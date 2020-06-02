@@ -1,6 +1,11 @@
-**DeePray** (`深度祈祷`): An new Modular, Scalable, Configurable, Easy-to-Use and Extend infrastructure for Deep Learning based Recommendation.
+**DeePray** (`深度祈祷`): A new Modular, Scalable, Configurable, Easy-to-Use and Extend infrastructure for Deep Learning based Recommendation.
 
 Let's Get Started!
+
+```
+pip install deepray
+```
+
 https://deepray.readthedocs.io/en/latest/
 
 Models List
@@ -38,11 +43,25 @@ DeePray is still under development, and call for contributions!
 * Call for contributions!
 ```
 
+# Citing
+DeePray is designed, developed and supported by [Hailin](https://github.com/fuhailin/).
+If you use any part of this library in your research, please cite it using the following BibTex entry
+```latex
+@misc{DeePray,
+  author = {Hailin Fu},
+  title = {DeePray: A new Modular, Scalable, Configurable, Easy-to-Use and Extend infrastructure for Deep Learning based Recommendation},
+  year = {2020},
+  publisher = {GitHub},
+  journal = {GitHub Repository},
+  howpublished = {\url{https://github.com/fuhailin/deepray}},
+}
+```
+
 # License
 
 Copyright (c) Copyright © 2020 The DeePray Authors<Hailin Fu>. All Rights Reserved.
 
-Licensed under the [GNU](LICENSE) License.
+Licensed under the [Apach](LICENSE) License.
 
 # Contact
 If you have any questions, please follow the following account:

@@ -165,12 +165,13 @@ class CSV2TFRecord(object):
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=value))
 
     def write_feature_map(self, dateframe, path):
-        with open(path, 'w') as f:
+        with open(path, 'a') as f:
             for item in self.CATEGORY_FEATURES:
                 f.writelines(','.join([str(dateframe[item].max()), item, 'CATEGORICAL\n']))
             for item in self.NUMERICAL_FEATURES:
                 f.write(','.join(['1', item, 'NUMERICAL\n']))
             for item in self.VARIABLE_FEATURES:
-                f.write(','.join(['1', item, 'VARIABLE\n']))
+                pass
+                # f.write(','.join(['1', item, 'VARIABLE\n']))
             for item in self.LABEL:
                 f.write(','.join([str(dateframe[item].nunique()), item, 'LABEL\n']))

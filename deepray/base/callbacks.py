@@ -17,12 +17,13 @@ from tensorflow.keras.callbacks import CSVLogger
 
 
 class LossAndErrorPrintingCallback(tf.keras.callbacks.Callback):
-
-    def on_train_batch_end(self, batch, logs=None):
-        logging.info('For batch {}, loss is {:7.2f}.'.format(batch, logs['loss']))
-
-    def on_test_batch_end(self, batch, logs=None):
-        logging.info('For batch {}, loss is {:7.2f}.'.format(batch, logs['loss']))
+    # def on_train_batch_begin(self, batch, logs=None):
+    #     logging.info('For batch {}, loss is {:7.2f}.'.format(batch, logs['loss']))
+    # def on_train_batch_end(self, batch, logs=None):
+    #     logging.info('For batch {}, loss is {:7.2f}.'.format(batch, logs['loss']))
+    #
+    # def on_test_batch_end(self, batch, logs=None):
+    #     logging.info('For batch {}, loss is {:7.2f}.'.format(batch, logs['loss']))
 
     def on_epoch_end(self, epoch, logs=None):
         logging.info(
@@ -96,3 +97,11 @@ class LearningRateScheduler(tf.keras.callbacks.Callback):
         # Set the value back to the optimizer before this epoch starts
         tf.keras.backend.set_value(self.model.optimizer.lr, scheduled_lr)
         logging.info('\nEpoch %05d: Learning rate is %6.4f.' % (epoch, scheduled_lr))
+
+
+class LossHistory(tf.keras.callbacks.Callback):
+    def on_batch_begin(self, batch, logs=None):
+        self.losses = []
+
+    def on_batch_end(self, batch, logs=None):
+        self.losses.append(logs.get('loss'))

@@ -36,13 +36,13 @@ def runner(argv=None):
     if len(argv) <= 1:
         argv = [
             sys.argv[0],
-            '--model=fm',
+            '--model=lr',
             '--optimizer=lazyadam',
-            '--train_data=/Users/vincent/Projects/DeePray_Keras/examples/census/data/train',
-            '--valid_data=/Users/vincent/Projects/DeePray_Keras/examples/census/data/valid',
-            '--feature_map=/Users/vincent/Projects/DeePray_Keras/examples/census/data/feature_map.csv',
+            '--train_data=/Users/vincent/Projects/DeePray/examples/census/data/train',
+            '--valid_data=/Users/vincent/Projects/DeePray/examples/census/data/valid',
+            '--feature_map=/Users/vincent/Projects/DeePray/examples/census/data/feature_map.csv',
             '--learning_rate=0.01',
-            '--epochs=1',
+            '--epochs=5',
             '--steps_per_summary=1',
             '--gzip=False',
             '--patient_valid_passes=3',
@@ -54,8 +54,8 @@ def runner(argv=None):
             '--batch_size=64',
             '--deep_layers=100,50',
             '--model_path=./outputs',
-            '--summaries_dir=/Users/vincent/Projects/DeePray_Keras/examples/census/summaries/{}'.format(
-                time.strftime('%y%m%d%H%M')),
+            # '--summaries_dir=/Users/vincent/Projects/DeePray/examples/census/summaries/{}'.format(
+            #     time.strftime('%y%m%d%H%M')),
             '--alsologtostderr=True'
         ]
     main(flags=argv)

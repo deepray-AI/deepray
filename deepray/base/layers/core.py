@@ -87,10 +87,12 @@ class Linear(tf.keras.layers.Layer):
         self.units = units
 
     def build(self, input_shape):
-        self.w = self.add_weight(shape=[input_shape[-1], self.units],
+        self.w = self.add_weight(name='linear_w',
+                                 shape=[input_shape[-1], self.units],
                                  initializer='random_normal',
                                  trainable=True)
-        self.b = self.add_weight(shape=(self.units,),
+        self.b = self.add_weight(name='linear_b',
+                                 shape=(self.units,),
                                  initializer='random_normal',
                                  trainable=True)
 

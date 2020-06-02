@@ -22,10 +22,10 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 from absl import flags, logging
 
-from deepray.base.callbacks import LossAndErrorPrintingCallback, LearningRateScheduler, CSVLogger
+from deepray.base.callbacks import LearningRateScheduler, CSVLogger, LossAndErrorPrintingCallback
 
 FLAGS = flags.FLAGS
-
+TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 flags.DEFINE_bool("gzip", False, 'tfrecord file is gzip or not')
 flags.DEFINE_bool("lr_schedule", False, 'lr_schedule')
 flags.DEFINE_enum("optimizer", "lazyadam",
@@ -34,12 +34,12 @@ flags.DEFINE_enum("optimizer", "lazyadam",
 flags.DEFINE_integer("patient_valid_passes", None,
                      "number of valid passes before early stopping")
 flags.DEFINE_string("profile_batch", None, "batch range to profile")
-flags.DEFINE_string("checkpoint_path", "/tmp/checkpoint",
+flags.DEFINE_string("checkpoint_path", "summaries/{0}/cpk/".format(TIME_STAMP),
                     "path to save checkpoint")
 flags.DEFINE_string("model_name", "ctr", "name to save checkpoints.")
-flags.DEFINE_string("model_path", "/tmp/model_base",
+flags.DEFINE_string("model_path", "summaries/" + TIME_STAMP,
                     "path to save models")
-flags.DEFINE_string("summaries_dir", "summaries/" + datetime.now().strftime("%Y%m%d-%H%M%S"), "summary dir")
+flags.DEFINE_string("summaries_dir", "summaries/" + TIME_STAMP, "summary dir")
 flags.DEFINE_string("train_data", None, "training data")
 flags.DEFINE_string("valid_data", None, "validating data")
 flags.DEFINE_string("predict_data", None, "predicting data")
@@ -181,8 +181,10 @@ class BaseTrainable(object):
         model.compile(optimizer=optimizer,
                       loss=self.loss_object,
                       metrics=self.metrics_object)
-        callbacks = [CSVLogger(self.flags.summaries_dir + '/log.csv', append=True, separator=','),
-                     LossAndErrorPrintingCallback()]
+        callbacks = [
+            CSVLogger(self.flags.summaries_dir + '/log.csv', append=True, separator=','),
+            LossAndErrorPrintingCallback()
+        ]
         if self.flags.profile_batch:
             tb_callback = tf.keras.callbacks.TensorBoard(log_dir=self.flags.summaries_dir,
                                                          profile_batch=self.flags.profile_batch)
@@ -193,10 +195,19 @@ class BaseTrainable(object):
                                                              mode='min',
                                                              restore_best_weights=True)
             callbacks.append(EarlyStopping)
+        if self.flags.checkpoint_path:
+            # Create a callback that saves the model's weights
+            cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=self.flags.checkpoint_path,
+                                                             save_weights_only=True,
+                                                             monitor='val_loss',
+                                                             mode='auto',
+                                                             save_best_only=True)
+            callbacks.append(cp_callback)
         if self.flags.lr_schedule:
             callbacks.append(LearningRateScheduler(self.lr_schedule))
         history = model.fit(self.train_iterator, validation_data=self.valid_iterator,
                             epochs=self.flags.epochs, callbacks=callbacks)
+        # model.save('/tmp/model')
         return history
 
     def _mylog(self, r):

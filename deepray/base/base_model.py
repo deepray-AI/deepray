@@ -4,7 +4,7 @@
 #
 #  Copyright © 2020 The DeePray Authors. All Rights Reserved.
 #
-#  Distributed under terms of the GNU license.
+#  Distributed under terms of the Apache license.
 #  ==============================================================================
 
 """
