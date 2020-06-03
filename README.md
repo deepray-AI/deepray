@@ -205,7 +205,7 @@ Licensed under the [Apach](LICENSE) License.
 
 # Contact
 If you want cooperation or have any questions, please follow my wechat offical account:
+
 公众微信号ID：【StateOfTheArt】
 
-
-<img src="https://gitee.com/fuhailin/Object-Storage-Service/raw/master/wechat_channel.png" >
+<img src="docs/source/_static/images/wechat_channel.png" >
