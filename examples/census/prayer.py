@@ -9,11 +9,10 @@ build and train model
 """
 
 import sys
-import time
 
 from absl import app, flags
-import deepray as dp
 
+import deepray as dp
 from deepray.base.trainer import train
 from deepray.model.build_model import BuildModel
 
@@ -21,15 +20,12 @@ FLAGS = flags.FLAGS
 
 
 def main(unused=None, flags=None):
-    test = dp.model.list_available()
-    print(test)
     if flags:
         FLAGS(flags, known_only=True)
     flags = FLAGS
     model = BuildModel(flags)
     history = train(model)
     print(history)
-    # model.predict()
 
 
 def runner(argv=None):
