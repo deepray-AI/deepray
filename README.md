@@ -208,4 +208,4 @@ If you want cooperation or have any questions, please follow my wechat offical a
 
 公众微信号ID：【StateOfTheArt】
 
-<img src="docs/source/_static/images/wechat_channel.png" >
+![StateOfTheArt](https://gitee.com/fuhailin/Object-Storage-Service/raw/master/wechat_channel.png)
