@@ -19,6 +19,7 @@ Author:
     Hailin Fu, hailinfufu@outlook.com
 """
 import tensorflow as tf
+from tensorflow.keras import layers
 
 
 class CustomEmbedding(tf.keras.layers.Layer):
@@ -108,3 +109,17 @@ class CustomEmbedding(tf.keras.layers.Layer):
             ids, layer_name, voc_size, emb_size, None,
             combiner=self.flags.sparse_embedding_combiner)
         return out
+
+
+class TokenAndPositionEmbedding(layers.Layer):
+    def __init__(self, maxlen, vocab_size, emded_dim):
+        super(TokenAndPositionEmbedding, self).__init__()
+        self.token_emb = layers.Embedding(input_dim=vocab_size, output_dim=emded_dim)
+        self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=emded_dim)
+
+    def call(self, x):
+        maxlen = tf.shape(x)[-1]
+        positions = tf.range(start=0, limit=maxlen, delta=1)
+        positions = self.pos_emb(positions)
+        x = self.token_emb(x)
+        return x + positions

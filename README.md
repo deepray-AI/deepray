@@ -12,7 +12,7 @@ making it easy to discover patterns and answer questions about tabular-structed 
 
 The main goals of DeePray:
 
-- Easy to use, newbees can get hands dirty with deep learning quickly
+- Easy to use, newbies can get hands dirty with deep learning quickly
 - Good performance with web-scale data
 - Easy to extend, Modular architecture let you build your Neural network like playing LEGO!
 

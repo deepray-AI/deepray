@@ -46,7 +46,6 @@ class FLENModel(BaseCTRModel):
         self.fwbi_bn = tf.keras.layers.BatchNormalization(momentum=0.9)
         self.fwbi_drop = CustomDropout(rate=0.2)
 
-        # self.fwbi_block = self.build_fwbi()
 
     def build_network(self, features, is_training=None):
         """
@@ -62,7 +61,6 @@ class FLENModel(BaseCTRModel):
         fwbi_fc_32 = self.fwbi_fc_32(fwbi)
         fwbi_bn = self.fwbi_bn(fwbi_fc_32)
         fwbi_out = self.fwbi_drop(fwbi_bn)
-        # fwbi_out = self.fwbi_block(features)
         v = tf.concat(values=[deep_out, fwbi_out], axis=1)
         return v
 

@@ -15,6 +15,9 @@
 
 
 """
+Author:
+    Hailin Fu, hailinfufu@outlook.com
+
 Base Deepray model with base network and helper functions.
 """
 

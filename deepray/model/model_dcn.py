@@ -32,10 +32,8 @@ flags.DEFINE_bool("sparse_cross", False, "sparse weights for cross")
 
 
 class DeepCrossModel(BaseCTRModel):
-
     def __init__(self, flags):
         super().__init__(flags)
-        self.NUM_POSITIONS = 100
 
     def build(self, input_shape):
         hidden = [int(h) for h in self.flags.deep_layers.split(',')]

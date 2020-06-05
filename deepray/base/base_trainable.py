@@ -178,13 +178,6 @@ class BaseTrainable(object):
     def train(self, model):
         self.create_train_data_iterator()
         optimizer = self.build_optimizer()
-        # for features, labels in self.train_iterator:
-        #     with tf.GradientTape() as tape:
-        #         predictions = model(features, training=True)
-        #         loss = self.loss_object(labels, predictions)
-        #     gradients = tape.gradient(loss, model.trainable_variables)
-        #     optimizer.apply_gradients(zip(gradients, model.trainable_variables))
-
         model.compile(optimizer=optimizer,
                       loss=self.loss_object,
                       metrics=self.metrics_object)

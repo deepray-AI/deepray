@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="deepray",
-    version="0.1.0",
+    version="0.1.1",
     author="Hailin Fu",
     author_email="hailinfufu@outlook.com",
     description="A new Modular, Scalable, Configurable, Easy-to-Use and Extend infrastructure for Deep Learning based Recommendation.",
@@ -29,7 +29,6 @@ setuptools.setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ),
     license="Apache-2.0",
-    keywords=['ctr', 'recommendation',
-              'deep learning', 'tensorflow', 'tensor', 'keras'],
+    keywords=['recommendation', 'deep learning', 'tensorflow2', 'keras'],
     python_requires='>=3.6',
 )
