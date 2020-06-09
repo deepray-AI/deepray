@@ -28,10 +28,9 @@ class AttentionalFactorizationMachine(FactorizationMachine):
 
     def build_network(self, features, is_training=None):
         """
+        TODO
 
         :param features:
         :param is_training:
         :return:
         """
-        v = self.fm_block(input)
-        return v

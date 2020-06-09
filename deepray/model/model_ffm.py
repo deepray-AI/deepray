@@ -44,9 +44,7 @@ class FieldawareFactorizationMachine(FactorizationMachine):
                                       initializer=tf.keras.initializers.TruncatedNormal(mean=0, stddev=0.01))
 
     def call(self, inputs, is_training=None, mask=None):
-        inputs = self.build_features(inputs)
         linear_terms = self.linear_part(inputs)
-
         interaction_terms = tf.constant(0, dtype='float32')
         for i in range(self.total_dims):
             for j in range(i + 1, self.total_dims):
@@ -54,10 +52,5 @@ class FieldawareFactorizationMachine(FactorizationMachine):
                     tf.reduce_sum(tf.multiply(self.kernel[i, self.field_dict[j]], self.kernel[j, self.field_dict[i]])),
                     tf.multiply(inputs[:, i], inputs[:, j]))
         interaction_terms = tf.reshape(interaction_terms, [-1, 1])
-        out = tf.math.add(linear_terms, interaction_terms)
-
-        preds = self.predict_layer(out)
-        if self.flags.ns_rate < 1:
-            preds = preds / (preds + tf.divide(tf.subtract(1.0, preds),
-                                               self.flags.ns_rate))
-        return preds
+        logit = tf.math.add(linear_terms, interaction_terms)
+        return logit

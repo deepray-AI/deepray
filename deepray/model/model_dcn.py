@@ -50,8 +50,8 @@ class DeepCrossModel(BaseCTRModel):
         """
         deep_out = self.deep_block(features, is_training=is_training)
         cross_out = self.cross_block(features, is_training=is_training)
-        v = self.concat([deep_out, cross_out])
-        return v
+        logit = self.concat([deep_out, cross_out])
+        return logit
 
     def build_cross(self, num_layers=3):
         return CrossNet(num_layers,

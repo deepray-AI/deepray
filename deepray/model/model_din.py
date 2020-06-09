@@ -21,7 +21,6 @@ Author:
 import tensorflow as tf
 from absl import flags
 
-from deepray.base.layers.attention import LocalActivationUnit
 from deepray.model.model_ctr import BaseCTRModel
 
 FLAGS = flags.FLAGS
@@ -60,8 +59,8 @@ class DeepInterestNetwork(BaseCTRModel):
                                   sparse_ev_list[self.flags.history_item],
                                   is_training)
         deep_part = self.mlp_block(self.concat(ev_list + fv_list))
-        v = tf.concat(values=[din_part, deep_part], axis=1)
-        return v
+        logit = tf.concat(values=[din_part, deep_part], axis=1)
+        return logit
 
     def build_features(self, features, embedding_suffix=''):
         """
@@ -76,4 +75,10 @@ class DeepInterestNetwork(BaseCTRModel):
         return ev_list, sparse_ev_list, fv_list
 
     def build_din(self):
-        return LocalActivationUnit()
+        """
+        TODO
+
+        Returns:
+
+        """
+        raise NotImplementedError("build_cin: not implemented!")

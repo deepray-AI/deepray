@@ -27,7 +27,7 @@ FLAGS = flags.FLAGS
 class DeepInterestEvolutionNetwork(BaseCTRModel):
 
     def __init__(self, flags):
-        super(DeepInterestEvolutionNetwork, self).__init__()
+        super(DeepInterestEvolutionNetwork, self).__init__(flags)
 
     def build_network(self, features, is_training=None):
         """

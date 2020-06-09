@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 #  Copyright © 2020-2020 Hailin Fu All Rights Reserved.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,6 +33,6 @@ class NeuralFactorizationMachine(FactorizationMachine):
         :param is_training:
         :return:
         """
-        v = self.B_Interaction_Layer(features)
-        v = self.Hidden_Layers(v)
-        return v
+        logit = self.B_Interaction_Layer(features)
+        logit = self.Hidden_Layers(logit)
+        return logit

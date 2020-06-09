@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.1.1",
     author="Hailin Fu",
     author_email="hailinfufu@outlook.com",
-    description="A new Modular, Scalable, Configurable, Easy-to-Use and Extend infrastructure for Deep Learning based Recommendation.",
+    description="A new Modular, Scalable, Configurable, Easy-to-Use and Extend infrastructure for Deep Learning based classification.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/fuhailin/deepray",

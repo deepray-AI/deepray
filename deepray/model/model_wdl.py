@@ -43,8 +43,8 @@ class WideAndDeepModel(BaseCTRModel):
         wide_part, deep_part = features[0], features[1]
         deep_part = self.deep_block(deep_part, is_training=is_training)
         wide_part = self.wide_block(wide_part, is_training=is_training)
-        v = tf.concat([wide_part, deep_part], -1)
-        return v
+        logit = tf.concat([wide_part, deep_part], -1)
+        return logit
 
     def build_features(self, features, embedding_suffix=''):
         """

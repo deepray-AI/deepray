@@ -1,17 +1,3 @@
-#  Copyright © 2020-2020 Hailin Fu All Rights Reserved.
-#
-#  Licensed under the Apache License, Version 2.0 (the "License");
-#  you may not use this file except in compliance with the License.
-#  You may obtain a copy of the License at
-#
-#  http://www.apache.org/licenses/LICENSE-2.0
-#
-#  Unless required by applicable law or agreed to in writing, software
-#  distributed under the License is distributed on an "AS IS" BASIS,
-#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#  See the License for the specific language governing permissions and
-#  limitations under the License.
-#  ==============================================================================
 """
 Field-Wise BiInteraction
 """
@@ -49,19 +35,17 @@ class FieldWiseBiInteraction(tf.keras.layers.Layer):
     """
 
     def __init__(self,
-                 use_bias=False,
                  activation=None,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',
                  kernel_regularizer=None,
                  **kwargs):
+        super(FieldWiseBiInteraction, self).__init__(**kwargs)
         self.activation = activations.get(activation)
-        self.use_bias = use_bias
         self.kernel_initializer = initializers.get(kernel_initializer)
         self.bias_initializer = initializers.get(bias_initializer)
         self.kernel_regularizer = regularizers.get(kernel_regularizer)
 
-        super(FieldWiseBiInteraction, self).__init__(**kwargs)
 
     def build(self, input_shape):
         self.num_fields = len(input_shape)
@@ -73,12 +57,10 @@ class FieldWiseBiInteraction(tf.keras.layers.Layer):
                                       regularizer=self.kernel_regularizer,
                                       trainable=True)
 
-        if self.use_bias:
-            self.bias = self.add_weight(name='bias',
+        self.bias = self.add_weight(name='bias',
                                         shape=(1,),
                                         initializer=self.bias_initializer,
                                         trainable=True)
-        super(FieldWiseBiInteraction, self).build(input_shape)
 
     def call(self, inputs, trainable=None, **kwargs):
         left = []
@@ -95,8 +77,7 @@ class FieldWiseBiInteraction(tf.keras.layers.Layer):
         field_weighted_embedding = tf.multiply(x=embeddings_prod, y=self.kernel)
         field_weighted_embedding = tf.reduce_sum(field_weighted_embedding, axis=1)
 
-        if self.use_bias:
-            field_weighted_embedding = tf.nn.bias_add(field_weighted_embedding, self.bias)
+        field_weighted_embedding = tf.nn.bias_add(field_weighted_embedding, self.bias)
 
         if self.activation is not None:
             field_weighted_embedding = self.activation(field_weighted_embedding)
@@ -109,7 +90,6 @@ class FieldWiseBiInteraction(tf.keras.layers.Layer):
 
     def get_config(self):
         config = {
-            'use_bias': self.use_bias,
             'activation': self.activation,
             'kernel_initializer': initializers.serialize(self.kernel_initializer),
             'bias_initializer': initializers.serialize(self.bias_initializer),

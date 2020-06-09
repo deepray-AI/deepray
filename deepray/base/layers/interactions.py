@@ -32,7 +32,8 @@ class FMNet(tf.keras.layers.Layer):
         n, p = input_shape
         self.linear_block = Linear()
         # interaction factors, randomly initialized
-        self.kernel = self.add_weight(shape=(self.k, p),
+        self.kernel = self.add_weight(name='fm_kernel',
+                                      shape=(self.k, p),
                                       initializer='random_normal',
                                       trainable=True)
 

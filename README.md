@@ -203,6 +203,14 @@ Copyright (c) Copyright © 2020 The DeePray Authors<Hailin Fu>. All Rights Reser
 
 Licensed under the [Apach](LICENSE) License.
 
+# Reference
+
+https://github.com/shenweichen/DeepCTR
+
+https://github.com/aimetrics/jarvis
+
+https://github.com/shichence/AutoInt
+
 # Contact
 If you want cooperation or have any questions, please follow my wechat offical account:
 

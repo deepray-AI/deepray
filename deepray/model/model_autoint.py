@@ -54,8 +54,8 @@ class AutoIntModel(BaseCTRModel):
         """
         deep_part = self.deep_block(features, is_training=is_training)
         attention_part = self.attention_block(features, is_training=is_training)
-        v = tf.concat([attention_part, deep_part], -1)
-        return v
+        logit = tf.concat([attention_part, deep_part], -1)
+        return logit
 
     def build_attention(self, concat_last_deep):
         hidden = [16, 16]  # [int(h) for h in self.flags.deep_layers.split(',')]

@@ -18,22 +18,18 @@ Author:
 """
 from absl import flags
 
-from deepray.base.layers.compressed_interaction_network import CIN
+from deepray.base.layers.cin import CompressedInteractionNetwork
+
 from deepray.base.layers.core import Linear
 from deepray.model.model_flen import FLENModel
 from deepray.model.model_fm import FactorizationMachine
+import tensorflow as tf
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean("res_cin",
                      False,
                      "Whether use residual structure to fuse the results from each layer of CIN.")
-flags.DEFINE_boolean("reduce_D", False, "")
-flags.DEFINE_boolean("cin_bias", False, "Whether to add bias term in CIN.")
-flags.DEFINE_boolean("cin_direct",
-                     False,
-                     "If true, then all hidden units are connected to both next layer and output layer;"
-                     "otherwise, half of hidden units are connected to next layer and the other half will be "
-                     "connected to output layer.")
+flags.DEFINE_boolean("split_half", False, "")
 flags.DEFINE_string("cin_layers", "128,128",
                     "sizes of CIN layers, string delimited by comma")
 
@@ -46,6 +42,8 @@ class ExtremeDeepFMModel(FactorizationMachine, FLENModel):
     def build(self, input_shape):
         dnn_hidden = [int(h) for h in self.flags.deep_layers.split(',')]
         cin_hidden = [int(h) for h in self.flags.cin_layers.split(',')]
+        self.embeddingsize = self.flags.embed_dim
+        self.numbericfeaturescnt = len(self.NUMERICAL_FEATURES)
         self.fm_block = self.build_fm()
         self.linear_block = Linear()
         self.dnn_block = self.build_deep(dnn_hidden)
@@ -53,17 +51,21 @@ class ExtremeDeepFMModel(FactorizationMachine, FLENModel):
 
     def build_network(self, features, is_training=None):
         ev_list, fv_list = features
-        cin_part = self.cin_block(ev_list)
-        dnn_part = self.dnn_block(self.concat(ev_list + fv_list))
-        fm_part = self.fm_block(self.concat(ev_list + fv_list))
-        linear_part = self.linear_block(self.concat(fv_list + fv_list))
-        v = self.concat([linear_part, fm_part, dnn_part, cin_part])
-        return v
+        ev_list = self.concat(ev_list)
+        fv_list = tf.reshape(
+            tf.reshape(fv_list, [-1, self.numbericfeaturescnt, 1]) * tf.ones([self.embeddingsize], tf.float32),
+            [-1, self.embeddingsize * self.numbericfeaturescnt])
+        l = self.concat([ev_list, fv_list])
+        x_cin = tf.reshape(l, [-1, l.shape[1] // self.embeddingsize, self.embeddingsize])
+        cin_part = self.cin_block(x_cin)
+        dnn_part = self.dnn_block(l)
+        fm_part = self.fm_block(l)
+        linear_part = self.linear_block(l)
+        logit = self.concat([linear_part, fm_part, dnn_part, cin_part])
+        return logit
 
     def build_cin(self, hidden):
-        return CIN(hidden=hidden,
-                   activation='relu',
-                   use_bias=self.flags.cin_bias,
-                   use_direct=self.flags.cin_direct,
-                   use_reduce_D=self.flags.reduce_D,
-                   use_res=self.flags.res_cin)
+        return CompressedInteractionNetwork(layer_size=hidden,
+                                            activation='relu',
+                                            split_half=self.flags.split_half,
+                                            use_res=self.flags.res_cin)

@@ -40,5 +40,5 @@ class DeepFM(FactorizationMachine):
         """
         fm_out = self.fm_block(features)
         deep_out = self.deep_block(features)
-        v = tf.concat([deep_out, fm_out], -1)
-        return v
+        logit = tf.concat([deep_out, fm_out], -1)
+        return logit

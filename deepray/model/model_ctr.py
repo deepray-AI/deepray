@@ -102,8 +102,7 @@ class BaseCTRModel(CustomTrainable, BaseModel):
         voc_emb_size = dict()
         for key, voc_size in self.VOC_SIZE.items():
             emb_size = self.compute_emb_size(voc_size)
-            voc_emb_size[key] = [voc_size + 2, emb_size]
-            voc_emb_size[key] = [voc_size + 2, emb_size]
+            voc_emb_size[key] = [voc_size + 1, emb_size]
         for k, v in voc_emb_size.items():
             if k == self.LABEL:
                 continue
@@ -112,8 +111,8 @@ class BaseCTRModel(CustomTrainable, BaseModel):
 
     def call(self, inputs, is_training=None, mask=None):
         features = self.build_features(inputs)
-        v = self.build_network(features, is_training)
-        preds = self.predict_layer(v)
+        logit = self.build_network(features, is_training)
+        preds = self.predict_layer(logit)
         if self.flags.ns_rate < 1:
             preds = preds / (preds + tf.divide(tf.subtract(1.0, preds),
                                                self.flags.ns_rate))

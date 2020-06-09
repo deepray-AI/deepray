@@ -12,87 +12,8 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #  ==============================================================================
-import numpy as np
 import tensorflow as tf
-
-from deepray.base.layers.core import DeepNet, Linear
-
-
-class Attention(tf.keras.layers.Layer):
-    """Attention layer.
-
-    Parameters
-    ----------
-    input_size : int
-        Size of input.
-
-    hidden_layers : iterable
-        Hidden layer sizes.
-
-    dropout : float
-        Dropout rate.
-
-    activation : str
-        Name of activation function. relu, prelu and sigmoid are supported.
-
-    return_scores : bool
-        Return attention scores instead of weighted sum pooling result.
-    """
-
-    def __init__(
-            self,
-            hidden_layers,
-            dropout=0.0,
-            batchnorm=True,
-            activation='prelu',
-            return_scores=False):
-        super(Attention, self).__init__()
-        self.return_scores = return_scores
-        self.mlp = DeepNet(hidden=hidden_layers, droprate=dropout, activation=activation, batchnorm=batchnorm)
-        self.fc = Linear(1)
-
-    def call(self, query, keys, keys_length):
-        """
-        Parameters
-        ----------
-        query: 2D tensor, [B, H]
-        kerys: 3D tensor, [B, T, H]
-        keys_length: 1D tensor, [B]
-
-        Returns
-        -------
-        outputs: 2D tensor, if return_scores=False [B, H], otherwise [B, T]
-        """
-        batch_size, max_length, dim = keys.size()
-
-        query = query.unsqueeze(1).expand(-1, max_length, -1)
-
-        din_all = tf.concat(
-            [query, keys, query - keys, query * keys], dim=-1)
-
-        din_all = din_all.view(batch_size * max_length, -1)
-
-        outputs = self.mlp(din_all)
-
-        outputs = self.fc(outputs).view(batch_size, max_length)  # [B, T]
-
-        # Scale
-        outputs = outputs / (dim ** 0.5)
-
-        # Mask
-        mask = (torch.arange(max_length, device=keys_length.device).repeat(
-            batch_size, 1) < keys_length.view(-1, 1))
-        outputs[~mask] = -np.inf
-
-        # Activation
-        outputs = tf.nn.softmax(outputs, dim=1)  # [B, T]
-
-        if not self.return_scores:
-            # Weighted sum
-            outputs = tf.matmul(
-                outputs.unsqueeze(1), keys).squeeze()  # [B, H]
-
-        return outputs
+from tensorflow.keras import layers
 
 
 class BahdanauAttention(tf.keras.layers.Layer):
@@ -211,82 +132,22 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         return output, attention_weights
 
 
-class LocalActivationUnit(tf.keras.layers.Layer):
-    """The LocalActivationUnit used in DIN with which the representation of
-    user interests varies adaptively given different candidate items.
+class TransformerBlock(layers.Layer):
+    def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
+        super(TransformerBlock, self).__init__()
+        self.att = MultiHeadAttention(embed_dim, num_heads)
+        self.ffn = self.point_wide_feed_forward_network(embed_dim, ff_dim)
+        self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
+        self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
+        self.dropout = layers.Dropout(rate)
 
-      Arguments
-        - **hidden_units**:list of positive integer, the attention net layer number and units in each layer.
-
-        - **activation**: Activation function to use in attention net.
-
-        - **l2_reg**: float between 0 and 1. L2 regularizer strength applied to the kernel weights matrix of attention net.
-
-        - **dropout_rate**: float in [0,1). Fraction of the units to dropout in attention net.
-
-        - **use_bn**: bool. Whether use BatchNormalization before activation or not in attention net.
-
-        - **seed**: A Python integer to use as random seed.
-
-      References
-        - [Zhou G, Zhu X, Song C, et al. Deep interest network for click-through rate prediction[C]//Proceedings of the 24th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining. ACM, 2018: 1059-1068.](https://arxiv.org/pdf/1706.06978.pdf)
-    """
-
-    def __init__(self, hidden_units=(64, 32), activation='sigmoid',
-                 l2_reg=0, dropout_rate=0, use_bn=False, seed=1024,
-                 **kwargs):
-        self.hidden_units = hidden_units
-        self.activation = activation
-        self.l2_reg = l2_reg
-        self.dropout_rate = dropout_rate
-        self.use_bn = use_bn
-        self.seed = seed
-        super(LocalActivationUnit, self).__init__(**kwargs)
-        self.supports_masking = True
-
-    def build(self, input_shape):
-        size = 4 * \
-               int(input_shape[0][-1]
-                   ) if len(self.hidden_units) == 0 else self.hidden_units[-1]
-        self.kernel = self.add_weight(shape=(size, 1),
-                                      initializer=tf.keras.initializers.glorot_normal(
-                                          seed=self.seed),
-                                      name="kernel")
-        self.bias = self.add_weight(
-            shape=(1,), initializer=tf.keras.initializers.Zeros(), name="bias")
-        self.dnn = DeepNet(hidden=self.hidden_units,
-                           activation=self.activation,
-                           droprate=self.dropout_rate,
-                           batchnorm=self.use_bn)
-
-        self.dense = tf.keras.layers.Lambda(lambda x: tf.nn.bias_add(tf.tensordot(
-            x[0], x[1], axes=(-1, 0)), x[2]))
-
-    def call(self, query, user_behavior, is_training=None, **kwargs):
-        keys_len = user_behavior.get_shape()[0]
-        queries = tf.keras.backend.repeat_elements(query, keys_len, 1)
-
-        att_input = tf.concat(
-            [queries, user_behavior, queries - user_behavior, queries * user_behavior], axis=-1)
-
-        att_out = self.dnn(att_input, training=is_training)
-
-        attention_score = self.dense([att_out, self.kernel, self.bias])
-
-        return attention_score
-
-
-class EncoderLayer(tf.keras.layers.Layer):
-    def __init__(self, d_model, num_heads, dff, rate=0):
-        super(EncoderLayer, self).__init__()
-        self.mha = MultiHeadAttention(d_model, num_heads)
-        self.ffn = self.point_wide_feed_forward_network(d_model, dff)
-
-        self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
-        self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
-
-        self.dropout1 = tf.keras.layers.Dropout(rate)
-        self.dropout2 = tf.keras.layers.Dropout(rate)
+    def call(self, inputs, training):
+        attn_output, weight = self.att(inputs, inputs, inputs, mask=None)
+        attn_output = self.dropout(attn_output, training=training)
+        out1 = self.layernorm1(inputs + attn_output)
+        ffn_output = self.ffn(out1)
+        ffn_output = self.dropout(ffn_output, training=training)
+        return self.layernorm2(out1 + ffn_output)
 
     def point_wide_feed_forward_network(self, d_model, dff):
         return tf.keras.Sequential([

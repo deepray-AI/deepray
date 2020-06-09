@@ -46,8 +46,8 @@ class FactorizationMachine(BaseCTRModel):
         :param is_training:
         :return:
         """
-        v = self.fm_block(features)
-        return v
+        logit = self.fm_block(features)
+        return logit
 
     def build_fm(self):
         return FMNet(k=self.k)

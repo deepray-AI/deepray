@@ -21,7 +21,7 @@ import tensorflow as tf
 from absl import flags
 
 from deepray.base.layers.core import CustomDropout, DeepBlock
-from deepray.base.layers.field_wise_bi_interaction import FieldWiseBiInteraction
+from deepray.base.layers.fwbi import FieldWiseBiInteraction
 from deepray.model.model_ctr import BaseCTRModel
 
 FLAGS = flags.FLAGS
@@ -41,11 +41,9 @@ class FLENModel(BaseCTRModel):
 
         # field-weighted embedding
         self.fwbi = FieldWiseBiInteraction()
-        self.fwbi_fc_32 = DeepBlock(hidden=32, activation=tf.nn.relu, prefix='fwbi_fc', sparse=None,
-                                    flags=self.flags)
+        self.fwbi_fc_32 = DeepBlock(hidden=32, activation=tf.nn.relu, prefix='fwbi_fc', sparse=None)
         self.fwbi_bn = tf.keras.layers.BatchNormalization(momentum=0.9)
         self.fwbi_drop = CustomDropout(rate=0.2)
-
 
     def build_network(self, features, is_training=None):
         """
@@ -61,8 +59,8 @@ class FLENModel(BaseCTRModel):
         fwbi_fc_32 = self.fwbi_fc_32(fwbi)
         fwbi_bn = self.fwbi_bn(fwbi_fc_32)
         fwbi_out = self.fwbi_drop(fwbi_bn)
-        v = tf.concat(values=[deep_out, fwbi_out], axis=1)
-        return v
+        logit = tf.concat(values=[deep_out, fwbi_out], axis=1)
+        return logit
 
     def build_features(self, features, embedding_suffix=''):
         """
