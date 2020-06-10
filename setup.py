@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="deepray",
-    version="0.1.1",
+    version="0.1.2",
     author="Hailin Fu",
     author_email="hailinfufu@outlook.com",
     description="A new Modular, Scalable, Configurable, Easy-to-Use and Extend infrastructure for Deep Learning based classification.",

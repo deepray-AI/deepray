@@ -43,26 +43,16 @@ flags.DEFINE_integer("patient_valid_passes", None,
 flags.DEFINE_string("profile_batch", None, "batch range to profile")
 flags.DEFINE_string("checkpoint_path", "summaries/{0}/cpk/".format(TIME_STAMP),
                     "path to save checkpoint")
-flags.DEFINE_string("model_name", "ctr", "name to save checkpoints.")
-flags.DEFINE_string("model_path", "summaries/" + TIME_STAMP,
-                    "path to save models")
 flags.DEFINE_string("summaries_dir", "summaries/" + TIME_STAMP, "summary dir")
 flags.DEFINE_string("train_data", None, "training data")
 flags.DEFINE_string("valid_data", None, "validating data")
-flags.DEFINE_string("predict_data", None, "predicting data")
 
 flags.DEFINE_integer("batch_size", 1, "batch size")
-flags.DEFINE_integer("prebatch", 1, "prebatch size for tfrecord")
 flags.DEFINE_integer("epochs", 1, "number of training epochs")
-flags.DEFINE_integer("interleave_cycle", 8,
-                     "The number of input elements that will be processed concurrently.")
 flags.DEFINE_integer("parallel_parse", 8, "Number of parallel parsing")
-flags.DEFINE_integer("parallel_reads_per_file", 8,
-                     "Number of parallel reads per file")
 flags.DEFINE_integer("shuffle_buffer", 512, "Size of shuffle buffer")
 flags.DEFINE_integer("prefetch_buffer", 4096, "Size of prefetch buffer")
-flags.DEFINE_integer("lr_schedule_mode", 0,
-                     "0: no schedule; 1: linear increase 2: exponential increase")
+
 LR_SCHEDULE = [
     # (epoch to start, learning rate) tuples
     (3, 0.05), (6, 0.01), (9, 0.005), (12, 0.001)
@@ -81,23 +71,14 @@ class BaseTrainable(object):
         )
         logging.info(' {} Initialize training'.format(
             time.strftime("%Y%m%d %H:%M:%S")))
-        if 'use_autotuner' in flags.__dict__:
-            self.flags = flags
-            logging.info(self.flags)
-        else:
-            self.flags = FLAGS
-            logging.info('\ttf.app.flags.FLAGS:')
-            for key, value in sorted(self.flags.flag_values_dict().items()):
-                logging.info('\t{:25}= {}'.format(key, value))
 
-        self.next_step_to_trace = 2
-        self.batch_size = self.flags.prebatch * self.flags.batch_size
-        self.best_loss = float('Inf')
-        self.best_checkpoint = None
-        self.patient_pass = 0
+        self.flags = FLAGS
+        logging.info('\ttf.app.flags.FLAGS:')
+        for key, value in sorted(self.flags.flag_values_dict().items()):
+            logging.info('\t{:25}= {}'.format(key, value))
+
+        self.batch_size = self.flags.batch_size
         self.max_patient_passes = self.flags.patient_valid_passes
-        self.prediction_signature = None
-        self.last_model_path = None
         self.LABEL, self.CATEGORY_FEATURES, self.NUMERICAL_FEATURES, \
         self.VOC_SIZE, self.VARIABLE_FEATURES = self.get_summary()
         self.metrics_object = self.build_metrics()
@@ -130,15 +111,6 @@ class BaseTrainable(object):
         return metrics
 
     @classmethod
-    def read_list_from_file(cls, filename):
-        # tfrecord file should be a text file with absolute path of tfrecords
-        if not os.path.isfile(filename):
-            raise ValueError('{} should be a text file'.format(filename))
-        with open(filename) as f:
-            record_files = [path.strip() for path in f]
-            return record_files
-
-    @classmethod
     def parser(cls, record):
         raise NotImplementedError(
             "parser(called by tfrecord_pipeline): not implemented!")
@@ -147,32 +119,24 @@ class BaseTrainable(object):
     def tfrecord_pipeline(cls, tfrecord_files, batch_size,
                           epochs, shuffle=True):
         flags = FLAGS
-        files_ds = tf.data.Dataset.from_tensor_slices(tfrecord_files)
-        if shuffle:
-            files_ds = files_ds.shuffle(buffer_size=len(tfrecord_files))
-        dataset = files_ds.interleave(
-            lambda x: tf.data.TFRecordDataset(
-                x, compression_type='GZIP' if flags.gzip else None,
-                num_parallel_reads=tf.data.experimental.AUTOTUNE
-                if flags.parallel_reads_per_file is None else flags.parallel_reads_per_file).map(cls.parser,
-                                                                                                 num_parallel_calls=tf.data.experimental.AUTOTUNE if flags.parallel_parse is None else flags.parallel_parse),
-            cycle_length=flags.interleave_cycle, block_length=16)
+        dataset = tf.data.TFRecordDataset(
+            [tfrecord_files],
+            compression_type='GZIP' if flags.gzip else None) \
+            .map(cls.parser,
+                 num_parallel_calls=tf.data.experimental.AUTOTUNE if flags.parallel_parse is None else flags.parallel_parse)
         if shuffle:
             dataset = dataset.shuffle(buffer_size=flags.shuffle_buffer)
-        dataset = \
-            dataset.repeat(epochs) \
-                .batch(batch_size) \
-                .prefetch(buffer_size=flags.prefetch_buffer)
+        dataset = dataset.repeat(epochs) \
+            .batch(batch_size) \
+            .prefetch(buffer_size=flags.prefetch_buffer)
         return dataset
 
     def create_train_data_iterator(self):
-        train_data = self.read_list_from_file(self.flags.train_data)
-        valid_data = self.read_list_from_file(self.flags.valid_data)
         self.train_iterator = self.tfrecord_pipeline(
-            train_data, self.flags.batch_size, epochs=1
+            self.flags.train_data, self.flags.batch_size, epochs=1
         )
         self.valid_iterator = self.tfrecord_pipeline(
-            valid_data, self.flags.batch_size, epochs=1, shuffle=False
+            self.flags.valid_data, self.flags.batch_size, epochs=1, shuffle=False
         )
 
     def train(self, model):
@@ -208,13 +172,10 @@ class BaseTrainable(object):
             callbacks.append(LearningRateScheduler(self.lr_schedule))
         history = model.fit(self.train_iterator, validation_data=self.valid_iterator,
                             epochs=self.flags.epochs, callbacks=callbacks)
-        # model.save('/tmp/model')
         return history
 
     def _mylog(self, r):
-        test = tf.constant(1e-18)
-        return tf.math.log(tf.math.maximum(r, test))
-        # return math.log(max(r, 1e-18))
+        return tf.math.log(tf.math.maximum(r, tf.constant(1e-18)))
 
     def build_optimizer(self):
         if self.flags.optimizer == "adam":

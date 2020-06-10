@@ -59,16 +59,12 @@ class BaseCTRModel(CustomTrainable, BaseModel):
         ev_list = [self.EmbeddingDict[key](features[key])
                    for key in self.CATEGORY_FEATURES]
         sparse_ev_list = []
-        if not self.flags.skip_varLen_feature:
-            for key in self.VARIABLE_FEATURES:
-                sparse_ev_list.append(
-                    self.EmbeddingDict[key](features[key],
-                                            combiner=self.flags.sparse_embedding_combiner))
+        for key in self.VARIABLE_FEATURES:
+            sparse_ev_list.append(
+                self.EmbeddingDict[key](features[key],
+                                        combiner=self.flags.sparse_embedding_combiner))
 
         fv_list = [self.build_dense_layer(features[key]) for key in self.NUMERICAL_FEATURES]
-        if self.flags.summary_mode == 'all':
-            for fv in fv_list:
-                tf.summary.histogram(fv.name, fv)
         inputs = self.concat(fv_list + ev_list + sparse_ev_list)
         return inputs
 
@@ -113,9 +109,6 @@ class BaseCTRModel(CustomTrainable, BaseModel):
         features = self.build_features(inputs)
         logit = self.build_network(features, is_training)
         preds = self.predict_layer(logit)
-        if self.flags.ns_rate < 1:
-            preds = preds / (preds + tf.divide(tf.subtract(1.0, preds),
-                                               self.flags.ns_rate))
         return preds
 
     def build_network(self, features, is_training=None):

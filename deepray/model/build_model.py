@@ -18,7 +18,11 @@ Build model
 Author:
     Hailin Fu, hailinfufu@outlook.com
 """
+from absl import flags
+
 from deepray.model import model_lr
+
+flags.DEFINE_string("model", "lr", "model")
 
 
 def BuildModel(flags):
@@ -60,6 +64,9 @@ def BuildModel(flags):
     elif flags.model == 'autoint':
         from deepray.model import model_autoint
         model = model_autoint.AutoIntModel(flags)
+    elif flags.model == 'lstm':
+        from deepray.model import model_lstm
+        model = model_lstm.CustomModel(flags)
     else:
         raise ValueError('--model {} was not found.'.format(flags.model))
     return model

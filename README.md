@@ -104,8 +104,6 @@ You will get a feature map file like that:
 1,education_num,NUMERICAL
 2,income_label,LABEL
 ```
-And then create two txt file `train`and `valid` separately to record train set TFRecords and valid set TFRecords file path.
-
 
 ### Choose your model, Training and evaluation
 
@@ -136,9 +134,9 @@ def main(flags=None):
 argv = [
     sys.argv[0],
     '--model=lr',
-    '--train_data=/Users/vincent/Projects/DeePray/examples/census/data/train',
-    '--valid_data=/Users/vincent/Projects/DeePray/examples/census/data/valid',
-    '--feature_map=/Users/vincent/Projects/DeePray/examples/census/data/feature_map.csv',
+    '--train_data=./census/data/train.tfrecord',
+    '--valid_data=./census/data/valid.tfrecord',
+    '--feature_map=./census/data/feature_map.csv',
     '--learning_rate=0.01',
     '--epochs=10',
     '--batch_size=64',

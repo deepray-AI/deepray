@@ -41,18 +41,17 @@ class CustomTrainable(BaseTrainable, object):
     @classmethod
     def parser(cls, record):
         flags = FLAGS
-        prebatch = flags.prebatch
         feature_map = {}
         if not flags.skip_varLen_feature:
             for key, dim in VARIABLE_FEATURES.items():
                 feature_map[key] = tf.io.VarLenFeature(tf.int64)
         for key, dim in CATEGORY_FEATURES.items():
-            feature_map[key] = tf.io.FixedLenFeature([1 * prebatch], tf.int64)
+            feature_map[key] = tf.io.FixedLenFeature([1], tf.int64)
         for key, dim in NUMERICAL_FEATURES.items():
-            feature_map[key] = tf.io.FixedLenFeature([1 * prebatch], tf.float32)
+            feature_map[key] = tf.io.FixedLenFeature([1], tf.float32)
         features = tf.io.parse_single_example(record, features=feature_map)
         label = tf.io.parse_single_example(record,
-                                           features={LABEL: tf.io.FixedLenFeature([prebatch], tf.int64)})
+                                           features={LABEL: tf.io.FixedLenFeature([1], tf.int64)})
         return features, label[LABEL]
 
     @classmethod
