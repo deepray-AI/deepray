@@ -23,4 +23,4 @@ In order to conform with the current API standard, all cells must:
    with `tf.config.run_functions_eagerly(True)`.
 
 #### Documentation Requirements
- * Update the [CODEOWNERS file](https://github.com/tensorflow/addons/blob/master/.github/CODEOWNERS)
+ * Update the [CODEOWNERS file](https://github.com/deepray-AI/deepray/blob/main/.github/CODEOWNERS)

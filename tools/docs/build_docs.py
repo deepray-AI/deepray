@@ -67,7 +67,7 @@ def main(argv):
     elif FLAGS.git_branch:
         code_url_prefix = CODE_PREFIX_TEMPLATE.format(git_branch=FLAGS.git_branch)
     else:
-        code_url_prefix = CODE_PREFIX_TEMPLATE.format(git_branch="master")
+        code_url_prefix = CODE_PREFIX_TEMPLATE.format(git_branch="main")
 
     doc_generator = generate_lib.DocGenerator(
         root_title=PROJECT_FULL_NAME,

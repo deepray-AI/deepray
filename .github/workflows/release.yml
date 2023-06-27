@@ -7,11 +7,11 @@ on:
       - v*
   push:
     branches:
-      - master
+      - main
       - r*
   pull_request:
     branches:
-      - master
+      - main
       - r*
 
 env:

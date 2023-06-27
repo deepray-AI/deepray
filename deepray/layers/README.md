@@ -19,4 +19,4 @@ must:
  * Run `layer_test` on the layer.
 
 #### Documentation Requirements
- * Update the [CODEOWNERS file](https://github.com/tensorflow/addons/blob/master/.github/CODEOWNERS)
+ * Update the [CODEOWNERS file](https://github.com/deepray-AI/deepray/blob/main/.github/CODEOWNERS)

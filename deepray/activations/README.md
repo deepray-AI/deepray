@@ -19,4 +19,4 @@ must:
  * Add activation name to [activations_test.py](https://github.com/tensorflow/addons/tree/master/deepray/activations/tests/activations_test.py) to test serialization.
 
 #### Documentation Requirements
- * Update the [CODEOWNERS file](https://github.com/tensorflow/addons/blob/master/.github/CODEOWNERS)
+ * Update the [CODEOWNERS file](https://github.com/deepray-AI/deepray/blob/main/.github/CODEOWNERS)
