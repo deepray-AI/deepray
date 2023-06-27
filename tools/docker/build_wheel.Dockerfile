@@ -25,7 +25,7 @@ COPY ./ /deepray
 WORKDIR /deepray
 
 # -------------------------------------------------------------------
-FROM base_install as tfa_gpu_tests
+FROM base_install as deepray_gpu_tests
 CMD ["bash", "tools/testing/build_and_run_tests.sh"]
 
 # -------------------------------------------------------------------
