@@ -17,7 +17,7 @@
 #include "tensorflow/core/framework/shape_inference.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 using ::tensorflow::shape_inference::InferenceContext;
 using ::tensorflow::shape_inference::ShapeHandle;
@@ -131,5 +131,5 @@ REGISTER_OP("Deepray>CorrelationCostGrad")
     })
     .Doc(R"doc(CorrelationCostGrad op.)doc");
 
-}  // namespace addons
+}  // namespace deepray
 }  // namespace tensorflow

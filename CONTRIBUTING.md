@@ -280,12 +280,12 @@ to install any additional tools.
 
 CPU Docker: 
 ```bash
-docker run --rm -it -v ${PWD}:/addons -w /addons tfaddons/dev_container:latest-cpu
+docker run --rm -it -v ${PWD}:/deepray -w /deepray hailinfufu/deepray/dev_container:latest-cpu
 ```
 
 GPU Docker: 
 ```bash
-docker run --gpus all --rm -it -v ${PWD}:/addons -w /addons gcr.io/tensorflow-testing/nosla-cuda11.8-cudnn8.6-ubuntu20.04-manylinux2014-multipython
+docker run --gpus all --rm -it -v ${PWD}:/deepray -w /deepray gcr.io/tensorflow-testing/nosla-cuda11.8-cudnn8.6-ubuntu20.04-manylinux2014-multipython
 ```
 
 Configure:

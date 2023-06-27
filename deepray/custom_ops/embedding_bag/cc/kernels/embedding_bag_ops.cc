@@ -25,7 +25,7 @@ limitations under the License.
 #include "tensorflow/core/framework/tensor_shape.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 typedef Eigen::ThreadPoolDevice CPUDevice;
 typedef Eigen::GpuDevice GPUDevice;
@@ -326,5 +326,5 @@ REGISTER_GPU_KERNEL(float);
 REGISTER_GPU_KERNEL(double);
 #undef REGISTER_GPU_KERNEL
 #endif // GOOGLE_CUDA
-} // namespace addons
+} // namespace deepray
 } // namespace tensorflow

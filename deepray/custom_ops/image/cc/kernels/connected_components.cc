@@ -26,7 +26,7 @@ limitations under the License.
 
 namespace tensorflow {
 
-namespace addons {
+namespace deepray {
 
 using tensorflow::addons::functor::BlockedImageUnionFindFunctor;
 using tensorflow::addons::functor::FindRootFunctor;
@@ -138,5 +138,5 @@ TF_CALL_string(REGISTER_IMAGE_CONNECTED_COMPONENTS);
 // shared memory in CUDA thread blocks, instead of starting with single-pixel
 // blocks).
 
-} // end namespace addons
+} // end namespace deepray
 } // end namespace tensorflow

@@ -14,8 +14,8 @@ RUN pip install -r requirements.txt
 COPY tools/install_deps/pytest.txt ./
 RUN pip install -r pytest.txt pytest-cov
 
-COPY ./ /addons
-WORKDIR addons
+COPY ./ /deepray
+WORKDIR /deepray
 RUN python configure.py
 RUN pip install -e ./
 RUN --mount=type=cache,id=cache_bazel,target=/root/.cache/bazel \
@@ -32,7 +32,7 @@ FROM python:3.9
 COPY tools/install_deps/tensorflow-cpu.txt ./
 RUN pip install --default-timeout=1000 -r tensorflow-cpu.txt
 
-COPY --from=0 /addons/artifacts /artifacts
+COPY --from=0 /deepray/artifacts /artifacts
 
 RUN pip install /artifacts/deepray-*.whl
 

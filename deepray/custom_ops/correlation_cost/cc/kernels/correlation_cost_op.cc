@@ -29,7 +29,7 @@ limitations under the License.
 #include "tensorflow/core/util/work_sharder.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 typedef Eigen::ThreadPoolDevice CPUDevice;
 typedef Eigen::GpuDevice GPUDevice;
@@ -375,5 +375,5 @@ TF_CALL_float(REGISTER_CORRELATIONCOST_OP_GPU);
 
 #endif // GOOGLE_CUDA
 
-} // namespace addons
+} // namespace deepray
 } // namespace tensorflow

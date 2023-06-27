@@ -19,7 +19,7 @@ limitations under the License.
 #include "tensorflow/core/framework/op_kernel.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 using ::tensorflow::OpKernel;
 using ::tensorflow::OpKernelConstruction;
@@ -99,5 +99,5 @@ class ParseTimeOp : public OpKernel {
 REGISTER_KERNEL_BUILDER(Name("Deepray>ParseTime").Device(tensorflow::DEVICE_CPU),
                         ParseTimeOp);
 
-}  // end namespace addons
+}  // end namespace deepray
 }  // end namespace tensorflow

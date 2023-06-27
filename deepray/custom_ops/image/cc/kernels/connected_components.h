@@ -30,7 +30,7 @@ limitations under the License.
 #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 namespace functor {
 
@@ -284,7 +284,7 @@ private:
 
 } // end namespace functor
 
-} // end namespace addons
+} // end namespace deepray
 } // namespace tensorflow
 
 #endif // DEEPRAY_IMAGE_KERNELS_CONNECTED_COMPONENTS_OPS_H_

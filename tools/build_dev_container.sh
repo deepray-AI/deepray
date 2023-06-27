@@ -9,4 +9,4 @@ docker build \
     --build-arg PY_VERSION=$PY_VERSION \
     --no-cache \
     --target dev_container \
-    -t tfaddons/dev_container:latest-gpu ./
+    -t hailinfufu/deepray/dev_container:latest-gpu ./

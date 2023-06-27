@@ -1,4 +1,4 @@
-name: addons-release
+name: deepray-release
 
 on:
   release:
@@ -146,4 +146,4 @@ jobs:
           set -e -x
           echo ${{ secrets.DOCKER_PW }} | docker login --username ${{ secrets.DOCKER_USER }} --password-stdin
           bash .github/workflows/github_build_dev_container.sh
-          docker push tfaddons/dev_container:latest-gpu
+          docker push hailinfufu/deepray/dev_container:latest-gpu

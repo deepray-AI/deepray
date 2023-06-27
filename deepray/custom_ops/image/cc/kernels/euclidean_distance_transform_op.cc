@@ -27,7 +27,7 @@ limitations under the License.
 #include "tensorflow/core/util/work_sharder.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 namespace functor {
 
@@ -132,5 +132,5 @@ TF_CALL_double(REGISTER);
 
 #endif // GOOGLE_CUDA
 
-} // end namespace addons
+} // end namespace deepray
 } // end namespace tensorflow

@@ -20,7 +20,7 @@ limitations under the License.
 #include "tensorflow/core/util/stream_executor_util.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 namespace internal {
 
 __global__ void compute_transformation_matrix_cuda(const float *const delta_h,
@@ -77,7 +77,7 @@ void AdjustHsvInYiqGPU::operator()(OpKernelContext *ctx, int channel_count,
   }
 }
 } // namespace functor
-} // end namespace addons
+} // end namespace deepray
 } // namespace tensorflow
 
 #endif // GOOGLE_CUDA

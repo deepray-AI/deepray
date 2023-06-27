@@ -27,7 +27,7 @@
 #include "tensorflow/core/util/gpu_kernel_helper.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 using GPUDevice = Eigen::GpuDevice;
 
@@ -276,6 +276,6 @@ template struct ResamplerGrad2DFunctor<GPUDevice, float>;
 template struct ResamplerGrad2DFunctor<GPUDevice, double>;
 
 } // namespace functor
-} // namespace addons
+} // namespace deepray
 } // namespace tensorflow
 #endif // GOOGLE_CUDA

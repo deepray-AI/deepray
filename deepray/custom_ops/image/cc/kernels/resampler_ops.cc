@@ -30,7 +30,7 @@
 
 namespace tensorflow {
 
-namespace addons {
+namespace deepray {
 
 using CPUDevice = Eigen::ThreadPoolDevice;
 using GPUDevice = Eigen::GpuDevice;
@@ -411,5 +411,5 @@ TF_CALL_float(REGISTER);
 #undef REGISTER
 #endif // GOOGLE_CUDA
 
-} // end namespace addons
+} // end namespace deepray
 } // namespace tensorflow

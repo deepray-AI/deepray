@@ -124,5 +124,5 @@ setup(
         "Topic :: Software Development :: Libraries",
     ],
     license="Apache 2.0",
-    keywords="tensorflow addons machine learning",
+    keywords="tensorflow deepray machine learning",
 )

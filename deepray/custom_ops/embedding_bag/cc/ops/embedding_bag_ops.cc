@@ -17,7 +17,7 @@ limitations under the License.
 #include "tensorflow/core/framework/shape_inference.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 using ::tensorflow::shape_inference::DimensionHandle;
 using ::tensorflow::shape_inference::InferenceContext;
@@ -66,5 +66,5 @@ REGISTER_OP("Deepray>EmbeddingBagGrad")
       return Status();
     });
 
-}  // namespace addons
+}  // namespace deepray
 }  // namespace tensorflow

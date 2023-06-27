@@ -24,7 +24,7 @@ limitations under the License.
 #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 typedef Eigen::ThreadPoolDevice CPUDevice;
 typedef Eigen::GpuDevice GPUDevice;
@@ -135,7 +135,7 @@ struct EuclideanDistanceTransformFunctor {
 };
 } // end namespace functor
 
-} // end namespace addons
+} // end namespace deepray
 } // end namespace tensorflow
 
 #endif // DEEPRAY_IMAGE_KERNELS_EUCLIDEAN_DISTANCE_TRANSFORM_OP_H_

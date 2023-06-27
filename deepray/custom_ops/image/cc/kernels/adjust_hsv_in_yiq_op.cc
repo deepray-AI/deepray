@@ -29,7 +29,7 @@ limitations under the License.
 #include "tensorflow/core/util/work_sharder.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 typedef Eigen::ThreadPoolDevice CPUDevice;
 typedef Eigen::GpuDevice GPUDevice;
@@ -166,5 +166,5 @@ REGISTER_KERNEL_BUILDER(
     AdjustHsvInYiqOp<GPUDevice>);
 #endif
 
-} // end namespace addons
+} // end namespace deepray
 } // namespace tensorflow

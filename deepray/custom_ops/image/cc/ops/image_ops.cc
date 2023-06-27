@@ -18,7 +18,7 @@ limitations under the License.
 #include "tensorflow/core/framework/shape_inference.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 namespace {
 
@@ -69,5 +69,5 @@ REGISTER_OP("Deepray>ImageConnectedComponents")
     .SetShapeFn(shape_inference::UnchangedShape)
     .Doc(ImageConnectedComponentsDoc);
 
-}  // end namespace addons
+}  // end namespace deepray
 }  // namespace tensorflow

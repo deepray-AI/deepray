@@ -23,7 +23,7 @@ limitations under the License.
 namespace tensorflow {
 class OpKernelContext;
 
-namespace addons {
+namespace deepray {
 
 namespace functor {
 
@@ -36,7 +36,7 @@ template <typename Device, typename T> struct GatherTree {
 };
 
 } // namespace functor
-} // end namespace addons
+} // end namespace deepray
 } // namespace tensorflow
 
 #endif // DEEPRAY_SEQ2SEQ_KERNELS_BEAM_SEARCH_OPS_H_

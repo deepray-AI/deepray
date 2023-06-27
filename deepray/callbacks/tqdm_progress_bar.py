@@ -64,7 +64,7 @@ class TQDMProgressBar(Callback):
 
         try:
             # import tqdm here because tqdm is not a required package
-            # for addons
+            # for deepray
             import tqdm
 
             version_message = "Please update your TQDM version to >= 4.36.1, "

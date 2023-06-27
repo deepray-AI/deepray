@@ -25,7 +25,7 @@ limitations under the License.
 #include "tensorflow/core/util/gpu_kernel_helper.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 namespace functor {
 
@@ -67,7 +67,7 @@ template struct EuclideanDistanceTransformFunctor<GPUDevice, double>;
 
 } // end namespace functor
 
-} // end namespace addons
+} // end namespace deepray
 } // end namespace tensorflow
 
 #endif // GOOGLE_CUDA

@@ -196,7 +196,7 @@ class LayerNormSimpleRNNCell(keras.layers.SimpleRNNCell):
               y_t = f(net + b)
 
         Case 2:
-            addons' LayerNormSimpleRNNCell. Like case 1 but with layer
+            deepray' LayerNormSimpleRNNCell. Like case 1 but with layer
             normalization (only scaling).
               y_t = f(ln(x_t * W_xh + y_{t-1} * W_hh) + b)
             or
@@ -216,7 +216,7 @@ class LayerNormSimpleRNNCell(keras.layers.SimpleRNNCell):
               y_t = f(net + b)
 
         Case 4:
-            addons' LayerNormSimpleRNNCell. Like case 3 but with layer
+            deepray' LayerNormSimpleRNNCell. Like case 3 but with layer
             normalization (only scaling).
               y_t = f(ln(d1(x_t) * W_xh + d2(y_{t-1}) * W_hh) + b)
             or

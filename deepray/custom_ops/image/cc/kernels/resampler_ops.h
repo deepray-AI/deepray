@@ -23,7 +23,7 @@
 #include "tensorflow/core/framework/op_kernel.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 namespace functor {
 
 // Helper functor for the Resampler Op in 2D
@@ -46,6 +46,6 @@ template <typename Device, typename T> struct ResamplerGrad2DFunctor {
 };
 
 } // namespace functor
-} // namespace addons
+} // namespace deepray
 } // namespace tensorflow
 #endif // DEEPRAY_IMAGE_KERNELS_RESAMPLER_OPS_H_

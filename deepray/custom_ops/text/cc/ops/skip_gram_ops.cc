@@ -17,7 +17,7 @@ limitations under the License.
 #include "tensorflow/core/framework/shape_inference.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 REGISTER_OP("Deepray>SkipGramGenerateCandidates")
     .Input("input_tensor: T")
     .Input("min_skips: int32")
@@ -52,5 +52,5 @@ REGISTER_OP("Deepray>SkipGramGenerateCandidates")
 Generates skip-gram token and label paired Tensors from the input tensor.
 See docs for the public-facing skip_gram_sample() Python op for more details.
 )doc");
-}  // end namespace addons
+}  // end namespace deepray
 }  // namespace tensorflow

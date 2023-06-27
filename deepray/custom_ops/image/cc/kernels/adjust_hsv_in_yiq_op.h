@@ -27,7 +27,7 @@ limitations under the License.
 #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 static constexpr int kChannelSize = 3;
 
@@ -83,7 +83,7 @@ struct AdjustHsvInYiqGPU {
 
 #endif // GOOGLE_CUDA
 
-} // end namespace addons
+} // end namespace deepray
 } // namespace tensorflow
 
 #endif // DEEPRAY_IMAGE_KERNELS_ADJUST_HSV_IN_YIQ_OP_H_

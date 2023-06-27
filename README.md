@@ -97,7 +97,7 @@ https://bazel.build/) build system (version >= 1.0.0).
 ##### CPU Custom Ops
 ```
 git clone https://github.com/tensorflow/addons.git
-cd addons
+cd deepray
 
 # This script links project with TensorFlow dependency
 python3 ./configure.py
@@ -111,7 +111,7 @@ pip install artifacts/deepray-*.whl
 ##### GPU and CPU Custom Ops
 ```
 git clone https://github.com/tensorflow/addons.git
-cd addons
+cd deepray
 
 export TF_NEED_CUDA="1"
 
@@ -132,7 +132,7 @@ pip install artifacts/deepray-*.whl
 
 ## Tutorials
 See [`docs/tutorials/`](docs/tutorials/)
-for end-to-end examples of various addons.
+for end-to-end examples of various deepray.
 
 ## Core Concepts
 

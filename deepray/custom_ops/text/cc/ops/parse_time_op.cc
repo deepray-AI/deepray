@@ -17,7 +17,7 @@ limitations under the License.
 #include "tensorflow/core/framework/op.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 REGISTER_OP("Deepray>ParseTime")
     .Input("time_string: string")
     .Output("time_int64: int64")
@@ -67,5 +67,5 @@ time_int64: the number of seconds / milliseconds / microseconds / nanoseconds
 output_unit: the output unit of the parsed unix time. Can only be SECOND,
   MILLISECOND, MICROSECOND, NANOSECOND.
 )doc");
-}  // end namespace addons
+}  // end namespace deepray
 }  // end namespace tensorflow
