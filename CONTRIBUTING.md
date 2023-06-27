@@ -2,7 +2,7 @@
 
 Interested in contributing to Deepray? We appreciate all kinds
 of help and are working to make this guide as comprehensive as possible.
-Please [let us know](https://github.com/tensorflow/addons/issues) if
+Please [let us know](https://github.com/deepray-AI/deepray/issues) if
 you think of something we could do to help lower the barrier to
 contributing.
 

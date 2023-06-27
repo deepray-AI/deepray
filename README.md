@@ -96,7 +96,7 @@ https://bazel.build/) build system (version >= 1.0.0).
 
 ##### CPU Custom Ops
 ```
-git clone https://github.com/tensorflow/addons.git
+git clone https://github.com/deepray-AI/deepray.git
 cd deepray
 
 # This script links project with TensorFlow dependency
@@ -110,7 +110,7 @@ pip install artifacts/deepray-*.whl
 
 ##### GPU and CPU Custom Ops
 ```
-git clone https://github.com/tensorflow/addons.git
+git clone https://github.com/deepray-AI/deepray.git
 cd deepray
 
 export TF_NEED_CUDA="1"
@@ -240,7 +240,7 @@ Do you want to contribute but are not sure of what? Here are a few suggestions:
   Do a change and hundreds of developers will see it and benefit from it. Maintainers are often focused 
   on making APIs, fixing bugs and other code related changes. The documentation will never 
   be loved enough!
-3. Solve an [existing issue](https://github.com/tensorflow/addons/issues).
+3. Solve an [existing issue](https://github.com/deepray-AI/deepray/issues).
   These range from low-level software bugs to higher-level design problems.
   Check out the label [help wanted](https://github.com/tensorflow/addons/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22). If you're a new contributor, the label [good first issue](https://github.com/tensorflow/addons/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) can be a good place to start.
 4. Review a pull request. So you're not a software engineer but you know a lot
@@ -249,7 +249,7 @@ Do you want to contribute but are not sure of what? Here are a few suggestions:
   papers. Since Deepray maintainers are not specialized in everything,
   you can imagine how hard it is to review. It takes very long to read the paper,
   understand it and check the math in the pull request. If you're specialized, look at 
-  the [list of pull requests](https://github.com/tensorflow/addons/pulls). 
+  the [list of pull requests](https://github.com/deepray-AI/deepray/pulls). 
   If there is something from a paper you know, please comment on the pull request to
   check the math is ok. If you see that everything is good, say it! It will help 
   the maintainers to sleep better at night knowing that he/she wasn't the only

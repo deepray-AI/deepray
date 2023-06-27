@@ -4,7 +4,7 @@
 
 set -e
 
-if [ -z "${ADDONS_DEV_CONTAINER}" ]; then
+if [ -z "${DEEPRAY_DEV_CONTAINER}" ]; then
   export DOCKER_BUILDKIT=1
   docker build -t tf_deepray_formatting -f tools/docker/pre-commit.Dockerfile .
 
