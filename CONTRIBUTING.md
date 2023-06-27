@@ -280,7 +280,7 @@ to install any additional tools.
 
 CPU Docker: 
 ```bash
-docker run --rm -it -v ${PWD}:/deepray -w /deepray hailinfufu/deepray/dev_container:latest-cpu
+docker run --rm -it -v ${PWD}:/deepray -w /deepray hailinfufu/deepray:latest-cpu
 ```
 
 GPU Docker: 
