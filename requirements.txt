@@ -1,0 +1,4 @@
+packaging
+setuptools
+tabulate
+typeguard

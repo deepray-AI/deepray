@@ -1,217 +1,280 @@
-**DeePray** (`深度祈祷`): A new Modular, Scalable, Configurable, Easy-to-Use and Extend infrastructure for Deep Learning based Recommendation.
+<div align="center">
+  <img src="https://github.com/tensorflow/community/blob/master/sigs/logos/SIGAddons.png" width="60%"><br><br>
+</div>
 
-[![Documentation Status](https://readthedocs.org/projects/deepray/badge/?version=latest)](https://deepray.readthedocs.io/en/latest/?badge=latest)
-[![PyPI version](https://badge.fury.io/py/deepray.svg)](https://badge.fury.io/py/deepray)
-[![GitHub version](https://badge.fury.io/gh/fuhailin%2Fdeepray.svg)](https://badge.fury.io/gh/fuhailin%2Fdeepray)
+-----------------
+
+[![PyPI Status Badge](https://badge.fury.io/py/deepray.svg)](https://pypi.org/project/deepray/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/deepray)](https://pypi.org/project/deepray/)
+[![Documentation](https://img.shields.io/badge/api-reference-blue.svg)](https://www.tensorflow.org/addons/api_docs/python/dp)
+[![Gitter chat](https://img.shields.io/badge/chat-on%20gitter-46bc99.svg)](https://gitter.im/tensorflow/sig-addons)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
+### Continuous Build Status
+
+| Build                     | Status                                                                                                                                                                                         |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ubuntu/macOS/Windows**  | [![Status](https://github.com/tensorflow/addons/workflows/addons-release/badge.svg)](https://github.com/tensorflow/addons/actions?query=workflow%3Aaddons-release)                             |
+| **Ubuntu GPU custom ops** | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/addons/ubuntu-gpu-py3.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/addons/ubuntu-gpu-py3.html) |
+
+**Deepray** is a repository of contributions that conform to
+well-established API patterns, but implement new functionality
+not available in core TensorFlow. TensorFlow natively supports
+a large number of operators, layers, metrics, losses, and optimizers.
+However, in a fast moving field like ML, there are many interesting new
+developments that cannot be integrated into core TensorFlow
+(because their broad applicability is not yet clear, or it is mostly
+ used by a smaller subset of the community).
 
 
-## Introduction
-The DeePray library offers state-of-the-art algorithms for [deep learning recommendation].
-DeePray is built on latest [TensorFlow 2][(https://tensorflow.org/)] and designed with modular structure，
-making it easy to discover patterns and answer questions about tabular-structed data.
-
-The main goals of DeePray:
-
-- Easy to use, newbies can get hands dirty with deep learning quickly
-- Good performance with web-scale data
-- Easy to extend, Modular architecture let you build your Neural network like playing LEGO!
-
-Let's Get Started! Please refer to the official docs at https://deepray.readthedocs.io/en/latest/.
+## Maintainership
+The maintainers of Deepray can be found in the [CODEOWNERS](.github/CODEOWNERS) file of the repo. This file 
+is parsed and pull requests will automatically tag the owners using a bot. If you would
+like to maintain something, please feel free to submit a PR. We encourage multiple 
+owners for all submodules.
 
 ## Installation
-
-
-#### Install DeePray using PyPI:
-
-To install DeePray library from [PyPI](https://pypi.org/) using `pip`, execute the following command:
-
+#### Stable Builds
+Deepray is available on PyPI for Linux, macOS, and Windows. To install the latest version, 
+run the following:
 ```
 pip install deepray
 ```
 
-#### Install DeePray from Github source:
-
-First, clone the DeePray repository using `git`:
-
-```
-git clone https://github.com/fuhailin/deepray.git
-```
-
-Then, `cd` to the deepray folder, and install the library by executing the following commands:
+To ensure you have a version of TensorFlow that is compatible with Deepray, 
+you can specify the `tensorflow` extra requirement during install:
 
 ```
-cd deepray
-pip install .
+pip install deepray[tensorflow]
 ```
-## Tutorial
 
-### Census Adult Data Set
-#### Data preparation
+Similar extras exist for the `tensorflow-gpu` and `tensorflow-cpu` packages.
+ 
 
-In your tabular data, specify **NUMERICAL** for your continue features,  **CATEGORY** for categorical features, **VARIABLE** for variable length features, and obviously **LABEL** for label column. Then process them to  to [TFRecord](https://www.tensorflow.org/tutorials/load_data/tfrecord) format into order to get good performance with large-scale dataset.
+To use Deepray:
 
 ```python
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, LabelEncoder
-
-from deepray.utils.converter import CSV2TFRecord
-
-
-# http://archive.ics.uci.edu/ml/datasets/Adult
-train_data = 'DeePray/examples/census/data/raw_data/adult_data.csv'
-df = pd.read_csv(train_data)
-df['income_label'] = (df["income_bracket"].apply(lambda x: ">50K" in x)).astype(int)
-df.pop('income_bracket')
-
-NUMERICAL_FEATURES = ['age', 'fnlwgt', 'hours_per_week', 'capital_gain', 'capital_loss', 'education_num']
-CATEGORY_FEATURES = [col for col in df.columns if col != LABEL and col not in NUMERICAL_FEATURES]
-LABEL = ['income_label']
-
-for feat in CATEGORY_FEATURES:
-    lbe = LabelEncoder()
-    df[feat] = lbe.fit_transform(df[feat])
-# Feature normilization
-mms = MinMaxScaler(feature_range=(0, 1))
-df[NUMERICAL_FEATURES] = mms.fit_transform(df[NUMERICAL_FEATURES])
-
-
-prebatch = 1  # flags.prebatch
-converter = CSV2TFRecord(LABEL, NUMERICAL_FEATURES, CATEGORY_FEATURES, VARIABLE_FEATURES=[], gzip=False)
-converter.write_feature_map(df, './data/feature_map.csv')
-
-train_df, valid_df = train_test_split(df, test_size=0.2)
-converter(train_df, out_file='./data/train.tfrecord', prebatch=prebatch)
-converter(valid_df, out_file='./data/valid.tfrecord', prebatch=prebatch)
-```
-
-You will get a feature map file like that:
-
-```
-9,workclass,CATEGORICAL
-16,education,CATEGORICAL
-7,marital_status,CATEGORICAL
-15,occupation,CATEGORICAL
-6,relationship,CATEGORICAL
-5,race,CATEGORICAL
-2,gender,CATEGORICAL
-42,native_country,CATEGORICAL
-1,hours_per_week,NUMERICAL
-1,capital_gain,NUMERICAL
-1,age,NUMERICAL
-1,fnlwgt,NUMERICAL
-1,capital_loss,NUMERICAL
-1,education_num,NUMERICAL
-2,income_label,LABEL
-```
-
-### Choose your model, Training and evaluation
-
-```python
-"""
-build and train model
-"""
-
-import sys
-
-from absl import app, flags
-
+import tensorflow as tf
 import deepray as dp
-from deepray.base.trainer import train
-from deepray.model.build_model import BuildModel
-
-FLAGS = flags.FLAGS
-
-
-def main(flags=None):
-    FLAGS(flags, known_only=True)
-    flags = FLAGS
-    model = BuildModel(flags)
-    history = train(model)
-    print(history)
-
-
-argv = [
-    sys.argv[0],
-    '--model=lr',
-    '--train_data=./census/data/train.tfrecord',
-    '--valid_data=./census/data/valid.tfrecord',
-    '--feature_map=./census/data/feature_map.csv',
-    '--learning_rate=0.01',
-    '--epochs=10',
-    '--batch_size=64',
-]
-main(flags=argv)
 ```
 
+### Python Op Compatility
+Deepray is actively working towards forward compatibility with TensorFlow 2.x. 
+However, there are still a few private API uses within the repository so at the moment 
+we can only guarantee compatibility with the TensorFlow versions which it was tested against. 
+Warnings will be emitted when importing `deepray` if your TensorFlow version does not match 
+what it was tested against.
 
-## Models List
-
-| Titile                                                       |  Booktitle  | Resources                                                    |
-| ------------------------------------------------------------ | :---------: | ------------------------------------------------------------ |
-| **FM**: Factorization Machines                               |  ICDM'2010  | [[pdf]](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf) [[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_fm.py) |
-| **FFM**: Field-aware Factorization Machines for CTR Prediction | RecSys'2016 | [[pdf]](https://www.csie.ntu.edu.tw/~cjlin/papers/ffm.pdf) [[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_ffm.py) |
-| **FNN**: Deep Learning over Multi-field Categorical Data: A Case Study on User Response Prediction |  ECIR'2016  | [[pdf]](https://arxiv.org/abs/1601.02376)[[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_fnn.py) |
-| **PNN**: Product-based Neural Networks for User Response Prediction |  ICDM'2016  | [[pdf]](https://arxiv.org/abs/1611.00144)[[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_pnn.py) |
-| **Wide&Deep**: Wide & Deep Learning for Recommender Systems  |  DLRS'2016  | [[pdf]](https://arxiv.org/pdf/1606.07792)[[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_wdl.py) |
-| **AFM**: Attentional Factorization Machines: Learning the Weight of Feature Interactions via Attention Networks | IJCAI'2017  | [[pdf]](https://arxiv.org/abs/1708.04617)[[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_afm.py) |
-| **NFM**: Neural Factorization Machines for Sparse Predictive Analytics | SIGIR'2017  | [[pdf]](https://arxiv.org/abs/1708.05027)[[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_nfm.py) |
-| **DeepFM**: DeepFM: A Factorization-Machine based Neural Network for CTR Prediction[C] | IJCAI'2017  | [[pdf]](https://arxiv.org/abs/1703.04247) [[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_deepfm.py) |
-| **DCN**: Deep & Cross Network for Ad Click Predictions       | ADKDD'2017  | [[pdf]](https://arxiv.org/abs/1708.05123) [[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_dcn.py) |
-| **xDeepFM**: xDeepFM: Combining Explicit and Implicit Feature Interactions for Recommender Systems |  KDD'2018   | [[pdf]](https://arxiv.org/abs/1803.05170) [[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_xdeepfm.py) |
-| **DIN**: DIN: Deep Interest Network for Click-Through Rate Prediction |  KDD'2018   | [[pdf]](https://arxiv.org/abs/1706.06978) [[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_dien.py) |
-| **DIEN**: DIEN: Deep Interest Evolution Network for Click-Through Rate Prediction |  AAAI'2019  | [[pdf]](https://arxiv.org/abs/1809.03672) [[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_dien.py) |
-| **DSIN**: Deep Session Interest Network for Click-Through Rate Prediction | IJCAI'2019  | [[pdf]](https://arxiv.org/abs/1905.06482)[[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_dsin.py) |
-| **AutoInt**: Automatic Feature Interaction Learning via Self-Attentive Neural Networks |  CIKM'2019  | [[pdf]](https://arxiv.org/abs/1810.11921)[[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_autoint.py) |
-| **FLEN**: Leveraging Field for Scalable CTR Prediction       |  AAAI'2020  | [[pdf]](https://arxiv.org/pdf/1911.04690.pdf)[[code]](https://github.com/fuhailin/DeePray/blob/master/deepray/model/model_flen.py) |
-| **DFN**: Deep Feedback Network for Recommendation            | IJCAI'2020  | [[pdf]]()[[code]](TODO)                                      |
-
-# How to build your own model with DeePray
-
-Inheriting   `BaseCTRModel` class from `from deepray.model.model_ctr`, and implement your own `build_network()` method!
+#### Python Op Compatibility Matrix
+| Deepray        | TensorFlow     | Python              |
+| :------------- | :------------- | :------------------ |
+| deepray-0.18.0 | 2.8, 2.9, 2.10 | 3.7, 3.8, 3.9, 3.10 |
 
 
-# Contribution
+### C++ Custom Op Compatibility
+TensorFlow C++ APIs are not stable and thus we can only guarantee compatibility with the 
+version Deepray was built against. It is possible custom ops will work with multiple 
+versions of TensorFlow, but there is also a chance for segmentation faults or other problematic crashes.
+Warnings will be emitted when loading a custom op if your TensorFlow version does not match 
+what it was built against.
 
-DeePray is still under development, and call for contributions!
+Additionally, custom ops registration does not have a stable ABI interface so it is 
+required that users have a compatible installation of TensorFlow even if the versions 
+match what we had built against. A simplification of this is that **Deepray 
+custom ops will work with `pip`-installed TensorFlow** but will have issues when TensorFlow 
+is compiled differently. A typical example of this would be `conda`-installed TensorFlow.
+[RFC #133](https://github.com/tensorflow/community/pull/133) aims to fix this.
 
+
+#### C++ Custom Op Compatibility Matrix
+| Deepray        | TensorFlow | Compiler  | cuDNN | CUDA |
+| :------------- | :--------- | :-------- | :---- | :--- |
+| deepray-0.18.0 | 2.10       | GCC 9.3.1 | 8.1   | 11.2 |
+
+
+
+#### Installing from Source
+You can also install from source. This requires the [Bazel](
+https://bazel.build/) build system (version >= 1.0.0).
+
+##### CPU Custom Ops
 ```
-* Hailin Fu (`Hailin <https://github.com/fuhailin>`)
-* Call for contributions!
-```
-让DeePray成为推荐算法新基建需要你的贡献
+git clone https://github.com/tensorflow/addons.git
+cd addons
 
-# Citing
-DeePray is designed, developed and supported by [Hailin](https://github.com/fuhailin/).
-If you use any part of this library in your research, please cite it using the following BibTex entry
-```latex
-@misc{DeePray,
-  author = {Hailin Fu},
-  title = {DeePray: A new Modular, Scalable, Configurable, Easy-to-Use and Extend infrastructure for Deep Learning based Recommendation},
-  year = {2020},
-  publisher = {GitHub},
-  journal = {GitHub Repository},
-  howpublished = {\url{https://github.com/fuhailin/deepray}},
-}
+# This script links project with TensorFlow dependency
+python3 ./configure.py
+
+bazel build build_pip_pkg
+bazel-bin/build_pip_pkg artifacts
+
+pip install artifacts/deepray-*.whl
 ```
 
-# License
+##### GPU and CPU Custom Ops
+```
+git clone https://github.com/tensorflow/addons.git
+cd addons
 
-Copyright (c) Copyright © 2020 The DeePray Authors<Hailin Fu>. All Rights Reserved.
+export TF_NEED_CUDA="1"
 
-Licensed under the [Apach](LICENSE) License.
+# Set these if the below defaults are different on your system
+export TF_CUDA_VERSION="11"
+export TF_CUDNN_VERSION="8"
+export CUDA_TOOLKIT_PATH="/usr/local/cuda"
+export CUDNN_INSTALL_PATH="/usr/lib/x86_64-linux-gnu"
 
-# Reference
+# This script links project with TensorFlow dependency
+python3 ./configure.py
 
-https://github.com/shenweichen/DeepCTR
+bazel build build_pip_pkg
+bazel-bin/build_pip_pkg artifacts
 
-https://github.com/aimetrics/jarvis
+pip install artifacts/deepray-*.whl
+```
 
-https://github.com/shichence/AutoInt
+## Tutorials
+See [`docs/tutorials/`](docs/tutorials/)
+for end-to-end examples of various addons.
 
-# Contact
-If you want cooperation or have any questions, please follow my wechat offical account:
+## Core Concepts
 
-公众微信号ID：【StateOfTheArt】
+#### Standardized API within Subpackages
+User experience and project maintainability are core concepts in
+Deepray. In order to achieve these we require that our additions
+conform to established API patterns seen in core TensorFlow.
 
-![StateOfTheArt](https://gitee.com/fuhailin/Object-Storage-Service/raw/master/wechat_channel.png)
+#### GPU and CPU Custom Ops
+Deepray supports precompiled custom ops for CPU and GPU. However, 
+GPU custom ops currently only work on Linux distributions. For this reason Windows and macOS 
+will fallback to pure TensorFlow Python implementations whenever possible.
+
+The order of priority on macOS/Windows is:
+1) Pure TensorFlow + Python implementation (works on CPU and GPU)
+2) C++ implementation for CPU
+
+The order of priority on Linux is:
+1) CUDA implementation
+2) C++ implementation
+3) Pure TensorFlow + Python implementation (works on CPU and GPU)
+
+If you want to change the default priority, "C++ and CUDA" VS "pure TensorFlow Python",
+you can set the environment variable `TF_DEEPRAY_PY_OPS=1` from the command line or
+run `dp.options.disable_custom_kernel()` in your code.
+
+For example, if you are on Linux and you have compatibility problems with the compiled ops,
+you can give priority to the Python implementations:
+
+From the command line:
+```bash
+export TF_DEEPRAY_PY_OPS=1
+```
+
+or in your code:
+
+```python
+import deepray as dp
+dp.options.disable_custom_kernel()
+```
+
+This variable defaults to `True` on Windows and macOS, and `False` on Linux.
+
+#### Proxy Maintainership
+Deepray has been designed to compartmentalize submodules so 
+that they can be maintained by community users who have expertise, and a vested 
+interest in that component. We heavily encourage users to submit sign up to maintain a 
+submodule by submitting your username to the [CODEOWNERS](.github/CODEOWNERS) file.
+
+Full write access will only be granted after substantial contribution 
+has been made in order to limit the number of users with write permission. 
+Contributions can come in the form of issue closings, bug fixes, documentation, 
+new code, or optimizing existing code. Submodule maintainership can be granted 
+with a lower barrier for entry as this will not include write permissions to 
+the repo.
+
+For more information see [the RFC](https://github.com/tensorflow/community/blob/master/rfcs/20190308-addons-proxy-maintainership.md) 
+on this topic.
+
+#### Periodic Evaluation of Subpackages
+Given the nature of this repository, submodules may become less 
+and less useful to the community as time goes on. In order to keep the 
+repository sustainable, we'll be performing bi-annual reviews of our code to 
+ensure everything still belongs within the repo. Contributing factors to this 
+review will be:
+
+1. Number of active maintainers
+2. Amount of OSS use
+3. Amount of issues or bugs attributed to the code
+4. If a better solution is now available
+
+Functionality within Deepray can be categorized into three groups:
+
+* **Suggested**: well-maintained API; use is encouraged.
+* **Discouraged**: a better alternative is available; the API is kept for 
+historic reasons; or the API requires maintenance and is the waiting period 
+to be deprecated.
+* **Deprecated**: use at your own risk; subject to be deleted.
+
+The status change between these three groups is: 
+Suggested <-> Discouraged -> Deprecated.
+
+The period between an API being marked as deprecated and being deleted will be 
+90 days. The rationale being:
+
+1. In the event that Deepray releases monthly, there will be 2-3 
+releases before an API is deleted. The release notes could give user enough 
+warning.
+
+2. 90 days gives maintainers ample time to fix their code.
+
+
+## Contributing
+Deepray is a community-led open source project (only a few maintainers work for Google!). 
+As such, the project depends on public contributions, bug fixes, and documentation. 
+This project adheres to [TensorFlow's code of conduct](CODE_OF_CONDUCT.md).
+By participating, you are expected to uphold this code.
+
+Do you want to contribute but are not sure of what? Here are a few suggestions:
+1. Add a new tutorial. Located in [`docs/tutorials/`](docs/tutorials),
+  these are a great way to familiarize yourself and others with Deepray. See
+  [the guidelines](docs/tutorials/README.md) for more information on how to add
+  examples.
+2. Improve the docstrings. The docstrings are fetched and then displayed in the documentation.
+  Do a change and hundreds of developers will see it and benefit from it. Maintainers are often focused 
+  on making APIs, fixing bugs and other code related changes. The documentation will never 
+  be loved enough!
+3. Solve an [existing issue](https://github.com/tensorflow/addons/issues).
+  These range from low-level software bugs to higher-level design problems.
+  Check out the label [help wanted](https://github.com/tensorflow/addons/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22). If you're a new contributor, the label [good first issue](https://github.com/tensorflow/addons/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) can be a good place to start.
+4. Review a pull request. So you're not a software engineer but you know a lot
+  about a certain field a research? That's awesome and we need your help! Many people 
+  are submitting pull requests to add layers/optimizers/functions taken from recent
+  papers. Since Deepray maintainers are not specialized in everything,
+  you can imagine how hard it is to review. It takes very long to read the paper,
+  understand it and check the math in the pull request. If you're specialized, look at 
+  the [list of pull requests](https://github.com/tensorflow/addons/pulls). 
+  If there is something from a paper you know, please comment on the pull request to
+  check the math is ok. If you see that everything is good, say it! It will help 
+  the maintainers to sleep better at night knowing that he/she wasn't the only
+  person to approve the pull request.
+5. You have an opinion and want to share it? The docs are not very helpful for 
+  a function or a class? You tried to open a pull request but you didn't manage to 
+  install or test anything and you think it's too complicated? You made a pull request
+  but you didn't find the process good enough and it made no sense to you? Please 
+  say it! We want feedback. Maintainers are too much the head into the code 
+  to understand what it's like for someone new to open source to come to this project. 
+  If you don't understand something, be aware there are no people who are 
+  bad at understanding, there are just bad tutorials and bad guides.
+
+Please see [contribution guidelines](CONTRIBUTING.md) to get started (and remember,
+if you don't understand something, open an issue, or even make a pull request to 
+improve the guide!).
+
+## Community
+* [Public Mailing List](https://groups.google.com/a/tensorflow.org/forum/#!forum/addons)
+* [SIG Monthly Meeting Notes](https://docs.google.com/document/d/1kxg5xIHWLY7EMdOJCdSGgaPu27a9YKpupUz2VTXqTJg)
+    * Join our mailing list and receive calendar invites to the meeting
+
+## License
+[Apache License 2.0](LICENSE)
+

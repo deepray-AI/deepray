@@ -1,0 +1,9 @@
+name,dtype,ftype,dim,length,voc_size
+label,bool,Label,1,1,
+item_feat_0_neg,int64,,1,100,1209081
+item_feat_1_neg,int64,,1,100,2330
+item_feat_0_pos,int64,,1,100,1209081
+item_feat_1_pos,int64,,1,100,2330
+item_feat_0_trgt,int64,,1,1,1209081
+item_feat_1_trgt,int64,,1,1,2330
+user_feat_0,int64,,1,1,105925

@@ -1,0 +1,51 @@
+labelPRBasedOnFilePath:
+  # Subpackages
+  activations:
+    - deepray/activations/**/*
+
+  callbacks:
+    - deepray/callbacks/**/*
+
+  custom-ops:
+    - deepray/custom_ops/**/*
+
+  image:
+    - deepray/image/**/*
+
+  layers:
+    - deepray/layers/**/*
+
+  losses:
+    - deepray/losses/**/*
+
+  metrics:
+    - deepray/metrics/**/*
+
+  optimizers:
+    - deepray/optimizers/**/*
+
+  seq2seq:
+    - deepray/seq2seq/**/*
+
+  text:
+    - deepray/text/**/*
+
+  # Other labels
+  build:
+    - build_deps/**/*
+    - tools/releases/**/*
+
+  documentation:
+    - docs/**/*
+
+  tutorials:
+    - docs/tutorials/**/*
+
+  test-cases:
+    - tools/testing/**/
+
+  style:
+    - STYLE_GUIDE.md
+
+  github:
+    - .github/**/*
