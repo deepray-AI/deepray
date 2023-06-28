@@ -1,8 +1,8 @@
 # Contributing
 
-Interested in contributing to Deepray? We appreciate all kinds
+Interested in contributing to TensorFlow Addons? We appreciate all kinds
 of help and are working to make this guide as comprehensive as possible.
-Please [let us know](https://github.com/deepray-AI/deepray/issues) if
+Please [let us know](https://github.com/tensorflow/addons/issues) if
 you think of something we could do to help lower the barrier to
 contributing.
 
@@ -168,7 +168,7 @@ conda activate my_dev_environement
 ```
 
 
-#### Install Deepray in editable mode
+#### Install TensorFlow Addons in editable mode
 
 Just run from the root:
 
@@ -181,67 +181,67 @@ pip install -e ./
 It's going to install Addons in editable mode without compiling anything.
 You can modify source files and changes will be seen at the next Python 
 interpreter startup. This command needs to be executed only once. 
-Now, anywhere on your system, if you do `import deepray`, it's 
+Now, anywhere on your system, if you do `import tensorflow_addons`, it's 
 going to import the code in this git repository.
 
-#### Uninstall Deepray
+#### Uninstall TensorFlow Addons
 
 To undo this operation, for example, you want to later on 
-install Deepray from PyPI, the release version, do:
+install TensorFlow Addons from PyPI, the release version, do:
 
 ```bash
-pip uninstall deepray
+pip uninstall tensorflow-addons
 ```
 
 #### Run the tests with pytest
 
-If Deepray is installed in editable mode, you can then just run your tests by 
+If TensorFlow Addons is installed in editable mode, you can then just run your tests by 
 running Pytest. For example:
 ```bash
 pip install -r tools/install_deps/pytest.txt
-python -m pytest deepray/rnn/tests/cell_test.py
+python -m pytest tensorflow_addons/rnn/tests/cell_test.py
 # or even
-python -m pytest deepray/rnn/
+python -m pytest tensorflow_addons/rnn/
 # or even 
-python -m pytest deepray/
+python -m pytest tensorflow_addons/
 # or even if pytest is in the PATH
-pytest deepray/
+pytest tensorflow_addons/
 ```
 
 Pytest has many cool options to help you make great tests:
 
 ```bash
 # Use multiprocessing to run the tests, 3 workers
-pytest -n 3 deepray/
-pytest -n auto deepray/
+pytest -n 3 tensorflow_addons/
+pytest -n auto tensorflow_addons/
 
 # Run the whole test suite without compiling any custom ops (.so files).
-pytest -v --skip-custom-ops deepray/
+pytest -v --skip-custom-ops tensorflow_addons/
 
 # Open the debugger to inspect variables and execute code when 
 # an exception is raised.
-pytest --pdb deepray/ 
+pytest --pdb tensorflow_addons/ 
 
 # or if you prefer the Ipython debugger
-pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb --capture no deepray/
+pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb --capture no tensorflow_addons/
 
 # by defaults print() aren't displayed with pytest
 # if you like to debug with prints (you might get 
 # the output scrambled)
-pytest -s deepray/
+pytest -s tensorflow_addons/
 
 # get the list of functions you ran
-pytest -v deepray/
+pytest -v tensorflow_addons/
 
 # to rerun all previous tests, running the ones that failed first
-pytest --ff deepray/
+pytest --ff tensorflow_addons/
 
 # You know which function to execute, but you're too 
 # lazy to type the file path
-pytest -k "test_get_all_shared_objects" ./deepray/
+pytest -k "test_get_all_shared_objects" ./tensorflow_addons/
 
 # get the 10 slowest functions
-pytest --duration=10 deepray/
+pytest --duration=10 tensorflow_addons/
 ```
 
 #### Testing with Pycharm
@@ -280,12 +280,12 @@ to install any additional tools.
 
 CPU Docker: 
 ```bash
-docker run --rm -it -v ${PWD}:/deepray -w /deepray hailinfufu/deepray:latest-cpu
+docker run --rm -it -v ${PWD}:/addons -w /addons tfaddons/dev_container:latest-cpu
 ```
 
 GPU Docker: 
 ```bash
-docker run --gpus all --rm -it -v ${PWD}:/deepray -w /deepray gcr.io/tensorflow-testing/nosla-cuda11.8-cudnn8.6-ubuntu20.04-manylinux2014-multipython
+docker run --gpus all --rm -it -v ${PWD}:/addons -w /addons gcr.io/tensorflow-testing/nosla-cuda11.8-cudnn8.6-ubuntu20.04-manylinux2014-multipython
 ```
 
 Configure:
@@ -311,8 +311,8 @@ Run selected tests:
 python3 -m pytest path/to/file/or/directory/to/test
 ```
 
-Run the gpu only tests with `pytest -m needs_gpu ./deepray`.
-Run the cpu only tests with `pytest -m 'not needs_gpu' ./deepray`.
+Run the gpu only tests with `pytest -m needs_gpu ./tensorflow_addons`.
+Run the cpu only tests with `pytest -m 'not needs_gpu' ./tensorflow_addons`.
 
 
 #### Testing with Bazel
@@ -336,7 +336,7 @@ bazel test -c opt -k \
 --test_timeout 300,450,1200,3600 \
 --test_output=all \
 --run_under=$(readlink -f tools/testing/parallel_gpu_execute.sh) \
-//deepray/...
+//tensorflow_addons/...
 ```
 
 #### Testing docstrings
@@ -344,7 +344,7 @@ bazel test -c opt -k \
 We use [DocTest](https://docs.python.org/3/library/doctest.html) to test code snippets
 in Python docstrings. The snippet must be executable Python code.
 To enable testing, prepend the line with `>>>` (three left-angle brackets).
-Available namespace include `np` for numpy, `tf` for TensorFlow, and `dp` for Deepray.
+Available namespace include `np` for numpy, `tf` for TensorFlow, and `tfa` for TensorFlow Addons.
 See [docs_ref](https://www.tensorflow.org/community/contribute/docs_ref) for more details.
 
 To test docstrings locally, run either
@@ -371,13 +371,13 @@ the [PEP 484](https://www.python.org/dev/peps/pep-0484/).
 
 We also have a runtime type check that we do 
 using [typeguard](https://typeguard.readthedocs.io/en/latest/).
-For an example, see the [normalizations.py file](deepray/layers/normalizations.py).
+For an example, see the [normalizations.py file](tensorflow_addons/layers/normalizations.py).
 Please add it if you type a class constructor (Note that the decorator doesn't 
 play nice with autograph at the moment, this is why we don't add it to functions. For more
 context, see [this pull request](https://github.com/tensorflow/addons/pull/928)).
 
 You can import some common types 
-from [deepray/utils/types.py](deepray/utils/types.py).
+from [tensorflow_addons/utils/types.py](tensorflow_addons/utils/types.py).
 
 We recommend adding types if you add a new class/function to Addons' public API, 
 but we don't enforce it.
@@ -427,7 +427,7 @@ focused on a specific feature/parameter.
 ### Fixtures and assert functions:
 We provide [fixtures](https://docs.pytest.org/en/latest/fixture.html) to help your write 
 your tests as well as helper functions. Those can be found in 
-[test_utils.py](https://github.com/tensorflow/addons/blob/master/deepray/utils/test_utils.py).
+[test_utils.py](https://github.com/tensorflow/addons/blob/master/tensorflow_addons/utils/test_utils.py).
 
 #### maybe_run_functions_eagerly
 
@@ -461,7 +461,7 @@ the test twice, on CPU and on GPU, or only on GPU. Here is how to do it.
 ```python
 import pytest
 import tensorflow as tf
-from deepray.utils import test_utils
+from tensorflow_addons.utils import test_utils
 
 @pytest.mark.with_device(["cpu", "gpu"])
 def test_something():
@@ -559,7 +559,7 @@ Is the same as [tf.test.TestCase.assertAllCloseAccordingToType](https://www.tens
 but doesn't require any subclassing to be done. Can be used as a plain function. To use it:
 
 ```python
-from deepray.utils import test_utils
+from tensorflow_addons.utils import test_utils
 
 def test_something():
     expected = ...

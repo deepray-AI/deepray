@@ -54,7 +54,7 @@ function main() {
 
   TMPDIR=$(mktemp -d -t tmp.XXXXXXXXXX)
   echo $(date) : "=== Using tmpdir: ${TMPDIR}"
-  echo "=== Copy Deepray files"
+  echo "=== Copy TensorFlow Addons files"
 
   cp ${PIP_FILE_PREFIX}setup.py "${TMPDIR}"
   cp ${PIP_FILE_PREFIX}MANIFEST.in "${TMPDIR}"
@@ -63,16 +63,17 @@ function main() {
   touch ${TMPDIR}/stub.cc
 
   if is_windows; then
-    from=$(cygpath -w ${PIP_FILE_PREFIX}deepray)
-    to=$(cygpath -w "${TMPDIR}"/deepray)
+    from=$(cygpath -w ${PIP_FILE_PREFIX}tensorflow_addons)
+    to=$(cygpath -w "${TMPDIR}"/tensorflow_addons)
     start robocopy //S "${from}" "${to}" //xf *_test.py
     sleep 5
   else
-    rsync -avm -L --exclude='*_test.py' ${PIP_FILE_PREFIX}deepray "${TMPDIR}"
+    rsync -avm -L --exclude='*_test.py' ${PIP_FILE_PREFIX}tensorflow_addons "${TMPDIR}"
   fi
 
   pushd ${TMPDIR}
   echo $(date) : "=== Building wheel"
+
 
   BUILD_CMD="setup.py bdist_wheel --platlib-patch"
   if is_macos; then

@@ -21,11 +21,11 @@ per-file-ignores =
     # imported but unused in __init__.py, that's ok.
     **/__init__.py:F401
     # import not at top okay due to TF installation check
-    deepray/__init__.py:F401,E402
+    tensorflow_addons/__init__.py:F401,E402
     # function name should be lowercase
-    deepray/image/utils.py:N802
-    deepray/image/tests/utils_test.py:N802
-    deepray/image/tests/color_ops_test.py:N802
-    deepray/optimizers/tests/conditional_gradient_test.py:N802
+    tensorflow_addons/image/utils.py:N802
+    tensorflow_addons/image/tests/utils_test.py:N802
+    tensorflow_addons/image/tests/color_ops_test.py:N802
+    tensorflow_addons/optimizers/tests/conditional_gradient_test.py:N802
     # variable ... in function should be lowercase
-    deepray/callbacks/tests/time_stopping_test.py:N806
+    tensorflow_addons/callbacks/tests/time_stopping_test.py:N806

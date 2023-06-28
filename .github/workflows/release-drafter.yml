@@ -3,7 +3,7 @@ name: release-drafter
 on:
   push:
     branches:
-      - main
+      - master
       - r*
 
 jobs:
