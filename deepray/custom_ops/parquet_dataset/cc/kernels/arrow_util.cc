@@ -12,8 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
-#include "deepray/custom_ops/parquet_dataset/cc/kernels/arrow_util.h"
+#include "arrow_util.h"
 
+#include <arrow/array.h>
+#include <arrow/util/thread_pool.h>
+#include <tensorflow/core/framework/allocation_description.pb.h>
 #include <unistd.h>
 
 #include <cstdlib>
@@ -23,10 +26,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "arrow/array.h"
-#include "arrow/util/thread_pool.h"
-#include "deepray/custom_ops/parquet_dataset/cc/kernels/eigen.h"
-#include "tensorflow/core/framework/allocation_description.pb.h"
+#include "eigen.h"
 
 namespace tensorflow {
 namespace data {

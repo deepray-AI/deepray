@@ -82,14 +82,14 @@ struct ArrowEnumToDataType {
     static constexpr ::arrow::Type::type value = ENUM; \
   };
 
-#define MATCH_ARROW_ENUM_TO_TYPE(ENUM, TYPE)           \
-  template <>                                          \
-  struct ArrowEnumToDataType<ENUM> {                   \
-    typedef TYPE Type;                                 \
+#define MATCH_ARROW_ENUM_TO_TYPE(ENUM, TYPE) \
+  template <>                                \
+  struct ArrowEnumToDataType<ENUM> {         \
+    typedef TYPE Type;                       \
   };
 
-#define MATCH_TYPE_AND_ARROW_ENUM(TYPE, ENUM)          \
-  MATCH_TYPE_TO_ARROW_ENUM(TYPE, ENUM)                 \
+#define MATCH_TYPE_AND_ARROW_ENUM(TYPE, ENUM) \
+  MATCH_TYPE_TO_ARROW_ENUM(TYPE, ENUM)        \
   MATCH_ARROW_ENUM_TO_TYPE(ENUM, TYPE)
 
 MATCH_TYPE_AND_ARROW_ENUM(int8, ::arrow::Type::INT8);

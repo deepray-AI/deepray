@@ -28,22 +28,22 @@ namespace tensorflow {
 
 namespace deepray {
 
-using tensorflow::addons::functor::BlockedImageUnionFindFunctor;
-using tensorflow::addons::functor::FindRootFunctor;
-using tensorflow::addons::functor::ImageConnectedComponentsFunctor;
-using tensorflow::addons::functor::TensorRangeFunctor;
+using tensorflow::deepray::functor::BlockedImageUnionFindFunctor;
+using tensorflow::deepray::functor::FindRootFunctor;
+using tensorflow::deepray::functor::ImageConnectedComponentsFunctor;
+using tensorflow::deepray::functor::TensorRangeFunctor;
 
 using OutputType = typename BlockedImageUnionFindFunctor<bool>::OutputType;
 
 // Computes connected components on batches of 2D images.
 template <typename Device, typename T>
 class ImageConnectedComponents : public OpKernel {
-public:
-  explicit ImageConnectedComponents(OpKernelConstruction *ctx)
+ public:
+  explicit ImageConnectedComponents(OpKernelConstruction* ctx)
       : OpKernel(ctx) {}
 
-  void Compute(OpKernelContext *ctx) override {
-    const Tensor &images_t = ctx->input(0);
+  void Compute(OpKernelContext* ctx) override {
+    const Tensor& images_t = ctx->input(0);
     OP_REQUIRES(ctx, images_t.shape().dims() == 3,
                 errors::InvalidArgument("Input images must have rank 3"));
     Tensor forest_t, rank_t;
@@ -51,7 +51,7 @@ public:
                                            images_t.shape(), &forest_t));
     OP_REQUIRES_OK(ctx, ctx->allocate_temp(tensorflow::DT_INT64,
                                            images_t.shape(), &rank_t));
-    Tensor *output_t;
+    Tensor* output_t;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, images_t.shape(), &output_t));
 
     // Fill forest with values from 0 to n - 1, so that each node points to
@@ -74,8 +74,9 @@ namespace functor {
 
 // Connected components CPU implementation. See `connected_components.h` for a
 // description of the algorithm.
-template <typename T> struct ImageConnectedComponentsFunctor<CPUDevice, T> {
-  void operator()(OpKernelContext *ctx,
+template <typename T>
+struct ImageConnectedComponentsFunctor<CPUDevice, T> {
+  void operator()(OpKernelContext* ctx,
                   typename TTypes<OutputType>::Flat output,
                   typename TTypes<T, 3>::ConstTensor images,
                   typename TTypes<OutputType, 3>::Tensor forest,
@@ -103,8 +104,8 @@ template <typename T> struct ImageConnectedComponentsFunctor<CPUDevice, T> {
 
       thread_pool->ParallelFor(
           num_images * num_blocks_vertically * num_blocks_horizontally, cost,
-          [&union_find, num_blocks_vertically,
-           num_blocks_horizontally](int64 start_block, int64 limit_block) {
+          [&union_find, num_blocks_vertically, num_blocks_horizontally](
+              int64 start_block, int64 limit_block) {
             for (int64 i = start_block; i < limit_block; i++) {
               int64 block_x = i % num_blocks_horizontally;
               int64 block_y =
@@ -120,12 +121,12 @@ template <typename T> struct ImageConnectedComponentsFunctor<CPUDevice, T> {
   }
 };
 
-} // end namespace functor
+}  // end namespace functor
 
-#define REGISTER_IMAGE_CONNECTED_COMPONENTS(TYPE)                              \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>ImageConnectedComponents")              \
-                              .Device(DEVICE_CPU)                              \
-                              .TypeConstraint<TYPE>("dtype"),                  \
+#define REGISTER_IMAGE_CONNECTED_COMPONENTS(TYPE)                  \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>ImageConnectedComponents") \
+                              .Device(DEVICE_CPU)                  \
+                              .TypeConstraint<TYPE>("dtype"),      \
                           ImageConnectedComponents<CPUDevice, TYPE>)
 // Connected components (arguably) make sense for number, bool, and string types
 TF_CALL_NUMBER_TYPES(REGISTER_IMAGE_CONNECTED_COMPONENTS);
@@ -138,5 +139,5 @@ TF_CALL_string(REGISTER_IMAGE_CONNECTED_COMPONENTS);
 // shared memory in CUDA thread blocks, instead of starting with single-pixel
 // blocks).
 
-} // end namespace deepray
-} // end namespace tensorflow
+}  // end namespace deepray
+}  // end namespace tensorflow
