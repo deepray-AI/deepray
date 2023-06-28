@@ -25,8 +25,7 @@ developments that cannot be integrated into core TensorFlow
 
 
 ## Maintainership
-The maintainers of Deepray can be found in the [CODEOWNERS](.github/CODEOWNERS) file of the repo. This file 
-is parsed and pull requests will automatically tag the owners using a bot. If you would
+The maintainer of Deepray now is [@fuhailin](https://github.com/fuhailin). If you would
 like to maintain something, please feel free to submit a PR. We encourage multiple 
 owners for all submodules.
 
@@ -175,22 +174,6 @@ dp.options.disable_custom_kernel()
 ```
 
 This variable defaults to `True` on Windows and macOS, and `False` on Linux.
-
-#### Proxy Maintainership
-Deepray has been designed to compartmentalize submodules so 
-that they can be maintained by community users who have expertise, and a vested 
-interest in that component. We heavily encourage users to submit sign up to maintain a 
-submodule by submitting your username to the [CODEOWNERS](.github/CODEOWNERS) file.
-
-Full write access will only be granted after substantial contribution 
-has been made in order to limit the number of users with write permission. 
-Contributions can come in the form of issue closings, bug fixes, documentation, 
-new code, or optimizing existing code. Submodule maintainership can be granted 
-with a lower barrier for entry as this will not include write permissions to 
-the repo.
-
-For more information see [the RFC](https://github.com/tensorflow/community/blob/master/rfcs/20190308-addons-proxy-maintainership.md) 
-on this topic.
 
 #### Periodic Evaluation of Subpackages
 Given the nature of this repository, submodules may become less 
