@@ -23,6 +23,8 @@ from deepray.layers.adaptive_pooling import (
     AdaptiveMaxPooling3D,
 )
 
+from deepray.layers.embedding_bag import EmbeddingBag
+from deepray.layers.gelu import GELU
 from deepray.layers.max_unpooling_2d import MaxUnpooling2D
 from deepray.layers.max_unpooling_2d_v2 import MaxUnpooling2DV2
 from deepray.layers.maxout import Maxout
@@ -30,7 +32,7 @@ from deepray.layers.multihead_attention import MultiHeadAttention
 from deepray.layers.normalizations import FilterResponseNormalization
 from deepray.layers.normalizations import GroupNormalization
 from deepray.layers.normalizations import InstanceNormalization
-# from deepray.custom_ops.correlation_cost.python.optical_flow import CorrelationCost
+from deepray.layers.optical_flow import CorrelationCost
 from deepray.layers.poincare import PoincareNormalize
 from deepray.layers.polynomial import PolynomialCrossing
 from deepray.layers.snake import Snake
@@ -43,17 +45,3 @@ from deepray.layers.esn import ESN
 from deepray.layers.stochastic_depth import StochasticDepth
 from deepray.layers.noisy_dense import NoisyDense
 from deepray.layers.crf import CRF
-
-
-"""Layers package definition."""
-from deepray.layers.attention import *  # pylint: disable=wildcard-import
-from deepray.layers.dense_einsum import DenseEinsum
-from deepray.layers.masked_softmax import MaskedSoftmax
-from deepray.layers.on_device_embedding import OnDeviceEmbedding
-from deepray.layers.position_embedding import PositionEmbedding
-from deepray.layers.self_attention_mask import SelfAttentionMask
-from deepray.layers.transformer import Transformer
-from deepray.layers.transformer_scaffold import TransformerScaffold
-
-from .bi_interaction import *
-from .fully_connects import *

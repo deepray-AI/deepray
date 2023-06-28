@@ -1,8 +1,0 @@
-name,dtype,ftype,dim,length,voc_size,lr,optimizer,storage_type,multihash_factor,ev_filter
-unique_ids,int64,Label,1,1
-input_ids,int64,Categorical,32,1
-input_mask,int64,Categorical,32,1
-segment_ids,int64,
-start_positions,int64,
-end_positions,int64,
-is_impossibleint64,

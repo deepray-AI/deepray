@@ -43,6 +43,3 @@ pip-wheel-metadata
 htmlcov
 
 wheelhouse/
-test
-docs/_static
-

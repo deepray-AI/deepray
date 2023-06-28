@@ -1,20 +1,13 @@
 #syntax=docker/dockerfile:1.1.5-experimental
-FROM python:3.9-alpine as flake8-test
+# -------------------------------
+FROM python:3.9 as yapf-test
 
-COPY tools/install_deps/flake8.txt ./
-RUN pip install -r flake8.txt
+COPY tools/install_deps/yapf.txt ./
+RUN pip install -r yapf.txt
 COPY ./ /deepray
 WORKDIR /deepray
-RUN flake8
-RUN touch /ok.txt
 
-# -------------------------------
-FROM python:3.9 as black-test
-
-COPY tools/install_deps/black.txt ./
-RUN pip install -r black.txt
-COPY ./ /deepray
-RUN black --check /deepray
+RUN python tools/check_python_format.py
 RUN touch /ok.txt
 
 # -------------------------------
@@ -136,4 +129,3 @@ COPY --from=3 /ok.txt /ok3.txt
 COPY --from=4 /ok.txt /ok4.txt
 COPY --from=5 /ok.txt /ok5.txt
 COPY --from=6 /ok.txt /ok6.txt
-COPY --from=7 /ok.txt /ok7.txt

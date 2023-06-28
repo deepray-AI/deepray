@@ -44,31 +44,3 @@ custom_op_library(
         "cc/kernels/resampler_ops_gpu.cu.cc",
     ],
 )
-
-py_library(
-    name = "image",
-    srcs = glob(["python/*.py"]),
-    data = [
-        ":_distort_image_ops.so",
-        ":_image_ops.so",
-        ":_resampler_ops.so",
-        ":sparse_image_warp_test_data",
-        "//deepray/testing",
-        "//deepray/utils",
-    ],
-)
-
-filegroup(
-    name = "sparse_image_warp_test_data",
-    srcs = glob(["python/tests/test_data/*.png"]),
-)
-
-py_test(
-    name = "image_test",
-    size = "small",
-    srcs = glob(["python/tests/*"]),
-    main = "python/tests/run_all_test.py",
-    deps = [
-        ":image",
-    ],
-)

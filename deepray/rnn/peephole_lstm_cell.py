@@ -17,9 +17,8 @@
 import tensorflow as tf
 
 
-
 class PeepholeLSTMCell(tf.keras.layers.LSTMCell):
-    """Equivalent to `tf.keras.layers.LSTMCell` class but adds peephole connections.
+  """Equivalent to `tf.keras.layers.LSTMCell` class but adds peephole connections.
 
     Peephole connections allow the gates to utilize the previous internal state as
     well as the previous hidden state (which is what LSTMCell is limited to).
@@ -51,59 +50,59 @@ class PeepholeLSTMCell(tf.keras.layers.LSTMCell):
     TensorShape([30, 4])
     """
 
-    def build(self, input_shape):
-        super().build(input_shape)
-        # The following are the weight matrices for the peephole connections. These
-        # are multiplied with the previous internal state during the computation of
-        # carry and output.
-        self.input_gate_peephole_weights = self.add_weight(
-            shape=(self.units,),
-            name="input_gate_peephole_weights",
-            initializer=self.kernel_initializer,
-        )
-        self.forget_gate_peephole_weights = self.add_weight(
-            shape=(self.units,),
-            name="forget_gate_peephole_weights",
-            initializer=self.kernel_initializer,
-        )
-        self.output_gate_peephole_weights = self.add_weight(
-            shape=(self.units,),
-            name="output_gate_peephole_weights",
-            initializer=self.kernel_initializer,
-        )
+  def build(self, input_shape):
+    super().build(input_shape)
+    # The following are the weight matrices for the peephole connections. These
+    # are multiplied with the previous internal state during the computation of
+    # carry and output.
+    self.input_gate_peephole_weights = self.add_weight(
+      shape=(self.units,),
+      name="input_gate_peephole_weights",
+      initializer=self.kernel_initializer,
+    )
+    self.forget_gate_peephole_weights = self.add_weight(
+      shape=(self.units,),
+      name="forget_gate_peephole_weights",
+      initializer=self.kernel_initializer,
+    )
+    self.output_gate_peephole_weights = self.add_weight(
+      shape=(self.units,),
+      name="output_gate_peephole_weights",
+      initializer=self.kernel_initializer,
+    )
 
-    def _compute_carry_and_output(self, x, h_tm1, c_tm1):
-        x_i, x_f, x_c, x_o = x
-        h_tm1_i, h_tm1_f, h_tm1_c, h_tm1_o = h_tm1
-        i = self.recurrent_activation(
-            x_i
-            + tf.keras.backend.dot(h_tm1_i, self.recurrent_kernel[:, : self.units])
-            + self.input_gate_peephole_weights * c_tm1
-        )
-        f = self.recurrent_activation(
-            x_f
-            + tf.keras.backend.dot(
-                h_tm1_f, self.recurrent_kernel[:, self.units : self.units * 2]
-            )
-            + self.forget_gate_peephole_weights * c_tm1
-        )
-        c = f * c_tm1 + i * self.activation(
-            x_c
-            + tf.keras.backend.dot(
-                h_tm1_c, self.recurrent_kernel[:, self.units * 2 : self.units * 3]
-            )
-        )
-        o = self.recurrent_activation(
-            x_o
-            + tf.keras.backend.dot(h_tm1_o, self.recurrent_kernel[:, self.units * 3 :])
-            + self.output_gate_peephole_weights * c
-        )
-        return c, o
+  def _compute_carry_and_output(self, x, h_tm1, c_tm1):
+    x_i, x_f, x_c, x_o = x
+    h_tm1_i, h_tm1_f, h_tm1_c, h_tm1_o = h_tm1
+    i = self.recurrent_activation(
+      x_i
+      + tf.keras.backend.dot(h_tm1_i, self.recurrent_kernel[:, : self.units])
+      + self.input_gate_peephole_weights * c_tm1
+    )
+    f = self.recurrent_activation(
+      x_f
+      + tf.keras.backend.dot(
+        h_tm1_f, self.recurrent_kernel[:, self.units: self.units * 2]
+      )
+      + self.forget_gate_peephole_weights * c_tm1
+    )
+    c = f * c_tm1 + i * self.activation(
+      x_c
+      + tf.keras.backend.dot(
+        h_tm1_c, self.recurrent_kernel[:, self.units * 2: self.units * 3]
+      )
+    )
+    o = self.recurrent_activation(
+      x_o
+      + tf.keras.backend.dot(h_tm1_o, self.recurrent_kernel[:, self.units * 3:])
+      + self.output_gate_peephole_weights * c
+    )
+    return c, o
 
-    def _compute_carry_and_output_fused(self, z, c_tm1):
-        z0, z1, z2, z3 = z
-        i = self.recurrent_activation(z0 + self.input_gate_peephole_weights * c_tm1)
-        f = self.recurrent_activation(z1 + self.forget_gate_peephole_weights * c_tm1)
-        c = f * c_tm1 + i * self.activation(z2)
-        o = self.recurrent_activation(z3 + self.output_gate_peephole_weights * c)
-        return c, o
+  def _compute_carry_and_output_fused(self, z, c_tm1):
+    z0, z1, z2, z3 = z
+    i = self.recurrent_activation(z0 + self.input_gate_peephole_weights * c_tm1)
+    f = self.recurrent_activation(z1 + self.forget_gate_peephole_weights * c_tm1)
+    c = f * c_tm1 + i * self.activation(z2)
+    o = self.recurrent_activation(z3 + self.output_gate_peephole_weights * c)
+    return c, o

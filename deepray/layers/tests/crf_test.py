@@ -24,8 +24,7 @@ import numpy as np
 import tensorflow as tf
 
 from deepray.layers.crf import CRF
-# from deepray.text.crf import crf_log_likelihood
-from deepray.custom_ops.text.python.crf import crf_log_likelihood
+from deepray.text.crf import crf_log_likelihood
 from deepray.utils import test_utils
 
 

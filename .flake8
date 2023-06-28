@@ -29,3 +29,7 @@ per-file-ignores =
     deepray/optimizers/tests/conditional_gradient_test.py:N802
     # variable ... in function should be lowercase
     deepray/callbacks/tests/time_stopping_test.py:N806
+
+# String used as indentation unit. This is usually " " (4 spaces) or "\t" (1
+# tab).
+indent-string='  '

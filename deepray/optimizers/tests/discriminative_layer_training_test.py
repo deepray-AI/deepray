@@ -312,9 +312,9 @@ def test_serialization_after_training(tmpdir):
     old_config = model.optimizer.get_config()
     new_config = loaded_model.optimizer.get_config()
     # Verify the loaded model has the same optimizer as before.
-    assert len(old_config["default_optimizer"]) == len(new_config["default_optimizer"])
+    assert len(old_config["optimizer_specs"]) == len(new_config["optimizer_specs"])
     for old_optimizer_spec, new_optimizer_spec in zip(
-        old_config["default_optimizer"], new_config["default_optimizer"]
+        old_config["optimizer_specs"], new_config["optimizer_specs"]
     ):
         assert old_optimizer_spec["weights"] == new_optimizer_spec["weights"]
         assert (

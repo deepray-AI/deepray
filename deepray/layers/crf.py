@@ -19,7 +19,7 @@
 import tensorflow as tf
 from typeguard import typechecked
 
-from deepray.custom_ops.text import crf_decode
+from deepray.text.crf import crf_decode
 from deepray.utils import types
 
 
