@@ -22,7 +22,6 @@ from deepray.utils.types import AcceptableDTypes, FloatTensorLike
 from typing import Optional
 
 
-
 class FBetaScore(tf.keras.metrics.Metric):
     r"""Computes F-Beta score.
 
@@ -212,7 +211,6 @@ class FBetaScore(tf.keras.metrics.Metric):
         # only implement `reset_state`.
         # Required in Tensorflow < 2.5.0
         return self.reset_state()
-
 
 
 class F1Score(FBetaScore):

@@ -32,7 +32,6 @@ else:
     from keras.utils import tf_utils
 
 
-
 class MultiOptimizer(KerasLegacyOptimizer):
     """Multi Optimizer Wrapper for Discriminative Layer Training.
 
@@ -93,7 +92,6 @@ class MultiOptimizer(KerasLegacyOptimizer):
         name: str = "MultiOptimizer",
         **kwargs,
     ):
-
         super(MultiOptimizer, self).__init__(name, **kwargs)
 
         if optimizer_specs is None and optimizers_and_layers is not None:

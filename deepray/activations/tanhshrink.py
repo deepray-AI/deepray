@@ -18,7 +18,6 @@ import tensorflow as tf
 from deepray.utils.types import TensorLike
 
 
-
 def tanhshrink(x: TensorLike) -> tf.Tensor:
     r"""Tanh shrink function.
 

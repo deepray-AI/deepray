@@ -53,7 +53,6 @@ def pairwise_distance_np(feature, squared=False):
 
 
 def lifted_struct_loss_np(labels, embedding, margin):
-
     num_data = embedding.shape[0]
     # Reshape labels to compute adjacency matrix.
     labels_reshaped = np.reshape(labels, (labels.shape[0], 1))

@@ -32,7 +32,6 @@ def _scaled_noise(size, dtype):
     return tf.sign(x) * tf.sqrt(tf.abs(x))
 
 
-
 class NoisyDense(tf.keras.layers.Dense):
     r"""Noisy dense layer that injects random noise to the weights of dense layer.
 

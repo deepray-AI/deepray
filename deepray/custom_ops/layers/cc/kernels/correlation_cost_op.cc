@@ -346,14 +346,14 @@ class CorrelationCostGradOp : public OpKernel {
 };
 
 // Register the CPU kernels.
-#define REGISTER_CORRELATIONCOST_OP_CPU(T)                   \
+#define REGISTER_CORRELATIONCOST_OP_CPU(T)                    \
   REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCost")     \
-                              .Device(DEVICE_CPU)            \
-                              .TypeConstraint<T>("T"),       \
-                          CorrelationCostOp<CPUDevice, T>)   \
+                              .Device(DEVICE_CPU)             \
+                              .TypeConstraint<T>("T"),        \
+                          CorrelationCostOp<CPUDevice, T>)    \
   REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCostGrad") \
-                              .Device(DEVICE_CPU)            \
-                              .TypeConstraint<T>("T"),       \
+                              .Device(DEVICE_CPU)             \
+                              .TypeConstraint<T>("T"),        \
                           CorrelationCostGradOp<CPUDevice, T>)
 
 TF_CALL_float(REGISTER_CORRELATIONCOST_OP_CPU);
@@ -362,14 +362,14 @@ TF_CALL_float(REGISTER_CORRELATIONCOST_OP_CPU);
 // Register the GPU kernels.
 #if GOOGLE_CUDA
 
-#define REGISTER_CORRELATIONCOST_OP_GPU(T)                   \
+#define REGISTER_CORRELATIONCOST_OP_GPU(T)                    \
   REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCost")     \
-                              .Device(DEVICE_GPU)            \
-                              .TypeConstraint<T>("T"),       \
-                          CorrelationCostOp<GPUDevice, T>)   \
+                              .Device(DEVICE_GPU)             \
+                              .TypeConstraint<T>("T"),        \
+                          CorrelationCostOp<GPUDevice, T>)    \
   REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCostGrad") \
-                              .Device(DEVICE_GPU)            \
-                              .TypeConstraint<T>("T"),       \
+                              .Device(DEVICE_GPU)             \
+                              .TypeConstraint<T>("T"),        \
                           CorrelationCostGradOp<GPUDevice, T>)
 
 TF_CALL_float(REGISTER_CORRELATIONCOST_OP_GPU);

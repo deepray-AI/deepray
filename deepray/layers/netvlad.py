@@ -19,7 +19,6 @@ import tensorflow as tf
 from typeguard import typechecked
 
 
-
 class NetVLAD(tf.keras.layers.Layer):
     """Applies NetVLAD to the input.
 

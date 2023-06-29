@@ -80,7 +80,6 @@ def assert_all_equal(array_list1, array_list2):
 
 
 def test_serialization():
-
     x_np, y_np = get_test_data()
     model = get_some_model(x_np, y_np, sanity_check=False)
 

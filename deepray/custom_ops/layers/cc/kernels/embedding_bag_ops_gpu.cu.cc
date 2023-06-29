@@ -17,9 +17,9 @@ limitations under the License.
 
 #define EIGEN_USE_GPU
 
+#include "deepray/custom_ops/layers/cc/kernels/embedding_bag_ops.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"
-#include "deepray/custom_ops/layers/cc/kernels/embedding_bag_ops.h"
 
 namespace tensorflow {
 namespace deepray {

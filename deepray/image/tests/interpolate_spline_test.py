@@ -263,7 +263,6 @@ def test_interpolation_gradient():
 
     regularization = 0.001
     for interpolation_order in (1, 2, 3, 4):
-
         with tf.GradientTape() as g:
             interpolator = interpolate_spline(
                 train_points,

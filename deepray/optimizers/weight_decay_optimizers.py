@@ -379,7 +379,6 @@ else:
     SGD_CLASS = tf.keras.optimizers.SGD
 
 
-
 class SGDW(DecoupledWeightDecayExtension, SGD_CLASS):
     """Optimizer that implements the Momentum algorithm with weight_decay.
 
@@ -456,7 +455,6 @@ class SGDW(DecoupledWeightDecayExtension, SGD_CLASS):
             name=name,
             **kwargs,
         )
-
 
 
 class AdamW(DecoupledWeightDecayExtension, ADAM_CLASS):

@@ -18,7 +18,6 @@ from deepray.activations.sparsemax import sparsemax
 from typeguard import typechecked
 
 
-
 class Sparsemax(tf.keras.layers.Layer):
     """Sparsemax activation function.
 

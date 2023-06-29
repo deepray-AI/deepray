@@ -112,7 +112,6 @@ def _test_random_shape_on_all_axis_except_batch(shape, groups, center, scale):
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def _test_specific_layer(inputs, axis, groups, center, scale):
-
     input_shape = inputs.shape
 
     # Get Output from Keras model
@@ -350,7 +349,6 @@ def test_groupnorm_convnet_no_center_no_scale():
 @pytest.mark.parametrize("center", [True, False])
 @pytest.mark.parametrize("scale", [True, False])
 def test_group_norm_compute_output_shape(center, scale):
-
     target_variables_len = [center, scale].count(True)
     target_trainable_variables_len = [center, scale].count(True)
     layer1 = GroupNormalization(groups=2, center=center, scale=scale)
@@ -373,7 +371,6 @@ def test_group_norm_compute_output_shape(center, scale):
 @pytest.mark.parametrize("center", [True, False])
 @pytest.mark.parametrize("scale", [True, False])
 def test_instance_norm_compute_output_shape(center, scale):
-
     target_variables_len = [center, scale].count(True)
     target_trainable_variables_len = [center, scale].count(True)
     layer1 = InstanceNormalization(groups=2, center=center, scale=scale)

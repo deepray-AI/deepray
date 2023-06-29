@@ -21,7 +21,6 @@ from deepray.utils.types import TensorLike, FloatTensorLike
 
 
 @tf.function
-
 def pinball_loss(
     y_true: TensorLike, y_pred: TensorLike, tau: FloatTensorLike = 0.5
 ) -> tf.Tensor:
@@ -67,7 +66,6 @@ def pinball_loss(
     delta_y = y_true - y_pred
     pinball = tf.math.maximum(tau * delta_y, (tau - one) * delta_y)
     return tf.reduce_mean(pinball, axis=-1)
-
 
 
 class PinballLoss(LossFunctionWrapper):

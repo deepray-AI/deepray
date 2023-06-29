@@ -21,7 +21,6 @@ from typing import Union, Callable
 from typeguard import typechecked
 
 
-
 class NovoGrad(KerasLegacyOptimizer):
     """Optimizer that implements NovoGrad.
 

@@ -21,7 +21,6 @@ from deepray.optimizers import KerasLegacyOptimizer
 from typing import Union, Callable, Dict
 
 
-
 class AdaBelief(KerasLegacyOptimizer):
     """Variant of the Adam optimizer.
 

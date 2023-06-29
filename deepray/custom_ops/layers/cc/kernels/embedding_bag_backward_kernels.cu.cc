@@ -21,9 +21,9 @@ limitations under the License.
 #include <thrust/fill.h>
 #include <thrust/sort.h>
 
+#include "deepray/custom_ops/layers/cc/kernels/embedding_bag_ops.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"
-#include "deepray/custom_ops/layers/cc/kernels/embedding_bag_ops.h"
 
 constexpr int MAX_THREADS_PER_BLOCK = 1024;
 

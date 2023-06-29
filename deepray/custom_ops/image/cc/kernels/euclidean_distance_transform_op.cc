@@ -88,10 +88,10 @@ class EuclideanDistanceTransform : public OpKernel {
   }
 };
 
-#define REGISTER(TYPE)                                              \
+#define REGISTER(TYPE)                                               \
   REGISTER_KERNEL_BUILDER(Name("Deepray>EuclideanDistanceTransform") \
-                              .Device(DEVICE_CPU)                   \
-                              .TypeConstraint<TYPE>("dtype"),       \
+                              .Device(DEVICE_CPU)                    \
+                              .TypeConstraint<TYPE>("dtype"),        \
                           EuclideanDistanceTransform<CPUDevice, TYPE>)
 
 TF_CALL_half(REGISTER);
@@ -119,10 +119,10 @@ TF_CALL_double(DECLARE_FUNCTOR);
 
 }  // end namespace functor
 
-#define REGISTER(TYPE)                                              \
+#define REGISTER(TYPE)                                               \
   REGISTER_KERNEL_BUILDER(Name("Deepray>EuclideanDistanceTransform") \
-                              .Device(DEVICE_GPU)                   \
-                              .TypeConstraint<TYPE>("dtype"),       \
+                              .Device(DEVICE_GPU)                    \
+                              .TypeConstraint<TYPE>("dtype"),        \
                           EuclideanDistanceTransform<GPUDevice, TYPE>)
 
 TF_CALL_half(REGISTER);

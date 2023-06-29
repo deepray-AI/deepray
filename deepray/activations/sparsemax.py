@@ -18,7 +18,6 @@ import tensorflow as tf
 from deepray.utils import types
 
 
-
 def sparsemax(logits: types.TensorLike, axis: int = -1) -> tf.Tensor:
     r"""Sparsemax activation function.
 

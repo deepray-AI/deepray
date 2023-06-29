@@ -80,7 +80,6 @@ def test_snake():
 def test_snake_disconnected():
     for i in range(SNAKE.shape[0]):
         for j in range(SNAKE.shape[1]):
-
             # If we disconnect any part of the snake except for the endpoints,
             # there will be 2 components.
             if SNAKE[i, j] and (i, j) not in [(1, 1), (6, 3)]:
@@ -132,7 +131,6 @@ def test_ones():
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def test_ones_small():
-
     np.testing.assert_equal(
         connected_components(tf.ones((3, 5), tf.bool)).numpy(), np.ones((3, 5))
     )

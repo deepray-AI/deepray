@@ -84,7 +84,6 @@ def _max_unpooling_2d(updates, mask, pool_size=(2, 2), strides=(2, 2), padding="
     return func(updates, mask)
 
 
-
 class MaxUnpooling2D(tf.keras.layers.Layer):
     """Unpool the outputs of a maximum pooling operation.
 

@@ -22,7 +22,6 @@ from typeguard import typechecked
 from deepray.utils import types
 
 
-
 class GroupNormalization(tf.keras.layers.Layer):
     """Group normalization layer.
 
@@ -104,7 +103,6 @@ class GroupNormalization(tf.keras.layers.Layer):
         self._check_axis()
 
     def build(self, input_shape):
-
         self._check_if_input_shape_is_none(input_shape)
         self._set_number_of_groups_for_instance_norm(input_shape)
         self._check_size_of_dimensions(input_shape)
@@ -116,7 +114,6 @@ class GroupNormalization(tf.keras.layers.Layer):
         super().build(input_shape)
 
     def call(self, inputs):
-
         input_shape = tf.keras.backend.int_shape(inputs)
         tensor_input_shape = tf.shape(inputs)
 
@@ -156,7 +153,6 @@ class GroupNormalization(tf.keras.layers.Layer):
         return {**base_config, **config}
 
     def _reshape_into_groups(self, inputs, input_shape, tensor_input_shape):
-
         group_shape = [tensor_input_shape[i] for i in range(len(input_shape))]
         is_instance_norm = (input_shape[self.axis] // self.groups) == 1
         if not is_instance_norm:
@@ -169,7 +165,6 @@ class GroupNormalization(tf.keras.layers.Layer):
             return inputs, group_shape
 
     def _apply_normalization(self, reshaped_inputs, input_shape):
-
         group_shape = tf.keras.backend.int_shape(reshaped_inputs)
         group_reduction_axes = list(range(1, len(group_shape)))
         is_instance_norm = (input_shape[self.axis] // self.groups) == 1
@@ -221,7 +216,6 @@ class GroupNormalization(tf.keras.layers.Layer):
             self.groups = dim
 
     def _check_size_of_dimensions(self, input_shape):
-
         dim = input_shape[self.axis]
         if dim < self.groups:
             raise ValueError(
@@ -236,7 +230,6 @@ class GroupNormalization(tf.keras.layers.Layer):
             )
 
     def _check_axis(self):
-
         if self.axis == 0:
             raise ValueError(
                 "You are trying to normalize your batch axis. Do you want to "
@@ -244,14 +237,12 @@ class GroupNormalization(tf.keras.layers.Layer):
             )
 
     def _create_input_spec(self, input_shape):
-
         dim = input_shape[self.axis]
         self.input_spec = tf.keras.layers.InputSpec(
             ndim=len(input_shape), axes={self.axis: dim}
         )
 
     def _add_gamma_weight(self, input_shape):
-
         dim = input_shape[self.axis]
         shape = (dim,)
 
@@ -267,7 +258,6 @@ class GroupNormalization(tf.keras.layers.Layer):
             self.gamma = None
 
     def _add_beta_weight(self, input_shape):
-
         dim = input_shape[self.axis]
         shape = (dim,)
 
@@ -291,7 +281,6 @@ class GroupNormalization(tf.keras.layers.Layer):
         else:
             broadcast_shape[self.axis] = self.groups
         return broadcast_shape
-
 
 
 class InstanceNormalization(GroupNormalization):
@@ -336,7 +325,6 @@ class InstanceNormalization(GroupNormalization):
 
         kwargs["groups"] = -1
         super().__init__(**kwargs)
-
 
 
 class FilterResponseNormalization(tf.keras.layers.Layer):

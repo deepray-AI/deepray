@@ -22,7 +22,6 @@ from deepray.utils.keras_utils import LossFunctionWrapper
 from deepray.utils.types import FloatTensorLike, TensorLike
 
 
-
 class SigmoidFocalCrossEntropy(LossFunctionWrapper):
     """Implements the focal loss function.
 
@@ -79,7 +78,6 @@ class SigmoidFocalCrossEntropy(LossFunctionWrapper):
             alpha=alpha,
             gamma=gamma,
         )
-
 
 
 @tf.function

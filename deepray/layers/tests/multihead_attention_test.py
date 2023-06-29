@@ -254,7 +254,6 @@ def test_from_to_config():
 
 
 def test_save_load_model():
-
     num_heads = 8
     head_size = 12
 
@@ -281,7 +280,6 @@ def test_save_load_model():
 
 @pytest.mark.usefixtures("run_with_mixed_precision_policy")
 def test_fit_predict_eval():
-
     num_heads = 8
     head_size = 12
 

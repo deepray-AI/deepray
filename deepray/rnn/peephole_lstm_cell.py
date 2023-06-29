@@ -17,7 +17,6 @@
 import tensorflow as tf
 
 
-
 class PeepholeLSTMCell(tf.keras.layers.LSTMCell):
     """Equivalent to `tf.keras.layers.LSTMCell` class but adds peephole connections.
 

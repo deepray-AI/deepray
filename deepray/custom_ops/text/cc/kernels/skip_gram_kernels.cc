@@ -128,10 +128,10 @@ class SkipGramGenerateCandidatesOp : public OpKernel {
   GuardedPhiloxRandom generator_;
 };
 
-#define REGISTER_KERNEL(type)                                       \
+#define REGISTER_KERNEL(type)                                        \
   REGISTER_KERNEL_BUILDER(Name("Deepray>SkipGramGenerateCandidates") \
-                              .Device(DEVICE_CPU)                   \
-                              .TypeConstraint<type>("T"),           \
+                              .Device(DEVICE_CPU)                    \
+                              .TypeConstraint<type>("T"),            \
                           SkipGramGenerateCandidatesOp<type>)
 
 REGISTER_KERNEL(tstring);

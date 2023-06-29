@@ -18,7 +18,6 @@ import tensorflow as tf
 from deepray.utils.types import TensorLike
 
 
-
 def mish(x: TensorLike) -> tf.Tensor:
     r"""Mish: A Self Regularized Non-Monotonic Neural Activation Function.
 

@@ -23,7 +23,6 @@ from typeguard import typechecked
 from typing import Optional
 
 
-
 @tf.function
 def lifted_struct_loss(
     labels: TensorLike, embeddings: TensorLike, margin: FloatTensorLike = 1.0
@@ -121,7 +120,6 @@ def lifted_struct_loss(
         return tf.cast(lifted_loss, embeddings.dtype)
     else:
         return lifted_loss
-
 
 
 class LiftedStructLoss(LossFunctionWrapper):

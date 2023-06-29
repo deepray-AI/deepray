@@ -66,7 +66,6 @@ def _masked_minimum(data, mask, dim=1):
     return masked_minimums
 
 
-
 @tf.function
 def triplet_semihard_loss(
     y_true: TensorLike,
@@ -201,7 +200,6 @@ def triplet_semihard_loss(
         return triplet_loss
 
 
-
 @tf.function
 def triplet_hard_loss(
     y_true: TensorLike,
@@ -307,7 +305,6 @@ def triplet_hard_loss(
         return triplet_loss
 
 
-
 class TripletSemiHardLoss(LossFunctionWrapper):
     """Computes the triplet loss with semi-hard negative mining.
 
@@ -342,7 +339,6 @@ class TripletSemiHardLoss(LossFunctionWrapper):
             margin=margin,
             distance_metric=distance_metric,
         )
-
 
 
 class TripletHardLoss(LossFunctionWrapper):

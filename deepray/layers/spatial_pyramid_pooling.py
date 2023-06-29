@@ -22,7 +22,6 @@ from typeguard import typechecked
 from typing import Union, Iterable
 
 
-
 class SpatialPyramidPooling2D(tf.keras.layers.Layer):
     """Performs Spatial Pyramid Pooling.
 

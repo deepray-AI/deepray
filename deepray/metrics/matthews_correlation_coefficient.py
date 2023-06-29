@@ -23,7 +23,6 @@ from deepray.utils.types import AcceptableDTypes, FloatTensorLike
 from typeguard import typechecked
 
 
-
 class MatthewsCorrelationCoefficient(tf.keras.metrics.Metric):
     """Computes the Matthews Correlation Coefficient.
 
@@ -93,7 +92,6 @@ class MatthewsCorrelationCoefficient(tf.keras.metrics.Metric):
         self.conf_mtx.assign_add(new_conf_mtx)
 
     def result(self):
-
         true_sum = tf.reduce_sum(self.conf_mtx, axis=1)
         pred_sum = tf.reduce_sum(self.conf_mtx, axis=0)
         num_correct = tf.linalg.trace(self.conf_mtx)

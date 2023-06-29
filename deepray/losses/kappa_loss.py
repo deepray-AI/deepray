@@ -22,7 +22,6 @@ from typeguard import typechecked
 from deepray.utils.types import Number
 
 
-
 class WeightedKappaLoss(tf.keras.losses.Loss):
     r"""Implements the Weighted Kappa loss function.
 

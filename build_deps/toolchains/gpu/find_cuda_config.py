@@ -333,7 +333,6 @@ def _find_cuda_config(base_paths, required_version):
 
 
 def _find_cublas_config(base_paths, required_version, cuda_version):
-
     if _at_least_version(cuda_version, "10.1"):
 
         def get_header_version(path):
@@ -366,7 +365,6 @@ def _find_cublas_config(base_paths, required_version, cuda_version):
 
 
 def _find_cusolver_config(base_paths, required_version, cuda_version):
-
     if _at_least_version(cuda_version, "11.0"):
 
         def get_header_version(path):
@@ -400,7 +398,6 @@ def _find_cusolver_config(base_paths, required_version, cuda_version):
 
 
 def _find_curand_config(base_paths, required_version, cuda_version):
-
     if _at_least_version(cuda_version, "11.0"):
 
         def get_header_version(path):
@@ -430,7 +427,6 @@ def _find_curand_config(base_paths, required_version, cuda_version):
 
 
 def _find_cufft_config(base_paths, required_version, cuda_version):
-
     if _at_least_version(cuda_version, "11.0"):
 
         def get_header_version(path):
@@ -482,7 +478,6 @@ def _find_cudnn_config(base_paths, required_version):
 
 
 def _find_cusparse_config(base_paths, required_version, cuda_version):
-
     if _at_least_version(cuda_version, "11.0"):
 
         def get_header_version(path):

@@ -30,7 +30,6 @@ from deepray.utils import test_utils
 )
 @pytest.mark.parametrize("time_major", [True, False])
 def test_dynamic_decode_rnn(time_major, maximum_iterations):
-
     sequence_length = [3, 4, 3, 1, 0]
     batch_size = 5
     max_time = 8

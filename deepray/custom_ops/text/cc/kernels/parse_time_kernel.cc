@@ -96,8 +96,8 @@ class ParseTimeOp : public OpKernel {
   OutputUnit output_unit_;
 };
 
-REGISTER_KERNEL_BUILDER(Name("Deepray>ParseTime").Device(tensorflow::DEVICE_CPU),
-                        ParseTimeOp);
+REGISTER_KERNEL_BUILDER(
+    Name("Deepray>ParseTime").Device(tensorflow::DEVICE_CPU), ParseTimeOp);
 
 }  // end namespace deepray
 }  // end namespace tensorflow

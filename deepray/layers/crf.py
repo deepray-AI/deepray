@@ -23,7 +23,6 @@ from deepray.text.crf import crf_decode
 from deepray.utils import types
 
 
-
 class CRF(tf.keras.layers.Layer):
     """Linear chain conditional random field (CRF).
 

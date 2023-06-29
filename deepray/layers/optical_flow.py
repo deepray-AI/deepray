@@ -135,7 +135,6 @@ def _correlation_cost_grad(op, grad_output):
     return [grad_input_a, grad_input_b]
 
 
-
 class CorrelationCost(tf.keras.layers.Layer):
     """Correlation Cost Layer.
 

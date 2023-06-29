@@ -198,7 +198,6 @@ class KendallsTauBase(CorrelationBase):
         return p, q, t, u
 
 
-
 class KendallsTauB(KendallsTauBase):
     """Computes Kendall's Tau-b Rank Correlation Coefficient.
 
@@ -214,7 +213,6 @@ class KendallsTauB(KendallsTauBase):
     def result(self):
         p, q, t, u = self._compute_variables()
         return (p - q) / tf.math.sqrt((p + q + t) * (p + q + u))
-
 
 
 class KendallsTauC(KendallsTauBase):
@@ -236,7 +234,6 @@ class KendallsTauC(KendallsTauBase):
         non_zeros_row = tf.math.count_nonzero(self.nrow)
         m = tf.cast(tf.minimum(non_zeros_col, non_zeros_row), tf.float32)
         return 2 * (p - q) / (tf.square(n) * (m - 1) / m)
-
 
 
 class SpearmansRank(CorrelationBase):
@@ -268,7 +265,6 @@ class SpearmansRank(CorrelationBase):
         corr = tf.matmul(tf.expand_dims(rrow, axis=0), m)
         corr = tf.matmul(corr, tf.expand_dims(rcol, axis=1))
         return tf.squeeze(corr)
-
 
 
 class PearsonsCorrelation(CorrelationBase):

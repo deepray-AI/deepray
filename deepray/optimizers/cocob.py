@@ -20,7 +20,6 @@ import tensorflow as tf
 from deepray.optimizers import KerasLegacyOptimizer
 
 
-
 class COCOB(KerasLegacyOptimizer):
     """Optimizer that implements COCOB Backprop Algorithm
 
@@ -106,7 +105,6 @@ class COCOB(KerasLegacyOptimizer):
         raise NotImplementedError()
 
     def get_config(self):
-
         config = {
             "alpha": self._serialize_hyperparameter("alpha"),
         }

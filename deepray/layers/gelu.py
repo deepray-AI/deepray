@@ -19,7 +19,6 @@ from deepray.activations import gelu
 from typeguard import typechecked
 
 
-
 class GELU(tf.keras.layers.Layer):
     """Gaussian Error Linear Unit.
 

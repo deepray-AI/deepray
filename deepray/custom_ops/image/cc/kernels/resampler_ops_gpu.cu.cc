@@ -21,10 +21,10 @@
 
 #include <cmath>
 
+#include "deepray/custom_ops/image/cc/kernels/resampler_ops.h"
 #include "tensorflow/core/framework/register_types.h"
 #include "tensorflow/core/util/gpu_device_functions.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"
-#include "deepray/custom_ops/image/cc/kernels/resampler_ops.h"
 
 namespace tensorflow {
 namespace deepray {

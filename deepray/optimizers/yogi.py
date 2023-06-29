@@ -50,7 +50,6 @@ def _solve(a, b, c):
     return w
 
 
-
 class Yogi(KerasLegacyOptimizer):
     """Optimizer that implements the Yogi algorithm in Keras.
 

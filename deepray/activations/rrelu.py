@@ -18,7 +18,6 @@ from deepray.utils.types import Number, TensorLike
 from typing import Optional
 
 
-
 def rrelu(
     x: TensorLike,
     lower: Number = 0.125,

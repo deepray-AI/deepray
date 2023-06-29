@@ -180,8 +180,8 @@ class ResamplerOp : public OpKernel {
   TF_DISALLOW_COPY_AND_ASSIGN(ResamplerOp);
 };
 
-#define REGISTER(TYPE)                                                       \
-  REGISTER_KERNEL_BUILDER(                                                   \
+#define REGISTER(TYPE)                                                        \
+  REGISTER_KERNEL_BUILDER(                                                    \
       Name("Deepray>Resampler").Device(DEVICE_CPU).TypeConstraint<TYPE>("T"), \
       ResamplerOp<CPUDevice, TYPE>);
 
@@ -191,8 +191,8 @@ TF_CALL_double(REGISTER);
 #undef REGISTER
 
 #if GOOGLE_CUDA
-#define REGISTER(TYPE)                                                       \
-  REGISTER_KERNEL_BUILDER(                                                   \
+#define REGISTER(TYPE)                                                        \
+  REGISTER_KERNEL_BUILDER(                                                    \
       Name("Deepray>Resampler").Device(DEVICE_GPU).TypeConstraint<TYPE>("T"), \
       ResamplerOp<GPUDevice, TYPE>)
 
@@ -392,7 +392,7 @@ class ResamplerGradOp : public OpKernel {
 };
 
 #define REGISTER(TYPE)                                    \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>ResamplerGrad")    \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>ResamplerGrad")   \
                               .Device(DEVICE_CPU)         \
                               .TypeConstraint<TYPE>("T"), \
                           ResamplerGradOp<CPUDevice, TYPE>);
@@ -404,7 +404,7 @@ TF_CALL_double(REGISTER);
 
 #if GOOGLE_CUDA
 #define REGISTER(TYPE)                                    \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>ResamplerGrad")    \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>ResamplerGrad")   \
                               .Device(DEVICE_GPU)         \
                               .TypeConstraint<TYPE>("T"), \
                           ResamplerGradOp<GPUDevice, TYPE>)

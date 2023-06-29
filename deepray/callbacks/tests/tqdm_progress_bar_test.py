@@ -20,7 +20,6 @@ def get_data_and_model():
 
 
 def test_tqdm_progress_bar(capsys):
-
     x, y, model = get_data_and_model()
 
     capsys.readouterr()  # flush the buffer
@@ -31,7 +30,6 @@ def test_tqdm_progress_bar(capsys):
 
 
 def test_tqdm_progress_bar_overall_bar_format(capsys):
-
     x, y, model = get_data_and_model()
     overall_bar_format = (
         "{l_bar}{bar} {n_fmt}/{total_fmt} ETA: dodo"
@@ -47,7 +45,6 @@ def test_tqdm_progress_bar_overall_bar_format(capsys):
 
 
 def test_tqdm_progress_bar_epoch_bar_format(capsys):
-
     x, y, model = get_data_and_model()
     epoch_bar_format = "{n_fmt}/{total_fmt}{bar} ETA: dodo {remaining}s - {desc}"
     pb = dp.callbacks.TQDMProgressBar(
@@ -60,7 +57,6 @@ def test_tqdm_progress_bar_epoch_bar_format(capsys):
 
 
 def test_tqdm_progress_bar_epoch_bar_format_missing_parameter(capsys):
-
     x, y, model = get_data_and_model()
     epoch_bar_format = "{n_fmt} {bar} ETA: dodo {remaining}s - {desc}"
     pb = dp.callbacks.TQDMProgressBar(
@@ -73,7 +69,6 @@ def test_tqdm_progress_bar_epoch_bar_format_missing_parameter(capsys):
 
 
 def test_tqdm_progress_bar_metrics_format(capsys):
-
     x, y, model = get_data_and_model()
 
     pb = dp.callbacks.TQDMProgressBar(
@@ -89,7 +84,6 @@ def test_tqdm_progress_bar_metrics_format(capsys):
 @pytest.mark.parametrize("show_epoch_progress", [True, False])
 @pytest.mark.parametrize("show_overall_progress", [True, False])
 def test_tqdm_progress_bar_show(capsys, show_epoch_progress, show_overall_progress):
-
     x, y, model = get_data_and_model()
 
     pb = dp.callbacks.TQDMProgressBar(

@@ -4,7 +4,6 @@ from deepray.text import crf_log_likelihood
 from deepray.utils import types
 
 
-
 class CRFModelWrapper(tf.keras.Model):
     def __init__(
         self,

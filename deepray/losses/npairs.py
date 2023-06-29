@@ -20,7 +20,6 @@ from typeguard import typechecked
 from deepray.utils.types import TensorLike
 
 
-
 @tf.function
 def npairs_loss(y_true: TensorLike, y_pred: TensorLike) -> tf.Tensor:
     """Computes the npairs loss between `y_true` and `y_pred`.
@@ -71,7 +70,6 @@ def npairs_loss(y_true: TensorLike, y_pred: TensorLike) -> tf.Tensor:
     loss = tf.nn.softmax_cross_entropy_with_logits(logits=y_pred, labels=y_true)
 
     return tf.math.reduce_mean(loss)
-
 
 
 @tf.function
@@ -149,7 +147,6 @@ def npairs_multilabel_loss(y_true: TensorLike, y_pred: TensorLike) -> tf.Tensor:
     return tf.math.reduce_mean(loss)
 
 
-
 class NpairsLoss(tf.keras.losses.Loss):
     """Computes the npairs loss between `y_true` and `y_pred`.
 
@@ -189,7 +186,6 @@ class NpairsLoss(tf.keras.losses.Loss):
 
     def call(self, y_true, y_pred):
         return npairs_loss(y_true, y_pred)
-
 
 
 class NpairsMultilabelLoss(tf.keras.losses.Loss):

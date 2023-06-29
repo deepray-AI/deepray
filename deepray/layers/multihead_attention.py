@@ -19,7 +19,6 @@ import warnings
 import tensorflow as tf
 
 
-
 class MultiHeadAttention(tf.keras.layers.Layer):
     r"""MultiHead Attention layer.
 
@@ -125,7 +124,6 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         self._droput_rate = dropout
 
     def build(self, input_shape):
-
         num_query_features = input_shape[0][-1]
         num_key_features = input_shape[1][-1]
         num_value_features = (
@@ -178,7 +176,6 @@ class MultiHeadAttention(tf.keras.layers.Layer):
         super().build(input_shape)
 
     def call(self, inputs, training=None, mask=None):
-
         # einsum nomenclature
         # ------------------------
         # N = query elements

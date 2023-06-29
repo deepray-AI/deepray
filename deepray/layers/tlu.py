@@ -20,7 +20,6 @@ from typeguard import typechecked
 from deepray.utils import types
 
 
-
 class TLU(tf.keras.layers.Layer):
     r"""Thresholded Linear Unit.
 

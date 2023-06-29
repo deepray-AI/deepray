@@ -21,7 +21,6 @@ from typeguard import typechecked
 from typing import Union, Callable
 
 
-
 class CyclicalLearningRate(tf.keras.optimizers.schedules.LearningRateSchedule):
     """A LearningRateSchedule that uses cyclical schedule."""
 
@@ -111,7 +110,6 @@ class CyclicalLearningRate(tf.keras.optimizers.schedules.LearningRateSchedule):
         }
 
 
-
 class TriangularCyclicalLearningRate(CyclicalLearningRate):
     @typechecked
     def __init__(
@@ -180,7 +178,6 @@ class TriangularCyclicalLearningRate(CyclicalLearningRate):
         }
 
 
-
 class Triangular2CyclicalLearningRate(CyclicalLearningRate):
     @typechecked
     def __init__(
@@ -247,7 +244,6 @@ class Triangular2CyclicalLearningRate(CyclicalLearningRate):
             "step_size": self.step_size,
             "scale_mode": self.scale_mode,
         }
-
 
 
 class ExponentialCyclicalLearningRate(CyclicalLearningRate):

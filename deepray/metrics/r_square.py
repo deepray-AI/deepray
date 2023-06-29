@@ -41,7 +41,6 @@ def _reduce_average(
     return average
 
 
-
 class RSquare(Metric):
     """Compute R^2 score.
 

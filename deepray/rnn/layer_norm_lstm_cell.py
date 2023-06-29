@@ -28,7 +28,6 @@ from deepray.utils.types import (
 )
 
 
-
 class LayerNormLSTMCell(keras.layers.LSTMCell):
     """LSTM cell with layer normalization and recurrent dropout.
 

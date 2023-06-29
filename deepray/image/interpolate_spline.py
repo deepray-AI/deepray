@@ -130,7 +130,6 @@ def _solve_interpolation(
 
     # Next, construct the linear system.
     with tf.name_scope("construct_linear_system"):
-
         matrix_a = _phi(_pairwise_squared_distance_matrix(c), order)  # [b, n, n]
         if regularization_weight > 0:
             batch_identity_matrix = tf.expand_dims(tf.eye(n, dtype=c.dtype), 0)

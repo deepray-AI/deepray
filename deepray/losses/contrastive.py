@@ -21,7 +21,6 @@ from deepray.utils.keras_utils import LossFunctionWrapper
 from deepray.utils.types import TensorLike, Number
 
 
-
 @tf.function
 def contrastive_loss(
     y_true: TensorLike, y_pred: TensorLike, margin: Number = 1.0
@@ -67,7 +66,6 @@ def contrastive_loss(
     return y_true * tf.math.square(y_pred) + (1.0 - y_true) * tf.math.square(
         tf.math.maximum(margin - y_pred, 0.0)
     )
-
 
 
 class ContrastiveLoss(LossFunctionWrapper):

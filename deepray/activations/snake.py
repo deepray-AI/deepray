@@ -18,7 +18,6 @@ import tensorflow as tf
 from deepray.utils import types
 
 
-
 def snake(x: types.TensorLike, frequency: types.Number = 1) -> tf.Tensor:
     r"""Snake activation to learn periodic functions.
 

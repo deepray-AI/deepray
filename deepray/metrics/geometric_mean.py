@@ -23,7 +23,6 @@ from deepray.utils.types import AcceptableDTypes
 from deepray.metrics.utils import sample_weight_shape_match
 
 
-
 class GeometricMean(Metric):
     """Compute Geometric Mean
 

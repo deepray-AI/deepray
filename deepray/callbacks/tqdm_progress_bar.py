@@ -15,12 +15,10 @@
 """TQDM Progress Bar."""
 
 import time
-import tensorflow as tf
 from collections import defaultdict
-from typeguard import typechecked
 
 from tensorflow.keras.callbacks import Callback
-
+from typeguard import typechecked
 
 
 class TQDMProgressBar(Callback):
@@ -61,7 +59,6 @@ class TQDMProgressBar(Callback):
         show_epoch_progress: bool = True,
         show_overall_progress: bool = True,
     ):
-
         try:
             # import tqdm here because tqdm is not a required package
             # for deepray
@@ -177,7 +174,6 @@ class TQDMProgressBar(Callback):
             now = time.time()
             time_diff = now - self.last_update_time
             if self.show_epoch_progress and time_diff >= self.update_interval:
-
                 # update the epoch progress bar
                 metrics = self.format_metrics(self.logs, self.num_samples_seen)
                 self.epoch_progress_tqdm.desc = metrics

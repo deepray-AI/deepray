@@ -15,9 +15,9 @@ limitations under the License.
 
 #define EIGEN_USE_GPU
 
+#include "deepray/custom_ops/image/cc/kernels/adjust_hsv_in_yiq_op.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"
 #include "tensorflow/core/util/stream_executor_util.h"
-#include "deepray/custom_ops/image/cc/kernels/adjust_hsv_in_yiq_op.h"
 
 namespace tensorflow {
 namespace deepray {

@@ -22,7 +22,6 @@ from typeguard import typechecked
 from typing import Union, Callable
 
 
-
 class ConditionalGradient(KerasLegacyOptimizer):
     """Optimizer that implements the Conditional Gradient optimization.
 

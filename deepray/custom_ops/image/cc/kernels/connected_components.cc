@@ -123,10 +123,10 @@ struct ImageConnectedComponentsFunctor<CPUDevice, T> {
 
 }  // end namespace functor
 
-#define REGISTER_IMAGE_CONNECTED_COMPONENTS(TYPE)                 \
+#define REGISTER_IMAGE_CONNECTED_COMPONENTS(TYPE)                  \
   REGISTER_KERNEL_BUILDER(Name("Deepray>ImageConnectedComponents") \
-                              .Device(DEVICE_CPU)                 \
-                              .TypeConstraint<TYPE>("dtype"),     \
+                              .Device(DEVICE_CPU)                  \
+                              .TypeConstraint<TYPE>("dtype"),      \
                           ImageConnectedComponents<CPUDevice, TYPE>)
 // Connected components (arguably) make sense for number, bool, and string types
 TF_CALL_NUMBER_TYPES(REGISTER_IMAGE_CONNECTED_COMPONENTS);

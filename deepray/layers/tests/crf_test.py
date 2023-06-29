@@ -233,7 +233,6 @@ def test_mask_left_padding():
 
 
 def clone(model: ModelWithCRFLoss, inference_only=True):
-
     with tempfile.TemporaryDirectory() as tmpdir:
         file_path = os.path.join(tmpdir, "my_model.tf")
         model.save(file_path)
@@ -259,7 +258,6 @@ def assert_all_equal(array_list1, array_list2):
 
 @pytest.mark.parametrize("inference_only", [True, False])
 def test_serialization(inference_only):
-
     x_np, y_np = get_test_data()
     model = get_some_model(x_np, y_np, sanity_check=False)
 

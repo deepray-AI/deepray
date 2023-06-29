@@ -16,11 +16,9 @@
 
 import datetime
 import time
-from typeguard import typechecked
 
-import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
-
+from typeguard import typechecked
 
 
 class TimeStopping(Callback):

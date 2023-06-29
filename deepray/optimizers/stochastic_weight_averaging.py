@@ -30,7 +30,6 @@ from deepray.utils import types
 from typeguard import typechecked
 
 
-
 class SWA(AveragedOptimizerWrapper):
     """This class extends optimizers with Stochastic Weight Averaging (SWA).
 

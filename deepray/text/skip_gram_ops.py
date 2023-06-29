@@ -152,7 +152,6 @@ def skip_gram_sample(
         )
 
     with tf.name_scope(name or "skip_gram_sample"):
-
         input_tensor = _filter_input(
             input_tensor=input_tensor,
             vocab_freq_table=vocab_freq_table,

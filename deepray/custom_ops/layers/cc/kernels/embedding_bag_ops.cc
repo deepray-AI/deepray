@@ -252,22 +252,22 @@ class EmbeddingBagBackwardOp : public OpKernel {
 
 // Register the CPU kernels.
 #define REGISTER_CPU_KERNEL(T)                                          \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBag")                   \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBag")                  \
                               .Device(DEVICE_CPU)                       \
                               .TypeConstraint<T>("T")                   \
                               .TypeConstraint<int32>("Tindices"),       \
                           EmbeddingBagOp<CPUDevice, T, int32>);         \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBag")                   \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBag")                  \
                               .Device(DEVICE_CPU)                       \
                               .TypeConstraint<T>("T")                   \
                               .TypeConstraint<int64>("Tindices"),       \
                           EmbeddingBagOp<CPUDevice, T, int64>);         \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBagGrad")               \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBagGrad")              \
                               .Device(DEVICE_CPU)                       \
                               .TypeConstraint<T>("T")                   \
                               .TypeConstraint<int32>("Tindices"),       \
                           EmbeddingBagBackwardOp<CPUDevice, T, int32>); \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBagGrad")               \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBagGrad")              \
                               .Device(DEVICE_CPU)                       \
                               .TypeConstraint<T>("T")                   \
                               .TypeConstraint<int64>("Tindices"),       \
@@ -301,22 +301,22 @@ DECLARE_GPU_SPECS(double);
 
 // Register the GPU kernels.
 #define REGISTER_GPU_KERNEL(T)                                          \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBag")                   \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBag")                  \
                               .Device(DEVICE_GPU)                       \
                               .TypeConstraint<T>("T")                   \
                               .TypeConstraint<int32>("Tindices"),       \
                           EmbeddingBagOp<GPUDevice, T, int32>);         \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBag")                   \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBag")                  \
                               .Device(DEVICE_GPU)                       \
                               .TypeConstraint<T>("T")                   \
                               .TypeConstraint<int64>("Tindices"),       \
                           EmbeddingBagOp<GPUDevice, T, int64>);         \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBagGrad")               \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBagGrad")              \
                               .Device(DEVICE_GPU)                       \
                               .TypeConstraint<T>("T")                   \
                               .TypeConstraint<int32>("Tindices"),       \
                           EmbeddingBagBackwardOp<GPUDevice, T, int32>); \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBagGrad")               \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>EmbeddingBagGrad")              \
                               .Device(DEVICE_GPU)                       \
                               .TypeConstraint<T>("T")                   \
                               .TypeConstraint<int64>("Tindices"),       \

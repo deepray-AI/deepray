@@ -71,7 +71,6 @@ def _embedding_bag_grad(op, grads):
     return [None, value_grads, weight_grads]
 
 
-
 class EmbeddingBag(tf.keras.layers.Layer):
     """EmbeddingBag Layer.
 

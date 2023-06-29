@@ -20,7 +20,6 @@ from typeguard import typechecked
 from deepray.utils import types
 
 
-
 class PolynomialCrossing(tf.keras.layers.Layer):
     """Layer for Deep & Cross Network to learn explicit feature interactions.
 

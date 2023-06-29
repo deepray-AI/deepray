@@ -24,7 +24,6 @@ from typeguard import typechecked
 from typing import Optional
 
 
-
 class CohenKappa(Metric):
     """Computes Kappa score between two raters.
 

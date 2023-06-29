@@ -17,7 +17,6 @@ import tensorflow as tf
 from deepray.utils.types import Number, TensorLike
 
 
-
 def softshrink(x: TensorLike, lower: Number = -0.5, upper: Number = 0.5) -> tf.Tensor:
     r"""Soft shrink function.
 

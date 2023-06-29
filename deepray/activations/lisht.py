@@ -18,7 +18,6 @@ import tensorflow as tf
 from deepray.utils.types import TensorLike
 
 
-
 def lisht(x: TensorLike) -> tf.Tensor:
     r"""LiSHT: Non-Parameteric Linearly Scaled Hyperbolic Tangent Activation Function.
 

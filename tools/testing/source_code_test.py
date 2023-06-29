@@ -105,7 +105,6 @@ def test_no_private_tf_api():
     ]
 
     for file_path, line_idx, line in get_lines_of_source_code(allowlist):
-
         if "import tensorflow.python" in line or "from tensorflow.python" in line:
             raise ImportError(
                 "A private tensorflow API import was found in {} at line {}.\n"
@@ -134,7 +133,6 @@ def test_no_tf_cond():
         "deepray/seq2seq/beam_search_decoder.py",
     ]
     for file_path, line_idx, line in get_lines_of_source_code(allowlist):
-
         if "tf.cond(" in line:
             raise NameError(
                 "The usage of a tf.cond() function call was found in "
@@ -161,7 +159,6 @@ def test_no_experimental_api():
         "deepray/image/dense_image_warp.py",
     ]
     for file_path, line_idx, line in get_lines_of_source_code(allowlist):
-
         if file_path.endswith("_test.py") or file_path.endswith("conftest.py"):
             continue
         if file_path.endswith("deepray/utils/test_utils.py"):
@@ -200,9 +197,7 @@ def test_no_tf_control_dependencies():
         "deepray/seq2seq/attention_wrapper.py",
     ]
     for file_path, line_idx, line in get_lines_of_source_code(allowlist):
-
         if "tf.control_dependencies(" in line:
-
             raise NameError(
                 "The usage of a tf.control_dependencies() function call was found in "
                 "file {} at line {}:\n\n"
@@ -228,7 +223,6 @@ def test_no_deprecated_v1():
         "deepray/seq2seq/tests/attention_wrapper_test.py",
     ]
     for file_path, line_idx, line in get_lines_of_source_code(allowlist):
-
         if "tf.compat.v1" in line:
             raise NameError(
                 "The usage of a tf.compat.v1 API was found in file {} at line {}:\n\n"

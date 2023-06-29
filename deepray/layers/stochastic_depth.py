@@ -2,7 +2,6 @@ import tensorflow as tf
 from typeguard import typechecked
 
 
-
 class StochasticDepth(tf.keras.layers.Layer):
     """Stochastic Depth layer.
 

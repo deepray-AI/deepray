@@ -49,7 +49,6 @@ def _max_unpooling_2d_v2(updates, mask, output_size):
     return ret
 
 
-
 class MaxUnpooling2DV2(tf.keras.layers.Layer):
     """Unpool the outputs of a maximum pooling operation.
 

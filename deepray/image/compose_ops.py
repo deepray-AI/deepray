@@ -45,7 +45,6 @@ def blend(image1: TensorLike, image2: TensorLike, factor: Number) -> tf.Tensor:
 
     """
     with tf.name_scope("blend"):
-
         if factor == 0.0:
             return tf.convert_to_tensor(image1)
         if factor == 1.0:

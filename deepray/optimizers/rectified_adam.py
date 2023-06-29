@@ -21,7 +21,6 @@ from typing import Union, Callable, Dict
 from typeguard import typechecked
 
 
-
 class RectifiedAdam(KerasLegacyOptimizer):
     """Variant of the Adam optimizer whose adaptive learning rate is rectified
     so as to have a consistent variance.

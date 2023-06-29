@@ -1176,7 +1176,6 @@ class BahdanauMonotonicAttention(_BaseMonotonicAttentionMechanism):
         return alignments, next_state
 
     def get_config(self):
-
         # yapf: disable
         config = {
             "units": self.units,

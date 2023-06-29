@@ -22,7 +22,6 @@ from typing import Union
 from typeguard import typechecked
 
 
-
 class MovingAverage(AveragedOptimizerWrapper):
     """Optimizer that computes a moving average of the variables.
 

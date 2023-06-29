@@ -41,9 +41,7 @@ flags.DEFINE_string(
     "git_branch", default=None, help="The name of the corresponding branch on github."
 )
 
-CODE_PREFIX_TEMPLATE = (
-    "https://github.com/tensorflow/deepray/tree/{git_branch}/deepray"
-)
+CODE_PREFIX_TEMPLATE = "https://github.com/tensorflow/deepray/tree/{git_branch}/deepray"
 flags.DEFINE_string("code_url_prefix", None, "The url prefix for links to the code.")
 flags.mark_flags_as_mutual_exclusive(["code_url_prefix", "git_branch"])
 

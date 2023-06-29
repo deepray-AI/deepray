@@ -20,7 +20,6 @@ from typeguard import typechecked
 from deepray.utils.types import AcceptableDTypes
 
 
-
 class HarmonicMean(tf.keras.metrics.Mean):
     """Compute Harmonic Mean
     The harmonic mean is a kind of mean. It can be expressed as the reciprocal of

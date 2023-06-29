@@ -77,7 +77,6 @@ def angular_distance_np(feature):
 
 
 def triplet_semihard_loss_np(labels, embedding, margin, dist_func):
-
     num_data = embedding.shape[0]
     # Reshape labels to compute adjacency matrix.
     labels_reshaped = np.reshape(labels.astype(np.float32), (labels.shape[0], 1))
@@ -114,7 +113,6 @@ def triplet_semihard_loss_np(labels, embedding, margin, dist_func):
 
 
 def triplet_hard_loss_np(labels, embedding, margin, dist_func, soft=False):
-
     num_data = embedding.shape[0]
     # Reshape labels to compute adjacency matrix.
     labels_reshaped = np.reshape(labels.astype(np.float32), (labels.shape[0], 1))

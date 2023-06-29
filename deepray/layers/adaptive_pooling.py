@@ -86,7 +86,6 @@ class AdaptivePooling1D(tf.keras.layers.Layer):
         return {**base_config, **config}
 
 
-
 class AdaptiveAveragePooling1D(AdaptivePooling1D):
     """Average Pooling with adaptive kernel size.
 
@@ -118,7 +117,6 @@ class AdaptiveAveragePooling1D(AdaptivePooling1D):
         self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs
     ):
         super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
-
 
 
 class AdaptiveMaxPooling1D(AdaptivePooling1D):
@@ -234,7 +232,6 @@ class AdaptivePooling2D(tf.keras.layers.Layer):
         return {**base_config, **config}
 
 
-
 class AdaptiveAveragePooling2D(AdaptivePooling2D):
     """Average Pooling with adaptive kernel size.
 
@@ -266,7 +263,6 @@ class AdaptiveAveragePooling2D(AdaptivePooling2D):
         self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs
     ):
         super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
-
 
 
 class AdaptiveMaxPooling2D(AdaptivePooling2D):
@@ -389,7 +385,6 @@ class AdaptivePooling3D(tf.keras.layers.Layer):
         return {**base_config, **config}
 
 
-
 class AdaptiveAveragePooling3D(AdaptivePooling3D):
     """Average Pooling with adaptive kernel size.
 
@@ -421,7 +416,6 @@ class AdaptiveAveragePooling3D(AdaptivePooling3D):
         self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs
     ):
         super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
-
 
 
 class AdaptiveMaxPooling3D(AdaptivePooling3D):
