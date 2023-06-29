@@ -28,7 +28,7 @@ from deepray.utils.types import (
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class ESN(tf.keras.layers.RNN):
-    """Echo State Network layer.
+  """Echo State Network layer.
 
     This implements the recurrent layer using the ESNCell.
 
@@ -92,115 +92,111 @@ class ESN(tf.keras.layers.RNN):
             call of the cell.
     """
 
-    @typechecked
-    def __init__(
-        self,
-        units: TensorLike,
-        connectivity: FloatTensorLike = 0.1,
-        leaky: FloatTensorLike = 1,
-        spectral_radius: FloatTensorLike = 0.9,
-        use_norm2: bool = False,
-        use_bias: bool = True,
-        activation: Activation = "tanh",
-        kernel_initializer: Initializer = "glorot_uniform",
-        recurrent_initializer: Initializer = "glorot_uniform",
-        bias_initializer: Initializer = "zeros",
-        return_sequences=False,
-        go_backwards=False,
-        unroll=False,
+  @typechecked
+  def __init__(
+      self,
+      units: TensorLike,
+      connectivity: FloatTensorLike = 0.1,
+      leaky: FloatTensorLike = 1,
+      spectral_radius: FloatTensorLike = 0.9,
+      use_norm2: bool = False,
+      use_bias: bool = True,
+      activation: Activation = "tanh",
+      kernel_initializer: Initializer = "glorot_uniform",
+      recurrent_initializer: Initializer = "glorot_uniform",
+      bias_initializer: Initializer = "zeros",
+      return_sequences=False,
+      go_backwards=False,
+      unroll=False,
+      **kwargs,
+  ):
+    cell = ESNCell(
+        units,
+        connectivity=connectivity,
+        leaky=leaky,
+        spectral_radius=spectral_radius,
+        use_norm2=use_norm2,
+        use_bias=use_bias,
+        activation=activation,
+        kernel_initializer=kernel_initializer,
+        recurrent_initializer=recurrent_initializer,
+        bias_initializer=bias_initializer,
+        dtype=kwargs.get("dtype"),
+    )
+    super().__init__(
+        cell,
+        return_sequences=return_sequences,
+        go_backwards=go_backwards,
+        unroll=unroll,
         **kwargs,
-    ):
-        cell = ESNCell(
-            units,
-            connectivity=connectivity,
-            leaky=leaky,
-            spectral_radius=spectral_radius,
-            use_norm2=use_norm2,
-            use_bias=use_bias,
-            activation=activation,
-            kernel_initializer=kernel_initializer,
-            recurrent_initializer=recurrent_initializer,
-            bias_initializer=bias_initializer,
-            dtype=kwargs.get("dtype"),
-        )
-        super().__init__(
-            cell,
-            return_sequences=return_sequences,
-            go_backwards=go_backwards,
-            unroll=unroll,
-            **kwargs,
-        )
+    )
 
-    def call(self, inputs, mask=None, training=None, initial_state=None):
-        return super().call(
-            inputs,
-            mask=mask,
-            training=training,
-            initial_state=initial_state,
-            constants=None,
-        )
+  def call(self, inputs, mask=None, training=None, initial_state=None):
+    return super().call(
+        inputs,
+        mask=mask,
+        training=training,
+        initial_state=initial_state,
+        constants=None,
+    )
 
-    @property
-    def units(self):
-        return self.cell.units
+  @property
+  def units(self):
+    return self.cell.units
 
-    @property
-    def connectivity(self):
-        return self.cell.connectivity
+  @property
+  def connectivity(self):
+    return self.cell.connectivity
 
-    @property
-    def leaky(self):
-        return self.cell.leaky
+  @property
+  def leaky(self):
+    return self.cell.leaky
 
-    @property
-    def spectral_radius(self):
-        return self.cell.spectral_radius
+  @property
+  def spectral_radius(self):
+    return self.cell.spectral_radius
 
-    @property
-    def use_norm2(self):
-        return self.cell.use_norm2
+  @property
+  def use_norm2(self):
+    return self.cell.use_norm2
 
-    @property
-    def use_bias(self):
-        return self.cell.use_bias
+  @property
+  def use_bias(self):
+    return self.cell.use_bias
 
-    @property
-    def activation(self):
-        return self.cell.activation
+  @property
+  def activation(self):
+    return self.cell.activation
 
-    @property
-    def kernel_initializer(self):
-        return self.cell.kernel_initializer
+  @property
+  def kernel_initializer(self):
+    return self.cell.kernel_initializer
 
-    @property
-    def recurrent_initializer(self):
-        return self.cell.recurrent_initializer
+  @property
+  def recurrent_initializer(self):
+    return self.cell.recurrent_initializer
 
-    @property
-    def bias_initializer(self):
-        return self.cell.bias_initializer
+  @property
+  def bias_initializer(self):
+    return self.cell.bias_initializer
 
-    def get_config(self):
-        config = {
-            "units": self.units,
-            "connectivity": self.connectivity,
-            "leaky": self.leaky,
-            "spectral_radius": self.spectral_radius,
-            "use_norm2": self.use_norm2,
-            "use_bias": self.use_bias,
-            "activation": tf.keras.activations.serialize(self.activation),
-            "kernel_initializer": tf.keras.initializers.serialize(
-                self.kernel_initializer
-            ),
-            "recurrent_initializer": tf.keras.initializers.serialize(
-                self.recurrent_initializer
-            ),
-            "bias_initializer": tf.keras.initializers.serialize(self.bias_initializer),
-        }
-        base_config = super().get_config()
-        del base_config["cell"]
-        return {**base_config, **config}
+  def get_config(self):
+    config = {
+        "units": self.units,
+        "connectivity": self.connectivity,
+        "leaky": self.leaky,
+        "spectral_radius": self.spectral_radius,
+        "use_norm2": self.use_norm2,
+        "use_bias": self.use_bias,
+        "activation": tf.keras.activations.serialize(self.activation),
+        "kernel_initializer": tf.keras.initializers.serialize(self.kernel_initializer),
+        "recurrent_initializer": tf.keras.initializers.serialize(self.recurrent_initializer),
+        "bias_initializer": tf.keras.initializers.serialize(self.bias_initializer),
+    }
+    base_config = super().get_config()
+    del base_config["cell"]
+    return {**base_config, **config}
 
-    @classmethod
-    def from_config(cls, config):
-        return cls(**config)
+  @classmethod
+  def from_config(cls, config):
+    return cls(**config)

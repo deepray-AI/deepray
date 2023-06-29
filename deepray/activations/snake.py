@@ -20,7 +20,7 @@ from deepray.utils import types
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 def snake(x: types.TensorLike, frequency: types.Number = 1) -> tf.Tensor:
-    r"""Snake activation to learn periodic functions.
+  r"""Snake activation to learn periodic functions.
 
     Computes snake activation:
 
@@ -42,7 +42,7 @@ def snake(x: types.TensorLike, frequency: types.Number = 1) -> tf.Tensor:
     Returns:
         A `Tensor`. Has the same type as `x`.
     """
-    x = tf.convert_to_tensor(x)
-    frequency = tf.cast(frequency, x.dtype)
+  x = tf.convert_to_tensor(x)
+  frequency = tf.cast(frequency, x.dtype)
 
-    return x + (1 - tf.cos(2 * frequency * x)) / (2 * frequency)
+  return x + (1 - tf.cos(2 * frequency * x)) / (2 * frequency)

@@ -22,7 +22,7 @@ from typing import Union, Callable, Iterable
 
 
 class AdaptivePooling1D(tf.keras.layers.Layer):
-    """Parent class for 1D pooling layers with adaptive kernel size.
+  """Parent class for 1D pooling layers with adaptive kernel size.
 
     This class only exists for code reuse. It will never be an exposed API.
 
@@ -39,56 +39,52 @@ class AdaptivePooling1D(tf.keras.layers.Layer):
         `(batch, features, steps)`.
     """
 
-    @typechecked
-    def __init__(
-        self,
-        reduce_function: Callable,
-        output_size: Union[int, Iterable[int]],
-        data_format=None,
-        **kwargs,
-    ):
-        self.data_format = conv_utils.normalize_data_format(data_format)
-        self.reduce_function = reduce_function
-        self.output_size = conv_utils.normalize_tuple(output_size, 1, "output_size")
-        super().__init__(**kwargs)
+  @typechecked
+  def __init__(
+      self,
+      reduce_function: Callable,
+      output_size: Union[int, Iterable[int]],
+      data_format=None,
+      **kwargs,
+  ):
+    self.data_format = conv_utils.normalize_data_format(data_format)
+    self.reduce_function = reduce_function
+    self.output_size = conv_utils.normalize_tuple(output_size, 1, "output_size")
+    super().__init__(**kwargs)
 
-    def call(self, inputs, *args):
-        bins = self.output_size[0]
-        if self.data_format == "channels_last":
-            splits = tf.split(inputs, bins, axis=1)
-            splits = tf.stack(splits, axis=1)
-            out_vect = self.reduce_function(splits, axis=2)
-        else:
-            splits = tf.split(inputs, bins, axis=2)
-            splits = tf.stack(splits, axis=2)
-            out_vect = self.reduce_function(splits, axis=3)
-        return out_vect
+  def call(self, inputs, *args):
+    bins = self.output_size[0]
+    if self.data_format == "channels_last":
+      splits = tf.split(inputs, bins, axis=1)
+      splits = tf.stack(splits, axis=1)
+      out_vect = self.reduce_function(splits, axis=2)
+    else:
+      splits = tf.split(inputs, bins, axis=2)
+      splits = tf.stack(splits, axis=2)
+      out_vect = self.reduce_function(splits, axis=3)
+    return out_vect
 
-    def compute_output_shape(self, input_shape):
-        input_shape = tf.TensorShape(input_shape).as_list()
-        if self.data_format == "channels_last":
-            shape = tf.TensorShape(
-                [input_shape[0], self.output_size[0], input_shape[2]]
-            )
-        else:
-            shape = tf.TensorShape(
-                [input_shape[0], input_shape[1], self.output_size[0]]
-            )
+  def compute_output_shape(self, input_shape):
+    input_shape = tf.TensorShape(input_shape).as_list()
+    if self.data_format == "channels_last":
+      shape = tf.TensorShape([input_shape[0], self.output_size[0], input_shape[2]])
+    else:
+      shape = tf.TensorShape([input_shape[0], input_shape[1], self.output_size[0]])
 
-        return shape
+    return shape
 
-    def get_config(self):
-        config = {
-            "output_size": self.output_size,
-            "data_format": self.data_format,
-        }
-        base_config = super().get_config()
-        return {**base_config, **config}
+  def get_config(self):
+    config = {
+        "output_size": self.output_size,
+        "data_format": self.data_format,
+    }
+    base_config = super().get_config()
+    return {**base_config, **config}
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveAveragePooling1D(AdaptivePooling1D):
-    """Average Pooling with adaptive kernel size.
+  """Average Pooling with adaptive kernel size.
 
     Args:
       output_size: An integer or tuple/list of a single integer, specifying pooled_features.
@@ -113,16 +109,14 @@ class AdaptiveAveragePooling1D(AdaptivePooling1D):
         3D tensor with shape `(batch_size, channels, pooled_steps)`.
     """
 
-    @typechecked
-    def __init__(
-        self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs
-    ):
-        super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
+  @typechecked
+  def __init__(self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs):
+    super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveMaxPooling1D(AdaptivePooling1D):
-    """Max Pooling with adaptive kernel size.
+  """Max Pooling with adaptive kernel size.
 
     Args:
       output_size: An integer or tuple/list of a single integer, specifying pooled_features.
@@ -147,15 +141,13 @@ class AdaptiveMaxPooling1D(AdaptivePooling1D):
         3D tensor with shape `(batch_size, channels, pooled_steps)`.
     """
 
-    @typechecked
-    def __init__(
-        self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs
-    ):
-        super().__init__(tf.reduce_max, output_size, data_format, **kwargs)
+  @typechecked
+  def __init__(self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs):
+    super().__init__(tf.reduce_max, output_size, data_format, **kwargs)
 
 
 class AdaptivePooling2D(tf.keras.layers.Layer):
-    """Parent class for 2D pooling layers with adaptive kernel size.
+  """Parent class for 2D pooling layers with adaptive kernel size.
 
     This class only exists for code reuse. It will never be an exposed API.
 
@@ -172,71 +164,67 @@ class AdaptivePooling2D(tf.keras.layers.Layer):
         `(batch, channels, height, width)`.
     """
 
-    @typechecked
-    def __init__(
-        self,
-        reduce_function: Callable,
-        output_size: Union[int, Iterable[int]],
-        data_format=None,
-        **kwargs,
-    ):
-        self.data_format = conv_utils.normalize_data_format(data_format)
-        self.reduce_function = reduce_function
-        self.output_size = conv_utils.normalize_tuple(output_size, 2, "output_size")
-        super().__init__(**kwargs)
+  @typechecked
+  def __init__(
+      self,
+      reduce_function: Callable,
+      output_size: Union[int, Iterable[int]],
+      data_format=None,
+      **kwargs,
+  ):
+    self.data_format = conv_utils.normalize_data_format(data_format)
+    self.reduce_function = reduce_function
+    self.output_size = conv_utils.normalize_tuple(output_size, 2, "output_size")
+    super().__init__(**kwargs)
 
-    def call(self, inputs, *args):
-        h_bins = self.output_size[0]
-        w_bins = self.output_size[1]
-        if self.data_format == "channels_last":
-            split_cols = tf.split(inputs, h_bins, axis=1)
-            split_cols = tf.stack(split_cols, axis=1)
-            split_rows = tf.split(split_cols, w_bins, axis=3)
-            split_rows = tf.stack(split_rows, axis=3)
-            out_vect = self.reduce_function(split_rows, axis=[2, 4])
-        else:
-            split_cols = tf.split(inputs, h_bins, axis=2)
-            split_cols = tf.stack(split_cols, axis=2)
-            split_rows = tf.split(split_cols, w_bins, axis=4)
-            split_rows = tf.stack(split_rows, axis=4)
-            out_vect = self.reduce_function(split_rows, axis=[3, 5])
-        return out_vect
+  def call(self, inputs, *args):
+    h_bins = self.output_size[0]
+    w_bins = self.output_size[1]
+    if self.data_format == "channels_last":
+      split_cols = tf.split(inputs, h_bins, axis=1)
+      split_cols = tf.stack(split_cols, axis=1)
+      split_rows = tf.split(split_cols, w_bins, axis=3)
+      split_rows = tf.stack(split_rows, axis=3)
+      out_vect = self.reduce_function(split_rows, axis=[2, 4])
+    else:
+      split_cols = tf.split(inputs, h_bins, axis=2)
+      split_cols = tf.stack(split_cols, axis=2)
+      split_rows = tf.split(split_cols, w_bins, axis=4)
+      split_rows = tf.stack(split_rows, axis=4)
+      out_vect = self.reduce_function(split_rows, axis=[3, 5])
+    return out_vect
 
-    def compute_output_shape(self, input_shape):
-        input_shape = tf.TensorShape(input_shape).as_list()
-        if self.data_format == "channels_last":
-            shape = tf.TensorShape(
-                [
-                    input_shape[0],
-                    self.output_size[0],
-                    self.output_size[1],
-                    input_shape[3],
-                ]
-            )
-        else:
-            shape = tf.TensorShape(
-                [
-                    input_shape[0],
-                    input_shape[1],
-                    self.output_size[0],
-                    self.output_size[1],
-                ]
-            )
+  def compute_output_shape(self, input_shape):
+    input_shape = tf.TensorShape(input_shape).as_list()
+    if self.data_format == "channels_last":
+      shape = tf.TensorShape([
+          input_shape[0],
+          self.output_size[0],
+          self.output_size[1],
+          input_shape[3],
+      ])
+    else:
+      shape = tf.TensorShape([
+          input_shape[0],
+          input_shape[1],
+          self.output_size[0],
+          self.output_size[1],
+      ])
 
-        return shape
+    return shape
 
-    def get_config(self):
-        config = {
-            "output_size": self.output_size,
-            "data_format": self.data_format,
-        }
-        base_config = super().get_config()
-        return {**base_config, **config}
+  def get_config(self):
+    config = {
+        "output_size": self.output_size,
+        "data_format": self.data_format,
+    }
+    base_config = super().get_config()
+    return {**base_config, **config}
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveAveragePooling2D(AdaptivePooling2D):
-    """Average Pooling with adaptive kernel size.
+  """Average Pooling with adaptive kernel size.
 
     Args:
       output_size: Tuple of integers specifying (pooled_rows, pooled_cols).
@@ -261,16 +249,14 @@ class AdaptiveAveragePooling2D(AdaptivePooling2D):
         4D tensor with shape `(batch_size, channels, pooled_rows, pooled_cols)`.
     """
 
-    @typechecked
-    def __init__(
-        self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs
-    ):
-        super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
+  @typechecked
+  def __init__(self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs):
+    super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveMaxPooling2D(AdaptivePooling2D):
-    """Max Pooling with adaptive kernel size.
+  """Max Pooling with adaptive kernel size.
 
     Args:
       output_size: Tuple of integers specifying (pooled_rows, pooled_cols).
@@ -295,15 +281,13 @@ class AdaptiveMaxPooling2D(AdaptivePooling2D):
         4D tensor with shape `(batch_size, channels, pooled_rows, pooled_cols)`.
     """
 
-    @typechecked
-    def __init__(
-        self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs
-    ):
-        super().__init__(tf.reduce_max, output_size, data_format, **kwargs)
+  @typechecked
+  def __init__(self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs):
+    super().__init__(tf.reduce_max, output_size, data_format, **kwargs)
 
 
 class AdaptivePooling3D(tf.keras.layers.Layer):
-    """Parent class for 3D pooling layers with adaptive kernel size.
+  """Parent class for 3D pooling layers with adaptive kernel size.
 
     This class only exists for code reuse. It will never be an exposed API.
 
@@ -320,78 +304,78 @@ class AdaptivePooling3D(tf.keras.layers.Layer):
         `(batch, channels, spatial_dim1, spatial_dim2, spatial_dim3)`.
     """
 
-    @typechecked
-    def __init__(
-        self,
-        reduce_function: Callable,
-        output_size: Union[int, Iterable[int]],
-        data_format=None,
-        **kwargs,
-    ):
-        self.data_format = conv_utils.normalize_data_format(data_format)
-        self.reduce_function = reduce_function
-        self.output_size = conv_utils.normalize_tuple(output_size, 3, "output_size")
-        super().__init__(**kwargs)
+  @typechecked
+  def __init__(
+      self,
+      reduce_function: Callable,
+      output_size: Union[int, Iterable[int]],
+      data_format=None,
+      **kwargs,
+  ):
+    self.data_format = conv_utils.normalize_data_format(data_format)
+    self.reduce_function = reduce_function
+    self.output_size = conv_utils.normalize_tuple(output_size, 3, "output_size")
+    super().__init__(**kwargs)
 
-    def call(self, inputs, *args):
-        h_bins = self.output_size[0]
-        w_bins = self.output_size[1]
-        d_bins = self.output_size[2]
-        if self.data_format == "channels_last":
-            split_cols = tf.split(inputs, h_bins, axis=1)
-            split_cols = tf.stack(split_cols, axis=1)
-            split_rows = tf.split(split_cols, w_bins, axis=3)
-            split_rows = tf.stack(split_rows, axis=3)
-            split_depth = tf.split(split_rows, d_bins, axis=5)
-            split_depth = tf.stack(split_depth, axis=5)
-            out_vect = self.reduce_function(split_depth, axis=[2, 4, 6])
-        else:
-            split_cols = tf.split(inputs, h_bins, axis=2)
-            split_cols = tf.stack(split_cols, axis=2)
-            split_rows = tf.split(split_cols, w_bins, axis=4)
-            split_rows = tf.stack(split_rows, axis=4)
-            split_depth = tf.split(split_rows, d_bins, axis=6)
-            split_depth = tf.stack(split_depth, axis=6)
-            out_vect = self.reduce_function(split_depth, axis=[3, 5, 7])
-        return out_vect
+  def call(self, inputs, *args):
+    h_bins = self.output_size[0]
+    w_bins = self.output_size[1]
+    d_bins = self.output_size[2]
+    if self.data_format == "channels_last":
+      split_cols = tf.split(inputs, h_bins, axis=1)
+      split_cols = tf.stack(split_cols, axis=1)
+      split_rows = tf.split(split_cols, w_bins, axis=3)
+      split_rows = tf.stack(split_rows, axis=3)
+      split_depth = tf.split(split_rows, d_bins, axis=5)
+      split_depth = tf.stack(split_depth, axis=5)
+      out_vect = self.reduce_function(split_depth, axis=[2, 4, 6])
+    else:
+      split_cols = tf.split(inputs, h_bins, axis=2)
+      split_cols = tf.stack(split_cols, axis=2)
+      split_rows = tf.split(split_cols, w_bins, axis=4)
+      split_rows = tf.stack(split_rows, axis=4)
+      split_depth = tf.split(split_rows, d_bins, axis=6)
+      split_depth = tf.stack(split_depth, axis=6)
+      out_vect = self.reduce_function(split_depth, axis=[3, 5, 7])
+    return out_vect
 
-    def compute_output_shape(self, input_shape):
-        input_shape = tf.TensorShape(input_shape).as_list()
-        if self.data_format == "channels_last":
-            shape = tf.TensorShape(
-                [
-                    input_shape[0],
-                    self.output_size[0],
-                    self.output_size[1],
-                    self.output_size[2],
-                    input_shape[4],
-                ]
-            )
-        else:
-            shape = tf.TensorShape(
-                [
-                    input_shape[0],
-                    input_shape[1],
-                    self.output_size[0],
-                    self.output_size[1],
-                    self.output_size[2],
-                ]
-            )
+  def compute_output_shape(self, input_shape):
+    input_shape = tf.TensorShape(input_shape).as_list()
+    if self.data_format == "channels_last":
+      shape = tf.TensorShape(
+          [
+              input_shape[0],
+              self.output_size[0],
+              self.output_size[1],
+              self.output_size[2],
+              input_shape[4],
+          ]
+      )
+    else:
+      shape = tf.TensorShape(
+          [
+              input_shape[0],
+              input_shape[1],
+              self.output_size[0],
+              self.output_size[1],
+              self.output_size[2],
+          ]
+      )
 
-        return shape
+    return shape
 
-    def get_config(self):
-        config = {
-            "output_size": self.output_size,
-            "data_format": self.data_format,
-        }
-        base_config = super().get_config()
-        return {**base_config, **config}
+  def get_config(self):
+    config = {
+        "output_size": self.output_size,
+        "data_format": self.data_format,
+    }
+    base_config = super().get_config()
+    return {**base_config, **config}
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveAveragePooling3D(AdaptivePooling3D):
-    """Average Pooling with adaptive kernel size.
+  """Average Pooling with adaptive kernel size.
 
     Args:
       output_size: An integer or tuple/list of 3 integers specifying (pooled_depth, pooled_height, pooled_width).
@@ -416,16 +400,14 @@ class AdaptiveAveragePooling3D(AdaptivePooling3D):
         5D tensor with shape `(batch_size, channels, pooled_dim1, pooled_dim2, pooled_dim3)`.
     """
 
-    @typechecked
-    def __init__(
-        self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs
-    ):
-        super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
+  @typechecked
+  def __init__(self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs):
+    super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveMaxPooling3D(AdaptivePooling3D):
-    """Max Pooling with adaptive kernel size.
+  """Max Pooling with adaptive kernel size.
 
     Args:
       output_size: An integer or tuple/list of 3 integers specifying (pooled_depth, pooled_height, pooled_width).
@@ -450,8 +432,6 @@ class AdaptiveMaxPooling3D(AdaptivePooling3D):
         5D tensor with shape `(batch_size, channels, pooled_dim1, pooled_dim2, pooled_dim3)`.
     """
 
-    @typechecked
-    def __init__(
-        self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs
-    ):
-        super().__init__(tf.reduce_max, output_size, data_format, **kwargs)
+  @typechecked
+  def __init__(self, output_size: Union[int, Iterable[int]], data_format=None, **kwargs):
+    super().__init__(tf.reduce_max, output_size, data_format, **kwargs)

@@ -15,12 +15,11 @@
 import tensorflow as tf
 
 if (
-    hasattr(tf.keras.optimizers, "experimental")
-    and tf.keras.optimizers.Optimizer.__module__
-    == tf.keras.optimizers.experimental.Optimizer.__module__
+    hasattr(tf.keras.optimizers, "experimental") and
+    tf.keras.optimizers.Optimizer.__module__ == tf.keras.optimizers.experimental.Optimizer.__module__
 ):
-    # If the default optimizer points to new Keras optimizer, addon optimizers
-    # should use the legacy path.
-    KerasLegacyOptimizer = tf.keras.optimizers.legacy.Optimizer
+  # If the default optimizer points to new Keras optimizer, addon optimizers
+  # should use the legacy path.
+  KerasLegacyOptimizer = tf.keras.optimizers.legacy.Optimizer
 else:
-    KerasLegacyOptimizer = tf.keras.optimizers.Optimizer
+  KerasLegacyOptimizer = tf.keras.optimizers.Optimizer

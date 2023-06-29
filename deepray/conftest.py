@@ -27,6 +27,6 @@ from deepray.utils.test_utils import (  # noqa: F401
 
 @pytest.fixture(autouse=True)
 def add_doctest_namespace(doctest_namespace):
-    doctest_namespace["np"] = np
-    doctest_namespace["tf"] = tf
-    doctest_namespace["dp"] = dp
+  doctest_namespace["np"] = np
+  doctest_namespace["tf"] = tf
+  doctest_namespace["dp"] = dp

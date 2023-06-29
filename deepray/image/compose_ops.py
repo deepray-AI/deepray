@@ -20,7 +20,7 @@ from deepray.utils.types import TensorLike, Number
 
 
 def blend(image1: TensorLike, image2: TensorLike, factor: Number) -> tf.Tensor:
-    """Blend `image1` and `image2` using `factor`.
+  """Blend `image1` and `image2` using `factor`.
 
     Factor can be above 0.0.  A value of 0.0 means only `image1` is used.
     A value of 1.0 means only `image2` is used.  A value between 0.0 and
@@ -44,29 +44,29 @@ def blend(image1: TensorLike, image2: TensorLike, factor: Number) -> tf.Tensor:
       A blended image Tensor of `tf.float32`.
 
     """
-    with tf.name_scope("blend"):
-        if factor == 0.0:
-            return tf.convert_to_tensor(image1)
-        if factor == 1.0:
-            return tf.convert_to_tensor(image2)
+  with tf.name_scope("blend"):
+    if factor == 0.0:
+      return tf.convert_to_tensor(image1)
+    if factor == 1.0:
+      return tf.convert_to_tensor(image2)
 
-        image1 = tf.cast(image1, dtype=tf.dtypes.float32)
-        image2 = tf.cast(image2, dtype=tf.dtypes.float32)
+    image1 = tf.cast(image1, dtype=tf.dtypes.float32)
+    image2 = tf.cast(image2, dtype=tf.dtypes.float32)
 
-        difference = image2 - image1
-        scaled = factor * difference
+    difference = image2 - image1
+    scaled = factor * difference
 
-        # Do addition in float.
-        temp = image1 + scaled
+    # Do addition in float.
+    temp = image1 + scaled
 
-        # Interpolate
-        if factor > 0.0 and factor < 1.0:
-            # Interpolation means we always stay within 0 and 255.
-            temp = tf.round(temp)
-            return temp
+    # Interpolate
+    if factor > 0.0 and factor < 1.0:
+      # Interpolation means we always stay within 0 and 255.
+      temp = tf.round(temp)
+      return temp
 
-        # Extrapolate:
-        #
-        # We need to clip and then cast.
-        temp = tf.round(tf.clip_by_value(temp, 0.0, 255.0))
-        return temp
+    # Extrapolate:
+    #
+    # We need to clip and then cast.
+    temp = tf.round(tf.clip_by_value(temp, 0.0, 255.0))
+    return temp

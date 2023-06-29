@@ -25,10 +25,8 @@ _image_so = LazySO("custom_ops/image/_image_ops.so")
 
 
 @tf.function
-def connected_components(
-    images: types.TensorLike, name: Optional[Text] = None
-) -> tf.Tensor:
-    """Labels the connected components in a batch of images.
+def connected_components(images: types.TensorLike, name: Optional[Text] = None) -> tf.Tensor:
+  """Labels the connected components in a batch of images.
 
     A component is a set of pixels in a single input image, which are
     all adjacent and all have the same non-zero value. The components
@@ -56,45 +54,40 @@ def connected_components(
     Raises:
       TypeError: if `images` is not 2D or 3D.
     """
-    with tf.name_scope(name or "connected_components"):
-        image_or_images = tf.convert_to_tensor(images, name="images")
-        if len(image_or_images.get_shape()) == 2:
-            images = image_or_images[None, :, :]
-        elif len(image_or_images.get_shape()) == 3:
-            images = image_or_images
-        else:
-            raise TypeError(
-                "images should have rank 2 (HW) or 3 (NHW). Static shape is %s"
-                % image_or_images.get_shape()
-            )
-        components = _image_so.ops.deepray_image_connected_components(images)
+  with tf.name_scope(name or "connected_components"):
+    image_or_images = tf.convert_to_tensor(images, name="images")
+    if len(image_or_images.get_shape()) == 2:
+      images = image_or_images[None, :, :]
+    elif len(image_or_images.get_shape()) == 3:
+      images = image_or_images
+    else:
+      raise TypeError("images should have rank 2 (HW) or 3 (NHW). Static shape is %s" % image_or_images.get_shape())
+    components = _image_so.ops.deepray_image_connected_components(images)
 
-        # TODO(ringwalt): Component id renaming should be done in the op,
-        # to avoid constructing multiple additional large tensors.
-        components_flat = tf.reshape(components, [-1])
-        unique_ids, id_index = tf.unique(components_flat)
-        id_is_zero = tf.where(tf.equal(unique_ids, 0))[:, 0]
-        # Map each nonzero id to consecutive values.
-        nonzero_consecutive_ids = (
-            tf.range(tf.shape(unique_ids)[0] - tf.shape(id_is_zero)[0]) + 1
-        )
+    # TODO(ringwalt): Component id renaming should be done in the op,
+    # to avoid constructing multiple additional large tensors.
+    components_flat = tf.reshape(components, [-1])
+    unique_ids, id_index = tf.unique(components_flat)
+    id_is_zero = tf.where(tf.equal(unique_ids, 0))[:, 0]
+    # Map each nonzero id to consecutive values.
+    nonzero_consecutive_ids = (tf.range(tf.shape(unique_ids)[0] - tf.shape(id_is_zero)[0]) + 1)
 
-        def no_zero():
-            # No need to insert a zero into the ids.
-            return nonzero_consecutive_ids
+    def no_zero():
+      # No need to insert a zero into the ids.
+      return nonzero_consecutive_ids
 
-        def has_zero():
-            # Insert a zero in the consecutive ids
-            # where zero appears in unique_ids.
-            # id_is_zero has length 1.
-            zero_id_ind = tf.cast(id_is_zero[0], tf.int32)
-            ids_before = nonzero_consecutive_ids[:zero_id_ind]
-            ids_after = nonzero_consecutive_ids[zero_id_ind:]
-            return tf.concat([ids_before, [0], ids_after], axis=0)
+    def has_zero():
+      # Insert a zero in the consecutive ids
+      # where zero appears in unique_ids.
+      # id_is_zero has length 1.
+      zero_id_ind = tf.cast(id_is_zero[0], tf.int32)
+      ids_before = nonzero_consecutive_ids[:zero_id_ind]
+      ids_after = nonzero_consecutive_ids[zero_id_ind:]
+      return tf.concat([ids_before, [0], ids_after], axis=0)
 
-        new_ids = tf.cond(tf.equal(tf.shape(id_is_zero)[0], 0), no_zero, has_zero)
-        components = tf.reshape(tf.gather(new_ids, id_index), tf.shape(components))
-        if len(image_or_images.get_shape()) == 2:
-            return components[0, :, :]
-        else:
-            return components
+    new_ids = tf.cond(tf.equal(tf.shape(id_is_zero)[0], 0), no_zero, has_zero)
+    components = tf.reshape(tf.gather(new_ids, id_index), tf.shape(components))
+    if len(image_or_images.get_shape()) == 2:
+      return components[0, :, :]
+    else:
+      return components

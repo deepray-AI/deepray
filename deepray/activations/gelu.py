@@ -21,7 +21,7 @@ from deepray.utils.types import TensorLike
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 def gelu(x: TensorLike, approximate: bool = True) -> tf.Tensor:
-    r"""Gaussian Error Linear Unit.
+  r"""Gaussian Error Linear Unit.
 
     Computes gaussian error linear:
 
@@ -64,11 +64,11 @@ def gelu(x: TensorLike, approximate: bool = True) -> tf.Tensor:
     Returns:
         A `Tensor`. Has the same type as `x`.
     """
-    warnings.warn(
-        "gelu activation has been migrated to core TensorFlow, "
-        "and will be deprecated in Addons 0.13. "
-        "Note that the default of `approximate` changed to `False` in `tf.nn.gelu`.",
-        DeprecationWarning,
-    )
+  warnings.warn(
+      "gelu activation has been migrated to core TensorFlow, "
+      "and will be deprecated in Addons 0.13. "
+      "Note that the default of `approximate` changed to `False` in `tf.nn.gelu`.",
+      DeprecationWarning,
+  )
 
-    return tf.nn.gelu(x, approximate)
+  return tf.nn.gelu(x, approximate)

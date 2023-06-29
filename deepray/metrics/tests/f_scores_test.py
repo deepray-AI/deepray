@@ -22,52 +22,52 @@ from deepray.testing.serialization import check_metric_serialization
 
 
 def test_config_fbeta():
-    fbeta_obj = FBetaScore(num_classes=3, beta=0.5, threshold=0.3, average=None)
-    assert fbeta_obj.beta == 0.5
-    assert fbeta_obj.average is None
-    assert fbeta_obj.threshold == 0.3
-    assert fbeta_obj.num_classes == 3
-    assert fbeta_obj.dtype == tf.float32
+  fbeta_obj = FBetaScore(num_classes=3, beta=0.5, threshold=0.3, average=None)
+  assert fbeta_obj.beta == 0.5
+  assert fbeta_obj.average is None
+  assert fbeta_obj.threshold == 0.3
+  assert fbeta_obj.num_classes == 3
+  assert fbeta_obj.dtype == tf.float32
 
-    # Check save and restore config
-    fbeta_obj2 = FBetaScore.from_config(fbeta_obj.get_config())
-    assert fbeta_obj2.beta == 0.5
-    assert fbeta_obj2.average is None
-    assert fbeta_obj2.threshold == 0.3
-    assert fbeta_obj2.num_classes == 3
-    assert fbeta_obj2.dtype == tf.float32
+  # Check save and restore config
+  fbeta_obj2 = FBetaScore.from_config(fbeta_obj.get_config())
+  assert fbeta_obj2.beta == 0.5
+  assert fbeta_obj2.average is None
+  assert fbeta_obj2.threshold == 0.3
+  assert fbeta_obj2.num_classes == 3
+  assert fbeta_obj2.dtype == tf.float32
 
 
 def _test_tf(avg, beta, act, pred, sample_weights, threshold):
-    act = tf.constant(act, tf.float32)
-    pred = tf.constant(pred, tf.float32)
+  act = tf.constant(act, tf.float32)
+  pred = tf.constant(pred, tf.float32)
 
-    fbeta = FBetaScore(3, avg, beta, threshold)
-    fbeta.update_state(act, pred, sample_weights)
-    return fbeta.result().numpy()
+  fbeta = FBetaScore(3, avg, beta, threshold)
+  fbeta.update_state(act, pred, sample_weights)
+  return fbeta.result().numpy()
 
 
 def _test_fbeta_score(actuals, preds, sample_weights, avg, beta_val, result, threshold):
-    tf_score = _test_tf(avg, beta_val, actuals, preds, sample_weights, threshold)
-    np.testing.assert_allclose(tf_score, result, atol=1e-7, rtol=1e-6)
+  tf_score = _test_tf(avg, beta_val, actuals, preds, sample_weights, threshold)
+  np.testing.assert_allclose(tf_score, result, atol=1e-7, rtol=1e-6)
 
 
 def test_fbeta_perfect_score():
-    preds = [[0.7, 0.7, 0.7], [1, 0, 0], [0.9, 0.8, 0]]
-    actuals = [[1, 1, 1], [1, 0, 0], [1, 1, 0]]
+  preds = [[0.7, 0.7, 0.7], [1, 0, 0], [0.9, 0.8, 0]]
+  actuals = [[1, 1, 1], [1, 0, 0], [1, 1, 0]]
 
-    for avg_val in ["micro", "macro", "weighted"]:
-        for beta in [0.5, 1.0, 2.0]:
-            _test_fbeta_score(actuals, preds, None, avg_val, beta, 1.0, 0.66)
+  for avg_val in ["micro", "macro", "weighted"]:
+    for beta in [0.5, 1.0, 2.0]:
+      _test_fbeta_score(actuals, preds, None, avg_val, beta, 1.0, 0.66)
 
 
 def test_fbeta_worst_score():
-    preds = [[0.7, 0.7, 0.7], [1, 0, 0], [0.9, 0.8, 0]]
-    actuals = [[0, 0, 0], [0, 1, 0], [0, 0, 1]]
+  preds = [[0.7, 0.7, 0.7], [1, 0, 0], [0.9, 0.8, 0]]
+  actuals = [[0, 0, 0], [0, 1, 0], [0, 0, 1]]
 
-    for avg_val in ["micro", "macro", "weighted"]:
-        for beta in [0.5, 1.0, 2.0]:
-            _test_fbeta_score(actuals, preds, None, avg_val, beta, 0.0, 0.66)
+  for avg_val in ["micro", "macro", "weighted"]:
+    for beta in [0.5, 1.0, 2.0]:
+      _test_fbeta_score(actuals, preds, None, avg_val, beta, 0.0, 0.66)
 
 
 @pytest.mark.parametrize(
@@ -88,9 +88,9 @@ def test_fbeta_worst_score():
     ],
 )
 def test_fbeta_random_score(avg_val, beta, result):
-    preds = [[0.7, 0.7, 0.7], [1, 0, 0], [0.9, 0.8, 0]]
-    actuals = [[0, 0, 1], [1, 1, 0], [1, 1, 1]]
-    _test_fbeta_score(actuals, preds, None, avg_val, beta, result, 0.66)
+  preds = [[0.7, 0.7, 0.7], [1, 0, 0], [0.9, 0.8, 0]]
+  actuals = [[0, 0, 1], [1, 1, 0], [1, 1, 1]]
+  _test_fbeta_score(actuals, preds, None, avg_val, beta, result, 0.66)
 
 
 @pytest.mark.parametrize(
@@ -111,16 +111,16 @@ def test_fbeta_random_score(avg_val, beta, result):
     ],
 )
 def test_fbeta_random_score_none(avg_val, beta, result):
-    preds = [
-        [0.9, 0.1, 0],
-        [0.2, 0.6, 0.2],
-        [0, 0, 1],
-        [0.4, 0.3, 0.3],
-        [0, 0.9, 0.1],
-        [0, 0, 1],
-    ]
-    actuals = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1]]
-    _test_fbeta_score(actuals, preds, None, avg_val, beta, result, None)
+  preds = [
+      [0.9, 0.1, 0],
+      [0.2, 0.6, 0.2],
+      [0, 0, 1],
+      [0.4, 0.3, 0.3],
+      [0, 0.9, 0.1],
+      [0, 0, 1],
+  ]
+  actuals = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1]]
+  _test_fbeta_score(actuals, preds, None, avg_val, beta, result, None)
 
 
 @pytest.mark.parametrize(
@@ -165,85 +165,85 @@ def test_fbeta_random_score_none(avg_val, beta, result):
     ],
 )
 def test_fbeta_weighted_random_score_none(avg_val, beta, sample_weights, result):
-    preds = [
-        [0.9, 0.1, 0],
-        [0.2, 0.6, 0.2],
-        [0, 0, 1],
-        [0.4, 0.3, 0.3],
-        [0, 0.9, 0.1],
-        [0, 0, 1],
-    ]
-    actuals = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1]]
-    _test_fbeta_score(actuals, preds, sample_weights, avg_val, beta, result, None)
+  preds = [
+      [0.9, 0.1, 0],
+      [0.2, 0.6, 0.2],
+      [0, 0, 1],
+      [0.4, 0.3, 0.3],
+      [0, 0.9, 0.1],
+      [0, 0, 1],
+  ]
+  actuals = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1]]
+  _test_fbeta_score(actuals, preds, sample_weights, avg_val, beta, result, None)
 
 
 def test_keras_model():
-    fbeta = FBetaScore(5, "micro", 1.0)
-    utils._get_model(fbeta, 5)
+  fbeta = FBetaScore(5, "micro", 1.0)
+  utils._get_model(fbeta, 5)
 
 
 def test_eq():
-    f1 = F1Score(3)
-    fbeta = FBetaScore(3, beta=1.0)
+  f1 = F1Score(3)
+  fbeta = FBetaScore(3, beta=1.0)
 
-    preds = [
-        [0.9, 0.1, 0],
-        [0.2, 0.6, 0.2],
-        [0, 0, 1],
-        [0.4, 0.3, 0.3],
-        [0, 0.9, 0.1],
-        [0, 0, 1],
-    ]
-    actuals = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1]]
+  preds = [
+      [0.9, 0.1, 0],
+      [0.2, 0.6, 0.2],
+      [0, 0, 1],
+      [0.4, 0.3, 0.3],
+      [0, 0.9, 0.1],
+      [0, 0, 1],
+  ]
+  actuals = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1]]
 
-    fbeta.update_state(actuals, preds)
-    f1.update_state(actuals, preds)
-    np.testing.assert_allclose(fbeta.result().numpy(), f1.result().numpy())
+  fbeta.update_state(actuals, preds)
+  f1.update_state(actuals, preds)
+  np.testing.assert_allclose(fbeta.result().numpy(), f1.result().numpy())
 
 
 def test_sample_eq():
-    f1 = F1Score(3)
-    f1_weighted = F1Score(3)
+  f1 = F1Score(3)
+  f1_weighted = F1Score(3)
 
-    preds = [
-        [0.9, 0.1, 0],
-        [0.2, 0.6, 0.2],
-        [0, 0, 1],
-        [0.4, 0.3, 0.3],
-        [0, 0.9, 0.1],
-        [0, 0, 1],
-    ]
-    actuals = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1]]
-    sample_weights = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  preds = [
+      [0.9, 0.1, 0],
+      [0.2, 0.6, 0.2],
+      [0, 0, 1],
+      [0.4, 0.3, 0.3],
+      [0, 0.9, 0.1],
+      [0, 0, 1],
+  ]
+  actuals = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1]]
+  sample_weights = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
 
-    f1.update_state(actuals, preds)
-    f1_weighted(actuals, preds, sample_weights)
-    np.testing.assert_allclose(f1.result().numpy(), f1_weighted.result().numpy())
+  f1.update_state(actuals, preds)
+  f1_weighted(actuals, preds, sample_weights)
+  np.testing.assert_allclose(f1.result().numpy(), f1_weighted.result().numpy())
 
 
 def test_keras_model_f1():
-    f1 = F1Score(5)
-    utils._get_model(f1, 5)
+  f1 = F1Score(5)
+  utils._get_model(f1, 5)
 
 
 def test_config_f1():
-    f1 = F1Score(3)
-    config = f1.get_config()
-    assert "beta" not in config
+  f1 = F1Score(3)
+  config = f1.get_config()
+  assert "beta" not in config
 
 
 @pytest.mark.parametrize("average", [None, "micro", "macro", "weighted"])
 @pytest.mark.parametrize("threshold", [None, 0.2])
 def test_serialization_f1_score(average, threshold):
-    f1 = F1Score(3, average, threshold)
-    preds = [
-        [0.9, 0.1, 0],
-        [0.2, 0.6, 0.2],
-        [0, 0, 1],
-        [0.4, 0.3, 0.3],
-        [0, 0.9, 0.1],
-        [0, 0, 1],
-    ]
-    actuals = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1]]
+  f1 = F1Score(3, average, threshold)
+  preds = [
+      [0.9, 0.1, 0],
+      [0.2, 0.6, 0.2],
+      [0, 0, 1],
+      [0.4, 0.3, 0.3],
+      [0, 0.9, 0.1],
+      [0, 0, 1],
+  ]
+  actuals = [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0], [1, 0, 0], [0, 0, 1]]
 
-    check_metric_serialization(f1, np.array(actuals), np.array(preds))
+  check_metric_serialization(f1, np.array(actuals), np.array(preds))

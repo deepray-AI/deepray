@@ -39,23 +39,18 @@ clang-format -i --style=google **/*.cc deepray/**/*.h
 ```
 
 #### Python
-
-Addons uses [flake8](http://flake8.pycqa.org/en/latest/) to check pep8 compliance and 
-code analysis.
-
-Addons use [Black](https://black.readthedocs.io/en/stable/) to format our code.
+Deepray use [Yapf](https://github.com/google/yapf) to format our code.
 The continuous integration check will fail if you do not use it.
 
 Install them with:
 ```
-pip install flake8 black
+pip install yapf
 ```
 
-Be sure to run them both before you push your commits, otherwise the CI will fail!
+Be sure to run it before you push your commits, otherwise the CI will fail!
 
 ```
-python -m black ./
-python -m flake8
+yapf --style=./.yapf -ir ./**/*.py
 ```
 
 #### TensorFlow Conventions

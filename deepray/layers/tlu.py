@@ -22,7 +22,7 @@ from deepray.utils import types
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class TLU(tf.keras.layers.Layer):
-    r"""Thresholded Linear Unit.
+  r"""Thresholded Linear Unit.
 
     An activation function which is similar to ReLU
     but with a learned threshold that benefits models using FRN(Filter Response
@@ -41,80 +41,74 @@ class TLU(tf.keras.layers.Layer):
             which has the form $\max(x, \alpha*x + \tau)$`
     """
 
-    @typechecked
-    def __init__(
-        self,
-        affine: bool = False,
-        tau_initializer: types.Initializer = "zeros",
-        tau_regularizer: types.Regularizer = None,
-        tau_constraint: types.Constraint = None,
-        alpha_initializer: types.Initializer = "zeros",
-        alpha_regularizer: types.Regularizer = None,
-        alpha_constraint: types.Constraint = None,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        self.supports_masking = True
-        self.affine = affine
-        self.tau_initializer = tf.keras.initializers.get(tau_initializer)
-        self.tau_regularizer = tf.keras.regularizers.get(tau_regularizer)
-        self.tau_constraint = tf.keras.constraints.get(tau_constraint)
-        if self.affine:
-            self.alpha_initializer = tf.keras.initializers.get(alpha_initializer)
-            self.alpha_regularizer = tf.keras.regularizers.get(alpha_regularizer)
-            self.alpha_constraint = tf.keras.constraints.get(alpha_constraint)
+  @typechecked
+  def __init__(
+      self,
+      affine: bool = False,
+      tau_initializer: types.Initializer = "zeros",
+      tau_regularizer: types.Regularizer = None,
+      tau_constraint: types.Constraint = None,
+      alpha_initializer: types.Initializer = "zeros",
+      alpha_regularizer: types.Regularizer = None,
+      alpha_constraint: types.Constraint = None,
+      **kwargs,
+  ):
+    super().__init__(**kwargs)
+    self.supports_masking = True
+    self.affine = affine
+    self.tau_initializer = tf.keras.initializers.get(tau_initializer)
+    self.tau_regularizer = tf.keras.regularizers.get(tau_regularizer)
+    self.tau_constraint = tf.keras.constraints.get(tau_constraint)
+    if self.affine:
+      self.alpha_initializer = tf.keras.initializers.get(alpha_initializer)
+      self.alpha_regularizer = tf.keras.regularizers.get(alpha_regularizer)
+      self.alpha_constraint = tf.keras.constraints.get(alpha_constraint)
 
-    def build(self, input_shape):
-        param_shape = list(input_shape[1:])
-        self.tau = self.add_weight(
-            shape=param_shape,
-            name="tau",
-            initializer=self.tau_initializer,
-            regularizer=self.tau_regularizer,
-            constraint=self.tau_constraint,
-            synchronization=tf.VariableSynchronization.AUTO,
-            aggregation=tf.VariableAggregation.MEAN,
-        )
-        if self.affine:
-            self.alpha = self.add_weight(
-                shape=param_shape,
-                name="alpha",
-                initializer=self.alpha_initializer,
-                regularizer=self.alpha_regularizer,
-                constraint=self.alpha_constraint,
-                synchronization=tf.VariableSynchronization.AUTO,
-                aggregation=tf.VariableAggregation.MEAN,
-            )
+  def build(self, input_shape):
+    param_shape = list(input_shape[1:])
+    self.tau = self.add_weight(
+        shape=param_shape,
+        name="tau",
+        initializer=self.tau_initializer,
+        regularizer=self.tau_regularizer,
+        constraint=self.tau_constraint,
+        synchronization=tf.VariableSynchronization.AUTO,
+        aggregation=tf.VariableAggregation.MEAN,
+    )
+    if self.affine:
+      self.alpha = self.add_weight(
+          shape=param_shape,
+          name="alpha",
+          initializer=self.alpha_initializer,
+          regularizer=self.alpha_regularizer,
+          constraint=self.alpha_constraint,
+          synchronization=tf.VariableSynchronization.AUTO,
+          aggregation=tf.VariableAggregation.MEAN,
+      )
 
-        axes = {i: input_shape[i] for i in range(1, len(input_shape))}
-        self.input_spec = tf.keras.layers.InputSpec(ndim=len(input_shape), axes=axes)
-        self.built = True
+    axes = {i: input_shape[i] for i in range(1, len(input_shape))}
+    self.input_spec = tf.keras.layers.InputSpec(ndim=len(input_shape), axes=axes)
+    self.built = True
 
-    def call(self, inputs):
-        v = self.alpha * inputs if self.affine else 0
-        return tf.maximum(inputs, self.tau + v)
+  def call(self, inputs):
+    v = self.alpha * inputs if self.affine else 0
+    return tf.maximum(inputs, self.tau + v)
 
-    def get_config(self):
-        config = {
-            "tau_initializer": tf.keras.initializers.serialize(self.tau_initializer),
-            "tau_regularizer": tf.keras.regularizers.serialize(self.tau_regularizer),
-            "tau_constraint": tf.keras.constraints.serialize(self.tau_constraint),
-            "affine": self.affine,
-        }
+  def get_config(self):
+    config = {
+        "tau_initializer": tf.keras.initializers.serialize(self.tau_initializer),
+        "tau_regularizer": tf.keras.regularizers.serialize(self.tau_regularizer),
+        "tau_constraint": tf.keras.constraints.serialize(self.tau_constraint),
+        "affine": self.affine,
+    }
 
-        if self.affine:
-            config["alpha_initializer"] = tf.keras.initializers.serialize(
-                self.alpha_initializer
-            )
-            config["alpha_regularizer"] = tf.keras.regularizers.serialize(
-                self.alpha_regularizer
-            )
-            config["alpha_constraint"] = tf.keras.constraints.serialize(
-                self.alpha_constraint
-            )
+    if self.affine:
+      config["alpha_initializer"] = tf.keras.initializers.serialize(self.alpha_initializer)
+      config["alpha_regularizer"] = tf.keras.regularizers.serialize(self.alpha_regularizer)
+      config["alpha_constraint"] = tf.keras.constraints.serialize(self.alpha_constraint)
 
-        base_config = super().get_config()
-        return {**base_config, **config}
+    base_config = super().get_config()
+    return {**base_config, **config}
 
-    def compute_output_shape(self, input_shape):
-        return input_shape
+  def compute_output_shape(self, input_shape):
+    return input_shape

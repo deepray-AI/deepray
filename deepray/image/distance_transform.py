@@ -31,7 +31,7 @@ def euclidean_dist_transform(
     dtype: Type[tf.dtypes.DType] = tf.float32,
     name: Optional[str] = None,
 ) -> tf.Tensor:
-    """Applies euclidean distance transform(s) to the image(s).
+  """Applies euclidean distance transform(s) to the image(s).
 
     Based on [Distance Transforms of Sampled Functions]
     (http://www.theoryofcomputing.org/articles/v008a019/v008a019.pdf).
@@ -52,18 +52,18 @@ def euclidean_dist_transform(
       TypeError: If `image` is not tf.uint8, or `dtype` is not floating point.
     """
 
-    with tf.name_scope(name or "euclidean_distance_transform"):
-        image_or_images = tf.convert_to_tensor(images, name="images")
+  with tf.name_scope(name or "euclidean_distance_transform"):
+    image_or_images = tf.convert_to_tensor(images, name="images")
 
-        if image_or_images.dtype.base_dtype != tf.uint8:
-            raise TypeError("Invalid dtype %s. Expected uint8." % image_or_images.dtype)
+    if image_or_images.dtype.base_dtype != tf.uint8:
+      raise TypeError("Invalid dtype %s. Expected uint8." % image_or_images.dtype)
 
-        images = img_utils.to_4D_image(image_or_images)
-        original_ndims = img_utils.get_ndims(image_or_images)
+    images = img_utils.to_4D_image(image_or_images)
+    original_ndims = img_utils.get_ndims(image_or_images)
 
-        if dtype not in [tf.float16, tf.float32, tf.float64]:
-            raise TypeError("`dtype` must be float16, float32 or float64")
+    if dtype not in [tf.float16, tf.float32, tf.float64]:
+      raise TypeError("`dtype` must be float16, float32 or float64")
 
-        output = _image_so.ops.deepray_euclidean_distance_transform(images, dtype)
+    output = _image_so.ops.deepray_euclidean_distance_transform(images, dtype)
 
-        return img_utils.from_4D_image(output, original_ndims)
+    return img_utils.from_4D_image(output, original_ndims)

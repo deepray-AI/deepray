@@ -23,19 +23,19 @@ from typing import Union, Callable
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class CyclicalLearningRate(tf.keras.optimizers.schedules.LearningRateSchedule):
-    """A LearningRateSchedule that uses cyclical schedule."""
+  """A LearningRateSchedule that uses cyclical schedule."""
 
-    @typechecked
-    def __init__(
-        self,
-        initial_learning_rate: Union[FloatTensorLike, Callable],
-        maximal_learning_rate: Union[FloatTensorLike, Callable],
-        step_size: FloatTensorLike,
-        scale_fn: Callable,
-        scale_mode: str = "cycle",
-        name: str = "CyclicalLearningRate",
-    ):
-        """Applies cyclical schedule to the learning rate.
+  @typechecked
+  def __init__(
+      self,
+      initial_learning_rate: Union[FloatTensorLike, Callable],
+      maximal_learning_rate: Union[FloatTensorLike, Callable],
+      step_size: FloatTensorLike,
+      scale_fn: Callable,
+      scale_mode: str = "cycle",
+      name: str = "CyclicalLearningRate",
+  ):
+    """Applies cyclical schedule to the learning rate.
 
         See Cyclical Learning Rates for Training Neural Networks. https://arxiv.org/abs/1506.01186
 
@@ -75,54 +75,53 @@ class CyclicalLearningRate(tf.keras.optimizers.schedules.LearningRateSchedule):
         Returns:
             Updated learning rate value.
         """
-        super().__init__()
-        self.initial_learning_rate = initial_learning_rate
-        self.maximal_learning_rate = maximal_learning_rate
-        self.step_size = step_size
-        self.scale_fn = scale_fn
-        self.scale_mode = scale_mode
-        self.name = name
+    super().__init__()
+    self.initial_learning_rate = initial_learning_rate
+    self.maximal_learning_rate = maximal_learning_rate
+    self.step_size = step_size
+    self.scale_fn = scale_fn
+    self.scale_mode = scale_mode
+    self.name = name
 
-    def __call__(self, step):
-        with tf.name_scope(self.name or "CyclicalLearningRate"):
-            initial_learning_rate = tf.convert_to_tensor(
-                self.initial_learning_rate, name="initial_learning_rate"
-            )
-            dtype = initial_learning_rate.dtype
-            maximal_learning_rate = tf.cast(self.maximal_learning_rate, dtype)
-            step_size = tf.cast(self.step_size, dtype)
-            step_as_dtype = tf.cast(step, dtype)
-            cycle = tf.floor(1 + step_as_dtype / (2 * step_size))
-            x = tf.abs(step_as_dtype / step_size - 2 * cycle + 1)
+  def __call__(self, step):
+    with tf.name_scope(self.name or "CyclicalLearningRate"):
+      initial_learning_rate = tf.convert_to_tensor(self.initial_learning_rate, name="initial_learning_rate")
+      dtype = initial_learning_rate.dtype
+      maximal_learning_rate = tf.cast(self.maximal_learning_rate, dtype)
+      step_size = tf.cast(self.step_size, dtype)
+      step_as_dtype = tf.cast(step, dtype)
+      cycle = tf.floor(1 + step_as_dtype / (2 * step_size))
+      x = tf.abs(step_as_dtype / step_size - 2 * cycle + 1)
 
-            mode_step = cycle if self.scale_mode == "cycle" else step
+      mode_step = cycle if self.scale_mode == "cycle" else step
 
-            return initial_learning_rate + (
-                maximal_learning_rate - initial_learning_rate
-            ) * tf.maximum(tf.cast(0, dtype), (1 - x)) * self.scale_fn(mode_step)
+      return initial_learning_rate + (maximal_learning_rate -
+                                      initial_learning_rate) * tf.maximum(tf.cast(0, dtype),
+                                                                          (1 - x)) * self.scale_fn(mode_step)
 
-    def get_config(self):
-        return {
-            "initial_learning_rate": self.initial_learning_rate,
-            "maximal_learning_rate": self.maximal_learning_rate,
-            "scale_fn": self.scale_fn,
-            "step_size": self.step_size,
-            "scale_mode": self.scale_mode,
-        }
+  def get_config(self):
+    return {
+        "initial_learning_rate": self.initial_learning_rate,
+        "maximal_learning_rate": self.maximal_learning_rate,
+        "scale_fn": self.scale_fn,
+        "step_size": self.step_size,
+        "scale_mode": self.scale_mode,
+    }
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class TriangularCyclicalLearningRate(CyclicalLearningRate):
-    @typechecked
-    def __init__(
-        self,
-        initial_learning_rate: Union[FloatTensorLike, Callable],
-        maximal_learning_rate: Union[FloatTensorLike, Callable],
-        step_size: FloatTensorLike,
-        scale_mode: str = "cycle",
-        name: str = "TriangularCyclicalLearningRate",
-    ):
-        """Applies triangular cyclical schedule to the learning rate.
+
+  @typechecked
+  def __init__(
+      self,
+      initial_learning_rate: Union[FloatTensorLike, Callable],
+      maximal_learning_rate: Union[FloatTensorLike, Callable],
+      step_size: FloatTensorLike,
+      scale_mode: str = "cycle",
+      name: str = "TriangularCyclicalLearningRate",
+  ):
+    """Applies triangular cyclical schedule to the learning rate.
 
         See Cyclical Learning Rates for Training Neural Networks. https://arxiv.org/abs/1506.01186
 
@@ -162,36 +161,37 @@ class TriangularCyclicalLearningRate(CyclicalLearningRate):
         Returns:
             Updated learning rate value.
         """
-        super().__init__(
-            initial_learning_rate=initial_learning_rate,
-            maximal_learning_rate=maximal_learning_rate,
-            step_size=step_size,
-            scale_fn=lambda x: 1.0,
-            scale_mode=scale_mode,
-            name=name,
-        )
+    super().__init__(
+        initial_learning_rate=initial_learning_rate,
+        maximal_learning_rate=maximal_learning_rate,
+        step_size=step_size,
+        scale_fn=lambda x: 1.0,
+        scale_mode=scale_mode,
+        name=name,
+    )
 
-    def get_config(self):
-        return {
-            "initial_learning_rate": self.initial_learning_rate,
-            "maximal_learning_rate": self.maximal_learning_rate,
-            "step_size": self.step_size,
-            "scale_mode": self.scale_mode,
-        }
+  def get_config(self):
+    return {
+        "initial_learning_rate": self.initial_learning_rate,
+        "maximal_learning_rate": self.maximal_learning_rate,
+        "step_size": self.step_size,
+        "scale_mode": self.scale_mode,
+    }
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class Triangular2CyclicalLearningRate(CyclicalLearningRate):
-    @typechecked
-    def __init__(
-        self,
-        initial_learning_rate: Union[FloatTensorLike, Callable],
-        maximal_learning_rate: Union[FloatTensorLike, Callable],
-        step_size: FloatTensorLike,
-        scale_mode: str = "cycle",
-        name: str = "Triangular2CyclicalLearningRate",
-    ):
-        """Applies triangular2 cyclical schedule to the learning rate.
+
+  @typechecked
+  def __init__(
+      self,
+      initial_learning_rate: Union[FloatTensorLike, Callable],
+      maximal_learning_rate: Union[FloatTensorLike, Callable],
+      step_size: FloatTensorLike,
+      scale_mode: str = "cycle",
+      name: str = "Triangular2CyclicalLearningRate",
+  ):
+    """Applies triangular2 cyclical schedule to the learning rate.
 
         See Cyclical Learning Rates for Training Neural Networks. https://arxiv.org/abs/1506.01186
 
@@ -231,37 +231,38 @@ class Triangular2CyclicalLearningRate(CyclicalLearningRate):
         Returns:
             Updated learning rate value.
         """
-        super().__init__(
-            initial_learning_rate=initial_learning_rate,
-            maximal_learning_rate=maximal_learning_rate,
-            step_size=step_size,
-            scale_fn=lambda x: 1 / (2.0 ** (x - 1)),
-            scale_mode=scale_mode,
-            name=name,
-        )
+    super().__init__(
+        initial_learning_rate=initial_learning_rate,
+        maximal_learning_rate=maximal_learning_rate,
+        step_size=step_size,
+        scale_fn=lambda x: 1 / (2.0**(x - 1)),
+        scale_mode=scale_mode,
+        name=name,
+    )
 
-    def get_config(self):
-        return {
-            "initial_learning_rate": self.initial_learning_rate,
-            "maximal_learning_rate": self.maximal_learning_rate,
-            "step_size": self.step_size,
-            "scale_mode": self.scale_mode,
-        }
+  def get_config(self):
+    return {
+        "initial_learning_rate": self.initial_learning_rate,
+        "maximal_learning_rate": self.maximal_learning_rate,
+        "step_size": self.step_size,
+        "scale_mode": self.scale_mode,
+    }
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class ExponentialCyclicalLearningRate(CyclicalLearningRate):
-    @typechecked
-    def __init__(
-        self,
-        initial_learning_rate: Union[FloatTensorLike, Callable],
-        maximal_learning_rate: Union[FloatTensorLike, Callable],
-        step_size: FloatTensorLike,
-        scale_mode: str = "iterations",
-        gamma: FloatTensorLike = 1.0,
-        name: str = "ExponentialCyclicalLearningRate",
-    ):
-        """Applies exponential cyclical schedule to the learning rate.
+
+  @typechecked
+  def __init__(
+      self,
+      initial_learning_rate: Union[FloatTensorLike, Callable],
+      maximal_learning_rate: Union[FloatTensorLike, Callable],
+      step_size: FloatTensorLike,
+      scale_mode: str = "iterations",
+      gamma: FloatTensorLike = 1.0,
+      name: str = "ExponentialCyclicalLearningRate",
+  ):
+    """Applies exponential cyclical schedule to the learning rate.
 
         See Cyclical Learning Rates for Training Neural Networks. https://arxiv.org/abs/1506.01186
 
@@ -304,21 +305,21 @@ class ExponentialCyclicalLearningRate(CyclicalLearningRate):
         Returns:
             Updated learning rate value.
         """
-        self.gamma = gamma
-        super().__init__(
-            initial_learning_rate=initial_learning_rate,
-            maximal_learning_rate=maximal_learning_rate,
-            step_size=step_size,
-            scale_fn=lambda x: gamma**x,
-            scale_mode=scale_mode,
-            name=name,
-        )
+    self.gamma = gamma
+    super().__init__(
+        initial_learning_rate=initial_learning_rate,
+        maximal_learning_rate=maximal_learning_rate,
+        step_size=step_size,
+        scale_fn=lambda x: gamma**x,
+        scale_mode=scale_mode,
+        name=name,
+    )
 
-    def get_config(self):
-        return {
-            "initial_learning_rate": self.initial_learning_rate,
-            "maximal_learning_rate": self.maximal_learning_rate,
-            "step_size": self.step_size,
-            "scale_mode": self.scale_mode,
-            "gamma": self.gamma,
-        }
+  def get_config(self):
+    return {
+        "initial_learning_rate": self.initial_learning_rate,
+        "maximal_learning_rate": self.maximal_learning_rate,
+        "step_size": self.step_size,
+        "scale_mode": self.scale_mode,
+        "gamma": self.gamma,
+    }

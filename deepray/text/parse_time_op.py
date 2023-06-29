@@ -27,7 +27,7 @@ tf.no_gradient("Deepray>ParseTime")
 
 
 def parse_time(time_string: str, time_format: str, output_unit: str) -> tf.Tensor:
-    """Parse an input string according to the provided format string into a
+  """Parse an input string according to the provided format string into a
     Unix time.
 
     Parse an input string according to the provided format string into a Unix
@@ -81,6 +81,6 @@ def parse_time(time_string: str, time_format: str, output_unit: str) -> tf.Tenso
       ValueError: If `output_unit` is not a valid value,
         if parsing `time_string` according to `time_format` failed.
     """
-    if IS_WINDOWS:
-        raise NotImplementedError("parse_time is not yet implemented on Windows.")
-    return _parse_time_so.ops.deepray_parse_time(time_string, time_format, output_unit)
+  if IS_WINDOWS:
+    raise NotImplementedError("parse_time is not yet implemented on Windows.")
+  return _parse_time_so.ops.deepray_parse_time(time_string, time_format, output_unit)

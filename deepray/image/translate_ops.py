@@ -22,10 +22,8 @@ from deepray.utils.types import TensorLike
 from typing import Optional
 
 
-def translations_to_projective_transforms(
-    translations: TensorLike, name: Optional[str] = None
-) -> tf.Tensor:
-    """Returns projective transform(s) for the given translation(s).
+def translations_to_projective_transforms(translations: TensorLike, name: Optional[str] = None) -> tf.Tensor:
+  """Returns projective transform(s) for the given translation(s).
 
     Args:
         translations: A 2-element list representing `[dx, dy]` or a matrix of
@@ -37,37 +35,35 @@ def translations_to_projective_transforms(
         A tensor of shape `(num_images, 8)` projective transforms which can be
         given to `dp.image.transform`.
     """
-    with tf.name_scope(name or "translations_to_projective_transforms"):
-        translation_or_translations = tf.convert_to_tensor(
-            translations, name="translations", dtype=tf.dtypes.float32
-        )
-        if translation_or_translations.get_shape().ndims is None:
-            raise TypeError("translation_or_translations rank must be statically known")
-        elif len(translation_or_translations.get_shape()) == 1:
-            translations = translation_or_translations[None]
-        elif len(translation_or_translations.get_shape()) == 2:
-            translations = translation_or_translations
-        else:
-            raise TypeError("Translations should have rank 1 or 2.")
-        num_translations = tf.shape(translations)[0]
-        # The translation matrix looks like:
-        #     [[1 0 -dx]
-        #      [0 1 -dy]
-        #      [0 0 1]]
-        # where the last entry is implicit.
-        # Translation matrices are always float32.
-        return tf.concat(
-            values=[
-                tf.ones((num_translations, 1), tf.dtypes.float32),
-                tf.zeros((num_translations, 1), tf.dtypes.float32),
-                -translations[:, 0, None],
-                tf.zeros((num_translations, 1), tf.dtypes.float32),
-                tf.ones((num_translations, 1), tf.dtypes.float32),
-                -translations[:, 1, None],
-                tf.zeros((num_translations, 2), tf.dtypes.float32),
-            ],
-            axis=1,
-        )
+  with tf.name_scope(name or "translations_to_projective_transforms"):
+    translation_or_translations = tf.convert_to_tensor(translations, name="translations", dtype=tf.dtypes.float32)
+    if translation_or_translations.get_shape().ndims is None:
+      raise TypeError("translation_or_translations rank must be statically known")
+    elif len(translation_or_translations.get_shape()) == 1:
+      translations = translation_or_translations[None]
+    elif len(translation_or_translations.get_shape()) == 2:
+      translations = translation_or_translations
+    else:
+      raise TypeError("Translations should have rank 1 or 2.")
+    num_translations = tf.shape(translations)[0]
+    # The translation matrix looks like:
+    #     [[1 0 -dx]
+    #      [0 1 -dy]
+    #      [0 0 1]]
+    # where the last entry is implicit.
+    # Translation matrices are always float32.
+    return tf.concat(
+        values=[
+            tf.ones((num_translations, 1), tf.dtypes.float32),
+            tf.zeros((num_translations, 1), tf.dtypes.float32),
+            -translations[:, 0, None],
+            tf.zeros((num_translations, 1), tf.dtypes.float32),
+            tf.ones((num_translations, 1), tf.dtypes.float32),
+            -translations[:, 1, None],
+            tf.zeros((num_translations, 2), tf.dtypes.float32),
+        ],
+        axis=1,
+    )
 
 
 @tf.function
@@ -79,7 +75,7 @@ def translate(
     name: Optional[str] = None,
     fill_value: TensorLike = 0.0,
 ) -> tf.Tensor:
-    """Translate image(s) by the passed vectors(s).
+  """Translate image(s) by the passed vectors(s).
 
     Args:
       images: A tensor of shape
@@ -113,20 +109,18 @@ def translate(
     Raises:
       TypeError: If `images` is an invalid type.
     """
-    with tf.name_scope(name or "translate"):
-        return transform(
-            images,
-            translations_to_projective_transforms(translations),
-            interpolation=interpolation,
-            fill_mode=fill_mode,
-            fill_value=fill_value,
-        )
+  with tf.name_scope(name or "translate"):
+    return transform(
+        images,
+        translations_to_projective_transforms(translations),
+        interpolation=interpolation,
+        fill_mode=fill_mode,
+        fill_value=fill_value,
+    )
 
 
-def translate_xy(
-    image: TensorLike, translate_to: TensorLike, replace: TensorLike
-) -> TensorLike:
-    """Translates image in X or Y dimension.
+def translate_xy(image: TensorLike, translate_to: TensorLike, replace: TensorLike) -> TensorLike:
+  """Translates image in X or Y dimension.
 
     Args:
         image: A 3D image `Tensor`.
@@ -138,8 +132,8 @@ def translate_xy(
     Raises:
         ValueError: if axis is neither 0 nor 1.
     """
-    image = tf.convert_to_tensor(image)
-    image = wrap(image)
-    trans = tf.convert_to_tensor(translate_to)
-    image = translate(image, [trans[0], trans[1]])
-    return unwrap(image, replace)
+  image = tf.convert_to_tensor(image)
+  image = wrap(image)
+  trans = tf.convert_to_tensor(translate_to)
+  image = translate(image, [trans[0], trans[1]])
+  return unwrap(image, replace)

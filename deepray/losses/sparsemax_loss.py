@@ -28,7 +28,7 @@ def sparsemax_loss(
     labels: TensorLike,
     name: Optional[str] = None,
 ) -> tf.Tensor:
-    """Sparsemax loss function [1].
+  """Sparsemax loss function [1].
 
     Computes the generalized multi-label classification loss for the sparsemax
     function. The implementation is a reformulation of the original loss
@@ -47,56 +47,54 @@ def sparsemax_loss(
     Returns:
       A `Tensor`. Has the same type as `logits`.
     """
-    logits = tf.convert_to_tensor(logits, name="logits")
-    sparsemax = tf.convert_to_tensor(sparsemax, name="sparsemax")
-    labels = tf.convert_to_tensor(labels, name="labels")
+  logits = tf.convert_to_tensor(logits, name="logits")
+  sparsemax = tf.convert_to_tensor(sparsemax, name="sparsemax")
+  labels = tf.convert_to_tensor(labels, name="labels")
 
-    # In the paper, they call the logits z.
-    # A constant can be substracted from logits to make the algorithm
-    # more numerically stable in theory. However, there are really no major
-    # source numerical instability in this algorithm.
-    z = logits
+  # In the paper, they call the logits z.
+  # A constant can be substracted from logits to make the algorithm
+  # more numerically stable in theory. However, there are really no major
+  # source numerical instability in this algorithm.
+  z = logits
 
-    # sum over support
-    # Use a conditional where instead of a multiplication to support z = -inf.
-    # If z = -inf, and there is no support (sparsemax = 0), a multiplication
-    # would cause 0 * -inf = nan, which is not correct in this case.
-    sum_s = tf.where(
-        tf.math.logical_or(sparsemax > 0, tf.math.is_nan(sparsemax)),
-        sparsemax * (z - 0.5 * sparsemax),
-        tf.zeros_like(sparsemax),
-    )
+  # sum over support
+  # Use a conditional where instead of a multiplication to support z = -inf.
+  # If z = -inf, and there is no support (sparsemax = 0), a multiplication
+  # would cause 0 * -inf = nan, which is not correct in this case.
+  sum_s = tf.where(
+      tf.math.logical_or(sparsemax > 0, tf.math.is_nan(sparsemax)),
+      sparsemax * (z - 0.5 * sparsemax),
+      tf.zeros_like(sparsemax),
+  )
 
-    # - z_k + ||q||^2
-    q_part = labels * (0.5 * labels - z)
-    # Fix the case where labels = 0 and z = -inf, where q_part would
-    # otherwise be 0 * -inf = nan. But since the lables = 0, no cost for
-    # z = -inf should be consideredself.
-    # The code below also coveres the case where z = inf. Howeverm in this
-    # caose the sparsemax will be nan, which means the sum_s will also be nan,
-    # therefor this case doesn't need addtional special treatment.
-    q_part_safe = tf.where(
-        tf.math.logical_and(tf.math.equal(labels, 0), tf.math.is_inf(z)),
-        tf.zeros_like(z),
-        q_part,
-    )
+  # - z_k + ||q||^2
+  q_part = labels * (0.5 * labels - z)
+  # Fix the case where labels = 0 and z = -inf, where q_part would
+  # otherwise be 0 * -inf = nan. But since the lables = 0, no cost for
+  # z = -inf should be consideredself.
+  # The code below also coveres the case where z = inf. Howeverm in this
+  # caose the sparsemax will be nan, which means the sum_s will also be nan,
+  # therefor this case doesn't need addtional special treatment.
+  q_part_safe = tf.where(
+      tf.math.logical_and(tf.math.equal(labels, 0), tf.math.is_inf(z)),
+      tf.zeros_like(z),
+      q_part,
+  )
 
-    return tf.math.reduce_sum(sum_s + q_part_safe, axis=1)
+  return tf.math.reduce_sum(sum_s + q_part_safe, axis=1)
 
 
 @tf.function
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-def sparsemax_loss_from_logits(
-    y_true: TensorLike, logits_pred: TensorLike
-) -> tf.Tensor:
-    y_pred = sparsemax(logits_pred)
-    loss = sparsemax_loss(logits_pred, y_pred, y_true)
-    return loss
+def sparsemax_loss_from_logits(y_true: TensorLike, logits_pred: TensorLike) -> tf.Tensor:
+  y_pred = sparsemax(logits_pred)
+  loss = sparsemax_loss(logits_pred, y_pred, y_true)
+  return loss
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class SparsemaxLoss(tf.keras.losses.Loss):
-    """Sparsemax loss function.
+  """Sparsemax loss function.
 
     Computes the generalized multi-label classification loss for the sparsemax
     function.
@@ -115,25 +113,25 @@ class SparsemaxLoss(tf.keras.losses.Loss):
       name: Optional name for the op.
     """
 
-    @typechecked
-    def __init__(
-        self,
-        from_logits: bool = True,
-        reduction: str = tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
-        name: str = "sparsemax_loss",
-    ):
-        if from_logits is not True:
-            raise ValueError("from_logits must be True")
+  @typechecked
+  def __init__(
+      self,
+      from_logits: bool = True,
+      reduction: str = tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
+      name: str = "sparsemax_loss",
+  ):
+    if from_logits is not True:
+      raise ValueError("from_logits must be True")
 
-        super().__init__(name=name, reduction=reduction)
-        self.from_logits = from_logits
+    super().__init__(name=name, reduction=reduction)
+    self.from_logits = from_logits
 
-    def call(self, y_true, y_pred):
-        return sparsemax_loss_from_logits(y_true, y_pred)
+  def call(self, y_true, y_pred):
+    return sparsemax_loss_from_logits(y_true, y_pred)
 
-    def get_config(self):
-        config = {
-            "from_logits": self.from_logits,
-        }
-        base_config = super().get_config()
-        return {**base_config, **config}
+  def get_config(self):
+    config = {
+        "from_logits": self.from_logits,
+    }
+    base_config = super().get_config()
+    return {**base_config, **config}

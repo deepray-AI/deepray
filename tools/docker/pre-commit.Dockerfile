@@ -1,7 +1,7 @@
 FROM python:3.9
 
 COPY tools/install_deps /install_deps
-RUN pip install -r /install_deps/black.txt -r /install_deps/flake8.txt
+RUN pip install -r /install_deps/yapf.txt
 
 COPY tools/install_deps/buildifier.sh ./buildifier.sh
 RUN bash buildifier.sh

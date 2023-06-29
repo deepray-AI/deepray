@@ -36,7 +36,7 @@ def random_hsv_in_yiq(
     seed: Optional[int] = None,
     name: Optional[str] = None,
 ) -> tf.Tensor:
-    """Adjust hue, saturation, value of an RGB image randomly in YIQ color space.
+  """Adjust hue, saturation, value of an RGB image randomly in YIQ color space.
 
     Equivalent to `adjust_yiq_hsv()` but uses a `delta_h` randomly
     picked in the interval `[-max_delta_hue, max_delta_hue]`, a
@@ -65,41 +65,36 @@ def random_hsv_in_yiq(
       ValueError: if `max_delta`, `lower_saturation`, `upper_saturation`,
         `lower_value`, or `upper_value` is invalid.
     """
-    if max_delta_hue < 0:
-        raise ValueError("max_delta must be non-negative.")
+  if max_delta_hue < 0:
+    raise ValueError("max_delta must be non-negative.")
 
-    if lower_saturation < 0:
-        raise ValueError("lower_saturation must be non-negative.")
+  if lower_saturation < 0:
+    raise ValueError("lower_saturation must be non-negative.")
 
-    if lower_value < 0:
-        raise ValueError("lower_value must be non-negative.")
+  if lower_value < 0:
+    raise ValueError("lower_value must be non-negative.")
 
-    if lower_saturation > upper_saturation:
-        raise ValueError(
-            "lower_saturation must be not greater than " "upper_saturation."
-        )
+  if lower_saturation > upper_saturation:
+    raise ValueError("lower_saturation must be not greater than "
+                     "upper_saturation.")
 
-    if lower_value > upper_value:
-        raise ValueError("lower_value must be not greater than upper_value.")
+  if lower_value > upper_value:
+    raise ValueError("lower_value must be not greater than upper_value.")
 
-    with tf.name_scope(name or "random_hsv_in_yiq") as scope:
-        if max_delta_hue == 0:
-            delta_hue = 0
-        else:
-            delta_hue = tf.random.uniform([], -max_delta_hue, max_delta_hue, seed=seed)
-        if lower_saturation == upper_saturation:
-            scale_saturation = lower_saturation
-        else:
-            scale_saturation = tf.random.uniform(
-                [], lower_saturation, upper_saturation, seed=seed
-            )
-        if lower_value == upper_value:
-            scale_value = lower_value
-        else:
-            scale_value = tf.random.uniform([], lower_value, upper_value, seed=seed)
-        return adjust_hsv_in_yiq(
-            image, delta_hue, scale_saturation, scale_value, name=scope
-        )
+  with tf.name_scope(name or "random_hsv_in_yiq") as scope:
+    if max_delta_hue == 0:
+      delta_hue = 0
+    else:
+      delta_hue = tf.random.uniform([], -max_delta_hue, max_delta_hue, seed=seed)
+    if lower_saturation == upper_saturation:
+      scale_saturation = lower_saturation
+    else:
+      scale_saturation = tf.random.uniform([], lower_saturation, upper_saturation, seed=seed)
+    if lower_value == upper_value:
+      scale_value = lower_value
+    else:
+      scale_value = tf.random.uniform([], lower_value, upper_value, seed=seed)
+    return adjust_hsv_in_yiq(image, delta_hue, scale_saturation, scale_value, name=scope)
 
 
 def _adjust_hsv_in_yiq(
@@ -108,35 +103,31 @@ def _adjust_hsv_in_yiq(
     scale_saturation,
     scale_value,
 ):
-    if image.shape.rank is not None and image.shape.rank < 3:
-        raise ValueError("input must be at least 3-D.")
-    if image.shape[-1] is not None and image.shape[-1] != 3:
-        raise ValueError(
-            "input must have 3 channels but instead has {}.".format(image.shape[-1])
-        )
-    # Construct hsv linear transformation matrix in YIQ space.
-    # https://beesbuzz.biz/code/hsv_color_transforms.php
-    yiq = tf.constant(
-        [[0.299, 0.596, 0.211], [0.587, -0.274, -0.523], [0.114, -0.322, 0.312]],
-        dtype=image.dtype,
-    )
-    yiq_inverse = tf.constant(
-        [
-            [1.0, 1.0, 1.0],
-            [0.95617069, -0.2726886, -1.103744],
-            [0.62143257, -0.64681324, 1.70062309],
-        ],
-        dtype=image.dtype,
-    )
-    vsu = scale_value * scale_saturation * tf.math.cos(delta_hue)
-    vsw = scale_value * scale_saturation * tf.math.sin(delta_hue)
-    hsv_transform = tf.convert_to_tensor(
-        [[scale_value, 0, 0], [0, vsu, vsw], [0, -vsw, vsu]], dtype=image.dtype
-    )
-    transform_matrix = yiq @ hsv_transform @ yiq_inverse
+  if image.shape.rank is not None and image.shape.rank < 3:
+    raise ValueError("input must be at least 3-D.")
+  if image.shape[-1] is not None and image.shape[-1] != 3:
+    raise ValueError("input must have 3 channels but instead has {}.".format(image.shape[-1]))
+  # Construct hsv linear transformation matrix in YIQ space.
+  # https://beesbuzz.biz/code/hsv_color_transforms.php
+  yiq = tf.constant(
+      [[0.299, 0.596, 0.211], [0.587, -0.274, -0.523], [0.114, -0.322, 0.312]],
+      dtype=image.dtype,
+  )
+  yiq_inverse = tf.constant(
+      [
+          [1.0, 1.0, 1.0],
+          [0.95617069, -0.2726886, -1.103744],
+          [0.62143257, -0.64681324, 1.70062309],
+      ],
+      dtype=image.dtype,
+  )
+  vsu = scale_value * scale_saturation * tf.math.cos(delta_hue)
+  vsw = scale_value * scale_saturation * tf.math.sin(delta_hue)
+  hsv_transform = tf.convert_to_tensor([[scale_value, 0, 0], [0, vsu, vsw], [0, -vsw, vsu]], dtype=image.dtype)
+  transform_matrix = yiq @ hsv_transform @ yiq_inverse
 
-    image = image @ transform_matrix
-    return image
+  image = image @ transform_matrix
+  return image
 
 
 def adjust_hsv_in_yiq(
@@ -146,7 +137,7 @@ def adjust_hsv_in_yiq(
     scale_value: Number = 1,
     name: Optional[str] = None,
 ) -> tf.Tensor:
-    """Adjust hue, saturation, value of an RGB image in YIQ color space.
+  """Adjust hue, saturation, value of an RGB image in YIQ color space.
 
     This is a convenience method that converts an RGB image to float
     representation, converts it to YIQ, rotates the color around the
@@ -170,34 +161,28 @@ def adjust_hsv_in_yiq(
     Returns:
       Adjusted image(s), same shape and dtype as `image`.
     """
-    with tf.name_scope(name or "adjust_hsv_in_yiq"):
-        image = tf.convert_to_tensor(image, name="image")
-        # Remember original dtype to so we can convert back if needed
-        orig_dtype = image.dtype
-        if not image.dtype.is_floating:
-            image = tf.image.convert_image_dtype(image, tf.float32)
+  with tf.name_scope(name or "adjust_hsv_in_yiq"):
+    image = tf.convert_to_tensor(image, name="image")
+    # Remember original dtype to so we can convert back if needed
+    orig_dtype = image.dtype
+    if not image.dtype.is_floating:
+      image = tf.image.convert_image_dtype(image, tf.float32)
 
-        delta_hue = tf.cast(delta_hue, dtype=image.dtype, name="delta_hue")
-        scale_saturation = tf.cast(
-            scale_saturation, dtype=image.dtype, name="scale_saturation"
-        )
-        scale_value = tf.cast(scale_value, dtype=image.dtype, name="scale_value")
+    delta_hue = tf.cast(delta_hue, dtype=image.dtype, name="delta_hue")
+    scale_saturation = tf.cast(scale_saturation, dtype=image.dtype, name="scale_saturation")
+    scale_value = tf.cast(scale_value, dtype=image.dtype, name="scale_value")
 
-        if not options.is_custom_kernel_disabled():
-            warnings.warn(
-                "C++/CUDA kernel of `adjust_hsv_in_yiq` will be removed in Addons `0.13`.",
-                DeprecationWarning,
-            )
-            try:
-                image = _distort_image_so.ops.deepray_adjust_hsv_in_yiq(
-                    image, delta_hue, scale_saturation, scale_value
-                )
-            except tf.errors.NotFoundError:
-                options.warn_fallback("adjust_hsv_in_yiq")
-                image = _adjust_hsv_in_yiq(
-                    image, delta_hue, scale_saturation, scale_value
-                )
-        else:
-            image = _adjust_hsv_in_yiq(image, delta_hue, scale_saturation, scale_value)
+    if not options.is_custom_kernel_disabled():
+      warnings.warn(
+          "C++/CUDA kernel of `adjust_hsv_in_yiq` will be removed in Addons `0.13`.",
+          DeprecationWarning,
+      )
+      try:
+        image = _distort_image_so.ops.deepray_adjust_hsv_in_yiq(image, delta_hue, scale_saturation, scale_value)
+      except tf.errors.NotFoundError:
+        options.warn_fallback("adjust_hsv_in_yiq")
+        image = _adjust_hsv_in_yiq(image, delta_hue, scale_saturation, scale_value)
+    else:
+      image = _adjust_hsv_in_yiq(image, delta_hue, scale_saturation, scale_value)
 
-        return tf.image.convert_image_dtype(image, orig_dtype)
+    return tf.image.convert_image_dtype(image, orig_dtype)

@@ -23,10 +23,8 @@ from deepray.utils.types import TensorLike, Number
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 @tf.function
-def contrastive_loss(
-    y_true: TensorLike, y_pred: TensorLike, margin: Number = 1.0
-) -> tf.Tensor:
-    r"""Computes the contrastive loss between `y_true` and `y_pred`.
+def contrastive_loss(y_true: TensorLike, y_pred: TensorLike, margin: Number = 1.0) -> tf.Tensor:
+  r"""Computes the contrastive loss between `y_true` and `y_pred`.
 
     This loss encourages the embedding to be close to each other for
     the samples of the same label and the embedding to be far apart at least
@@ -62,16 +60,14 @@ def contrastive_loss(
     Returns:
       contrastive_loss: 1-D float `Tensor` with shape `[batch_size]`.
     """
-    y_pred = tf.convert_to_tensor(y_pred)
-    y_true = tf.dtypes.cast(y_true, y_pred.dtype)
-    return y_true * tf.math.square(y_pred) + (1.0 - y_true) * tf.math.square(
-        tf.math.maximum(margin - y_pred, 0.0)
-    )
+  y_pred = tf.convert_to_tensor(y_pred)
+  y_true = tf.dtypes.cast(y_true, y_pred.dtype)
+  return y_true * tf.math.square(y_pred) + (1.0 - y_true) * tf.math.square(tf.math.maximum(margin - y_pred, 0.0))
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class ContrastiveLoss(LossFunctionWrapper):
-    r"""Computes the contrastive loss between `y_true` and `y_pred`.
+  r"""Computes the contrastive loss between `y_true` and `y_pred`.
 
     This loss encourages the embedding to be close to each other for
     the samples of the same label and the embedding to be far apart at least
@@ -108,13 +104,11 @@ class ContrastiveLoss(LossFunctionWrapper):
       name: (Optional) name for the loss.
     """
 
-    @typechecked
-    def __init__(
-        self,
-        margin: Number = 1.0,
-        reduction: str = tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
-        name: str = "contrastive_loss",
-    ):
-        super().__init__(
-            contrastive_loss, reduction=reduction, name=name, margin=margin
-        )
+  @typechecked
+  def __init__(
+      self,
+      margin: Number = 1.0,
+      reduction: str = tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
+      name: str = "contrastive_loss",
+  ):
+    super().__init__(contrastive_loss, reduction=reduction, name=name, margin=margin)

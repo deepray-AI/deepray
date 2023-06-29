@@ -23,18 +23,18 @@ from deepray.optimizers import KerasLegacyOptimizer
 from typeguard import typechecked
 
 if Version(tf.__version__).release >= Version("2.13").release:
-    # New versions of Keras require importing from `keras.src` when
-    # importing internal symbols.
-    from keras.src import backend
-    from keras.src.utils import tf_utils
+  # New versions of Keras require importing from `keras.src` when
+  # importing internal symbols.
+  from keras.src import backend
+  from keras.src.utils import tf_utils
 else:
-    from keras import backend
-    from keras.utils import tf_utils
+  from keras import backend
+  from keras.utils import tf_utils
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class MultiOptimizer(KerasLegacyOptimizer):
-    """Multi Optimizer Wrapper for Discriminative Layer Training.
+  """Multi Optimizer Wrapper for Discriminative Layer Training.
 
     Creates a wrapper around a set of instantiated optimizer layer pairs.
     Generally useful for transfer learning of deep networks.
@@ -85,120 +85,98 @@ class MultiOptimizer(KerasLegacyOptimizer):
     would with any other optimizer.
     """
 
-    @typechecked
-    def __init__(
-        self,
-        optimizers_and_layers: Union[list, None] = None,
-        optimizer_specs: Union[list, None] = None,
-        name: str = "MultiOptimizer",
-        **kwargs,
-    ):
-        super(MultiOptimizer, self).__init__(name, **kwargs)
+  @typechecked
+  def __init__(
+      self,
+      optimizers_and_layers: Union[list, None] = None,
+      optimizer_specs: Union[list, None] = None,
+      name: str = "MultiOptimizer",
+      **kwargs,
+  ):
+    super(MultiOptimizer, self).__init__(name, **kwargs)
 
-        if optimizer_specs is None and optimizers_and_layers is not None:
-            self.optimizer_specs = [
-                self.create_optimizer_spec(optimizer, layers_or_model)
-                for optimizer, layers_or_model in optimizers_and_layers
-            ]
+    if optimizer_specs is None and optimizers_and_layers is not None:
+      self.optimizer_specs = [
+          self.create_optimizer_spec(optimizer, layers_or_model) for optimizer, layers_or_model in optimizers_and_layers
+      ]
 
-        elif optimizer_specs is not None and optimizers_and_layers is None:
-            self.optimizer_specs = [
-                self.maybe_initialize_optimizer_spec(spec) for spec in optimizer_specs
-            ]
+    elif optimizer_specs is not None and optimizers_and_layers is None:
+      self.optimizer_specs = [self.maybe_initialize_optimizer_spec(spec) for spec in optimizer_specs]
 
-        else:
-            raise RuntimeError(
-                "Must specify one of `optimizers_and_layers` or `optimizer_specs`."
-            )
+    else:
+      raise RuntimeError("Must specify one of `optimizers_and_layers` or `optimizer_specs`.")
 
-    def apply_gradients(self, grads_and_vars, **kwargs):
-        """Wrapped apply_gradient method.
+  def apply_gradients(self, grads_and_vars, **kwargs):
+    """Wrapped apply_gradient method.
 
         Returns an operation to be executed.
         """
 
-        for spec in self.optimizer_specs:
-            spec["gv"] = []
+    for spec in self.optimizer_specs:
+      spec["gv"] = []
 
-        for grad, var in tuple(grads_and_vars):
-            for spec in self.optimizer_specs:
-                for name in spec["weights"]:
-                    if var.name == name:
-                        spec["gv"].append((grad, var))
+    for grad, var in tuple(grads_and_vars):
+      for spec in self.optimizer_specs:
+        for name in spec["weights"]:
+          if var.name == name:
+            spec["gv"].append((grad, var))
 
-        update_ops = [
-            spec["optimizer"].apply_gradients(spec["gv"], **kwargs)
-            for spec in self.optimizer_specs
-        ]
-        update_group = tf.group(update_ops)
+    update_ops = [spec["optimizer"].apply_gradients(spec["gv"], **kwargs) for spec in self.optimizer_specs]
+    update_group = tf.group(update_ops)
 
-        any_symbolic = any(
-            isinstance(i, tf.Operation) or tf_utils.is_symbolic_tensor(i)
-            for i in update_ops
-        )
+    any_symbolic = any(isinstance(i, tf.Operation) or tf_utils.is_symbolic_tensor(i) for i in update_ops)
 
-        if not tf.executing_eagerly() or any_symbolic:
-            # If the current context is graph mode or any of the update ops are
-            # symbolic then the step update should be carried out under a graph
-            # context. (eager updates execute immediately)
-            with backend._current_graph(  # pylint: disable=protected-access
-                update_ops
-            ).as_default():
-                with tf.control_dependencies([update_group]):
-                    return self.iterations.assign_add(1, read_value=False)
+    if not tf.executing_eagerly() or any_symbolic:
+      # If the current context is graph mode or any of the update ops are
+      # symbolic then the step update should be carried out under a graph
+      # context. (eager updates execute immediately)
+      with backend._current_graph(  # pylint: disable=protected-access
+          update_ops
+      ).as_default():
+        with tf.control_dependencies([update_group]):
+          return self.iterations.assign_add(1, read_value=False)
 
-        return self.iterations.assign_add(1)
+    return self.iterations.assign_add(1)
 
-    def get_config(self):
-        config = super(MultiOptimizer, self).get_config()
-        optimizer_specs_without_gv = []
-        for optimizer_spec in self.optimizer_specs:
-            optimizer_specs_without_gv.append(
-                {
-                    "optimizer": optimizer_spec["optimizer"],
-                    "weights": optimizer_spec["weights"],
-                }
-            )
-        config.update({"optimizer_specs": optimizer_specs_without_gv})
-        return config
+  def get_config(self):
+    config = super(MultiOptimizer, self).get_config()
+    optimizer_specs_without_gv = []
+    for optimizer_spec in self.optimizer_specs:
+      optimizer_specs_without_gv.append(
+          {
+              "optimizer": optimizer_spec["optimizer"],
+              "weights": optimizer_spec["weights"],
+          }
+      )
+    config.update({"optimizer_specs": optimizer_specs_without_gv})
+    return config
 
-    @classmethod
-    def create_optimizer_spec(
-        cls,
-        optimizer: KerasLegacyOptimizer,
-        layers_or_model: Union[
-            tf.keras.Model,
-            tf.keras.Sequential,
-            tf.keras.layers.Layer,
-            List[tf.keras.layers.Layer],
-        ],
-    ):
-        """Creates a serializable optimizer spec.
+  @classmethod
+  def create_optimizer_spec(
+      cls,
+      optimizer: KerasLegacyOptimizer,
+      layers_or_model: Union[tf.keras.Model, tf.keras.Sequential, tf.keras.layers.Layer, List[tf.keras.layers.Layer],],
+  ):
+    """Creates a serializable optimizer spec.
 
         The name of each variable is used rather than `var.ref()` to enable serialization and deserialization.
         """
-        if isinstance(layers_or_model, list):
-            weights = [
-                var.name for sublayer in layers_or_model for var in sublayer.weights
-            ]
-        else:
-            weights = [var.name for var in layers_or_model.weights]
+    if isinstance(layers_or_model, list):
+      weights = [var.name for sublayer in layers_or_model for var in sublayer.weights]
+    else:
+      weights = [var.name for var in layers_or_model.weights]
 
-        return {
-            "optimizer": optimizer,
-            "weights": weights,
-        }
+    return {
+        "optimizer": optimizer,
+        "weights": weights,
+    }
 
-    @classmethod
-    def maybe_initialize_optimizer_spec(cls, optimizer_spec):
-        if isinstance(optimizer_spec["optimizer"], dict):
-            optimizer_spec["optimizer"] = tf.keras.optimizers.deserialize(
-                optimizer_spec["optimizer"]
-            )
+  @classmethod
+  def maybe_initialize_optimizer_spec(cls, optimizer_spec):
+    if isinstance(optimizer_spec["optimizer"], dict):
+      optimizer_spec["optimizer"] = tf.keras.optimizers.deserialize(optimizer_spec["optimizer"])
 
-        return optimizer_spec
+    return optimizer_spec
 
-    def __repr__(self):
-        return "Multi Optimizer with %i optimizer layer pairs" % len(
-            self.optimizer_specs
-        )
+  def __repr__(self):
+    return "Multi Optimizer with %i optimizer layer pairs" % len(self.optimizer_specs)

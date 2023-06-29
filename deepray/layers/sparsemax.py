@@ -20,7 +20,7 @@ from typeguard import typechecked
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class Sparsemax(tf.keras.layers.Layer):
-    """Sparsemax activation function.
+  """Sparsemax activation function.
 
     The output shape is the same as the input shape.
 
@@ -30,19 +30,19 @@ class Sparsemax(tf.keras.layers.Layer):
         axis: Integer, axis along which the sparsemax normalization is applied.
     """
 
-    @typechecked
-    def __init__(self, axis: int = -1, **kwargs):
-        super().__init__(**kwargs)
-        self.supports_masking = True
-        self.axis = axis
+  @typechecked
+  def __init__(self, axis: int = -1, **kwargs):
+    super().__init__(**kwargs)
+    self.supports_masking = True
+    self.axis = axis
 
-    def call(self, inputs):
-        return sparsemax(inputs, axis=self.axis)
+  def call(self, inputs):
+    return sparsemax(inputs, axis=self.axis)
 
-    def get_config(self):
-        config = {"axis": self.axis}
-        base_config = super().get_config()
-        return {**base_config, **config}
+  def get_config(self):
+    config = {"axis": self.axis}
+    base_config = super().get_config()
+    return {**base_config, **config}
 
-    def compute_output_shape(self, input_shape):
-        return input_shape
+  def compute_output_shape(self, input_shape):
+    return input_shape

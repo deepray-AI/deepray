@@ -27,7 +27,7 @@ def interpolate_bilinear(
     indexing: str = "ij",
     name: Optional[str] = None,
 ) -> tf.Tensor:
-    """Similar to Matlab's interp2 function.
+  """Similar to Matlab's interp2 function.
 
     Finds values for query points on a grid using bilinear interpolation.
 
@@ -46,7 +46,7 @@ def interpolate_bilinear(
       ValueError: if the indexing mode is invalid, or if the shape of the
         inputs invalid.
     """
-    return _interpolate_bilinear_with_checks(grid, query_points, indexing, name)
+  return _interpolate_bilinear_with_checks(grid, query_points, indexing, name)
 
 
 def _interpolate_bilinear_with_checks(
@@ -55,33 +55,25 @@ def _interpolate_bilinear_with_checks(
     indexing: str,
     name: Optional[str],
 ) -> tf.Tensor:
-    """Perform checks on inputs without tf.function decorator to avoid flakiness."""
-    if indexing != "ij" and indexing != "xy":
-        raise ValueError("Indexing mode must be 'ij' or 'xy'")
+  """Perform checks on inputs without tf.function decorator to avoid flakiness."""
+  if indexing != "ij" and indexing != "xy":
+    raise ValueError("Indexing mode must be 'ij' or 'xy'")
 
-    grid = tf.convert_to_tensor(grid)
-    query_points = tf.convert_to_tensor(query_points)
-    grid_shape = tf.shape(grid)
-    query_shape = tf.shape(query_points)
+  grid = tf.convert_to_tensor(grid)
+  query_points = tf.convert_to_tensor(query_points)
+  grid_shape = tf.shape(grid)
+  query_shape = tf.shape(query_points)
 
-    with tf.control_dependencies(
-        [
-            tf.debugging.assert_equal(tf.rank(grid), 4, "Grid must be 4D Tensor"),
-            tf.debugging.assert_greater_equal(
-                grid_shape[1], 2, "Grid height must be at least 2."
-            ),
-            tf.debugging.assert_greater_equal(
-                grid_shape[2], 2, "Grid width must be at least 2."
-            ),
-            tf.debugging.assert_equal(
-                tf.rank(query_points), 3, "Query points must be 3 dimensional."
-            ),
-            tf.debugging.assert_equal(
-                query_shape[2], 2, "Query points last dimension must be 2."
-            ),
-        ]
-    ):
-        return _interpolate_bilinear_impl(grid, query_points, indexing, name)
+  with tf.control_dependencies(
+      [
+          tf.debugging.assert_equal(tf.rank(grid), 4, "Grid must be 4D Tensor"),
+          tf.debugging.assert_greater_equal(grid_shape[1], 2, "Grid height must be at least 2."),
+          tf.debugging.assert_greater_equal(grid_shape[2], 2, "Grid width must be at least 2."),
+          tf.debugging.assert_equal(tf.rank(query_points), 3, "Query points must be 3 dimensional."),
+          tf.debugging.assert_equal(query_shape[2], 2, "Query points last dimension must be 2."),
+      ]
+  ):
+    return _interpolate_bilinear_impl(grid, query_points, indexing, name)
 
 
 def _interpolate_bilinear_impl(
@@ -90,100 +82,94 @@ def _interpolate_bilinear_impl(
     indexing: str,
     name: Optional[str],
 ) -> tf.Tensor:
-    """tf.function implementation of interpolate_bilinear."""
-    with tf.name_scope(name or "interpolate_bilinear"):
-        grid_shape = tf.shape(grid)
-        query_shape = tf.shape(query_points)
+  """tf.function implementation of interpolate_bilinear."""
+  with tf.name_scope(name or "interpolate_bilinear"):
+    grid_shape = tf.shape(grid)
+    query_shape = tf.shape(query_points)
 
-        batch_size, height, width, channels = (
-            grid_shape[0],
-            grid_shape[1],
-            grid_shape[2],
-            grid_shape[3],
-        )
+    batch_size, height, width, channels = (
+        grid_shape[0],
+        grid_shape[1],
+        grid_shape[2],
+        grid_shape[3],
+    )
 
-        num_queries = query_shape[1]
+    num_queries = query_shape[1]
 
-        query_type = query_points.dtype
-        grid_type = grid.dtype
+    query_type = query_points.dtype
+    grid_type = grid.dtype
 
-        alphas = []
-        floors = []
-        ceils = []
-        index_order = [0, 1] if indexing == "ij" else [1, 0]
-        unstacked_query_points = tf.unstack(query_points, axis=2, num=2)
+    alphas = []
+    floors = []
+    ceils = []
+    index_order = [0, 1] if indexing == "ij" else [1, 0]
+    unstacked_query_points = tf.unstack(query_points, axis=2, num=2)
 
-        for i, dim in enumerate(index_order):
-            with tf.name_scope("dim-" + str(dim)):
-                queries = unstacked_query_points[dim]
+    for i, dim in enumerate(index_order):
+      with tf.name_scope("dim-" + str(dim)):
+        queries = unstacked_query_points[dim]
 
-                size_in_indexing_dimension = grid_shape[i + 1]
+        size_in_indexing_dimension = grid_shape[i + 1]
 
-                # max_floor is size_in_indexing_dimension - 2 so that max_floor + 1
-                # is still a valid index into the grid.
-                max_floor = tf.cast(size_in_indexing_dimension - 2, query_type)
-                min_floor = tf.constant(0.0, dtype=query_type)
-                floor = tf.math.minimum(
-                    tf.math.maximum(min_floor, tf.math.floor(queries)), max_floor
-                )
-                int_floor = tf.cast(floor, tf.dtypes.int32)
-                floors.append(int_floor)
-                ceil = int_floor + 1
-                ceils.append(ceil)
+        # max_floor is size_in_indexing_dimension - 2 so that max_floor + 1
+        # is still a valid index into the grid.
+        max_floor = tf.cast(size_in_indexing_dimension - 2, query_type)
+        min_floor = tf.constant(0.0, dtype=query_type)
+        floor = tf.math.minimum(tf.math.maximum(min_floor, tf.math.floor(queries)), max_floor)
+        int_floor = tf.cast(floor, tf.dtypes.int32)
+        floors.append(int_floor)
+        ceil = int_floor + 1
+        ceils.append(ceil)
 
-                # alpha has the same type as the grid, as we will directly use alpha
-                # when taking linear combinations of pixel values from the image.
-                alpha = tf.cast(queries - floor, grid_type)
-                min_alpha = tf.constant(0.0, dtype=grid_type)
-                max_alpha = tf.constant(1.0, dtype=grid_type)
-                alpha = tf.math.minimum(tf.math.maximum(min_alpha, alpha), max_alpha)
+        # alpha has the same type as the grid, as we will directly use alpha
+        # when taking linear combinations of pixel values from the image.
+        alpha = tf.cast(queries - floor, grid_type)
+        min_alpha = tf.constant(0.0, dtype=grid_type)
+        max_alpha = tf.constant(1.0, dtype=grid_type)
+        alpha = tf.math.minimum(tf.math.maximum(min_alpha, alpha), max_alpha)
 
-                # Expand alpha to [b, n, 1] so we can use broadcasting
-                # (since the alpha values don't depend on the channel).
-                alpha = tf.expand_dims(alpha, 2)
-                alphas.append(alpha)
+        # Expand alpha to [b, n, 1] so we can use broadcasting
+        # (since the alpha values don't depend on the channel).
+        alpha = tf.expand_dims(alpha, 2)
+        alphas.append(alpha)
 
-            flattened_grid = tf.reshape(grid, [batch_size * height * width, channels])
-            batch_offsets = tf.reshape(
-                tf.range(batch_size) * height * width, [batch_size, 1]
-            )
+      flattened_grid = tf.reshape(grid, [batch_size * height * width, channels])
+      batch_offsets = tf.reshape(tf.range(batch_size) * height * width, [batch_size, 1])
 
-        # This wraps tf.gather. We reshape the image data such that the
-        # batch, y, and x coordinates are pulled into the first dimension.
-        # Then we gather. Finally, we reshape the output back. It's possible this
-        # code would be made simpler by using tf.gather_nd.
-        def gather(y_coords, x_coords, name):
-            with tf.name_scope("gather-" + name):
-                linear_coordinates = batch_offsets + y_coords * width + x_coords
-                gathered_values = tf.gather(flattened_grid, linear_coordinates)
-                return tf.reshape(gathered_values, [batch_size, num_queries, channels])
+    # This wraps tf.gather. We reshape the image data such that the
+    # batch, y, and x coordinates are pulled into the first dimension.
+    # Then we gather. Finally, we reshape the output back. It's possible this
+    # code would be made simpler by using tf.gather_nd.
+    def gather(y_coords, x_coords, name):
+      with tf.name_scope("gather-" + name):
+        linear_coordinates = batch_offsets + y_coords * width + x_coords
+        gathered_values = tf.gather(flattened_grid, linear_coordinates)
+        return tf.reshape(gathered_values, [batch_size, num_queries, channels])
 
-        # grab the pixel values in the 4 corners around each query point
-        top_left = gather(floors[0], floors[1], "top_left")
-        top_right = gather(floors[0], ceils[1], "top_right")
-        bottom_left = gather(ceils[0], floors[1], "bottom_left")
-        bottom_right = gather(ceils[0], ceils[1], "bottom_right")
+    # grab the pixel values in the 4 corners around each query point
+    top_left = gather(floors[0], floors[1], "top_left")
+    top_right = gather(floors[0], ceils[1], "top_right")
+    bottom_left = gather(ceils[0], floors[1], "bottom_left")
+    bottom_right = gather(ceils[0], ceils[1], "bottom_right")
 
-        # now, do the actual interpolation
-        with tf.name_scope("interpolate"):
-            interp_top = alphas[1] * (top_right - top_left) + top_left
-            interp_bottom = alphas[1] * (bottom_right - bottom_left) + bottom_left
-            interp = alphas[0] * (interp_bottom - interp_top) + interp_top
+    # now, do the actual interpolation
+    with tf.name_scope("interpolate"):
+      interp_top = alphas[1] * (top_right - top_left) + top_left
+      interp_bottom = alphas[1] * (bottom_right - bottom_left) + bottom_left
+      interp = alphas[0] * (interp_bottom - interp_top) + interp_top
 
-        return interp
+    return interp
 
 
 def _get_dim(x, idx):
-    if x.shape.ndims is None:
-        return tf.shape(x)[idx]
-    return x.shape[idx] or tf.shape(x)[idx]
+  if x.shape.ndims is None:
+    return tf.shape(x)[idx]
+  return x.shape[idx] or tf.shape(x)[idx]
 
 
 @tf.function
-def dense_image_warp(
-    image: types.TensorLike, flow: types.TensorLike, name: Optional[str] = None
-) -> tf.Tensor:
-    """Image warping using per-pixel flow vectors.
+def dense_image_warp(image: types.TensorLike, flow: types.TensorLike, name: Optional[str] = None) -> tf.Tensor:
+  """Image warping using per-pixel flow vectors.
 
     Apply a non-linear warp to the image, where the warp is specified by a
     dense flow field of offset vectors that define the correspondences of
@@ -219,37 +205,35 @@ def dense_image_warp(
       ValueError: if `height < 2` or `width < 2` or the inputs have the wrong
         number of dimensions.
     """
-    with tf.name_scope(name or "dense_image_warp"):
-        image = tf.convert_to_tensor(image)
-        flow = tf.convert_to_tensor(flow)
-        batch_size, height, width, channels = (
-            _get_dim(image, 0),
-            _get_dim(image, 1),
-            _get_dim(image, 2),
-            _get_dim(image, 3),
-        )
+  with tf.name_scope(name or "dense_image_warp"):
+    image = tf.convert_to_tensor(image)
+    flow = tf.convert_to_tensor(flow)
+    batch_size, height, width, channels = (
+        _get_dim(image, 0),
+        _get_dim(image, 1),
+        _get_dim(image, 2),
+        _get_dim(image, 3),
+    )
 
-        # The flow is defined on the image grid. Turn the flow into a list of query
-        # points in the grid space.
-        grid_x, grid_y = tf.meshgrid(tf.range(width), tf.range(height))
-        stacked_grid = tf.cast(tf.stack([grid_y, grid_x], axis=2), flow.dtype)
-        batched_grid = tf.expand_dims(stacked_grid, axis=0)
-        query_points_on_grid = batched_grid - flow
-        query_points_flattened = tf.reshape(
-            query_points_on_grid, [batch_size, height * width, 2]
-        )
-        # Compute values at the query points, then reshape the result back to the
-        # image grid.
-        interpolated = interpolate_bilinear(image, query_points_flattened)
-        interpolated = tf.reshape(interpolated, [batch_size, height, width, channels])
-        return interpolated
+    # The flow is defined on the image grid. Turn the flow into a list of query
+    # points in the grid space.
+    grid_x, grid_y = tf.meshgrid(tf.range(width), tf.range(height))
+    stacked_grid = tf.cast(tf.stack([grid_y, grid_x], axis=2), flow.dtype)
+    batched_grid = tf.expand_dims(stacked_grid, axis=0)
+    query_points_on_grid = batched_grid - flow
+    query_points_flattened = tf.reshape(query_points_on_grid, [batch_size, height * width, 2])
+    # Compute values at the query points, then reshape the result back to the
+    # image grid.
+    interpolated = interpolate_bilinear(image, query_points_flattened)
+    interpolated = tf.reshape(interpolated, [batch_size, height, width, channels])
+    return interpolated
 
 
 @tf.function(experimental_implements="deepray:DenseImageWarp")
 def dense_image_warp_annotated(
     image: types.TensorLike, flow: types.TensorLike, name: Optional[str] = None
 ) -> tf.Tensor:
-    """Similar to dense_image_warp but annotated with experimental_implements.
+  """Similar to dense_image_warp but annotated with experimental_implements.
 
     IMPORTANT: This is a temporary function and will be removed after TensorFlow's
     next release.
@@ -260,4 +244,4 @@ def dense_image_warp_annotated(
     However, with the annotation, this function cannot be used with backprop
     under `tf.GradientTape` objects.
     """
-    return dense_image_warp(image, flow, name)
+  return dense_image_warp(image, flow, name)

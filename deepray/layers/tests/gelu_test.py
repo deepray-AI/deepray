@@ -14,7 +14,6 @@
 # ==============================================================================
 """Tests for GELU activation."""
 
-
 import pytest
 import numpy as np
 from deepray.layers.gelu import GELU
@@ -23,8 +22,6 @@ from deepray.utils import test_utils
 
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def test_random(dtype):
-    x = np.array([[0.5, 1.2, -0.3]]).astype(dtype)
-    val = np.array([[0.345714, 1.0617027, -0.11462909]]).astype(dtype)
-    test_utils.layer_test(
-        GELU, kwargs={"dtype": dtype}, input_data=x, expected_output=val
-    )
+  x = np.array([[0.5, 1.2, -0.3]]).astype(dtype)
+  val = np.array([[0.345714, 1.0617027, -0.11462909]]).astype(dtype)
+  test_utils.layer_test(GELU, kwargs={"dtype": dtype}, input_data=x, expected_output=val)

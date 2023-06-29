@@ -22,40 +22,36 @@ from deepray.image import utils as img_utils
 from deepray.utils.types import TensorLike, FloatTensorLike
 
 
-def _get_grid_locations(
-    image_height: TensorLike, image_width: TensorLike
-) -> TensorLike:
-    """Wrapper for `tf.meshgrid`."""
-    y_range = tf.linspace(0, image_height - 1, image_height)
-    x_range = tf.linspace(0, image_width - 1, image_width)
-    y_grid, x_grid = tf.meshgrid(y_range, x_range, indexing="ij")
-    return tf.stack((y_grid, x_grid), -1)
+def _get_grid_locations(image_height: TensorLike, image_width: TensorLike) -> TensorLike:
+  """Wrapper for `tf.meshgrid`."""
+  y_range = tf.linspace(0, image_height - 1, image_height)
+  x_range = tf.linspace(0, image_width - 1, image_width)
+  y_grid, x_grid = tf.meshgrid(y_range, x_range, indexing="ij")
+  return tf.stack((y_grid, x_grid), -1)
 
 
 def _expand_to_minibatch(array: TensorLike, batch_size: TensorLike) -> TensorLike:
-    """Tile arbitrarily-sized array to include new batch dimension."""
-    batch_size = tf.expand_dims(batch_size, 0)
-    array_ones = tf.ones((tf.rank(array)), dtype=tf.dtypes.int32)
-    tiles = tf.concat([batch_size, array_ones], axis=0)
-    return tf.tile(tf.expand_dims(array, 0), tiles)
+  """Tile arbitrarily-sized array to include new batch dimension."""
+  batch_size = tf.expand_dims(batch_size, 0)
+  array_ones = tf.ones((tf.rank(array)), dtype=tf.dtypes.int32)
+  tiles = tf.concat([batch_size, array_ones], axis=0)
+  return tf.tile(tf.expand_dims(array, 0), tiles)
 
 
 def _get_boundary_locations(
     image_height: TensorLike, image_width: TensorLike, num_points_per_edge: TensorLike
 ) -> TensorLike:
-    """Compute evenly-spaced indices along edge of image."""
-    image_height = tf.cast(image_height, tf.float32)
-    image_width = tf.cast(image_width, tf.float32)
-    y_range = tf.linspace(0.0, image_height - 1, num_points_per_edge + 2)
-    x_range = tf.linspace(0.0, image_width - 1, num_points_per_edge + 2)
-    ys, xs = tf.meshgrid(y_range, x_range, indexing="ij")
-    is_boundary = tf.logical_or(
-        tf.logical_or(tf.equal(xs, 0), tf.equal(xs, image_width - 1)),
-        tf.logical_or(tf.equal(ys, 0), tf.equal(ys, image_height - 1)),
-    )
-    return tf.stack(
-        [tf.boolean_mask(ys, is_boundary), tf.boolean_mask(xs, is_boundary)], axis=-1
-    )
+  """Compute evenly-spaced indices along edge of image."""
+  image_height = tf.cast(image_height, tf.float32)
+  image_width = tf.cast(image_width, tf.float32)
+  y_range = tf.linspace(0.0, image_height - 1, num_points_per_edge + 2)
+  x_range = tf.linspace(0.0, image_width - 1, num_points_per_edge + 2)
+  ys, xs = tf.meshgrid(y_range, x_range, indexing="ij")
+  is_boundary = tf.logical_or(
+      tf.logical_or(tf.equal(xs, 0), tf.equal(xs, image_width - 1)),
+      tf.logical_or(tf.equal(ys, 0), tf.equal(ys, image_height - 1)),
+  )
+  return tf.stack([tf.boolean_mask(ys, is_boundary), tf.boolean_mask(xs, is_boundary)], axis=-1)
 
 
 def _add_zero_flow_controls_at_boundary(
@@ -65,7 +61,7 @@ def _add_zero_flow_controls_at_boundary(
     image_width: TensorLike,
     boundary_points_per_edge: TensorLike,
 ) -> tf.Tensor:
-    """Add control points for zero-flow boundary conditions.
+  """Add control points for zero-flow boundary conditions.
 
     Augment the set of control points with extra points on the
     boundary of the image that have zero flow.
@@ -85,32 +81,22 @@ def _add_zero_flow_controls_at_boundary(
       merged_control_point_flows: augmented set of control point flows.
     """
 
-    batch_size = tf.shape(control_point_locations)[0]
+  batch_size = tf.shape(control_point_locations)[0]
 
-    boundary_point_locations = _get_boundary_locations(
-        image_height, image_width, boundary_points_per_edge
-    )
+  boundary_point_locations = _get_boundary_locations(image_height, image_width, boundary_points_per_edge)
 
-    boundary_point_flows = tf.zeros([tf.shape(boundary_point_locations)[0], 2])
+  boundary_point_flows = tf.zeros([tf.shape(boundary_point_locations)[0], 2])
 
-    type_to_use = control_point_locations.dtype
-    boundary_point_locations = tf.cast(
-        _expand_to_minibatch(boundary_point_locations, batch_size), type_to_use
-    )
+  type_to_use = control_point_locations.dtype
+  boundary_point_locations = tf.cast(_expand_to_minibatch(boundary_point_locations, batch_size), type_to_use)
 
-    boundary_point_flows = tf.cast(
-        _expand_to_minibatch(boundary_point_flows, batch_size), type_to_use
-    )
+  boundary_point_flows = tf.cast(_expand_to_minibatch(boundary_point_flows, batch_size), type_to_use)
 
-    merged_control_point_locations = tf.concat(
-        [control_point_locations, boundary_point_locations], 1
-    )
+  merged_control_point_locations = tf.concat([control_point_locations, boundary_point_locations], 1)
 
-    merged_control_point_flows = tf.concat(
-        [control_point_flows, boundary_point_flows], 1
-    )
+  merged_control_point_flows = tf.concat([control_point_flows, boundary_point_flows], 1)
 
-    return merged_control_point_locations, merged_control_point_flows
+  return merged_control_point_locations, merged_control_point_flows
 
 
 def sparse_image_warp(
@@ -122,7 +108,7 @@ def sparse_image_warp(
     num_boundary_points: int = 0,
     name: str = "sparse_image_warp",
 ) -> tf.Tensor:
-    """Image warping using correspondences between sparse control points.
+  """Image warping using correspondences between sparse control points.
 
     Apply a non-linear warp to the image, where the warp is specified by
     the source and destination locations of a (potentially small) number of
@@ -174,64 +160,56 @@ def sparse_image_warp(
         dense flow field produced by the interpolation.
     """
 
-    image = tf.convert_to_tensor(image)
-    original_ndims = img_utils.get_ndims(image)
-    image = img_utils.to_4D_image(image)
+  image = tf.convert_to_tensor(image)
+  original_ndims = img_utils.get_ndims(image)
+  image = img_utils.to_4D_image(image)
 
-    source_control_point_locations = tf.convert_to_tensor(
-        source_control_point_locations
+  source_control_point_locations = tf.convert_to_tensor(source_control_point_locations)
+  dest_control_point_locations = tf.convert_to_tensor(dest_control_point_locations)
+
+  control_point_flows = dest_control_point_locations - source_control_point_locations
+
+  clamp_boundaries = num_boundary_points > 0
+  boundary_points_per_edge = num_boundary_points - 1
+
+  with tf.name_scope(name or "sparse_image_warp"):
+    image_shape = tf.shape(image)
+    batch_size, image_height, image_width = (
+        image_shape[0],
+        image_shape[1],
+        image_shape[2],
     )
-    dest_control_point_locations = tf.convert_to_tensor(dest_control_point_locations)
 
-    control_point_flows = dest_control_point_locations - source_control_point_locations
+    # This generates the dense locations where the interpolant
+    # will be evaluated.
+    grid_locations = _get_grid_locations(image_height, image_width)
 
-    clamp_boundaries = num_boundary_points > 0
-    boundary_points_per_edge = num_boundary_points - 1
+    flattened_grid_locations = tf.reshape(grid_locations, [image_height * image_width, 2])
 
-    with tf.name_scope(name or "sparse_image_warp"):
-        image_shape = tf.shape(image)
-        batch_size, image_height, image_width = (
-            image_shape[0],
-            image_shape[1],
-            image_shape[2],
-        )
+    flattened_grid_locations = tf.cast(_expand_to_minibatch(flattened_grid_locations, batch_size), image.dtype)
 
-        # This generates the dense locations where the interpolant
-        # will be evaluated.
-        grid_locations = _get_grid_locations(image_height, image_width)
+    if clamp_boundaries:
+      (
+          dest_control_point_locations,
+          control_point_flows,
+      ) = _add_zero_flow_controls_at_boundary(
+          dest_control_point_locations,
+          control_point_flows,
+          image_height,
+          image_width,
+          boundary_points_per_edge,
+      )
 
-        flattened_grid_locations = tf.reshape(
-            grid_locations, [image_height * image_width, 2]
-        )
+    flattened_flows = interpolate_spline(
+        dest_control_point_locations,
+        control_point_flows,
+        flattened_grid_locations,
+        interpolation_order,
+        regularization_weight,
+    )
 
-        flattened_grid_locations = tf.cast(
-            _expand_to_minibatch(flattened_grid_locations, batch_size), image.dtype
-        )
+    dense_flows = tf.reshape(flattened_flows, [batch_size, image_height, image_width, 2])
 
-        if clamp_boundaries:
-            (
-                dest_control_point_locations,
-                control_point_flows,
-            ) = _add_zero_flow_controls_at_boundary(
-                dest_control_point_locations,
-                control_point_flows,
-                image_height,
-                image_width,
-                boundary_points_per_edge,
-            )
+    warped_image = dense_image_warp(image, dense_flows)
 
-        flattened_flows = interpolate_spline(
-            dest_control_point_locations,
-            control_point_flows,
-            flattened_grid_locations,
-            interpolation_order,
-            regularization_weight,
-        )
-
-        dense_flows = tf.reshape(
-            flattened_flows, [batch_size, image_height, image_width, 2]
-        )
-
-        warped_image = dense_image_warp(image, dense_flows)
-
-        return img_utils.from_4D_image(warped_image, original_ndims), dense_flows
+    return img_utils.from_4D_image(warped_image, original_ndims), dense_flows

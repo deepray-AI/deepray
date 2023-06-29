@@ -23,35 +23,33 @@ from deepray.utils.keras_utils import normalize_tuple
 
 
 def _max_unpooling_2d_v2(updates, mask, output_size):
-    """Unpool the outputs of a maximum pooling operation."""
-    mask = tf.cast(mask, "int32")
-    input_shape = tf.shape(updates, out_type="int32")
-    input_shape = [updates.shape[i] or input_shape[i] for i in range(4)]
-    output_shape = output_size
+  """Unpool the outputs of a maximum pooling operation."""
+  mask = tf.cast(mask, "int32")
+  input_shape = tf.shape(updates, out_type="int32")
+  input_shape = [updates.shape[i] or input_shape[i] for i in range(4)]
+  output_shape = output_size
 
-    # Calculates indices for batch, height, width and feature maps.
-    one_like_mask = tf.ones_like(mask, dtype="int32")
-    batch_shape = tf.concat([[input_shape[0]], [1], [1], [1]], axis=0)
-    batch_range = tf.reshape(
-        tf.range(output_shape[0], dtype="int32"), shape=batch_shape
-    )
-    b = one_like_mask * batch_range
-    y = mask // (output_shape[2] * output_shape[3])
-    x = (mask // output_shape[3]) % output_shape[2]
-    feature_range = tf.range(output_shape[3], dtype="int32")
-    f = one_like_mask * feature_range
+  # Calculates indices for batch, height, width and feature maps.
+  one_like_mask = tf.ones_like(mask, dtype="int32")
+  batch_shape = tf.concat([[input_shape[0]], [1], [1], [1]], axis=0)
+  batch_range = tf.reshape(tf.range(output_shape[0], dtype="int32"), shape=batch_shape)
+  b = one_like_mask * batch_range
+  y = mask // (output_shape[2] * output_shape[3])
+  x = (mask // output_shape[3]) % output_shape[2]
+  feature_range = tf.range(output_shape[3], dtype="int32")
+  f = one_like_mask * feature_range
 
-    # Transposes indices & reshape update values to one dimension.
-    updates_size = tf.size(updates)
-    indices = tf.transpose(tf.reshape(tf.stack([b, y, x, f]), [4, updates_size]))
-    values = tf.reshape(updates, [updates_size])
-    ret = tf.scatter_nd(indices, values, output_shape)
-    return ret
+  # Transposes indices & reshape update values to one dimension.
+  updates_size = tf.size(updates)
+  indices = tf.transpose(tf.reshape(tf.stack([b, y, x, f]), [4, updates_size]))
+  values = tf.reshape(updates, [updates_size])
+  ret = tf.scatter_nd(indices, values, output_shape)
+  return ret
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class MaxUnpooling2DV2(tf.keras.layers.Layer):
-    """Unpool the outputs of a maximum pooling operation.
+  """Unpool the outputs of a maximum pooling operation.
 
     This differs from MaxUnpooling2D in that it uses output_size rather than strides and padding
     to calculate the unpooled tensor. This is because MaxPoolingWithArgMax can map several input
@@ -74,20 +72,20 @@ class MaxUnpooling2DV2(tf.keras.layers.Layer):
       4D tensor with the same shape as output_size.
     """
 
-    @typechecked
-    def __init__(
-        self,
-        output_size: Iterable[int],
-        **kwargs,
-    ):
-        super(MaxUnpooling2DV2, self).__init__(**kwargs)
+  @typechecked
+  def __init__(
+      self,
+      output_size: Iterable[int],
+      **kwargs,
+  ):
+    super(MaxUnpooling2DV2, self).__init__(**kwargs)
 
-        self.output_size = normalize_tuple(output_size, 4, "output_size")
+    self.output_size = normalize_tuple(output_size, 4, "output_size")
 
-    def call(self, updates, mask):
-        return _max_unpooling_2d_v2(updates, mask, output_size=self.output_size)
+  def call(self, updates, mask):
+    return _max_unpooling_2d_v2(updates, mask, output_size=self.output_size)
 
-    def get_config(self):
-        config = super(MaxUnpooling2DV2, self).get_config()
-        config["output_size"] = self.output_size
-        return config
+  def get_config(self):
+    config = super(MaxUnpooling2DV2, self).get_config()
+    config["output_size"] = self.output_size
+    return config

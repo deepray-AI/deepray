@@ -4,7 +4,7 @@ from typeguard import typechecked
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class StochasticDepth(tf.keras.layers.Layer):
-    """Stochastic Depth layer.
+  """Stochastic Depth layer.
 
     Implements Stochastic Depth as described in
     [Deep Networks with Stochastic Depth](https://arxiv.org/abs/1603.09382), to randomly drop residual branches
@@ -52,39 +52,35 @@ class StochasticDepth(tf.keras.layers.Layer):
         Equal to the shape of inputs `shortcut`, and `residual`
     """
 
-    @typechecked
-    def __init__(self, survival_probability: float = 0.5, **kwargs):
-        super().__init__(**kwargs)
+  @typechecked
+  def __init__(self, survival_probability: float = 0.5, **kwargs):
+    super().__init__(**kwargs)
 
-        self.survival_probability = survival_probability
+    self.survival_probability = survival_probability
 
-    def call(self, x, training=None):
-        if not isinstance(x, list) or len(x) != 2:
-            raise ValueError("input must be a list of length 2.")
+  def call(self, x, training=None):
+    if not isinstance(x, list) or len(x) != 2:
+      raise ValueError("input must be a list of length 2.")
 
-        shortcut, residual = x
+    shortcut, residual = x
 
-        # Random bernoulli variable indicating whether the branch should be kept or not or not
-        b_l = tf.keras.backend.random_bernoulli(
-            [], p=self.survival_probability, dtype=self._compute_dtype_object
-        )
+    # Random bernoulli variable indicating whether the branch should be kept or not or not
+    b_l = tf.keras.backend.random_bernoulli([], p=self.survival_probability, dtype=self._compute_dtype_object)
 
-        def _call_train():
-            return shortcut + b_l * residual
+    def _call_train():
+      return shortcut + b_l * residual
 
-        def _call_test():
-            return shortcut + self.survival_probability * residual
+    def _call_test():
+      return shortcut + self.survival_probability * residual
 
-        return tf.keras.backend.in_train_phase(
-            _call_train, _call_test, training=training
-        )
+    return tf.keras.backend.in_train_phase(_call_train, _call_test, training=training)
 
-    def compute_output_shape(self, input_shape):
-        return input_shape[0]
+  def compute_output_shape(self, input_shape):
+    return input_shape[0]
 
-    def get_config(self):
-        base_config = super().get_config()
+  def get_config(self):
+    base_config = super().get_config()
 
-        config = {"survival_probability": self.survival_probability}
+    config = {"survival_probability": self.survival_probability}
 
-        return {**base_config, **config}
+    return {**base_config, **config}

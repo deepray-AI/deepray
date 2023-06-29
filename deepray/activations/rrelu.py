@@ -27,7 +27,7 @@ def rrelu(
     seed: Optional[int] = None,
     rng: Optional[tf.random.Generator] = None,
 ) -> tf.Tensor:
-    r"""Randomized leaky rectified liner unit function.
+  r"""Randomized leaky rectified liner unit function.
 
     Computes rrelu function:
 
@@ -78,23 +78,19 @@ def rrelu(
     Returns:
         result: A `Tensor`. Has the same type as `x`.
     """
-    x = tf.convert_to_tensor(x)
-    lower = tf.cast(lower, x.dtype)
-    upper = tf.cast(upper, x.dtype)
+  x = tf.convert_to_tensor(x)
+  lower = tf.cast(lower, x.dtype)
+  upper = tf.cast(upper, x.dtype)
 
-    def random_a():
-        if rng is not None and seed is not None:
-            raise ValueError(
-                "Either seed or rng should be specified. Not both at the same time."
-            )
+  def random_a():
+    if rng is not None and seed is not None:
+      raise ValueError("Either seed or rng should be specified. Not both at the same time.")
 
-        if rng is not None:
-            return rng.uniform(tf.shape(x), minval=lower, maxval=upper, dtype=x.dtype)
+    if rng is not None:
+      return rng.uniform(tf.shape(x), minval=lower, maxval=upper, dtype=x.dtype)
 
-        return tf.random.uniform(
-            tf.shape(x), minval=lower, maxval=upper, dtype=x.dtype, seed=seed
-        )
+    return tf.random.uniform(tf.shape(x), minval=lower, maxval=upper, dtype=x.dtype, seed=seed)
 
-    a = tf.keras.backend.in_train_phase(random_a, (lower + upper) / 2, training)
+  a = tf.keras.backend.in_train_phase(random_a, (lower + upper) / 2, training)
 
-    return tf.where(x >= 0, x, a * x)
+  return tf.where(x >= 0, x, a * x)

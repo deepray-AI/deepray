@@ -24,7 +24,7 @@ from deepray.utils.types import FloatTensorLike, TensorLike
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class SigmoidFocalCrossEntropy(LossFunctionWrapper):
-    """Implements the focal loss function.
+  """Implements the focal loss function.
 
     Focal loss was first introduced in the RetinaNet paper
     (https://arxiv.org/pdf/1708.02002.pdf). Focal loss is extremely useful for
@@ -62,23 +62,23 @@ class SigmoidFocalCrossEntropy(LossFunctionWrapper):
           `gamma` is less than zero.
     """
 
-    @typechecked
-    def __init__(
-        self,
-        from_logits: bool = False,
-        alpha: FloatTensorLike = 0.25,
-        gamma: FloatTensorLike = 2.0,
-        reduction: str = tf.keras.losses.Reduction.NONE,
-        name: str = "sigmoid_focal_crossentropy",
-    ):
-        super().__init__(
-            sigmoid_focal_crossentropy,
-            name=name,
-            reduction=reduction,
-            from_logits=from_logits,
-            alpha=alpha,
-            gamma=gamma,
-        )
+  @typechecked
+  def __init__(
+      self,
+      from_logits: bool = False,
+      alpha: FloatTensorLike = 0.25,
+      gamma: FloatTensorLike = 2.0,
+      reduction: str = tf.keras.losses.Reduction.NONE,
+      name: str = "sigmoid_focal_crossentropy",
+  ):
+    super().__init__(
+        sigmoid_focal_crossentropy,
+        name=name,
+        reduction=reduction,
+        from_logits=from_logits,
+        alpha=alpha,
+        gamma=gamma,
+    )
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
@@ -90,7 +90,7 @@ def sigmoid_focal_crossentropy(
     gamma: FloatTensorLike = 2.0,
     from_logits: bool = False,
 ) -> tf.Tensor:
-    """Implements the focal loss function.
+  """Implements the focal loss function.
 
     Focal loss was first introduced in the RetinaNet paper
     (https://arxiv.org/pdf/1708.02002.pdf). Focal loss is extremely useful for
@@ -111,32 +111,32 @@ def sigmoid_focal_crossentropy(
         Weighted loss float `Tensor`. If `reduction` is `NONE`,this has the
         same shape as `y_true`; otherwise, it is scalar.
     """
-    if gamma and gamma < 0:
-        raise ValueError("Value of gamma should be greater than or equal to zero.")
+  if gamma and gamma < 0:
+    raise ValueError("Value of gamma should be greater than or equal to zero.")
 
-    y_pred = tf.convert_to_tensor(y_pred)
-    y_true = tf.cast(y_true, dtype=y_pred.dtype)
+  y_pred = tf.convert_to_tensor(y_pred)
+  y_true = tf.cast(y_true, dtype=y_pred.dtype)
 
-    # Get the cross_entropy for each entry
-    ce = K.binary_crossentropy(y_true, y_pred, from_logits=from_logits)
+  # Get the cross_entropy for each entry
+  ce = K.binary_crossentropy(y_true, y_pred, from_logits=from_logits)
 
-    # If logits are provided then convert the predictions into probabilities
-    if from_logits:
-        pred_prob = tf.sigmoid(y_pred)
-    else:
-        pred_prob = y_pred
+  # If logits are provided then convert the predictions into probabilities
+  if from_logits:
+    pred_prob = tf.sigmoid(y_pred)
+  else:
+    pred_prob = y_pred
 
-    p_t = (y_true * pred_prob) + ((1 - y_true) * (1 - pred_prob))
-    alpha_factor = 1.0
-    modulating_factor = 1.0
+  p_t = (y_true * pred_prob) + ((1 - y_true) * (1 - pred_prob))
+  alpha_factor = 1.0
+  modulating_factor = 1.0
 
-    if alpha:
-        alpha = tf.cast(alpha, dtype=y_true.dtype)
-        alpha_factor = y_true * alpha + (1 - y_true) * (1 - alpha)
+  if alpha:
+    alpha = tf.cast(alpha, dtype=y_true.dtype)
+    alpha_factor = y_true * alpha + (1 - y_true) * (1 - alpha)
 
-    if gamma:
-        gamma = tf.cast(gamma, dtype=y_true.dtype)
-        modulating_factor = tf.pow((1.0 - p_t), gamma)
+  if gamma:
+    gamma = tf.cast(gamma, dtype=y_true.dtype)
+    modulating_factor = tf.pow((1.0 - p_t), gamma)
 
-    # compute the final loss and return
-    return tf.reduce_sum(alpha_factor * modulating_factor * ce, axis=-1)
+  # compute the final loss and return
+  return tf.reduce_sum(alpha_factor * modulating_factor * ce, axis=-1)

@@ -32,7 +32,7 @@ def sequence_loss(
     softmax_loss_function: Optional[Callable] = None,
     name: Optional[str] = None,
 ) -> tf.Tensor:
-    """Computes the weighted cross-entropy loss for a sequence of logits.
+  """Computes the weighted cross-entropy loss for a sequence of logits.
 
     Depending on the values of `average_across_timesteps` /
     `sum_over_timesteps` and `average_across_batch` / `sum_over_batch`, the
@@ -88,122 +88,111 @@ def sequence_loss(
       ValueError: logits does not have 3 dimensions or targets does not have 2
                   dimensions or weights does not have 2 dimensions.
     """
-    if len(logits.shape) != 3:
-        raise ValueError(
-            "Logits must be a [batch_size x sequence_length x logits] tensor"
-        )
+  if len(logits.shape) != 3:
+    raise ValueError("Logits must be a [batch_size x sequence_length x logits] tensor")
 
-    targets_rank = len(targets.shape)
-    if targets_rank != 2 and targets_rank != 3:
-        raise ValueError(
-            "Targets must be either a [batch_size x sequence_length] tensor "
-            + "where each element contains the labels' index"
-            + "or a [batch_size x sequence_length x num_classes] tensor "
-            + "where the third axis is a one-hot representation of the labels"
-        )
+  targets_rank = len(targets.shape)
+  if targets_rank != 2 and targets_rank != 3:
+    raise ValueError(
+        "Targets must be either a [batch_size x sequence_length] tensor " +
+        "where each element contains the labels' index" + "or a [batch_size x sequence_length x num_classes] tensor " +
+        "where the third axis is a one-hot representation of the labels"
+    )
 
-    if len(weights.shape) != 2:
-        raise ValueError("Weights must be a [batch_size x sequence_length] tensor")
+  if len(weights.shape) != 2:
+    raise ValueError("Weights must be a [batch_size x sequence_length] tensor")
 
-    if average_across_timesteps and sum_over_timesteps:
-        raise ValueError(
-            "average_across_timesteps and sum_over_timesteps cannot "
-            "be set to True at same time."
+  if average_across_timesteps and sum_over_timesteps:
+    raise ValueError("average_across_timesteps and sum_over_timesteps cannot "
+                     "be set to True at same time.")
+  if average_across_batch and sum_over_batch:
+    raise ValueError("average_across_batch and sum_over_batch cannot be set "
+                     "to True at same time.")
+  if average_across_batch and sum_over_timesteps:
+    raise ValueError(
+        "average_across_batch and sum_over_timesteps cannot be set "
+        "to True at same time because of ambiguous order."
+    )
+  if sum_over_batch and average_across_timesteps:
+    raise ValueError(
+        "sum_over_batch and average_across_timesteps cannot be set "
+        "to True at same time because of ambiguous order."
+    )
+  with tf.name_scope(name or "sequence_loss"):
+    num_classes = tf.shape(input=logits)[2]
+    logits_flat = tf.reshape(logits, [-1, num_classes])
+    if softmax_loss_function is None:
+      if targets_rank == 2:
+        targets = tf.reshape(targets, [-1])
+        crossent = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=targets, logits=logits_flat)
+      else:
+        targets = tf.reshape(targets, [-1, num_classes])
+        crossent = tf.nn.softmax_cross_entropy_with_logits(labels=targets, logits=logits_flat)
+    else:
+      targets = tf.reshape(targets, [-1])
+      crossent = softmax_loss_function(labels=targets, logits=logits_flat)
+    crossent *= tf.reshape(weights, [-1])
+    if average_across_timesteps and average_across_batch:
+      crossent = tf.reduce_sum(input_tensor=crossent)
+      total_size = tf.reduce_sum(input_tensor=weights)
+      crossent = tf.math.divide_no_nan(crossent, total_size)
+    elif sum_over_timesteps and sum_over_batch:
+      crossent = tf.reduce_sum(input_tensor=crossent)
+      total_count = tf.cast(tf.math.count_nonzero(weights), crossent.dtype)
+      crossent = tf.math.divide_no_nan(crossent, total_count)
+    else:
+      crossent = tf.reshape(crossent, tf.shape(input=logits)[0:2])
+      if average_across_timesteps or average_across_batch:
+        reduce_axis = [0] if average_across_batch else [1]
+        crossent = tf.reduce_sum(input_tensor=crossent, axis=reduce_axis)
+        total_size = tf.reduce_sum(input_tensor=weights, axis=reduce_axis)
+        crossent = tf.math.divide_no_nan(crossent, total_size)
+      elif sum_over_timesteps or sum_over_batch:
+        reduce_axis = [0] if sum_over_batch else [1]
+        crossent = tf.reduce_sum(input_tensor=crossent, axis=reduce_axis)
+        total_count = tf.cast(
+            tf.math.count_nonzero(weights, axis=reduce_axis),
+            dtype=crossent.dtype,
         )
-    if average_across_batch and sum_over_batch:
-        raise ValueError(
-            "average_across_batch and sum_over_batch cannot be set "
-            "to True at same time."
-        )
-    if average_across_batch and sum_over_timesteps:
-        raise ValueError(
-            "average_across_batch and sum_over_timesteps cannot be set "
-            "to True at same time because of ambiguous order."
-        )
-    if sum_over_batch and average_across_timesteps:
-        raise ValueError(
-            "sum_over_batch and average_across_timesteps cannot be set "
-            "to True at same time because of ambiguous order."
-        )
-    with tf.name_scope(name or "sequence_loss"):
-        num_classes = tf.shape(input=logits)[2]
-        logits_flat = tf.reshape(logits, [-1, num_classes])
-        if softmax_loss_function is None:
-            if targets_rank == 2:
-                targets = tf.reshape(targets, [-1])
-                crossent = tf.nn.sparse_softmax_cross_entropy_with_logits(
-                    labels=targets, logits=logits_flat
-                )
-            else:
-                targets = tf.reshape(targets, [-1, num_classes])
-                crossent = tf.nn.softmax_cross_entropy_with_logits(
-                    labels=targets, logits=logits_flat
-                )
-        else:
-            targets = tf.reshape(targets, [-1])
-            crossent = softmax_loss_function(labels=targets, logits=logits_flat)
-        crossent *= tf.reshape(weights, [-1])
-        if average_across_timesteps and average_across_batch:
-            crossent = tf.reduce_sum(input_tensor=crossent)
-            total_size = tf.reduce_sum(input_tensor=weights)
-            crossent = tf.math.divide_no_nan(crossent, total_size)
-        elif sum_over_timesteps and sum_over_batch:
-            crossent = tf.reduce_sum(input_tensor=crossent)
-            total_count = tf.cast(tf.math.count_nonzero(weights), crossent.dtype)
-            crossent = tf.math.divide_no_nan(crossent, total_count)
-        else:
-            crossent = tf.reshape(crossent, tf.shape(input=logits)[0:2])
-            if average_across_timesteps or average_across_batch:
-                reduce_axis = [0] if average_across_batch else [1]
-                crossent = tf.reduce_sum(input_tensor=crossent, axis=reduce_axis)
-                total_size = tf.reduce_sum(input_tensor=weights, axis=reduce_axis)
-                crossent = tf.math.divide_no_nan(crossent, total_size)
-            elif sum_over_timesteps or sum_over_batch:
-                reduce_axis = [0] if sum_over_batch else [1]
-                crossent = tf.reduce_sum(input_tensor=crossent, axis=reduce_axis)
-                total_count = tf.cast(
-                    tf.math.count_nonzero(weights, axis=reduce_axis),
-                    dtype=crossent.dtype,
-                )
-                crossent = tf.math.divide_no_nan(crossent, total_count)
-        return crossent
+        crossent = tf.math.divide_no_nan(crossent, total_count)
+    return crossent
 
 
 class SequenceLoss(tf.keras.losses.Loss):
-    """Weighted cross-entropy loss for a sequence of logits."""
+  """Weighted cross-entropy loss for a sequence of logits."""
 
-    @typechecked
-    def __init__(
-        self,
-        average_across_timesteps: bool = False,
-        average_across_batch: bool = False,
-        sum_over_timesteps: bool = True,
-        sum_over_batch: bool = True,
-        softmax_loss_function: Optional[Callable] = None,
-        name: Optional[str] = None,
-    ):
-        super().__init__(reduction=tf.keras.losses.Reduction.NONE, name=name)
-        self.average_across_timesteps = average_across_timesteps
-        self.average_across_batch = average_across_batch
-        self.sum_over_timesteps = sum_over_timesteps
-        self.sum_over_batch = sum_over_batch
-        self.softmax_loss_function = softmax_loss_function
+  @typechecked
+  def __init__(
+      self,
+      average_across_timesteps: bool = False,
+      average_across_batch: bool = False,
+      sum_over_timesteps: bool = True,
+      sum_over_batch: bool = True,
+      softmax_loss_function: Optional[Callable] = None,
+      name: Optional[str] = None,
+  ):
+    super().__init__(reduction=tf.keras.losses.Reduction.NONE, name=name)
+    self.average_across_timesteps = average_across_timesteps
+    self.average_across_batch = average_across_batch
+    self.sum_over_timesteps = sum_over_timesteps
+    self.sum_over_batch = sum_over_batch
+    self.softmax_loss_function = softmax_loss_function
 
-    def __call__(self, y_true, y_pred, sample_weight=None):
-        """Override the parent __call__ to have a customized reduce
+  def __call__(self, y_true, y_pred, sample_weight=None):
+    """Override the parent __call__ to have a customized reduce
         behavior."""
-        return sequence_loss(
-            y_pred,
-            y_true,
-            sample_weight,
-            average_across_timesteps=self.average_across_timesteps,
-            average_across_batch=self.average_across_batch,
-            sum_over_timesteps=self.sum_over_timesteps,
-            sum_over_batch=self.sum_over_batch,
-            softmax_loss_function=self.softmax_loss_function,
-            name=self.name,
-        )
+    return sequence_loss(
+        y_pred,
+        y_true,
+        sample_weight,
+        average_across_timesteps=self.average_across_timesteps,
+        average_across_batch=self.average_across_batch,
+        sum_over_timesteps=self.sum_over_timesteps,
+        sum_over_batch=self.sum_over_batch,
+        softmax_loss_function=self.softmax_loss_function,
+        name=self.name,
+    )
 
-    def call(self, y_true, y_pred):
-        # Skip this method since the __call__ contains real implementation.
-        pass
+  def call(self, y_true, y_pred):
+    # Skip this method since the __call__ contains real implementation.
+    pass

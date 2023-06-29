@@ -27,7 +27,7 @@ def _pad(
     mode: str = "CONSTANT",
     constant_values: TensorLike = 0,
 ) -> tf.Tensor:
-    """Explicitly pad a 4-D image.
+  """Explicitly pad a 4-D image.
 
     Equivalent to the implicit padding method offered in `tf.nn.conv2d` and
     `tf.nn.depthwise_conv2d`, but supports non-zero, reflect and symmetric
@@ -45,18 +45,16 @@ def _pad(
       constant_values: A `scalar`, the pad value to use in "CONSTANT"
         padding mode.
     """
-    if mode.upper() not in {"REFLECT", "CONSTANT", "SYMMETRIC"}:
-        raise ValueError(
-            'padding should be one of "REFLECT", "CONSTANT", or "SYMMETRIC".'
-        )
-    constant_values = tf.convert_to_tensor(constant_values, image.dtype)
-    filter_height, filter_width = filter_shape
-    pad_top = (filter_height - 1) // 2
-    pad_bottom = filter_height - 1 - pad_top
-    pad_left = (filter_width - 1) // 2
-    pad_right = filter_width - 1 - pad_left
-    paddings = [[0, 0], [pad_top, pad_bottom], [pad_left, pad_right], [0, 0]]
-    return tf.pad(image, paddings, mode=mode, constant_values=constant_values)
+  if mode.upper() not in {"REFLECT", "CONSTANT", "SYMMETRIC"}:
+    raise ValueError('padding should be one of "REFLECT", "CONSTANT", or "SYMMETRIC".')
+  constant_values = tf.convert_to_tensor(constant_values, image.dtype)
+  filter_height, filter_width = filter_shape
+  pad_top = (filter_height - 1) // 2
+  pad_bottom = filter_height - 1 - pad_top
+  pad_left = (filter_width - 1) // 2
+  pad_right = filter_width - 1 - pad_left
+  paddings = [[0, 0], [pad_top, pad_bottom], [pad_left, pad_right], [0, 0]]
+  return tf.pad(image, paddings, mode=mode, constant_values=constant_values)
 
 
 @tf.function
@@ -67,7 +65,7 @@ def mean_filter2d(
     constant_values: TensorLike = 0,
     name: Optional[str] = None,
 ) -> tf.Tensor:
-    """Perform mean filtering on image(s).
+  """Perform mean filtering on image(s).
 
     Args:
       image: Either a 2-D `Tensor` of shape `[height, width]`,
@@ -90,36 +88,34 @@ def mean_filter2d(
         if `padding` is other than "REFLECT", "CONSTANT" or "SYMMETRIC",
         or if `filter_shape` is invalid.
     """
-    with tf.name_scope(name or "mean_filter2d"):
-        image = tf.convert_to_tensor(image, name="image")
-        original_ndims = img_utils.get_ndims(image)
-        image = img_utils.to_4D_image(image)
+  with tf.name_scope(name or "mean_filter2d"):
+    image = tf.convert_to_tensor(image, name="image")
+    original_ndims = img_utils.get_ndims(image)
+    image = img_utils.to_4D_image(image)
 
-        filter_shape = keras_utils.normalize_tuple(filter_shape, 2, "filter_shape")
+    filter_shape = keras_utils.normalize_tuple(filter_shape, 2, "filter_shape")
 
-        # Keep the precision if it's float;
-        # otherwise, convert to float32 for computing.
-        orig_dtype = image.dtype
-        if not image.dtype.is_floating:
-            image = tf.dtypes.cast(image, tf.dtypes.float32)
+    # Keep the precision if it's float;
+    # otherwise, convert to float32 for computing.
+    orig_dtype = image.dtype
+    if not image.dtype.is_floating:
+      image = tf.dtypes.cast(image, tf.dtypes.float32)
 
-        # Explicitly pad the image
-        image = _pad(image, filter_shape, mode=padding, constant_values=constant_values)
+    # Explicitly pad the image
+    image = _pad(image, filter_shape, mode=padding, constant_values=constant_values)
 
-        # Filter of shape (filter_width, filter_height, in_channels, 1)
-        # has the value of 1 for each element.
-        area = tf.constant(filter_shape[0] * filter_shape[1], dtype=image.dtype)
-        filter_shape += (tf.shape(image)[-1], 1)
-        kernel = tf.ones(shape=filter_shape, dtype=image.dtype)
+    # Filter of shape (filter_width, filter_height, in_channels, 1)
+    # has the value of 1 for each element.
+    area = tf.constant(filter_shape[0] * filter_shape[1], dtype=image.dtype)
+    filter_shape += (tf.shape(image)[-1], 1)
+    kernel = tf.ones(shape=filter_shape, dtype=image.dtype)
 
-        output = tf.nn.depthwise_conv2d(
-            image, kernel, strides=(1, 1, 1, 1), padding="VALID"
-        )
+    output = tf.nn.depthwise_conv2d(image, kernel, strides=(1, 1, 1, 1), padding="VALID")
 
-        output /= area
+    output /= area
 
-        output = img_utils.from_4D_image(output, original_ndims)
-        return tf.dtypes.cast(output, orig_dtype)
+    output = img_utils.from_4D_image(output, original_ndims)
+    return tf.dtypes.cast(output, orig_dtype)
 
 
 @tf.function
@@ -130,7 +126,7 @@ def median_filter2d(
     constant_values: TensorLike = 0,
     name: Optional[str] = None,
 ) -> tf.Tensor:
-    """Perform median filtering on image(s).
+  """Perform median filtering on image(s).
 
     Args:
       image: Either a 2-D `Tensor` of shape `[height, width]`,
@@ -153,66 +149,66 @@ def median_filter2d(
         if `padding` is other than "REFLECT", "CONSTANT" or "SYMMETRIC",
         or if `filter_shape` is invalid.
     """
-    with tf.name_scope(name or "median_filter2d"):
-        image = tf.convert_to_tensor(image, name="image")
-        original_ndims = img_utils.get_ndims(image)
-        image = img_utils.to_4D_image(image)
+  with tf.name_scope(name or "median_filter2d"):
+    image = tf.convert_to_tensor(image, name="image")
+    original_ndims = img_utils.get_ndims(image)
+    image = img_utils.to_4D_image(image)
 
-        filter_shape = keras_utils.normalize_tuple(filter_shape, 2, "filter_shape")
+    filter_shape = keras_utils.normalize_tuple(filter_shape, 2, "filter_shape")
 
-        image_shape = tf.shape(image)
-        batch_size = image_shape[0]
-        height = image_shape[1]
-        width = image_shape[2]
-        channels = image_shape[3]
+    image_shape = tf.shape(image)
+    batch_size = image_shape[0]
+    height = image_shape[1]
+    width = image_shape[2]
+    channels = image_shape[3]
 
-        # Explicitly pad the image
-        image = _pad(image, filter_shape, mode=padding, constant_values=constant_values)
+    # Explicitly pad the image
+    image = _pad(image, filter_shape, mode=padding, constant_values=constant_values)
 
-        area = filter_shape[0] * filter_shape[1]
+    area = filter_shape[0] * filter_shape[1]
 
-        floor = (area + 1) // 2
-        ceil = area // 2 + 1
+    floor = (area + 1) // 2
+    ceil = area // 2 + 1
 
-        patches = tf.image.extract_patches(
-            image,
-            sizes=[1, filter_shape[0], filter_shape[1], 1],
-            strides=[1, 1, 1, 1],
-            rates=[1, 1, 1, 1],
-            padding="VALID",
-        )
+    patches = tf.image.extract_patches(
+        image,
+        sizes=[1, filter_shape[0], filter_shape[1], 1],
+        strides=[1, 1, 1, 1],
+        rates=[1, 1, 1, 1],
+        padding="VALID",
+    )
 
-        patches = tf.reshape(patches, shape=[batch_size, height, width, area, channels])
+    patches = tf.reshape(patches, shape=[batch_size, height, width, area, channels])
 
-        patches = tf.transpose(patches, [0, 1, 2, 4, 3])
+    patches = tf.transpose(patches, [0, 1, 2, 4, 3])
 
-        # Note the returned median is casted back to the original type
-        # Take [5, 6, 7, 8] for example, the median is (6 + 7) / 2 = 3.5
-        # It turns out to be int(6.5) = 6 if the original type is int
-        top = tf.nn.top_k(patches, k=ceil).values
-        if area % 2 == 1:
-            median = top[:, :, :, :, floor - 1]
-        else:
-            median = (top[:, :, :, :, floor - 1] + top[:, :, :, :, ceil - 1]) / 2
+    # Note the returned median is casted back to the original type
+    # Take [5, 6, 7, 8] for example, the median is (6 + 7) / 2 = 3.5
+    # It turns out to be int(6.5) = 6 if the original type is int
+    top = tf.nn.top_k(patches, k=ceil).values
+    if area % 2 == 1:
+      median = top[:, :, :, :, floor - 1]
+    else:
+      median = (top[:, :, :, :, floor - 1] + top[:, :, :, :, ceil - 1]) / 2
 
-        output = tf.cast(median, image.dtype)
-        output = img_utils.from_4D_image(output, original_ndims)
-        return output
+    output = tf.cast(median, image.dtype)
+    output = img_utils.from_4D_image(output, original_ndims)
+    return output
 
 
 def _get_gaussian_kernel(sigma, filter_shape):
-    """Compute 1D Gaussian kernel."""
-    sigma = tf.convert_to_tensor(sigma)
-    x = tf.range(-filter_shape // 2 + 1, filter_shape // 2 + 1)
-    x = tf.cast(x**2, sigma.dtype)
-    x = tf.nn.softmax(-x / (2.0 * (sigma**2)))
-    return x
+  """Compute 1D Gaussian kernel."""
+  sigma = tf.convert_to_tensor(sigma)
+  x = tf.range(-filter_shape // 2 + 1, filter_shape // 2 + 1)
+  x = tf.cast(x**2, sigma.dtype)
+  x = tf.nn.softmax(-x / (2.0 * (sigma**2)))
+  return x
 
 
 def _get_gaussian_kernel_2d(gaussian_filter_x, gaussian_filter_y):
-    """Compute 2D Gaussian kernel given 1D kernels."""
-    gaussian_kernel = tf.matmul(gaussian_filter_x, gaussian_filter_y)
-    return gaussian_kernel
+  """Compute 2D Gaussian kernel given 1D kernels."""
+  gaussian_kernel = tf.matmul(gaussian_filter_x, gaussian_filter_y)
+  return gaussian_kernel
 
 
 @tf.function
@@ -224,7 +220,7 @@ def gaussian_filter2d(
     constant_values: TensorLike = 0,
     name: Optional[str] = None,
 ) -> TensorLike:
-    """Perform Gaussian blur on image(s).
+  """Perform Gaussian blur on image(s).
 
     Args:
       image: Either a 2-D `Tensor` of shape `[height, width]`,
@@ -252,51 +248,49 @@ def gaussian_filter2d(
         if `filter_shape` is invalid,
         or if `sigma` is invalid.
     """
-    with tf.name_scope(name or "gaussian_filter2d"):
-        if isinstance(sigma, (list, tuple)):
-            if len(sigma) != 2:
-                raise ValueError("sigma should be a float or a tuple/list of 2 floats")
-        else:
-            sigma = (sigma,) * 2
+  with tf.name_scope(name or "gaussian_filter2d"):
+    if isinstance(sigma, (list, tuple)):
+      if len(sigma) != 2:
+        raise ValueError("sigma should be a float or a tuple/list of 2 floats")
+    else:
+      sigma = (sigma,) * 2
 
-        if any(s < 0 for s in sigma):
-            raise ValueError("sigma should be greater than or equal to 0.")
+    if any(s < 0 for s in sigma):
+      raise ValueError("sigma should be greater than or equal to 0.")
 
-        image = tf.convert_to_tensor(image, name="image")
-        sigma = tf.convert_to_tensor(sigma, name="sigma")
+    image = tf.convert_to_tensor(image, name="image")
+    sigma = tf.convert_to_tensor(sigma, name="sigma")
 
-        original_ndims = img_utils.get_ndims(image)
-        image = img_utils.to_4D_image(image)
+    original_ndims = img_utils.get_ndims(image)
+    image = img_utils.to_4D_image(image)
 
-        # Keep the precision if it's float;
-        # otherwise, convert to float32 for computing.
-        orig_dtype = image.dtype
-        if not image.dtype.is_floating:
-            image = tf.cast(image, tf.float32)
+    # Keep the precision if it's float;
+    # otherwise, convert to float32 for computing.
+    orig_dtype = image.dtype
+    if not image.dtype.is_floating:
+      image = tf.cast(image, tf.float32)
 
-        channels = tf.shape(image)[3]
-        filter_shape = keras_utils.normalize_tuple(filter_shape, 2, "filter_shape")
+    channels = tf.shape(image)[3]
+    filter_shape = keras_utils.normalize_tuple(filter_shape, 2, "filter_shape")
 
-        sigma = tf.cast(sigma, image.dtype)
-        gaussian_kernel_x = _get_gaussian_kernel(sigma[1], filter_shape[1])
-        gaussian_kernel_x = gaussian_kernel_x[tf.newaxis, :]
+    sigma = tf.cast(sigma, image.dtype)
+    gaussian_kernel_x = _get_gaussian_kernel(sigma[1], filter_shape[1])
+    gaussian_kernel_x = gaussian_kernel_x[tf.newaxis, :]
 
-        gaussian_kernel_y = _get_gaussian_kernel(sigma[0], filter_shape[0])
-        gaussian_kernel_y = gaussian_kernel_y[:, tf.newaxis]
+    gaussian_kernel_y = _get_gaussian_kernel(sigma[0], filter_shape[0])
+    gaussian_kernel_y = gaussian_kernel_y[:, tf.newaxis]
 
-        gaussian_kernel_2d = _get_gaussian_kernel_2d(
-            gaussian_kernel_y, gaussian_kernel_x
-        )
-        gaussian_kernel_2d = gaussian_kernel_2d[:, :, tf.newaxis, tf.newaxis]
-        gaussian_kernel_2d = tf.tile(gaussian_kernel_2d, [1, 1, channels, 1])
+    gaussian_kernel_2d = _get_gaussian_kernel_2d(gaussian_kernel_y, gaussian_kernel_x)
+    gaussian_kernel_2d = gaussian_kernel_2d[:, :, tf.newaxis, tf.newaxis]
+    gaussian_kernel_2d = tf.tile(gaussian_kernel_2d, [1, 1, channels, 1])
 
-        image = _pad(image, filter_shape, mode=padding, constant_values=constant_values)
+    image = _pad(image, filter_shape, mode=padding, constant_values=constant_values)
 
-        output = tf.nn.depthwise_conv2d(
-            input=image,
-            filter=gaussian_kernel_2d,
-            strides=(1, 1, 1, 1),
-            padding="VALID",
-        )
-        output = img_utils.from_4D_image(output, original_ndims)
-        return tf.cast(output, orig_dtype)
+    output = tf.nn.depthwise_conv2d(
+        input=image,
+        filter=gaussian_kernel_2d,
+        strides=(1, 1, 1, 1),
+        padding="VALID",
+    )
+    output = img_utils.from_4D_image(output, original_ndims)
+    return tf.cast(output, orig_dtype)

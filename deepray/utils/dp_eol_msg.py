@@ -17,17 +17,17 @@ import warnings
 
 
 def _print_eol_warning():
-    """
+  """
     Prints Deepray End of Life Warning
     """
-    warnings.warn(
-        "\n\nDeepray (DP) has ended development and introduction of new features.\n"
-        "DP has entered a minimal maintenance and release mode until a planned end of life in May 2024.\n"
-        "Please modify downstream libraries to take dependencies from other repositories in our TensorFlow community "
-        "(e.g. Keras, Keras-CV, and Keras-NLP). \n\n"
-        "For more information see: https://github.com/tensorflow/deepray/issues/2807 \n",
-        UserWarning,
-    )
+  warnings.warn(
+      "\n\nDeepray (DP) has ended development and introduction of new features.\n"
+      "DP has entered a minimal maintenance and release mode until a planned end of life in May 2024.\n"
+      "Please modify downstream libraries to take dependencies from other repositories in our TensorFlow community "
+      "(e.g. Keras, Keras-CV, and Keras-NLP). \n\n"
+      "For more information see: https://github.com/tensorflow/deepray/issues/2807 \n",
+      UserWarning,
+  )
 
 
 _print_eol_warning()

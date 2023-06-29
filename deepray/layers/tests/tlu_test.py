@@ -14,7 +14,6 @@
 # ==============================================================================
 """Tests for TLU activation."""
 
-
 import pytest
 import numpy as np
 import tensorflow as tf
@@ -26,36 +25,32 @@ from deepray.utils import test_utils
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def test_random(dtype):
-    x = np.array([[-2.5, 0.0, 0.3]]).astype(dtype)
-    val = np.array([[0.0, 0.0, 0.3]]).astype(dtype)
-    test_utils.layer_test(
-        TLU, kwargs={"dtype": dtype}, input_data=x, expected_output=val
-    )
+  x = np.array([[-2.5, 0.0, 0.3]]).astype(dtype)
+  val = np.array([[0.0, 0.0, 0.3]]).astype(dtype)
+  test_utils.layer_test(TLU, kwargs={"dtype": dtype}, input_data=x, expected_output=val)
 
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def test_affine(dtype):
-    x = np.array([[-2.5, 0.0, 0.3]]).astype(dtype)
-    val = np.array([[-1.5, 1.0, 1.3]]).astype(dtype)
-    test_utils.layer_test(
-        TLU,
-        kwargs={
-            "affine": True,
-            "dtype": dtype,
-            "alpha_initializer": "ones",
-            "tau_initializer": "ones",
-        },
-        input_data=x,
-        expected_output=val,
-    )
+  x = np.array([[-2.5, 0.0, 0.3]]).astype(dtype)
+  val = np.array([[-1.5, 1.0, 1.3]]).astype(dtype)
+  test_utils.layer_test(
+      TLU,
+      kwargs={
+          "affine": True,
+          "dtype": dtype,
+          "alpha_initializer": "ones",
+          "tau_initializer": "ones",
+      },
+      input_data=x,
+      expected_output=val,
+  )
 
 
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def test_serialization(dtype):
-    tlu = TLU(
-        affine=True, alpha_initializer="ones", tau_initializer="ones", dtype=dtype
-    )
-    serialized_tlu = tf.keras.layers.serialize(tlu)
-    new_layer = tf.keras.layers.deserialize(serialized_tlu)
-    assert tlu.get_config() == new_layer.get_config()
+  tlu = TLU(affine=True, alpha_initializer="ones", tau_initializer="ones", dtype=dtype)
+  serialized_tlu = tf.keras.layers.serialize(tlu)
+  new_layer = tf.keras.layers.deserialize(serialized_tlu)
+  assert tlu.get_config() == new_layer.get_config()

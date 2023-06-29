@@ -21,7 +21,7 @@ from typeguard import typechecked
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class GELU(tf.keras.layers.Layer):
-    """Gaussian Error Linear Unit.
+  """Gaussian Error Linear Unit.
 
     A smoother version of ReLU generally used
     in the BERT or BERT architecture based models.
@@ -36,19 +36,19 @@ class GELU(tf.keras.layers.Layer):
         Same shape as the input.
     """
 
-    @typechecked
-    def __init__(self, approximate: bool = True, **kwargs):
-        super().__init__(**kwargs)
-        self.approximate = approximate
-        self.supports_masking = True
+  @typechecked
+  def __init__(self, approximate: bool = True, **kwargs):
+    super().__init__(**kwargs)
+    self.approximate = approximate
+    self.supports_masking = True
 
-    def call(self, inputs):
-        return gelu(inputs, approximate=self.approximate)
+  def call(self, inputs):
+    return gelu(inputs, approximate=self.approximate)
 
-    def get_config(self):
-        config = {"approximate": self.approximate}
-        base_config = super().get_config()
-        return {**base_config, **config}
+  def get_config(self):
+    config = {"approximate": self.approximate}
+    base_config = super().get_config()
+    return {**base_config, **config}
 
-    def compute_output_shape(self, input_shape):
-        return input_shape
+  def compute_output_shape(self, input_shape):
+    return input_shape

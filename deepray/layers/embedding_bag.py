@@ -29,7 +29,7 @@ def _embedding_bag(
     combiner="sum",
     name=None,
 ):
-    """EmbeddingBag computation.
+  """EmbeddingBag computation.
 
     See [PyTorch op](https://pytorch.org/docs/stable/generated/torch.nn.EmbeddingBag.html).
 
@@ -49,31 +49,27 @@ def _embedding_bag(
     Returns:
       A `Tensor` of the format specified by `data_format`.
     """
-    if weights is None:
-        weights = tf.ones_like(indices, dtype=params.dtype)
-    elif combiner != "sum":
-        raise RuntimeError(
-            "Combiner mode must be 'sum' when weights are supplied to EmbeddingBag!"
-        )
+  if weights is None:
+    weights = tf.ones_like(indices, dtype=params.dtype)
+  elif combiner != "sum":
+    raise RuntimeError("Combiner mode must be 'sum' when weights are supplied to EmbeddingBag!")
 
-    return _embedding_bag_so.ops.deepray_embedding_bag(
-        indices, params, weights, combiner=combiner.upper(), name=name
-    )
+  return _embedding_bag_so.ops.deepray_embedding_bag(indices, params, weights, combiner=combiner.upper(), name=name)
 
 
 @tf.RegisterGradient("Deepray>EmbeddingBag")
 def _embedding_bag_grad(op, grads):
-    indices, params, weights = op.inputs[:3]
-    combiner = op.get_attr("combiner")
-    value_grads, weight_grads = _embedding_bag_so.ops.deepray_embedding_bag_grad(
-        indices, params, weights, grads, combiner=combiner
-    )
-    return [None, value_grads, weight_grads]
+  indices, params, weights = op.inputs[:3]
+  combiner = op.get_attr("combiner")
+  value_grads, weight_grads = _embedding_bag_so.ops.deepray_embedding_bag_grad(
+      indices, params, weights, grads, combiner=combiner
+  )
+  return [None, value_grads, weight_grads]
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class EmbeddingBag(tf.keras.layers.Layer):
-    """EmbeddingBag Layer.
+  """EmbeddingBag Layer.
 
     See [PyTorch op](https://pytorch.org/docs/stable/generated/torch.nn.EmbeddingBag.html).
 
@@ -93,61 +89,55 @@ class EmbeddingBag(tf.keras.layers.Layer):
         indices.shape[:-1], params.shape[-1]
     """
 
-    @typechecked
-    def __init__(
-        self,
-        input_dim: int,
-        output_dim: int,
-        embeddings_initializer: Initializer = "uniform",
-        embeddings_regularizer: Regularizer = None,
-        embeddings_constraint: Constraint = None,
-        mask_zero: bool = False,
-        combiner: str = "sum",
-        **kwargs,
-    ):
-        super(EmbeddingBag, self).__init__(**kwargs)
-        if input_dim <= 0 or output_dim <= 0:
-            raise ValueError(
-                "Both `input_dim` and `output_dim` should be positive, "
-                "found input_dim {} and output_dim {}".format(input_dim, output_dim)
-            )
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.embeddings_initializer = tf.keras.initializers.get(embeddings_initializer)
-        self.embeddings_regularizer = tf.keras.regularizers.get(embeddings_regularizer)
-        self.embeddings_constraint = tf.keras.constraints.get(embeddings_constraint)
-        self.mask_zero = mask_zero
-        self.supports_masking = mask_zero
-        self.combiner = combiner
+  @typechecked
+  def __init__(
+      self,
+      input_dim: int,
+      output_dim: int,
+      embeddings_initializer: Initializer = "uniform",
+      embeddings_regularizer: Regularizer = None,
+      embeddings_constraint: Constraint = None,
+      mask_zero: bool = False,
+      combiner: str = "sum",
+      **kwargs,
+  ):
+    super(EmbeddingBag, self).__init__(**kwargs)
+    if input_dim <= 0 or output_dim <= 0:
+      raise ValueError(
+          "Both `input_dim` and `output_dim` should be positive, "
+          "found input_dim {} and output_dim {}".format(input_dim, output_dim)
+      )
+    self.input_dim = input_dim
+    self.output_dim = output_dim
+    self.embeddings_initializer = tf.keras.initializers.get(embeddings_initializer)
+    self.embeddings_regularizer = tf.keras.regularizers.get(embeddings_regularizer)
+    self.embeddings_constraint = tf.keras.constraints.get(embeddings_constraint)
+    self.mask_zero = mask_zero
+    self.supports_masking = mask_zero
+    self.combiner = combiner
 
-    def build(self, input_shape):
-        self.embeddings = self.add_weight(
-            shape=(self.input_dim, self.output_dim),
-            name="embeddings",
-            initializer=self.embeddings_initializer,
-            regularizer=self.embeddings_regularizer,
-            constraint=self.embeddings_constraint,
-        )
-        self.built = True
+  def build(self, input_shape):
+    self.embeddings = self.add_weight(
+        shape=(self.input_dim, self.output_dim),
+        name="embeddings",
+        initializer=self.embeddings_initializer,
+        regularizer=self.embeddings_regularizer,
+        constraint=self.embeddings_constraint,
+    )
+    self.built = True
 
-    def call(self, indices, weights=None):
-        return _embedding_bag(indices, self.embeddings, weights, combiner=self.combiner)
+  def call(self, indices, weights=None):
+    return _embedding_bag(indices, self.embeddings, weights, combiner=self.combiner)
 
-    def get_config(self):
-        config = {
-            "input_dim": self.input_dim,
-            "output_dim": self.output_dim,
-            "embeddings_initializer": tf.keras.initializers.serialize(
-                self.embeddings_initializer
-            ),
-            "embeddings_regularizer": tf.keras.regularizers.serialize(
-                self.embeddings_regularizer
-            ),
-            "embeddings_constraint": tf.keras.constraints.serialize(
-                self.embeddings_constraint
-            ),
-            "mask_zero": self.mask_zero,
-            "combiner": self.combiner,
-        }
-        base_config = super(EmbeddingBag, self).get_config()
-        return dict(list(base_config.items()) + list(config.items()))
+  def get_config(self):
+    config = {
+        "input_dim": self.input_dim,
+        "output_dim": self.output_dim,
+        "embeddings_initializer": tf.keras.initializers.serialize(self.embeddings_initializer),
+        "embeddings_regularizer": tf.keras.regularizers.serialize(self.embeddings_regularizer),
+        "embeddings_constraint": tf.keras.constraints.serialize(self.embeddings_constraint),
+        "mask_zero": self.mask_zero,
+        "combiner": self.combiner,
+    }
+    base_config = super(EmbeddingBag, self).get_config()
+    return dict(list(base_config.items()) + list(config.items()))

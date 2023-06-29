@@ -26,10 +26,8 @@ from typeguard import typechecked
 from typing import Optional
 
 
-class BasicDecoderOutput(
-    collections.namedtuple("BasicDecoderOutput", ("rnn_output", "sample_id"))
-):
-    """Outputs of a `dp.seq2seq.BasicDecoder` step.
+class BasicDecoderOutput(collections.namedtuple("BasicDecoderOutput", ("rnn_output", "sample_id"))):
+  """Outputs of a `dp.seq2seq.BasicDecoder` step.
 
     Attributes:
       rnn_output: The output for this step. If the `output_layer` argument
@@ -39,11 +37,11 @@ class BasicDecoderOutput(
         `sampler` instance passed to `dp.seq2seq.BasicDecoder`.
     """
 
-    pass
+  pass
 
 
 class BasicDecoder(decoder.BaseDecoder):
-    """Basic sampling decoder for training and inference.
+  """Basic sampling decoder for training and inference.
 
     The `dp.seq2seq.Sampler` instance passed as argument is responsible to sample from
     the output distribution and produce the input for the next decoding step. The decoding
@@ -95,15 +93,15 @@ class BasicDecoder(decoder.BaseDecoder):
     TensorShape([4, 10])
     """
 
-    @typechecked
-    def __init__(
-        self,
-        cell: tf.keras.layers.Layer,
-        sampler: sampler_py.Sampler,
-        output_layer: Optional[tf.keras.layers.Layer] = None,
-        **kwargs,
-    ):
-        """Initialize BasicDecoder.
+  @typechecked
+  def __init__(
+      self,
+      cell: tf.keras.layers.Layer,
+      sampler: sampler_py.Sampler,
+      output_layer: Optional[tf.keras.layers.Layer] = None,
+      **kwargs,
+  ):
+    """Initialize BasicDecoder.
 
         Args:
           cell: A layer that implements the `tf.keras.layers.AbstractRNNCell`
@@ -114,62 +112,56 @@ class BasicDecoder(decoder.BaseDecoder):
              prior to storing the result or sampling.
           **kwargs: Other keyword arguments of `dp.seq2seq.BaseDecoder`.
         """
-        keras_utils.assert_like_rnncell("cell", cell)
-        self.cell = cell
-        self.sampler = sampler
-        self.output_layer = output_layer
-        super().__init__(**kwargs)
+    keras_utils.assert_like_rnncell("cell", cell)
+    self.cell = cell
+    self.sampler = sampler
+    self.output_layer = output_layer
+    super().__init__(**kwargs)
 
-    def initialize(self, inputs, initial_state=None, **kwargs):
-        """Initialize the decoder."""
-        # Assume the dtype of the cell is the output_size structure
-        # containing the input_state's first component's dtype.
-        self._cell_dtype = tf.nest.flatten(initial_state)[0].dtype
-        return self.sampler.initialize(inputs, **kwargs) + (initial_state,)
+  def initialize(self, inputs, initial_state=None, **kwargs):
+    """Initialize the decoder."""
+    # Assume the dtype of the cell is the output_size structure
+    # containing the input_state's first component's dtype.
+    self._cell_dtype = tf.nest.flatten(initial_state)[0].dtype
+    return self.sampler.initialize(inputs, **kwargs) + (initial_state,)
 
-    @property
-    def batch_size(self):
-        return self.sampler.batch_size
+  @property
+  def batch_size(self):
+    return self.sampler.batch_size
 
-    def _rnn_output_size(self):
-        size = tf.TensorShape(self.cell.output_size)
-        if self.output_layer is None:
-            return size
-        else:
-            # To use layer's compute_output_shape, we need to convert the
-            # RNNCell's output_size entries into shapes with an unknown
-            # batch size.  We then pass this through the layer's
-            # compute_output_shape and read off all but the first (batch)
-            # dimensions to get the output size of the rnn with the layer
-            # applied to the top.
-            output_shape_with_unknown_batch = tf.nest.map_structure(
-                lambda s: tf.TensorShape([None]).concatenate(s), size
-            )
-            layer_output_shape = self.output_layer.compute_output_shape(
-                output_shape_with_unknown_batch
-            )
-            return tf.nest.map_structure(lambda s: s[1:], layer_output_shape)
+  def _rnn_output_size(self):
+    size = tf.TensorShape(self.cell.output_size)
+    if self.output_layer is None:
+      return size
+    else:
+      # To use layer's compute_output_shape, we need to convert the
+      # RNNCell's output_size entries into shapes with an unknown
+      # batch size.  We then pass this through the layer's
+      # compute_output_shape and read off all but the first (batch)
+      # dimensions to get the output size of the rnn with the layer
+      # applied to the top.
+      output_shape_with_unknown_batch = tf.nest.map_structure(lambda s: tf.TensorShape([None]).concatenate(s), size)
+      layer_output_shape = self.output_layer.compute_output_shape(output_shape_with_unknown_batch)
+      return tf.nest.map_structure(lambda s: s[1:], layer_output_shape)
 
-    @property
-    def output_size(self):
-        # Return the cell output and the id
-        return BasicDecoderOutput(
-            rnn_output=self._rnn_output_size(), sample_id=self.sampler.sample_ids_shape
-        )
+  @property
+  def output_size(self):
+    # Return the cell output and the id
+    return BasicDecoderOutput(rnn_output=self._rnn_output_size(), sample_id=self.sampler.sample_ids_shape)
 
-    @property
-    def output_dtype(self):
-        # Assume the dtype of the cell is the output_size structure
-        # containing the input_state's first component's dtype.
-        # Return that structure and the sample_ids_dtype from the helper.
-        dtype = self._cell_dtype
-        return BasicDecoderOutput(
-            tf.nest.map_structure(lambda _: dtype, self._rnn_output_size()),
-            self.sampler.sample_ids_dtype,
-        )
+  @property
+  def output_dtype(self):
+    # Assume the dtype of the cell is the output_size structure
+    # containing the input_state's first component's dtype.
+    # Return that structure and the sample_ids_dtype from the helper.
+    dtype = self._cell_dtype
+    return BasicDecoderOutput(
+        tf.nest.map_structure(lambda _: dtype, self._rnn_output_size()),
+        self.sampler.sample_ids_dtype,
+    )
 
-    def step(self, time, inputs, state, training=None):
-        """Perform a decoding step.
+  def step(self, time, inputs, state, training=None):
+    """Perform a decoding step.
 
         Args:
           time: scalar `int32` tensor.
@@ -180,15 +172,12 @@ class BasicDecoder(decoder.BaseDecoder):
         Returns:
           `(outputs, next_state, next_inputs, finished)`.
         """
-        cell_outputs, cell_state = self.cell(inputs, state, training=training)
-        cell_state = tf.nest.pack_sequence_as(state, tf.nest.flatten(cell_state))
-        if self.output_layer is not None:
-            cell_outputs = self.output_layer(cell_outputs)
-        sample_ids = self.sampler.sample(
-            time=time, outputs=cell_outputs, state=cell_state
-        )
-        (finished, next_inputs, next_state) = self.sampler.next_inputs(
-            time=time, outputs=cell_outputs, state=cell_state, sample_ids=sample_ids
-        )
-        outputs = BasicDecoderOutput(cell_outputs, sample_ids)
-        return (outputs, next_state, next_inputs, finished)
+    cell_outputs, cell_state = self.cell(inputs, state, training=training)
+    cell_state = tf.nest.pack_sequence_as(state, tf.nest.flatten(cell_state))
+    if self.output_layer is not None:
+      cell_outputs = self.output_layer(cell_outputs)
+    sample_ids = self.sampler.sample(time=time, outputs=cell_outputs, state=cell_state)
+    (finished, next_inputs,
+     next_state) = self.sampler.next_inputs(time=time, outputs=cell_outputs, state=cell_state, sample_ids=sample_ids)
+    outputs = BasicDecoderOutput(cell_outputs, sample_ids)
+    return (outputs, next_state, next_inputs, finished)

@@ -23,8 +23,6 @@ from deepray.utils import test_utils
 
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def test_lisht(dtype):
-    x = tf.constant([-2.0, -1.0, 0.0, 1.0, 2.0], dtype=dtype)
-    expected_result = tf.constant(
-        [1.9280552, 0.7615942, 0.0, 0.7615942, 1.9280552], dtype=dtype
-    )
-    test_utils.assert_allclose_according_to_type(lisht(x), expected_result)
+  x = tf.constant([-2.0, -1.0, 0.0, 1.0, 2.0], dtype=dtype)
+  expected_result = tf.constant([1.9280552, 0.7615942, 0.0, 0.7615942, 1.9280552], dtype=dtype)
+  test_utils.assert_allclose_according_to_type(lisht(x), expected_result)

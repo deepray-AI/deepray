@@ -4,12 +4,12 @@ import warnings
 import traceback
 
 try:
-    _TF_ADDONS_PY_OPS = bool(int(os.environ["TF_ADDONS_PY_OPS"]))
+  _DEEPRAY_PY_OPS = bool(int(os.environ["DEEPRAY_PY_OPS"]))
 except KeyError:
-    if platform.system() == "Linux":
-        _TF_ADDONS_PY_OPS = False
-    else:
-        _TF_ADDONS_PY_OPS = True
+  if platform.system() == "Linux":
+    _DEEPRAY_PY_OPS = False
+  else:
+    _DEEPRAY_PY_OPS = True
 
 _FALLBACK_WARNING_TEMPLATE = """{}
 
@@ -25,9 +25,9 @@ shared object file was displayed above.
 If you want this warning to disappear, either make sure the TensorFlow installed
 is compatible with this version of Addons, or tell Deepray to
 prefer using Python implementations and not custom C++/CUDA ones. You can do that
-by setting the enviornment variable `TF_ADDONS_PY_OPS=1`:
+by setting the enviornment variable `DEEPRAY_PY_OPS=1`:
 ```bash
-TF_ADDONS_PY_OPS=1 python my_script.py
+DEEPRAY_PY_OPS=1 python my_script.py
 ```
 or run `dp.options.disable_custom_kernel()` in your code, after your imports:
 ```python
@@ -41,31 +41,31 @@ dp.options.disable_custom_kernel()
 
 
 def warn_fallback(op_name):
-    warning_msg = _FALLBACK_WARNING_TEMPLATE.format(traceback.format_exc(), op_name)
-    warnings.warn(warning_msg, RuntimeWarning)
-    disable_custom_kernel()
+  warning_msg = _FALLBACK_WARNING_TEMPLATE.format(traceback.format_exc(), op_name)
+  warnings.warn(warning_msg, RuntimeWarning)
+  disable_custom_kernel()
 
 
 def enable_custom_kernel():
-    """Prefer custom C++/CUDA kernel to pure python operations.
+  """Prefer custom C++/CUDA kernel to pure python operations.
 
     Enable using custom C++/CUDA kernel instead of pure python operations.
-    It has the same effect as setting environment variable `TF_ADDONS_PY_OPS=0`.
+    It has the same effect as setting environment variable `DEEPRAY_PY_OPS=0`.
     """
-    global _TF_ADDONS_PY_OPS
-    _TF_ADDONS_PY_OPS = False
+  global _DEEPRAY_PY_OPS
+  _DEEPRAY_PY_OPS = False
 
 
 def disable_custom_kernel():
-    """Prefer pure python operations to custom C++/CUDA kernel.
+  """Prefer pure python operations to custom C++/CUDA kernel.
 
     Disable using custom C++/CUDA kernel instead of pure python operations.
-    It has the same effect as setting environment variable `TF_ADDONS_PY_OPS=1`.
+    It has the same effect as setting environment variable `DEEPRAY_PY_OPS=1`.
     """
-    global _TF_ADDONS_PY_OPS
-    _TF_ADDONS_PY_OPS = True
+  global _DEEPRAY_PY_OPS
+  _DEEPRAY_PY_OPS = True
 
 
 def is_custom_kernel_disabled():
-    """Return whether custom C++/CUDA kernel is disabled."""
-    return _TF_ADDONS_PY_OPS
+  """Return whether custom C++/CUDA kernel is disabled."""
+  return _DEEPRAY_PY_OPS

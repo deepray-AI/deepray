@@ -20,7 +20,7 @@ from deepray.utils.types import TensorLike
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 def mish(x: TensorLike) -> tf.Tensor:
-    r"""Mish: A Self Regularized Non-Monotonic Neural Activation Function.
+  r"""Mish: A Self Regularized Non-Monotonic Neural Activation Function.
 
     Computes mish activation:
 
@@ -42,5 +42,5 @@ def mish(x: TensorLike) -> tf.Tensor:
     Returns:
         A `Tensor`. Has the same type as `x`.
     """
-    x = tf.convert_to_tensor(x)
-    return x * tf.math.tanh(tf.math.softplus(x))
+  x = tf.convert_to_tensor(x)
+  return x * tf.math.tanh(tf.math.softplus(x))

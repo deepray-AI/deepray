@@ -23,7 +23,7 @@ from typing import Union, Optional
 
 
 def hamming_distance(actuals: TensorLike, predictions: TensorLike) -> tf.Tensor:
-    """Computes hamming distance.
+  """Computes hamming distance.
 
     Hamming distance is for comparing two binary strings.
     It is the number of bit positions in which two bits
@@ -44,10 +44,10 @@ def hamming_distance(actuals: TensorLike, predictions: TensorLike) -> tf.Tensor:
     0.3
 
     """
-    result = tf.not_equal(actuals, predictions)
-    not_eq = tf.reduce_sum(tf.cast(result, tf.float32))
-    ham_distance = tf.math.divide_no_nan(not_eq, len(result))
-    return ham_distance
+  result = tf.not_equal(actuals, predictions)
+  not_eq = tf.reduce_sum(tf.cast(result, tf.float32))
+  ham_distance = tf.math.divide_no_nan(not_eq, len(result))
+  return ham_distance
 
 
 def hamming_loss_fn(
@@ -56,7 +56,7 @@ def hamming_loss_fn(
     threshold: Union[FloatTensorLike, None],
     mode: str,
 ) -> tf.Tensor:
-    """Computes hamming loss.
+  """Computes hamming loss.
 
     Hamming loss is the fraction of wrong labels to the total number
     of labels.
@@ -77,31 +77,31 @@ def hamming_loss_fn(
     Returns:
         hamming loss: float.
     """
-    if mode not in ["multiclass", "multilabel"]:
-        raise TypeError("mode must be either multiclass or multilabel]")
+  if mode not in ["multiclass", "multilabel"]:
+    raise TypeError("mode must be either multiclass or multilabel]")
 
-    if threshold is None:
-        threshold = tf.reduce_max(y_pred, axis=-1, keepdims=True)
-        # make sure [0, 0, 0] doesn't become [1, 1, 1]
-        # Use abs(x) > eps, instead of x != 0 to check for zero
-        y_pred = tf.logical_and(y_pred >= threshold, tf.abs(y_pred) > 1e-12)
-    else:
-        y_pred = y_pred > threshold
+  if threshold is None:
+    threshold = tf.reduce_max(y_pred, axis=-1, keepdims=True)
+    # make sure [0, 0, 0] doesn't become [1, 1, 1]
+    # Use abs(x) > eps, instead of x != 0 to check for zero
+    y_pred = tf.logical_and(y_pred >= threshold, tf.abs(y_pred) > 1e-12)
+  else:
+    y_pred = y_pred > threshold
 
-    y_true = tf.cast(y_true, tf.int32)
-    y_pred = tf.cast(y_pred, tf.int32)
+  y_true = tf.cast(y_true, tf.int32)
+  y_pred = tf.cast(y_pred, tf.int32)
 
-    if mode == "multiclass":
-        nonzero = tf.cast(tf.math.count_nonzero(y_true * y_pred, axis=-1), tf.float32)
-        return 1.0 - nonzero
+  if mode == "multiclass":
+    nonzero = tf.cast(tf.math.count_nonzero(y_true * y_pred, axis=-1), tf.float32)
+    return 1.0 - nonzero
 
-    else:
-        nonzero = tf.cast(tf.math.count_nonzero(y_true - y_pred, axis=-1), tf.float32)
-        return nonzero / y_true.get_shape()[-1]
+  else:
+    nonzero = tf.cast(tf.math.count_nonzero(y_true - y_pred, axis=-1), tf.float32)
+    return nonzero / y_true.get_shape()[-1]
 
 
 class HammingLoss(MeanMetricWrapper):
-    """Computes hamming loss.
+  """Computes hamming loss.
 
     Hamming loss is the fraction of wrong labels to the total number
     of labels.
@@ -149,15 +149,13 @@ class HammingLoss(MeanMetricWrapper):
     0.16666667
     """
 
-    @typechecked
-    def __init__(
-        self,
-        mode: str,
-        name: str = "hamming_loss",
-        threshold: Optional[FloatTensorLike] = None,
-        dtype: AcceptableDTypes = None,
-        **kwargs,
-    ):
-        super().__init__(
-            hamming_loss_fn, name=name, dtype=dtype, mode=mode, threshold=threshold
-        )
+  @typechecked
+  def __init__(
+      self,
+      mode: str,
+      name: str = "hamming_loss",
+      threshold: Optional[FloatTensorLike] = None,
+      dtype: AcceptableDTypes = None,
+      **kwargs,
+  ):
+    super().__init__(hamming_loss_fn, name=name, dtype=dtype, mode=mode, threshold=threshold)

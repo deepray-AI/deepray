@@ -25,10 +25,8 @@ _resampler_so = LazySO("custom_ops/image/_resampler_ops.so")
 
 
 @tf.function
-def resampler(
-    data: types.TensorLike, warp: types.TensorLike, name: Optional[str] = None
-) -> tf.Tensor:
-    """Resamples input data at user defined coordinates.
+def resampler(data: types.TensorLike, warp: types.TensorLike, name: Optional[str] = None) -> tf.Tensor:
+  """Resamples input data at user defined coordinates.
 
     The resampler currently only supports bilinear interpolation of 2D data.
 
@@ -51,17 +49,17 @@ def resampler(
       ImportError: if the wrapper generated during compilation is not
       present when the function is called.
     """
-    with tf.name_scope(name or "resampler"):
-        data_tensor = tf.convert_to_tensor(data, name="data")
-        warp_tensor = tf.convert_to_tensor(warp, name="warp")
-        return _resampler_so.ops.deepray_resampler(data_tensor, warp_tensor)
+  with tf.name_scope(name or "resampler"):
+    data_tensor = tf.convert_to_tensor(data, name="data")
+    warp_tensor = tf.convert_to_tensor(warp, name="warp")
+    return _resampler_so.ops.deepray_resampler(data_tensor, warp_tensor)
 
 
 @tf.RegisterGradient("Deepray>Resampler")
 def _resampler_grad(op: types.TensorLike, grad_output: types.TensorLike) -> tf.Tensor:
-    data, warp = op.inputs
-    grad_output_tensor = tf.convert_to_tensor(grad_output, name="grad_output")
-    return _resampler_so.ops.deepray_resampler_grad(data, warp, grad_output_tensor)
+  data, warp = op.inputs
+  grad_output_tensor = tf.convert_to_tensor(grad_output, name="grad_output")
+  return _resampler_so.ops.deepray_resampler_grad(data, warp, grad_output_tensor)
 
 
 tf.no_gradient("Deepray>ResamplerGrad")

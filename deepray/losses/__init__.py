@@ -30,7 +30,6 @@ from deepray.losses.triplet import (
 )
 from deepray.losses.quantiles import pinball_loss, PinballLoss
 
-
 from deepray.losses.npairs import (
     npairs_loss,
     NpairsLoss,

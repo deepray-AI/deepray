@@ -24,7 +24,7 @@ from deepray.utils import types
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class Snake(tf.keras.layers.Layer):
-    """Snake layer to learn periodic functions with the trainable `frequency` scalar.
+  """Snake layer to learn periodic functions with the trainable `frequency` scalar.
 
     See [Neural Networks Fail to Learn Periodic Functions and How to Fix It](https://arxiv.org/abs/2006.08195).
 
@@ -32,22 +32,18 @@ class Snake(tf.keras.layers.Layer):
         frequency_initializer: Initializer for the `frequency` scalar.
     """
 
-    @typechecked
-    def __init__(self, frequency_initializer: types.Initializer = "ones", **kwargs):
-        super().__init__(**kwargs)
-        self.frequency_initializer = tf.keras.initializers.get(frequency_initializer)
-        self.frequency = self.add_weight(
-            initializer=frequency_initializer, trainable=True
-        )
+  @typechecked
+  def __init__(self, frequency_initializer: types.Initializer = "ones", **kwargs):
+    super().__init__(**kwargs)
+    self.frequency_initializer = tf.keras.initializers.get(frequency_initializer)
+    self.frequency = self.add_weight(initializer=frequency_initializer, trainable=True)
 
-    def call(self, inputs):
-        return snake(inputs, self.frequency)
+  def call(self, inputs):
+    return snake(inputs, self.frequency)
 
-    def get_config(self):
-        config = {
-            "frequency_initializer": tf.keras.initializers.serialize(
-                self.frequency_initializer
-            ),
-        }
-        base_config = super().get_config()
-        return {**base_config, **config}
+  def get_config(self):
+    config = {
+        "frequency_initializer": tf.keras.initializers.serialize(self.frequency_initializer),
+    }
+    base_config = super().get_config()
+    return {**base_config, **config}
