@@ -19,6 +19,7 @@ from typeguard import typechecked
 from typing import Union, List
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class PoincareNormalize(tf.keras.layers.Layer):
     """Project into the Poincare ball with `norm <= 1.0 - epsilon`.
 

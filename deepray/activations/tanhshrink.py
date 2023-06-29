@@ -18,6 +18,7 @@ import tensorflow as tf
 from deepray.utils.types import TensorLike
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 def tanhshrink(x: TensorLike) -> tf.Tensor:
     r"""Tanh shrink function.
 

@@ -8,7 +8,7 @@ https://www.tensorflow.org/deepray/api_docs/python/dp/metrics
 In order to conform with the current API standard, all metrics
 must:
  * Inherit from `tf.keras.metrics.Metric`.
- * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Addons')`
+ * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Deepray')`
 
 #### Metric Requirements
 

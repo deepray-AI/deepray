@@ -26,7 +26,7 @@ from deepray.utils import test_utils
 
 
 def _dtypes_to_test(use_gpu):
-    # Based on issue #347 (https://github.com/tensorflow/deepray/issues/347)
+    # Based on issue #347 (https://github.com/tensorflow/addons/issues/347)
     # tf.half is not registered for 'ResourceScatterUpdate' OpKernel for 'GPU'.
     # So we have to remove tf.half when testing with gpu.
     if use_gpu:

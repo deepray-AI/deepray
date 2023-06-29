@@ -71,6 +71,7 @@ def _embedding_bag_grad(op, grads):
     return [None, value_grads, weight_grads]
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class EmbeddingBag(tf.keras.layers.Layer):
     """EmbeddingBag Layer.
 

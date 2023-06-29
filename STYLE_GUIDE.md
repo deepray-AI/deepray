@@ -14,17 +14,28 @@ int formatted_code;
 void formatted_code_again;
 ```
 
-Install Clang-format 9 with:
+Install Clang-format 9 for Ubuntu:
 
 ```bash
-wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - 
 sudo add-apt-repository -u 'http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main'
 sudo apt install clang-format-9
 ```
 
 format all with:
 ```bash
-clang-format-9 -i --style=google **/*.cc **/*.h
+clang-format-9 -i --style=google ./deepray/**/*.cc ./deepray/**/*.h
+```
+
+Install Clang-format for MacOS:
+```bash
+brew update
+brew install clang-format
+```
+
+format all with:
+```bash
+clang-format -i --style=google **/*.cc deepray/**/*.h
 ```
 
 #### Python

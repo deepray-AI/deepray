@@ -18,6 +18,7 @@ import tensorflow as tf
 from deepray.utils import types
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 def sparsemax(logits: types.TensorLike, axis: int = -1) -> tf.Tensor:
     r"""Sparsemax activation function.
 

@@ -17,10 +17,12 @@
 import datetime
 import time
 
+import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class TimeStopping(Callback):
     """Stop training when a specified amount of time has passed.
 

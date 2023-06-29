@@ -22,6 +22,7 @@ from deepray.utils.types import AcceptableDTypes, FloatTensorLike
 from typing import Optional
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class FBetaScore(tf.keras.metrics.Metric):
     r"""Computes F-Beta score.
 
@@ -213,6 +214,7 @@ class FBetaScore(tf.keras.metrics.Metric):
         return self.reset_state()
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class F1Score(FBetaScore):
     r"""Computes F-1 Score.
 

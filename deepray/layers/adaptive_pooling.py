@@ -86,6 +86,7 @@ class AdaptivePooling1D(tf.keras.layers.Layer):
         return {**base_config, **config}
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveAveragePooling1D(AdaptivePooling1D):
     """Average Pooling with adaptive kernel size.
 
@@ -119,6 +120,7 @@ class AdaptiveAveragePooling1D(AdaptivePooling1D):
         super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveMaxPooling1D(AdaptivePooling1D):
     """Max Pooling with adaptive kernel size.
 
@@ -232,6 +234,7 @@ class AdaptivePooling2D(tf.keras.layers.Layer):
         return {**base_config, **config}
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveAveragePooling2D(AdaptivePooling2D):
     """Average Pooling with adaptive kernel size.
 
@@ -265,6 +268,7 @@ class AdaptiveAveragePooling2D(AdaptivePooling2D):
         super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveMaxPooling2D(AdaptivePooling2D):
     """Max Pooling with adaptive kernel size.
 
@@ -385,6 +389,7 @@ class AdaptivePooling3D(tf.keras.layers.Layer):
         return {**base_config, **config}
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveAveragePooling3D(AdaptivePooling3D):
     """Average Pooling with adaptive kernel size.
 
@@ -418,6 +423,7 @@ class AdaptiveAveragePooling3D(AdaptivePooling3D):
         super().__init__(tf.reduce_mean, output_size, data_format, **kwargs)
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdaptiveMaxPooling3D(AdaptivePooling3D):
     """Max Pooling with adaptive kernel size.
 

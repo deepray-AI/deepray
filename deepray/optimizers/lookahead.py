@@ -20,6 +20,7 @@ from deepray.optimizers import KerasLegacyOptimizer
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class Lookahead(KerasLegacyOptimizer):
     """This class allows to extend optimizers with the lookahead mechanism.
 

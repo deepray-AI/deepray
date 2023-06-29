@@ -26,6 +26,7 @@ from deepray.utils.types import (
 from typing import Optional
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class NASCell(keras.layers.AbstractRNNCell):
     """Neural Architecture Search (NAS) recurrent network cell.
 

@@ -14,6 +14,7 @@
 # ==============================================================================
 """Implements LayerNormSimpleRNNCell Cell."""
 
+import tensorflow as tf
 import tensorflow.keras as keras
 from typeguard import typechecked
 
@@ -27,6 +28,7 @@ from deepray.utils.types import (
 )
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class LayerNormSimpleRNNCell(keras.layers.SimpleRNNCell):
     """Cell class for LayerNormSimpleRNN.
 

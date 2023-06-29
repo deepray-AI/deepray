@@ -25,7 +25,7 @@ from deepray.optimizers import conditional_gradient as cg_lib
 
 def _dtypes_to_test(use_gpu):
     # Based on issue #347 in the following link,
-    #        "https://github.com/tensorflow/deepray/issues/347"
+    #        "https://github.com/tensorflow/addons/issues/347"
     # tf.half is not registered for 'ResourceScatterUpdate' OpKernel
     # for 'GPU' devices.
     # So we have to remove tf.half when testing with gpu.
@@ -73,7 +73,7 @@ def test_like_dist_belief_nuclear_cg01():
 @pytest.mark.parametrize("dtype", [tf.float16, tf.float32, tf.float64])
 def test_minimize_sparse_resource_variable_frobenius(dtype, device):
     if "gpu" in device and dtype == tf.float16:
-        pytest.xfail("See https://github.com/tensorflow/deepray/issues/347")
+        pytest.xfail("See https://github.com/tensorflow/addons/issues/347")
     var0 = tf.Variable([[1.0, 2.0]], dtype=dtype)
 
     def loss():

@@ -20,6 +20,7 @@ import tensorflow as tf
 from deepray.optimizers import KerasLegacyOptimizer
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class COCOB(KerasLegacyOptimizer):
     """Optimizer that implements COCOB Backprop Algorithm
 

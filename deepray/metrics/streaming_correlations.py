@@ -198,6 +198,7 @@ class KendallsTauBase(CorrelationBase):
         return p, q, t, u
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class KendallsTauB(KendallsTauBase):
     """Computes Kendall's Tau-b Rank Correlation Coefficient.
 
@@ -215,6 +216,7 @@ class KendallsTauB(KendallsTauBase):
         return (p - q) / tf.math.sqrt((p + q + t) * (p + q + u))
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class KendallsTauC(KendallsTauBase):
     """Computes Kendall's Tau-c Rank Correlation Coefficient.
 
@@ -236,6 +238,7 @@ class KendallsTauC(KendallsTauBase):
         return 2 * (p - q) / (tf.square(n) * (m - 1) / m)
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class SpearmansRank(CorrelationBase):
     """Computes Spearman's Rank Correlation Coefficient.
 
@@ -267,6 +270,7 @@ class SpearmansRank(CorrelationBase):
         return tf.squeeze(corr)
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class PearsonsCorrelation(CorrelationBase):
     """Computes Pearsons's Correlation Coefficient.
 

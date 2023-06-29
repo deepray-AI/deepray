@@ -26,6 +26,7 @@ from deepray.utils.types import (
 )
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class ESN(tf.keras.layers.RNN):
     """Echo State Network layer.
 

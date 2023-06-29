@@ -21,6 +21,7 @@ from deepray.utils.types import TensorLike, FloatTensorLike
 
 
 @tf.function
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 def pinball_loss(
     y_true: TensorLike, y_pred: TensorLike, tau: FloatTensorLike = 0.5
 ) -> tf.Tensor:
@@ -68,6 +69,7 @@ def pinball_loss(
     return tf.reduce_mean(pinball, axis=-1)
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class PinballLoss(LossFunctionWrapper):
     """Computes the pinball loss between `y_true` and `y_pred`.
 

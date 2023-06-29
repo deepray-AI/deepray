@@ -17,6 +17,7 @@ import tensorflow as tf
 from deepray.utils.types import Number, TensorLike
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 def hardshrink(x: TensorLike, lower: Number = -0.5, upper: Number = 0.5) -> tf.Tensor:
     r"""Hard shrink function.
 

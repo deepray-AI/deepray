@@ -66,6 +66,7 @@ def _masked_minimum(data, mask, dim=1):
     return masked_minimums
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 @tf.function
 def triplet_semihard_loss(
     y_true: TensorLike,
@@ -200,6 +201,7 @@ def triplet_semihard_loss(
         return triplet_loss
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 @tf.function
 def triplet_hard_loss(
     y_true: TensorLike,
@@ -305,6 +307,7 @@ def triplet_hard_loss(
         return triplet_loss
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class TripletSemiHardLoss(LossFunctionWrapper):
     """Computes the triplet loss with semi-hard negative mining.
 
@@ -341,6 +344,7 @@ class TripletSemiHardLoss(LossFunctionWrapper):
         )
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class TripletHardLoss(LossFunctionWrapper):
     """Computes the triplet loss with hard negative and hard positive mining.
 

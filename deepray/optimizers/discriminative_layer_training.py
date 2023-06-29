@@ -32,6 +32,7 @@ else:
     from keras.utils import tf_utils
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class MultiOptimizer(KerasLegacyOptimizer):
     """Multi Optimizer Wrapper for Discriminative Layer Training.
 

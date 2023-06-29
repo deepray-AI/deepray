@@ -379,6 +379,7 @@ else:
     SGD_CLASS = tf.keras.optimizers.SGD
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class SGDW(DecoupledWeightDecayExtension, SGD_CLASS):
     """Optimizer that implements the Momentum algorithm with weight_decay.
 
@@ -457,6 +458,7 @@ class SGDW(DecoupledWeightDecayExtension, SGD_CLASS):
         )
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdamW(DecoupledWeightDecayExtension, ADAM_CLASS):
     """Optimizer that implements the Adam algorithm with weight decay.
 

@@ -23,6 +23,7 @@ from deepray.optimizers import KerasLegacyOptimizer
 from deepray.utils.types import FloatTensorLike
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class ProximalAdagrad(KerasLegacyOptimizer):
     """Optimizer that implements the Proximal Adagrad algorithm.
 

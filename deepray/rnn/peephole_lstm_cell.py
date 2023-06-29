@@ -17,6 +17,7 @@
 import tensorflow as tf
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class PeepholeLSTMCell(tf.keras.layers.LSTMCell):
     """Equivalent to `tf.keras.layers.LSTMCell` class but adds peephole connections.
 

@@ -22,6 +22,7 @@ from deepray.activations.snake import snake
 from deepray.utils import types
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class Snake(tf.keras.layers.Layer):
     """Snake layer to learn periodic functions with the trainable `frequency` scalar.
 

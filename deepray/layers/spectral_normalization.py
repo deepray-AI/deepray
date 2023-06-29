@@ -17,6 +17,7 @@ import tensorflow as tf
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class SpectralNormalization(tf.keras.layers.Wrapper):
     """Performs spectral normalization on weights.
 

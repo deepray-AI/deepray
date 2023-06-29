@@ -19,6 +19,7 @@ import warnings
 from deepray.utils.types import TensorLike
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 def gelu(x: TensorLike, approximate: bool = True) -> tf.Tensor:
     r"""Gaussian Error Linear Unit.
 

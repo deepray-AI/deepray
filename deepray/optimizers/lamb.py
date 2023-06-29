@@ -29,6 +29,7 @@ from deepray.utils.types import FloatTensorLike
 from deepray.optimizers.utils import is_variable_matched_by_regexes
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class LAMB(KerasLegacyOptimizer):
     """Optimizer that implements the Layer-wise Adaptive Moments (LAMB).
 

@@ -50,6 +50,7 @@ def _solve(a, b, c):
     return w
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class Yogi(KerasLegacyOptimizer):
     """Optimizer that implements the Yogi algorithm in Keras.
 

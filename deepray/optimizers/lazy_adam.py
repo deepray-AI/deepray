@@ -34,6 +34,7 @@ else:
     adam_optimizer_class = tf.keras.optimizers.Adam
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class LazyAdam(adam_optimizer_class):
     """Variant of the Adam optimizer that handles sparse updates more
     efficiently.

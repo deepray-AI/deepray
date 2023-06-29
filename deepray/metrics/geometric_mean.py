@@ -23,6 +23,7 @@ from deepray.utils.types import AcceptableDTypes
 from deepray.metrics.utils import sample_weight_shape_match
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class GeometricMean(Metric):
     """Compute Geometric Mean
 

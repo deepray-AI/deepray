@@ -8,7 +8,7 @@ https://www.tensorflow.org/deepray/api_docs/python/dp/activations
 In order to conform with the current API standard, all activations
 must:
  * Be a `tf.function` unless it is a straightforward call to a custom op or likely to be retraced.
- * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Addons')`
+ * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Deepray')`
 
 #### Testing Requirements
  * Simple unittests that demonstrate the layer is behaving as expected.

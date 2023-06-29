@@ -41,6 +41,7 @@ def _reduce_average(
     return average
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class RSquare(Metric):
     """Compute R^2 score.
 

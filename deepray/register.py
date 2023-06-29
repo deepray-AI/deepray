@@ -51,7 +51,7 @@ def register_all(keras_objects: bool = True, custom_kernels: bool = True) -> Non
     Args:
         keras_objects: boolean, `True` by default. If `True`, register all
             Keras objects
-            with `tf.keras.utils.register_keras_serializable(package="Addons")`
+            with `tf.keras.utils.register_keras_serializable(package="Deepray")`
             If set to False, doesn't register any Keras objects
             of Addons in TensorFlow.
         custom_kernels: boolean, `True` by default. If `True`, loads all

@@ -21,6 +21,7 @@ from deepray.utils.keras_utils import LossFunctionWrapper
 from deepray.utils.types import TensorLike, Number
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 @tf.function
 def contrastive_loss(
     y_true: TensorLike, y_pred: TensorLike, margin: Number = 1.0
@@ -68,6 +69,7 @@ def contrastive_loss(
     )
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class ContrastiveLoss(LossFunctionWrapper):
     r"""Computes the contrastive loss between `y_true` and `y_pred`.
 

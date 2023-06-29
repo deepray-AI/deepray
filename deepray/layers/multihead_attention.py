@@ -19,6 +19,7 @@ import warnings
 import tensorflow as tf
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class MultiHeadAttention(tf.keras.layers.Layer):
     r"""MultiHead Attention layer.
 

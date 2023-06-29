@@ -22,6 +22,7 @@ from typeguard import typechecked
 from deepray.utils import types
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class GroupNormalization(tf.keras.layers.Layer):
     """Group normalization layer.
 
@@ -283,6 +284,7 @@ class GroupNormalization(tf.keras.layers.Layer):
         return broadcast_shape
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class InstanceNormalization(GroupNormalization):
     """Instance normalization layer.
 
@@ -327,6 +329,7 @@ class InstanceNormalization(GroupNormalization):
         super().__init__(**kwargs)
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class FilterResponseNormalization(tf.keras.layers.Layer):
     """Filter response normalization layer.
 

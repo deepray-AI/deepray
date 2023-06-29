@@ -21,6 +21,7 @@ from typing import Union, Callable
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class NovoGrad(KerasLegacyOptimizer):
     """Optimizer that implements NovoGrad.
 

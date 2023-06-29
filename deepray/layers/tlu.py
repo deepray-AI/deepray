@@ -20,6 +20,7 @@ from typeguard import typechecked
 from deepray.utils import types
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class TLU(tf.keras.layers.Layer):
     r"""Thresholded Linear Unit.
 

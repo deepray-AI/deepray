@@ -23,6 +23,7 @@ from deepray.utils.keras_utils import LossFunctionWrapper
 from deepray.utils.types import TensorLike
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class GIoULoss(LossFunctionWrapper):
     """Implements the GIoU loss function.
 
@@ -60,6 +61,7 @@ class GIoULoss(LossFunctionWrapper):
         super().__init__(giou_loss, name=name, reduction=reduction, mode=mode)
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 def giou_loss(y_true: TensorLike, y_pred: TensorLike, mode: str = "giou") -> tf.Tensor:
     """Implements the GIoU loss function.
 

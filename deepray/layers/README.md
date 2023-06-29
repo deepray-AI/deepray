@@ -8,7 +8,7 @@ https://www.tensorflow.org/deepray/api_docs/python/dp/layers
 In order to conform with the current API standard, all layers
 must:
  * Inherit from either `keras.layers.Layer` or its subclasses.
- * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Addons')`
+ * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Deepray')`
 
 #### Testing Requirements
  * Simple unittests that demonstrate the layer is behaving as expected.

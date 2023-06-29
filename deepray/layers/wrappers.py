@@ -19,6 +19,7 @@ import tensorflow as tf
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class WeightNormalization(tf.keras.layers.Wrapper):
     """Performs weight normalization.
 

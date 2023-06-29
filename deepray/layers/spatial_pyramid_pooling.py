@@ -22,6 +22,7 @@ from typeguard import typechecked
 from typing import Union, Iterable
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class SpatialPyramidPooling2D(tf.keras.layers.Layer):
     """Performs Spatial Pyramid Pooling.
 

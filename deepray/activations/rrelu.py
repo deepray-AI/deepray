@@ -18,6 +18,7 @@ from deepray.utils.types import Number, TensorLike
 from typing import Optional
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 def rrelu(
     x: TensorLike,
     lower: Number = 0.125,

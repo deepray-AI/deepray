@@ -22,6 +22,7 @@ from typeguard import typechecked
 from typing import Union, Callable
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class ConditionalGradient(KerasLegacyOptimizer):
     """Optimizer that implements the Conditional Gradient optimization.
 

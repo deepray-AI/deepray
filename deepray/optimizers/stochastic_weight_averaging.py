@@ -30,6 +30,7 @@ from deepray.utils import types
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class SWA(AveragedOptimizerWrapper):
     """This class extends optimizers with Stochastic Weight Averaging (SWA).
 

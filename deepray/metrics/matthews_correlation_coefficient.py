@@ -23,6 +23,7 @@ from deepray.utils.types import AcceptableDTypes, FloatTensorLike
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class MatthewsCorrelationCoefficient(tf.keras.metrics.Metric):
     """Computes the Matthews Correlation Coefficient.
 

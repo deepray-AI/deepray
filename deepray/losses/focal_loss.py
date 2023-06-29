@@ -22,6 +22,7 @@ from deepray.utils.keras_utils import LossFunctionWrapper
 from deepray.utils.types import FloatTensorLike, TensorLike
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class SigmoidFocalCrossEntropy(LossFunctionWrapper):
     """Implements the focal loss function.
 
@@ -80,6 +81,7 @@ class SigmoidFocalCrossEntropy(LossFunctionWrapper):
         )
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 @tf.function
 def sigmoid_focal_crossentropy(
     y_true: TensorLike,

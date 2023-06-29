@@ -24,6 +24,7 @@ from deepray.utils.types import (
 )
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class ESNCell(keras.layers.AbstractRNNCell):
     """Echo State recurrent Network (ESN) cell.
     This implements the recurrent cell from the paper:

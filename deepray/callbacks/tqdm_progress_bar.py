@@ -17,10 +17,12 @@
 import time
 from collections import defaultdict
 
+import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class TQDMProgressBar(Callback):
     """TQDM Progress Bar for Tensorflow Keras.
 
