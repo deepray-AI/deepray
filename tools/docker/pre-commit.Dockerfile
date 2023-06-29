@@ -12,4 +12,4 @@ RUN bash clang-format.sh
 WORKDIR /deepray
 
 
-CMD ["python", "tools/format.py"]
+CMD ["python", "tools/check_python_format.py"]
