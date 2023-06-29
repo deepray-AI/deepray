@@ -1,12 +1,13 @@
 #syntax=docker/dockerfile:1.1.5-experimental
-FROM python:3.9-alpine as yapf-test
+
+FROM python:3.9 as yapf-test
 
 COPY tools/install_deps/yapf.txt ./
 RUN pip install -r yapf.txt
 COPY ./ /deepray
 WORKDIR /deepray
 
-RUN python tools/check_python_format.py
+RUN python tools/format.py
 RUN touch /ok.txt
 
 # -------------------------------

@@ -11,5 +11,5 @@ if [ -z "${ADDONS_DEV_CONTAINER}" ]; then
   export MSYS_NO_PATHCONV=1
   docker run --rm -t -v "$(pwd -P):/deepray" deepray_formatting
 else
-  python tools/check_python_format.py
+  python tools/format.py
 fi

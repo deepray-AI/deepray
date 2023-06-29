@@ -6,7 +6,7 @@ def check_bash_call(string):
   check_call(["bash", "-c", string])
 
 
-def _run_format():
+def _run_format_and_yapf():
   files_changed = False
 
   try:
@@ -25,13 +25,13 @@ def _run_format():
     exit(1)
 
 
-def run_format():
+def run_format_and_yapf():
   try:
-    _run_format()
+    _run_format_and_yapf()
   except CalledProcessError as error:
     print("Yapf check returned exit code", error.returncode)
     exit(error.returncode)
 
 
 if __name__ == "__main__":
-  run_format()
+  run_format_and_yapf()
