@@ -77,7 +77,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: pip install --default-timeout=1000 -r tools/install_deps/tensorflow-cpu.txt -r tools/install_deps/pytest.txt
       - run: pip install -e ./
-      - run: pytest -v -n auto --skip-custom-ops ./tensorflow_addons
+      - run: pytest -v -n auto --skip-custom-ops ./deepray
   test_cpu_in_small_docker_image:
     name: Run the cpu tests in a small python docker image
     runs-on: ubuntu-latest
@@ -111,5 +111,5 @@ jobs:
         # Run on all notebooks to prevent upstream change.
         echo "Lint check with nblint:"
         python3 -m tensorflow_docs.tools.nblint \
-            --arg=repo:tensorflow/addons \
+            --arg=repo:tensorflow/deepray \
             $(find docs/tutorials/ -type f -name *.ipynb ! -path "docs/tutorials/_template.ipynb")

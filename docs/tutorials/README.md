@@ -1,6 +1,6 @@
-# TensorFlow Addons Tutorials
+# Deepray Tutorials
 
-TensorFlow Addons welcomes and highly encourages tutorial contributions.
+Deepray welcomes and highly encourages tutorial contributions.
 
 
 ## How To Contribute
@@ -9,9 +9,9 @@ Addons tutorials are created using [Google Colab](https://colab.research.google.
 and the jupyter notebooks are saved to this directory in the repository. To do 
 this, follow the below steps:
 
-1. Create a new branch on your fork of TensorFlow Addons
+1. Create a new branch on your fork of Deepray
 2. Goto [Google Colab](https://colab.research.google.com/) and start a new 
-notebook using addons example template:
+notebook using deepray example template:
 [docs/tutorials/_template.ipynb](_template.ipynb)
 3. Edit the links for the "View source on GitHub" and "Run in Google Colab" 
 URL boxes so that they match the name of your new example notebook

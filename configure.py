@@ -25,12 +25,12 @@ import tensorflow as tf
 
 from packaging.version import Version
 
-_TFA_BAZELRC = ".bazelrc"
+_DP_BAZELRC = ".bazelrc"
 
 
 # Writes variables to bazelrc file
 def write(line):
-    with open(_TFA_BAZELRC, "a") as f:
+    with open(_DP_BAZELRC, "a") as f:
         f.write(line + "\n")
 
 
@@ -124,10 +124,10 @@ def get_shared_lib_name():
 
 def create_build_configuration():
     print()
-    print("Configuring TensorFlow Addons to be built from source...")
+    print("Configuring Deepray to be built from source...")
 
-    if os.path.isfile(_TFA_BAZELRC):
-        os.remove(_TFA_BAZELRC)
+    if os.path.isfile(_DP_BAZELRC):
+        os.remove(_DP_BAZELRC)
 
     logging.disable(logging.WARNING)
 
@@ -172,8 +172,8 @@ def create_build_configuration():
         print("> Building only CPU ops")
 
     print()
-    print("Build configurations successfully written to", _TFA_BAZELRC, ":\n")
-    print(pathlib.Path(_TFA_BAZELRC).read_text())
+    print("Build configurations successfully written to", _DP_BAZELRC, ":\n")
+    print(pathlib.Path(_DP_BAZELRC).read_text())
 
 
 def configure_cuda():

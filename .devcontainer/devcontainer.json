@@ -17,7 +17,7 @@
 		"python.linting.flake8Enabled": true,
 		   "python.testing.pytestEnabled": true,
 		   "python.testing.pytestArgs": [ 
-			   "./tensorflow_addons"
+			   "./deepray"
 		],
 		"C_Cpp.clang_format_style": "{BasedOnStyle: Google}",
 		"C_Cpp.default.includePath": [
@@ -54,6 +54,6 @@
 		"--security-opt",
 		"seccomp=unconfined" ],
 
-	// Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/pytest ./tensorflow_addons/layerscontainers/non-root.
+	// Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/pytest ./deepray/layerscontainers/non-root.
 	//"remoteUser": "vscode"
 }

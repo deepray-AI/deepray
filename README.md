@@ -3,16 +3,16 @@
 
 [![PyPI Status Badge](https://badge.fury.io/py/deepray.svg)](https://pypi.org/project/deepray/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/deepray)](https://pypi.org/project/deepray/)
-[![Documentation](https://img.shields.io/badge/api-reference-blue.svg)](https://www.tensorflow.org/addons/api_docs/python/dp)
-[![Gitter chat](https://img.shields.io/badge/chat-on%20gitter-46bc99.svg)](https://gitter.im/tensorflow/sig-addons)
+[![Documentation](https://img.shields.io/badge/api-reference-blue.svg)](https://www.tensorflow.org/deepray/api_docs/python/dp)
+[![Gitter chat](https://img.shields.io/badge/chat-on%20gitter-46bc99.svg)](https://gitter.im/tensorflow/sig-deepray)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ### Continuous Build Status
 
 | Build                     | Status                                                                                                                                                                                         |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ubuntu/macOS/Windows**  | [![Status](https://github.com/tensorflow/addons/workflows/addons-release/badge.svg)](https://github.com/tensorflow/addons/actions?query=workflow%3Aaddons-release)                             |
-| **Ubuntu GPU custom ops** | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/addons/ubuntu-gpu-py3.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/addons/ubuntu-gpu-py3.html) |
+| **Ubuntu/macOS/Windows**  | [![Status](https://github.com/tensorflow/deepray/workflows/deepray-release/badge.svg)](https://github.com/tensorflow/deepray/actions?query=workflow%3Aaddons-release)                             |
+| **Ubuntu GPU custom ops** | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/deepray/ubuntu-gpu-py3.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/deepray/ubuntu-gpu-py3.html) |
 
 **Deepray** is a repository of contributions that conform to
 well-established API patterns, but implement new functionality
@@ -225,7 +225,7 @@ Do you want to contribute but are not sure of what? Here are a few suggestions:
   be loved enough!
 3. Solve an [existing issue](https://github.com/deepray-AI/deepray/issues).
   These range from low-level software bugs to higher-level design problems.
-  Check out the label [help wanted](https://github.com/tensorflow/addons/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22). If you're a new contributor, the label [good first issue](https://github.com/tensorflow/addons/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) can be a good place to start.
+  Check out the label [help wanted](https://github.com/tensorflow/deepray/issues?q=is%3Aopen+is%3Aissue+label%3A%22help+wanted%22). If you're a new contributor, the label [good first issue](https://github.com/tensorflow/deepray/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) can be a good place to start.
 4. Review a pull request. So you're not a software engineer but you know a lot
   about a certain field a research? That's awesome and we need your help! Many people 
   are submitting pull requests to add layers/optimizers/functions taken from recent
@@ -251,7 +251,7 @@ if you don't understand something, open an issue, or even make a pull request to
 improve the guide!).
 
 ## Community
-* [Public Mailing List](https://groups.google.com/a/tensorflow.org/forum/#!forum/addons)
+* [Public Mailing List](https://groups.google.com/a/tensorflow.org/forum/#!forum/deepray)
 * [SIG Monthly Meeting Notes](https://docs.google.com/document/d/1kxg5xIHWLY7EMdOJCdSGgaPu27a9YKpupUz2VTXqTJg)
     * Join our mailing list and receive calendar invites to the meeting
 

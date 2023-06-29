@@ -1,26 +1,26 @@
 toc:
 - title: Overview
-  path: /addons/overview
+  path: /deepray/overview
 - heading: Tutorials
 - title: Triplet loss
-  path: /addons/tutorials/losses_triplet
+  path: /deepray/tutorials/losses_triplet
 - title: Image Ops
-  path: /addons/tutorials/image_ops
+  path: /deepray/tutorials/image_ops
 - title: Normalization layers
-  path: /addons/tutorials/layers_normalizations
+  path: /deepray/tutorials/layers_normalizations
 - title: Weight normalization layer
-  path: /addons/tutorials/layers_weightnormalization
+  path: /deepray/tutorials/layers_weightnormalization
 - title: LazyAdam optimizer
-  path: /addons/tutorials/optimizers_lazyadam
+  path: /deepray/tutorials/optimizers_lazyadam
 - title: ConditionalGradient Optimizer
-  path: /addons/tutorials/optimizers_conditionalgradient
+  path: /deepray/tutorials/optimizers_conditionalgradient
 - title: CyclicalLearningRate Schedule
-  path: /addons/tutorials/optimizers_cyclicallearningrate
+  path: /deepray/tutorials/optimizers_cyclicallearningrate
 - title: TQDM Progress Bar
-  path: /addons/tutorials/tqdm_progress_bar
+  path: /deepray/tutorials/tqdm_progress_bar
 - title: Seq2Seq for Translation
-  path: /addons/tutorials/networks_seq2seq_nmt
+  path: /deepray/tutorials/networks_seq2seq_nmt
 - title: Moving Average Optimizer Checkpoint
-  path: /addons/tutorials/average_optimizers_callback
+  path: /deepray/tutorials/average_optimizers_callback
 - title: Time Stopping Callback
-  path: /addons/tutorials/time_stopping
+  path: /deepray/tutorials/time_stopping

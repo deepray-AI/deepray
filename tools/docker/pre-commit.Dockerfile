@@ -9,7 +9,7 @@ RUN bash buildifier.sh
 COPY tools/install_deps/clang-format.sh ./clang-format.sh
 RUN bash clang-format.sh
 
-WORKDIR /addons
+WORKDIR /deepray
 
 
 CMD ["python", "tools/format.py"]

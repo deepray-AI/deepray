@@ -21,11 +21,11 @@ RUN python -m pip install -r /install_deps/pytest.txt
 COPY requirements.txt .
 RUN python -m pip install -r requirements.txt
 
-COPY ./ /addons
-WORKDIR /addons
+COPY ./ /deepray
+WORKDIR /deepray
 
 # -------------------------------------------------------------------
-FROM base_install as tfa_gpu_tests
+FROM base_install as dp_gpu_tests
 CMD ["bash", "tools/testing/build_and_run_tests.sh"]
 
 # -------------------------------------------------------------------
@@ -63,12 +63,12 @@ ARG SKIP_CUSTOM_OP_TESTS
 
 RUN python -m pip install --default-timeout=1000 tensorflow==$TF_VERSION
 
-COPY --from=make_wheel /addons/wheelhouse/ /addons/wheelhouse/
-RUN pip install /addons/wheelhouse/*.whl
+COPY --from=make_wheel /deepray/wheelhouse/ /deepray/wheelhouse/
+RUN pip install /deepray/wheelhouse/*.whl
 
-RUN if [[ -z "$SKIP_CUSTOM_OP_TESTS" ]] ; then python -c "import tensorflow_addons as tfa; print(tfa.register_all())" ; else python -c "import tensorflow_addons as tfa; print(tfa.register_all(custom_kernels=False))" ; fi
+RUN if [[ -z "$SKIP_CUSTOM_OP_TESTS" ]] ; then python -c "import deepray as dp; print(dp.register_all())" ; else python -c "import deepray as dp; print(dp.register_all(custom_kernels=False))" ; fi
 
 # -------------------------------------------------------------------
 FROM scratch as output
 
-COPY --from=test_wheel_in_fresh_environment /addons/wheelhouse/ .
+COPY --from=test_wheel_in_fresh_environment /deepray/wheelhouse/ .

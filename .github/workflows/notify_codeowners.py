@@ -12,7 +12,7 @@ import json
 # Github already take care
 # of notifying users with write access
 WRITE_ACCESS_LIST = [
-    "tensorflow/sig-addons-maintainers",
+    "tensorflow/sig-deepray-maintainers",
     "facaiy",
     "seanpmorgan",
     "squadrick",
@@ -165,7 +165,7 @@ def notify_codeowners(pull_request_id, no_dry_run):
         if pull_request_id == "auto":
             pull_request_id = get_pull_request_id_from_gh_actions()
         pull_request_id = int(pull_request_id)
-        pull_request = CLIENT.get_repo("tensorflow/addons").get_pull(pull_request_id)
+        pull_request = CLIENT.get_repo("tensorflow/deepray").get_pull(pull_request_id)
         msg = craft_message(codeowners, pull_request)
         print(msg)
         if no_dry_run and msg is not None:

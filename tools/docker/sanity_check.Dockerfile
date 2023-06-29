@@ -3,8 +3,8 @@ FROM python:3.9-alpine as flake8-test
 
 COPY tools/install_deps/flake8.txt ./
 RUN pip install -r flake8.txt
-COPY ./ /addons
-WORKDIR /addons
+COPY ./ /deepray
+WORKDIR /deepray
 RUN flake8
 RUN touch /ok.txt
 
@@ -13,8 +13,8 @@ FROM python:3.9 as black-test
 
 COPY tools/install_deps/black.txt ./
 RUN pip install -r black.txt
-COPY ./ /addons
-RUN black --check /addons
+COPY ./ /deepray
+RUN black --check /deepray
 RUN touch /ok.txt
 
 # -------------------------------
@@ -28,9 +28,9 @@ RUN --mount=type=cache,id=cache_pip,target=/root/.cache/pip \
     -r typedapi.txt \
     -r pytest.txt
 
-COPY ./ /addons
-RUN pip install -e /addons
-RUN pytest -v /addons/tools/testing/
+COPY ./ /deepray
+RUN pip install -e /deepray
+RUN pytest -v /deepray/tools/testing/
 RUN touch /ok.txt
 
 # -------------------------------
@@ -43,11 +43,11 @@ RUN apt-get update && apt-get install sudo
 COPY tools/install_deps/install_bazelisk.sh .bazelversion ./
 RUN bash install_bazelisk.sh
 
-COPY ./ /addons
-WORKDIR /addons
+COPY ./ /deepray
+WORKDIR /deepray
 RUN python ./configure.py
 RUN --mount=type=cache,id=cache_bazel,target=/root/.cache/bazel \
-    bazel build --nobuild -- //tensorflow_addons/...
+    bazel build --nobuild -- //deepray/...
 RUN touch /ok.txt
 
 # -------------------------------
@@ -58,12 +58,12 @@ RUN git clone https://github.com/gabrieldemarmiesse/clang-format-lint-action.git
 WORKDIR ./clang-format-lint-action
 RUN git checkout 1044fee
 
-COPY ./ /addons
+COPY ./ /deepray
 RUN python run-clang-format.py \
                -r \
                --cli-args=--style=google \
                --clang-format-executable ./clang-format/clang-format9 \
-               /addons
+               /deepray
 RUN touch /ok.txt
 
 # -------------------------------
@@ -73,8 +73,8 @@ FROM alpine:3.11 as check-bazel-format
 COPY ./tools/install_deps/buildifier.sh ./
 RUN sh buildifier.sh
 
-COPY ./ /addons
-RUN buildifier -mode=check -r /addons
+COPY ./ /deepray
+RUN buildifier -mode=check -r /deepray
 RUN touch /ok.txt
 
 # -------------------------------
@@ -91,8 +91,8 @@ RUN pip install -r doc_requirements.txt
 
 RUN apt-get update && apt-get install -y rsync
 
-COPY ./ /addons
-WORKDIR /addons
+COPY ./ /deepray
+WORKDIR /deepray
 RUN pip install --no-deps -e .
 RUN python tools/docs/build_docs.py
 RUN touch /ok.txt
@@ -112,13 +112,13 @@ RUN apt-get update && apt-get install -y sudo rsync
 COPY tools/install_deps/install_bazelisk.sh .bazelversion ./
 RUN bash install_bazelisk.sh
 
-COPY ./ /addons
-WORKDIR /addons
+COPY ./ /deepray
+WORKDIR /deepray
 RUN python configure.py
 RUN --mount=type=cache,id=cache_bazel,target=/root/.cache/bazel \
     bash tools/install_so_files.sh
 RUN pip install --no-deps -e .
-RUN pytest -v -n auto ./tensorflow_addons/activations
+RUN pytest -v -n auto ./deepray/activations
 RUN touch /ok.txt
 
 # -------------------------------

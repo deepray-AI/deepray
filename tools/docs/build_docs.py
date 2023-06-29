@@ -18,7 +18,7 @@ This script generates API reference docs.
 
 Install pre-requisites:
 $> pip install -U git+https://github.com/tensorflow/docs
-$> pip install artifacts/tensorflow_addons-*.whl
+$> pip install artifacts/deepray-*.whl
 
 Generate Docs:
 $> from the repo root run: python docs/build_docs.py
@@ -27,13 +27,13 @@ $> from the repo root run: python docs/build_docs.py
 from absl import app
 from absl import flags
 
-import tensorflow_addons as tfa
+import deepray as dp
 
 from tensorflow_docs.api_generator import generate_lib
 from tensorflow_docs.api_generator import public_api
 
-PROJECT_SHORT_NAME = "tfa"
-PROJECT_FULL_NAME = "TensorFlow Addons"
+PROJECT_SHORT_NAME = "dp"
+PROJECT_FULL_NAME = "Deepray"
 
 FLAGS = flags.FLAGS
 
@@ -42,19 +42,19 @@ flags.DEFINE_string(
 )
 
 CODE_PREFIX_TEMPLATE = (
-    "https://github.com/tensorflow/addons/tree/{git_branch}/tensorflow_addons"
+    "https://github.com/tensorflow/deepray/tree/{git_branch}/deepray"
 )
 flags.DEFINE_string("code_url_prefix", None, "The url prefix for links to the code.")
 flags.mark_flags_as_mutual_exclusive(["code_url_prefix", "git_branch"])
 
-flags.DEFINE_string("output_dir", "/tmp/addons_api", "Where to output the docs")
+flags.DEFINE_string("output_dir", "/tmp/deepray_api", "Where to output the docs")
 
 flags.DEFINE_bool(
     "search_hints", True, "Include metadata search hints in the generated files"
 )
 
 flags.DEFINE_string(
-    "site_path", "addons/api_docs/python", "Path prefix in the _toc.yaml"
+    "site_path", "deepray/api_docs/python", "Path prefix in the _toc.yaml"
 )
 
 
@@ -71,11 +71,11 @@ def main(argv):
 
     doc_generator = generate_lib.DocGenerator(
         root_title=PROJECT_FULL_NAME,
-        py_modules=[(PROJECT_SHORT_NAME, tfa)],
+        py_modules=[(PROJECT_SHORT_NAME, dp)],
         code_url_prefix=code_url_prefix,
         private_map={
-            "tfa": ["__version__", "utils", "version"],
-            "tfa.options": ["warn_fallback"],
+            "dp": ["__version__", "utils", "version"],
+            "dp.options": ["warn_fallback"],
         },
         # These callbacks usually clean up a lot of aliases caused by internal imports.
         callbacks=[

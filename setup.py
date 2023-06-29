@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""TensorFlow Addons.
+"""Deepray.
 
-TensorFlow Addons is a repository of contributions that conform to well-
+Deepray is a repository of contributions that conform to well-
 established API patterns, but implement new functionality not available
 in core TensorFlow. TensorFlow natively supports a large number of
 operators, layers, metrics, losses, and optimizers. However, in a fast
@@ -46,12 +46,12 @@ def get_project_name_version():
     # Version
     version = {}
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(base_dir, "tensorflow_addons", "version.py")) as fp:
+    with open(os.path.join(base_dir, "deepray", "version.py")) as fp:
         exec(fp.read(), version)
 
-    project_name = "tensorflow-addons"
+    project_name = "deepray"
     if "--nightly" in sys.argv:
-        project_name = "tfa-nightly"
+        project_name = "dp-nightly"
         version["__version__"] += get_last_commit_time()
         sys.argv.remove("--nightly")
 
@@ -124,5 +124,5 @@ setup(
         "Topic :: Software Development :: Libraries",
     ],
     license="Apache 2.0",
-    keywords="tensorflow addons machine learning",
+    keywords="tensorflow deepray machine learning",
 )

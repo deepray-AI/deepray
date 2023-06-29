@@ -1,12 +1,12 @@
-# [tensorflow.org/addons](https://tensorflow.org/addons)
+# [tensorflow.org/deepray](https://tensorflow.org/deepray)
 
-This directory contains the source for [tensorflow.org/addons](https://tensorflow.org/addons).
+This directory contains the source for [tensorflow.org/deepray](https://tensorflow.org/deepray).
 
 It comprises two main components:
 
 ## 1. Narrative Docs
 
-Any markdown or notebook files in this directory will be published to tensorflow.org/addons.
+Any markdown or notebook files in this directory will be published to tensorflow.org/deepray.
 
 `tutorials/_toc.yaml` controls the left-nav on the tutorials tab. Make sure to keep that file up to date.
 Notify the tensorflow/docs team if you need to major changes. 

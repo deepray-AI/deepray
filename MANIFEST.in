@@ -1,2 +1,2 @@
-recursive-include tensorflow_addons *.so
+recursive-include deepray *.so
 include docs/*

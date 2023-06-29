@@ -1,8 +1,8 @@
 # Contributing
 
-Interested in contributing to TensorFlow Addons? We appreciate all kinds
+Interested in contributing to Deepray? We appreciate all kinds
 of help and are working to make this guide as comprehensive as possible.
-Please [let us know](https://github.com/tensorflow/addons/issues) if
+Please [let us know](https://github.com/tensorflow/deepray/issues) if
 you think of something we could do to help lower the barrier to
 contributing.
 
@@ -32,7 +32,7 @@ ecosystem and ensure it is not roadmapped internally for Keras or TF core. These
 feature requests will be labeled with `ecosystem-review` while we determine if it 
 should be included in Addons.**
 
-The tensorflow/addons repository contains additional functionality
+The tensorflow/deepray repository contains additional functionality
 fitting the following criteria:
 
 * The functionality is not otherwise available in TensorFlow
@@ -96,7 +96,7 @@ This is if you want to stay in Windows world. In this case, you need:
  (if you want to compile custom ops on windows, optional).
  
  If you develop on Windows and you encounter issues, we'd be happy to have your feedback!
- [This link](https://github.com/tensorflow/addons/issues/1134) might help you.
+ [This link](https://github.com/tensorflow/deepray/issues/1134) might help you.
 
 ## Development Tips
 Try these useful commands below, they only use Docker and 
@@ -137,7 +137,7 @@ See our [Style Guide](STYLE_GUIDE.md) for more details.
 ## Code Testing
 ### CI Testing
 Nightly CI tests are ran and results can be found on the central README. To
-subscribe for alerts please join the [addons-testing mailing list](https://groups.google.com/a/tensorflow.org/forum/#!forum/addons-testing).
+subscribe for alerts please join the [deepray-testing mailing list](https://groups.google.com/a/tensorflow.org/forum/#!forum/deepray-testing).
 
 
 ### Testing locally, without Docker
@@ -168,7 +168,7 @@ conda activate my_dev_environement
 ```
 
 
-#### Install TensorFlow Addons in editable mode
+#### Install Deepray in editable mode
 
 Just run from the root:
 
@@ -181,67 +181,67 @@ pip install -e ./
 It's going to install Addons in editable mode without compiling anything.
 You can modify source files and changes will be seen at the next Python 
 interpreter startup. This command needs to be executed only once. 
-Now, anywhere on your system, if you do `import tensorflow_addons`, it's 
+Now, anywhere on your system, if you do `import deepray`, it's 
 going to import the code in this git repository.
 
-#### Uninstall TensorFlow Addons
+#### Uninstall Deepray
 
 To undo this operation, for example, you want to later on 
-install TensorFlow Addons from PyPI, the release version, do:
+install Deepray from PyPI, the release version, do:
 
 ```bash
-pip uninstall tensorflow-addons
+pip uninstall deepray
 ```
 
 #### Run the tests with pytest
 
-If TensorFlow Addons is installed in editable mode, you can then just run your tests by 
+If Deepray is installed in editable mode, you can then just run your tests by 
 running Pytest. For example:
 ```bash
 pip install -r tools/install_deps/pytest.txt
-python -m pytest tensorflow_addons/rnn/tests/cell_test.py
+python -m pytest deepray/rnn/tests/cell_test.py
 # or even
-python -m pytest tensorflow_addons/rnn/
+python -m pytest deepray/rnn/
 # or even 
-python -m pytest tensorflow_addons/
+python -m pytest deepray/
 # or even if pytest is in the PATH
-pytest tensorflow_addons/
+pytest deepray/
 ```
 
 Pytest has many cool options to help you make great tests:
 
 ```bash
 # Use multiprocessing to run the tests, 3 workers
-pytest -n 3 tensorflow_addons/
-pytest -n auto tensorflow_addons/
+pytest -n 3 deepray/
+pytest -n auto deepray/
 
 # Run the whole test suite without compiling any custom ops (.so files).
-pytest -v --skip-custom-ops tensorflow_addons/
+pytest -v --skip-custom-ops deepray/
 
 # Open the debugger to inspect variables and execute code when 
 # an exception is raised.
-pytest --pdb tensorflow_addons/ 
+pytest --pdb deepray/ 
 
 # or if you prefer the Ipython debugger
-pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb --capture no tensorflow_addons/
+pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb --capture no deepray/
 
 # by defaults print() aren't displayed with pytest
 # if you like to debug with prints (you might get 
 # the output scrambled)
-pytest -s tensorflow_addons/
+pytest -s deepray/
 
 # get the list of functions you ran
-pytest -v tensorflow_addons/
+pytest -v deepray/
 
 # to rerun all previous tests, running the ones that failed first
-pytest --ff tensorflow_addons/
+pytest --ff deepray/
 
 # You know which function to execute, but you're too 
 # lazy to type the file path
-pytest -k "test_get_all_shared_objects" ./tensorflow_addons/
+pytest -k "test_get_all_shared_objects" ./deepray/
 
 # get the 10 slowest functions
-pytest --duration=10 tensorflow_addons/
+pytest --duration=10 deepray/
 ```
 
 #### Testing with Pycharm
@@ -280,12 +280,12 @@ to install any additional tools.
 
 CPU Docker: 
 ```bash
-docker run --rm -it -v ${PWD}:/addons -w /addons tfaddons/dev_container:latest-cpu
+docker run --rm -it -v ${PWD}:/deepray -w /deepray hailinfufu/deepray:latest-cpu
 ```
 
 GPU Docker: 
 ```bash
-docker run --gpus all --rm -it -v ${PWD}:/addons -w /addons gcr.io/tensorflow-testing/nosla-cuda11.8-cudnn8.6-ubuntu20.04-manylinux2014-multipython
+docker run --gpus all --rm -it -v ${PWD}:/deepray -w /deepray gcr.io/tensorflow-testing/nosla-cuda11.8-cudnn8.6-ubuntu20.04-manylinux2014-multipython
 ```
 
 Configure:
@@ -311,8 +311,8 @@ Run selected tests:
 python3 -m pytest path/to/file/or/directory/to/test
 ```
 
-Run the gpu only tests with `pytest -m needs_gpu ./tensorflow_addons`.
-Run the cpu only tests with `pytest -m 'not needs_gpu' ./tensorflow_addons`.
+Run the gpu only tests with `pytest -m needs_gpu ./deepray`.
+Run the cpu only tests with `pytest -m 'not needs_gpu' ./deepray`.
 
 
 #### Testing with Bazel
@@ -336,7 +336,7 @@ bazel test -c opt -k \
 --test_timeout 300,450,1200,3600 \
 --test_output=all \
 --run_under=$(readlink -f tools/testing/parallel_gpu_execute.sh) \
-//tensorflow_addons/...
+//deepray/...
 ```
 
 #### Testing docstrings
@@ -344,7 +344,7 @@ bazel test -c opt -k \
 We use [DocTest](https://docs.python.org/3/library/doctest.html) to test code snippets
 in Python docstrings. The snippet must be executable Python code.
 To enable testing, prepend the line with `>>>` (three left-angle brackets).
-Available namespace include `np` for numpy, `tf` for TensorFlow, and `tfa` for TensorFlow Addons.
+Available namespace include `np` for numpy, `tf` for TensorFlow, and `dp` for Deepray.
 See [docs_ref](https://www.tensorflow.org/community/contribute/docs_ref) for more details.
 
 To test docstrings locally, run either
@@ -371,13 +371,13 @@ the [PEP 484](https://www.python.org/dev/peps/pep-0484/).
 
 We also have a runtime type check that we do 
 using [typeguard](https://typeguard.readthedocs.io/en/latest/).
-For an example, see the [normalizations.py file](tensorflow_addons/layers/normalizations.py).
+For an example, see the [normalizations.py file](deepray/layers/normalizations.py).
 Please add it if you type a class constructor (Note that the decorator doesn't 
 play nice with autograph at the moment, this is why we don't add it to functions. For more
-context, see [this pull request](https://github.com/tensorflow/addons/pull/928)).
+context, see [this pull request](https://github.com/tensorflow/deepray/pull/928)).
 
 You can import some common types 
-from [tensorflow_addons/utils/types.py](tensorflow_addons/utils/types.py).
+from [deepray/utils/types.py](deepray/utils/types.py).
 
 We recommend adding types if you add a new class/function to Addons' public API, 
 but we don't enforce it.
@@ -422,12 +422,12 @@ focused on a specific feature/parameter.
 
 ### Code example
 * It is required to contribute a code example in the docstring when adding new features.
-* It is strongly suggested to expand or contribute a new [tutorial](https://github.com/tensorflow/addons/blob/master/docs/tutorials/README.md) for more complex features that are hard to be expressed in the docstring only.
+* It is strongly suggested to expand or contribute a new [tutorial](https://github.com/tensorflow/deepray/blob/master/docs/tutorials/README.md) for more complex features that are hard to be expressed in the docstring only.
 
 ### Fixtures and assert functions:
 We provide [fixtures](https://docs.pytest.org/en/latest/fixture.html) to help your write 
 your tests as well as helper functions. Those can be found in 
-[test_utils.py](https://github.com/tensorflow/addons/blob/master/tensorflow_addons/utils/test_utils.py).
+[test_utils.py](https://github.com/tensorflow/deepray/blob/master/deepray/utils/test_utils.py).
 
 #### maybe_run_functions_eagerly
 
@@ -461,70 +461,71 @@ the test twice, on CPU and on GPU, or only on GPU. Here is how to do it.
 ```python
 import pytest
 import tensorflow as tf
-from tensorflow_addons.utils import test_utils
+from deepray.utils import test_utils
+
 
 @pytest.mark.with_device(["cpu", "gpu"])
 def test_something():
-    # the code here will run twice, once on gpu, once on cpu.
-    ...
+  # the code here will run twice, once on gpu, once on cpu.
+  ...
 
 
 @pytest.mark.with_device(["cpu", "gpu"])
 def test_something2(device):
-    # the code here will run twice, once on gpu, once on cpu.
-    # device will be "cpu:0" or "gpu:0" or "gpu:1" or "gpu:2" ...   
-    if "cpu" in device:
-        print("do something.")
-    if "gpu" in device:
-        print("do something else.")
-
+  # the code here will run twice, once on gpu, once on cpu.
+  # device will be "cpu:0" or "gpu:0" or "gpu:1" or "gpu:2" ...   
+  if "cpu" in device:
+    print("do something.")
+  if "gpu" in device:
+    print("do something else.")
 
 
 @pytest.mark.with_device(["cpu", "gpu", tf.distribute.MirroredStrategy])
 def test_something3(device):
-    # the code here will run three times, once on gpu, once on cpu and once with 
-    # a mirror distributed strategy.
-    # device will be "cpu:0" or "gpu:0" or the strategy.
-    # with the MirroredStrategy, it's equivalent to:
-    # strategy = tf.distribute.MirroredStrategy(...)
-    # with strategy.scope():
-    #     test_function(strategy)
-    if "cpu" in device:
-        print("do something.")
-    if "gpu" in device:
-        print("do something else.")
-    if isinstance(device, tf.distribute.Strategy):
-        device.run(...)
+  # the code here will run three times, once on gpu, once on cpu and once with 
+  # a mirror distributed strategy.
+  # device will be "cpu:0" or "gpu:0" or the strategy.
+  # with the MirroredStrategy, it's equivalent to:
+  # strategy = tf.distribute.MirroredStrategy(...)
+  # with strategy.scope():
+  #     test_function(strategy)
+  if "cpu" in device:
+    print("do something.")
+  if "gpu" in device:
+    print("do something else.")
+  if isinstance(device, tf.distribute.Strategy):
+    device.run(...)
 
 
 @pytest.mark.with_device(["gpu"])
 def test_something_else():
-    # This test will be only run on gpu.
-    # The test runner will call with tf.device("GPU:0") behind the scenes.  
-    ...
+  # This test will be only run on gpu.
+  # The test runner will call with tf.device("GPU:0") behind the scenes.  
+  ...
+
 
 @pytest.mark.with_device(["cpu"])
 def test_something_more():
-    # Don't do that, this is the default behavior. 
-    ...
+  # Don't do that, this is the default behavior. 
+  ...
 
 
 @pytest.mark.with_device(["no_device"])
 @pytest.mark.needs_gpu
 def test_something_more2():
-    # When running the function, there will be no `with tf.device` wrapper.
-    # You are free to do whatever you wish with the devices in there.
-    # Make sure to use only the cpu, or only gpus available to the current process with
-    # test_utils.gpu_for_testing() , otherwise, it might not play nice with 
-    # pytest's multiprocessing.
-    # If you use a gpu, mark the test with @pytest.mark.needs_gpu , otherwise the 
-    # test will fail if no gpu is available on the system.
-    # for example
-    ...
-    strategy = tf.distribute.MirroredStrategy(test_utils.gpus_for_testing())
-    with strategy.scope():
-        print("I'm doing whatever I want.") 
-    ...
+  # When running the function, there will be no `with tf.device` wrapper.
+  # You are free to do whatever you wish with the devices in there.
+  # Make sure to use only the cpu, or only gpus available to the current process with
+  # test_utils.gpu_for_testing() , otherwise, it might not play nice with 
+  # pytest's multiprocessing.
+  # If you use a gpu, mark the test with @pytest.mark.needs_gpu , otherwise the 
+  # test will fail if no gpu is available on the system.
+  # for example
+  ...
+  strategy = tf.distribute.MirroredStrategy(test_utils.gpus_for_testing())
+  with strategy.scope():
+    print("I'm doing whatever I want.")
+  ...
 ```
 
 Note that if a gpu is not detected on the system, the test will be 
@@ -559,12 +560,13 @@ Is the same as [tf.test.TestCase.assertAllCloseAccordingToType](https://www.tens
 but doesn't require any subclassing to be done. Can be used as a plain function. To use it:
 
 ```python
-from tensorflow_addons.utils import test_utils
+from deepray.utils import test_utils
+
 
 def test_something():
-    expected = ...
-    computed = my_function_i_just_wrote(...).numpy()
-    test_utils.assert_allclose_according_to_type(computed, expected)
+  expected = ...
+  computed = my_function_i_just_wrote(...).numpy()
+  test_utils.assert_allclose_according_to_type(computed, expected)
 ```
 
 ##### When to use it?

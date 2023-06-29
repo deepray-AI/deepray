@@ -19,7 +19,7 @@ import os
 from typedapi import ensure_api_is_typed
 
 import importlib
-import tensorflow_addons as tfa
+import deepray as dp
 import tensorflow as tf
 
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -27,20 +27,20 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 
 def test_api_typed():
     modules_list = [
-        tfa,
-        tfa.activations,
-        tfa.callbacks,
-        tfa.image,
-        tfa.losses,
-        tfa.metrics,
-        tfa.optimizers,
-        tfa.rnn,
-        tfa.seq2seq,
-        tfa.text,
+        dp,
+        dp.activations,
+        dp.callbacks,
+        dp.image,
+        dp.losses,
+        dp.metrics,
+        dp.optimizers,
+        dp.rnn,
+        dp.seq2seq,
+        dp.text,
     ]
     # Files within this list will be exempt from verification.
     exception_list = [
-        tfa.rnn.PeepholeLSTMCell,
+        dp.rnn.PeepholeLSTMCell,
         tf.keras.optimizers.Optimizer,
     ]
     if importlib.util.find_spec("tensorflow.keras.optimizers.legacy") is not None:
@@ -48,7 +48,7 @@ def test_api_typed():
 
     help_message = (
         "You can also take a look at the section about it in the CONTRIBUTING.md:\n"
-        "https://github.com/tensorflow/addons/blob/master/CONTRIBUTING.md#about-type-hints"
+        "https://github.com/tensorflow/deepray/blob/master/CONTRIBUTING.md#about-type-hints"
     )
     ensure_api_is_typed(
         modules_list,
@@ -61,7 +61,7 @@ def test_api_typed():
 def test_case_insensitive_filesystems():
     # Make sure BASE_DIR is project root.
     # If it doesn't, we probably computed the wrong directory.
-    if not os.path.isdir(os.path.join(BASE_DIR, "tensorflow_addons")):
+    if not os.path.isdir(os.path.join(BASE_DIR, "deepray")):
         raise AssertionError("BASE_DIR = {} is not project root".format(BASE_DIR))
 
     for dirpath, dirnames, filenames in os.walk(BASE_DIR, followlinks=True):
@@ -78,7 +78,7 @@ def test_case_insensitive_filesystems():
 
 def get_lines_of_source_code(allowlist=None):
     allowlist = allowlist or []
-    source_dir = os.path.join(BASE_DIR, "tensorflow_addons")
+    source_dir = os.path.join(BASE_DIR, "deepray")
     for path in glob.glob(source_dir + "/**/*.py", recursive=True):
         if in_allowlist(path, allowlist):
             continue
@@ -98,10 +98,10 @@ def test_no_private_tf_api():
     # TODO: remove all elements of the list and remove the allowlist
     # This allowlist should not grow. Do not add elements to this list.
     allowlist = [
-        "tensorflow_addons/metrics/r_square.py",
-        "tensorflow_addons/utils/test_utils.py",
-        "tensorflow_addons/seq2seq/decoder.py",
-        "tensorflow_addons/utils/types.py",
+        "deepray/metrics/r_square.py",
+        "deepray/utils/test_utils.py",
+        "deepray/seq2seq/decoder.py",
+        "deepray/utils/types.py",
     ]
 
     for file_path, line_idx, line in get_lines_of_source_code(allowlist):
@@ -125,13 +125,13 @@ def test_no_tf_cond():
     # TODO: remove all elements of the list and remove the allowlist
     # This allowlist should not grow. Do not add elements to this list.
     allowlist = [
-        "tensorflow_addons/text/crf.py",
-        "tensorflow_addons/layers/wrappers.py",
-        "tensorflow_addons/image/connected_components.py",
-        "tensorflow_addons/optimizers/novograd.py",
-        "tensorflow_addons/metrics/cohens_kappa.py",
-        "tensorflow_addons/seq2seq/sampler.py",
-        "tensorflow_addons/seq2seq/beam_search_decoder.py",
+        "deepray/text/crf.py",
+        "deepray/layers/wrappers.py",
+        "deepray/image/connected_components.py",
+        "deepray/optimizers/novograd.py",
+        "deepray/metrics/cohens_kappa.py",
+        "deepray/seq2seq/sampler.py",
+        "deepray/seq2seq/beam_search_decoder.py",
     ]
     for file_path, line_idx, line in get_lines_of_source_code(allowlist):
 
@@ -142,7 +142,7 @@ def test_no_tf_cond():
                 "   {}\n"
                 "In TensorFlow 2.x, using a simple `if` in a function decorated "
                 "with `@tf.function` is equivalent to a tf.cond() thanks to Autograph. \n"
-                "TensorFlow Addons aims to be written with idiomatic TF 2.x code. \n"
+                "Deepray aims to be written with idiomatic TF 2.x code. \n"
                 "As such, using tf.cond() is not allowed in the codebase. \n"
                 "Use a `if` and decorate your function with @tf.function instead. \n"
                 "You can take a look at "
@@ -155,16 +155,16 @@ def test_no_experimental_api():
     # TODO: remove all elements of the list and remove the allowlist
     # This allowlist should not grow. Do not add elements to this list.
     allowlist = [
-        "tensorflow_addons/optimizers/constants.py",
-        "tensorflow_addons/optimizers/weight_decay_optimizers.py",
-        "tensorflow_addons/layers/max_unpooling_2d.py",
-        "tensorflow_addons/image/dense_image_warp.py",
+        "deepray/optimizers/constants.py",
+        "deepray/optimizers/weight_decay_optimizers.py",
+        "deepray/layers/max_unpooling_2d.py",
+        "deepray/image/dense_image_warp.py",
     ]
     for file_path, line_idx, line in get_lines_of_source_code(allowlist):
 
         if file_path.endswith("_test.py") or file_path.endswith("conftest.py"):
             continue
-        if file_path.endswith("tensorflow_addons/utils/test_utils.py"):
+        if file_path.endswith("deepray/utils/test_utils.py"):
             continue
 
         if "experimental" in line:
@@ -185,19 +185,19 @@ def test_no_tf_control_dependencies():
     # TODO: remove all elements of the list and remove the allowlist
     # This allowlist should not grow. Do not add elements to this list.
     allowlist = [
-        "tensorflow_addons/layers/wrappers.py",
-        "tensorflow_addons/image/utils.py",
-        "tensorflow_addons/image/dense_image_warp.py",
-        "tensorflow_addons/optimizers/average_wrapper.py",
-        "tensorflow_addons/optimizers/discriminative_layer_training.py",
-        "tensorflow_addons/optimizers/yogi.py",
-        "tensorflow_addons/optimizers/lookahead.py",
-        "tensorflow_addons/optimizers/weight_decay_optimizers.py",
-        "tensorflow_addons/optimizers/rectified_adam.py",
-        "tensorflow_addons/optimizers/lamb.py",
-        "tensorflow_addons/seq2seq/sampler.py",
-        "tensorflow_addons/seq2seq/beam_search_decoder.py",
-        "tensorflow_addons/seq2seq/attention_wrapper.py",
+        "deepray/layers/wrappers.py",
+        "deepray/image/utils.py",
+        "deepray/image/dense_image_warp.py",
+        "deepray/optimizers/average_wrapper.py",
+        "deepray/optimizers/discriminative_layer_training.py",
+        "deepray/optimizers/yogi.py",
+        "deepray/optimizers/lookahead.py",
+        "deepray/optimizers/weight_decay_optimizers.py",
+        "deepray/optimizers/rectified_adam.py",
+        "deepray/optimizers/lamb.py",
+        "deepray/seq2seq/sampler.py",
+        "deepray/seq2seq/beam_search_decoder.py",
+        "deepray/seq2seq/attention_wrapper.py",
     ]
     for file_path, line_idx, line in get_lines_of_source_code(allowlist):
 
@@ -210,7 +210,7 @@ def test_no_tf_control_dependencies():
                 "In TensorFlow 2.x, in a function decorated "
                 "with `@tf.function` the dependencies are controlled automatically"
                 " thanks to Autograph. \n"
-                "TensorFlow Addons aims to be written with idiomatic TF 2.x code. \n"
+                "Deepray aims to be written with idiomatic TF 2.x code. \n"
                 "As such, using tf.control_dependencies() is not allowed in the codebase. \n"
                 "Decorate your function with @tf.function instead. \n"
                 "You can take a look at \n"
@@ -223,9 +223,9 @@ def test_no_deprecated_v1():
     # TODO: remove all elements of the list and remove the allowlist
     # This allowlist should not grow. Do not add elements to this list.
     allowlist = [
-        "tensorflow_addons/text/skip_gram_ops.py",
-        "tensorflow_addons/seq2seq/decoder.py",
-        "tensorflow_addons/seq2seq/tests/attention_wrapper_test.py",
+        "deepray/text/skip_gram_ops.py",
+        "deepray/seq2seq/decoder.py",
+        "deepray/seq2seq/tests/attention_wrapper_test.py",
     ]
     for file_path, line_idx, line in get_lines_of_source_code(allowlist):
 
@@ -233,7 +233,7 @@ def test_no_deprecated_v1():
             raise NameError(
                 "The usage of a tf.compat.v1 API was found in file {} at line {}:\n\n"
                 "   {}\n"
-                "TensorFlow Addons doesn't support running programs with "
+                "Deepray doesn't support running programs with "
                 "`tf.compat.v1.disable_v2_behavior()`.\n"
                 "As such, there should be no need for the compatibility module "
                 "tf.compat. Please find an alternative using only the TF2.x API."

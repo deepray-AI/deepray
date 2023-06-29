@@ -14,14 +14,14 @@ RUN pip install -r requirements.txt
 COPY tools/install_deps/pytest.txt ./
 RUN pip install -r pytest.txt pytest-cov
 
-COPY ./ /addons
-WORKDIR addons
+COPY ./ /deepray
+WORKDIR /deepray
 RUN python configure.py
 RUN pip install -e ./
 RUN --mount=type=cache,id=cache_bazel,target=/root/.cache/bazel \
     bash tools/install_so_files.sh
-RUN pytest -v -n auto --durations=25 --doctest-modules ./tensorflow_addons \
-    --cov=tensorflow_addons ./tensorflow_addons/
+RUN pytest -v -n auto --durations=25 --doctest-modules ./deepray \
+    --cov=deepray ./deepray/
 
 RUN bazel build --enable_runfiles build_pip_pkg
 RUN bazel-bin/build_pip_pkg artifacts
@@ -32,11 +32,11 @@ FROM python:3.9
 COPY tools/install_deps/tensorflow-cpu.txt ./
 RUN pip install --default-timeout=1000 -r tensorflow-cpu.txt
 
-COPY --from=0 /addons/artifacts /artifacts
+COPY --from=0 /deepray/artifacts /artifacts
 
-RUN pip install /artifacts/tensorflow_addons-*.whl
+RUN pip install /artifacts/deepray-*.whl
 
 # check that we didnd't forget to add a py file to
 # The corresponding BUILD file.
 # Also test that the wheel works in a fresh environment
-RUN python -c "import tensorflow_addons as tfa; print(tfa.register_all())"
+RUN python -c "import deepray as dp; print(dp.register_all())"

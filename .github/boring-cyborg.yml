@@ -1,34 +1,34 @@
 labelPRBasedOnFilePath:
   # Subpackages
   activations:
-    - tensorflow_addons/activations/**/*
+    - deepray/activations/**/*
 
   callbacks:
-    - tensorflow_addons/callbacks/**/*
+    - deepray/callbacks/**/*
 
   custom-ops:
-    - tensorflow_addons/custom_ops/**/*
+    - deepray/custom_ops/**/*
 
   image:
-    - tensorflow_addons/image/**/*
+    - deepray/image/**/*
 
   layers:
-    - tensorflow_addons/layers/**/*
+    - deepray/layers/**/*
 
   losses:
-    - tensorflow_addons/losses/**/*
+    - deepray/losses/**/*
 
   metrics:
-    - tensorflow_addons/metrics/**/*
+    - deepray/metrics/**/*
 
   optimizers:
-    - tensorflow_addons/optimizers/**/*
+    - deepray/optimizers/**/*
 
   seq2seq:
-    - tensorflow_addons/seq2seq/**/*
+    - deepray/seq2seq/**/*
 
   text:
-    - tensorflow_addons/text/**/*
+    - deepray/text/**/*
 
   # Other labels
   build:
