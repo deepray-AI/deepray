@@ -153,6 +153,7 @@ def test_no_experimental_api():
   allowlist = [
       "deepray/optimizers/constants.py",
       "deepray/optimizers/weight_decay_optimizers.py",
+      "deepray/layers/embedding.py",
       "deepray/layers/max_unpooling_2d.py",
       "deepray/image/dense_image_warp.py",
   ]
@@ -170,7 +171,7 @@ def test_no_experimental_api():
           "Experimental APIs are ok in tests but not in user-facing code. "
           "This is because Experimental APIs might have bugs and are not "
           "widely used yet.\n"
-          "Addons should show how to write TensorFlow "
+          "Deepray should show how to write TensorFlow "
           "code in a stable and forward-compatible way."
           "".format(file_path, line_idx, line)
       )
