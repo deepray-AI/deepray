@@ -22,15 +22,13 @@ from deepray.layers.adaptive_pooling import (
     AdaptiveAveragePooling3D,
     AdaptiveMaxPooling3D,
 )
-from deepray.layers.crf import CRF
-from deepray.layers.embedding import Embedding
+
 from deepray.layers.embedding_bag import EmbeddingBag
-from deepray.layers.esn import ESN
+from deepray.layers.gelu import GELU
 from deepray.layers.max_unpooling_2d import MaxUnpooling2D
 from deepray.layers.max_unpooling_2d_v2 import MaxUnpooling2DV2
 from deepray.layers.maxout import Maxout
 from deepray.layers.multihead_attention import MultiHeadAttention
-from deepray.layers.noisy_dense import NoisyDense
 from deepray.layers.normalizations import FilterResponseNormalization
 from deepray.layers.normalizations import GroupNormalization
 from deepray.layers.normalizations import InstanceNormalization
@@ -39,8 +37,11 @@ from deepray.layers.poincare import PoincareNormalize
 from deepray.layers.polynomial import PolynomialCrossing
 from deepray.layers.snake import Snake
 from deepray.layers.sparsemax import Sparsemax
-from deepray.layers.spatial_pyramid_pooling import SpatialPyramidPooling2D
 from deepray.layers.spectral_normalization import SpectralNormalization
-from deepray.layers.stochastic_depth import StochasticDepth
+from deepray.layers.spatial_pyramid_pooling import SpatialPyramidPooling2D
 from deepray.layers.tlu import TLU
 from deepray.layers.wrappers import WeightNormalization
+from deepray.layers.esn import ESN
+from deepray.layers.stochastic_depth import StochasticDepth
+from deepray.layers.noisy_dense import NoisyDense
+from deepray.layers.crf import CRF

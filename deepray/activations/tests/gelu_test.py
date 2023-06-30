@@ -12,14 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Additional activation functions."""
 
-from deepray.activations.gelu import gelu
-from deepray.activations.hardshrink import hardshrink
-from deepray.activations.lisht import lisht
-from deepray.activations.mish import mish
-from deepray.activations.softshrink import softshrink
-from deepray.activations.rrelu import rrelu
-from deepray.activations.snake import snake
-from deepray.activations.sparsemax import sparsemax
-from deepray.activations.tanhshrink import tanhshrink
+import pytest
+
+import numpy as np
+import tensorflow as tf
+from deepray.activations import gelu
+from deepray.utils import test_utils
+
+
+@pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
+def test_gelu(dtype):
+  x = tf.constant([-2.0, -1.0, 0.0, 1.0, 2.0], dtype=dtype)
+  expected_result = tf.constant([-0.04540229, -0.158808, 0.0, 0.841192, 1.9545977], dtype=dtype)
+  test_utils.assert_allclose_according_to_type(gelu(x), expected_result)
+
+  expected_result = tf.constant([-0.04550028, -0.15865526, 0.0, 0.8413447, 1.9544997], dtype=dtype)
+  test_utils.assert_allclose_according_to_type(gelu(x, False), expected_result)

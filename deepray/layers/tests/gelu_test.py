@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Additional activation functions."""
+"""Tests for GELU activation."""
 
-from deepray.activations.gelu import gelu
-from deepray.activations.hardshrink import hardshrink
-from deepray.activations.lisht import lisht
-from deepray.activations.mish import mish
-from deepray.activations.softshrink import softshrink
-from deepray.activations.rrelu import rrelu
-from deepray.activations.snake import snake
-from deepray.activations.sparsemax import sparsemax
-from deepray.activations.tanhshrink import tanhshrink
+import pytest
+import numpy as np
+from deepray.layers.gelu import GELU
+from deepray.utils import test_utils
+
+
+@pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
+def test_random(dtype):
+  x = np.array([[0.5, 1.2, -0.3]]).astype(dtype)
+  val = np.array([[0.345714, 1.0617027, -0.11462909]]).astype(dtype)
+  test_utils.layer_test(GELU, kwargs={"dtype": dtype}, input_data=x, expected_output=val)
