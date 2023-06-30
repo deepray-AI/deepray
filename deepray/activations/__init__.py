@@ -14,7 +14,6 @@
 # ==============================================================================
 """Additional activation functions."""
 
-from deepray.activations.gelu import gelu
 from deepray.activations.hardshrink import hardshrink
 from deepray.activations.lisht import lisht
 from deepray.activations.mish import mish

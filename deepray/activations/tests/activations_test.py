@@ -18,7 +18,6 @@ import tensorflow as tf
 from deepray import activations
 
 ALL_ACTIVATIONS = [
-    "gelu",
     "hardshrink",
     "lisht",
     "mish",

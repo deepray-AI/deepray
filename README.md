@@ -7,12 +7,6 @@
 [![Gitter chat](https://img.shields.io/badge/chat-on%20gitter-46bc99.svg)](https://gitter.im/tensorflow/sig-deepray)
 [![Code style: yapf](https://img.shields.io/badge/code%20style-yapf-blue)](https://github.com/google/yapf)
 
-### Continuous Build Status
-
-| Build                     | Status                                                                                                                                                                                         |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ubuntu/macOS/Windows**  | [![Status](https://github.com/tensorflow/deepray/workflows/deepray-release/badge.svg)](https://github.com/tensorflow/deepray/actions?query=workflow%3Aaddons-release)                             |
-| **Ubuntu GPU custom ops** | [![Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/deepray/ubuntu-gpu-py3.svg)](https://storage.googleapis.com/tensorflow-kokoro-build-badges/deepray/ubuntu-gpu-py3.html) |
 
 **Deepray** is a repository of contributions that conform to
 well-established API patterns, but implement new functionality
@@ -155,7 +149,7 @@ The order of priority on Linux is:
 3) Pure TensorFlow + Python implementation (works on CPU and GPU)
 
 If you want to change the default priority, "C++ and CUDA" VS "pure TensorFlow Python",
-you can set the environment variable `TF_DEEPRAY_PY_OPS=1` from the command line or
+you can set the environment variable `DEEPRAY_PY_OPS=1` from the command line or
 run `dp.options.disable_custom_kernel()` in your code.
 
 For example, if you are on Linux and you have compatibility problems with the compiled ops,
@@ -163,7 +157,7 @@ you can give priority to the Python implementations:
 
 From the command line:
 ```bash
-export TF_DEEPRAY_PY_OPS=1
+export DEEPRAY_PY_OPS=1
 ```
 
 or in your code:
