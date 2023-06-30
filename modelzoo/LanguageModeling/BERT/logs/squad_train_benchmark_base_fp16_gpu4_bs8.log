@@ -1,0 +1,477 @@
+/workspaces/Deepray2/deepray/utils/ensure_tf_install.py:53: UserWarning: Tensorflow Addons supports using Python ops for all Tensorflow versions above or equal to 2.10.0 and strictly below 2.13.0 (nightly versions are not supported). 
+ The versions of TensorFlow you are currently using is 2.9.3 and is not supported. 
+Some things might work, some things might not.
+If you were to encounter a bug, do not file an issue.
+If you want to make sure you're using a tested and supported configuration, either change the TensorFlow version or the Deepray's version. 
+You can find the compatibility matrix in TensorFlow Addon's readme:
+https://github.com/tensorflow/addons
+  warnings.warn(
+/workspaces/Deepray2/examples/LanguageModeling/BERT/run_squad.py:468: UserWarning: Flag --model_dir has a non-None default value; therefore, mark_flag_as_required will pass even if flag is not specified in the command line!
+  flags.mark_flag_as_required('model_dir')
+I0615 13:09:05.659566 140041562986304 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+/workspaces/Deepray2/deepray/utils/ensure_tf_install.py:53: UserWarning: Tensorflow Addons supports using Python ops for all Tensorflow versions above or equal to 2.10.0 and strictly below 2.13.0 (nightly versions are not supported). 
+ The versions of TensorFlow you are currently using is 2.9.3 and is not supported. 
+Some things might work, some things might not.
+If you were to encounter a bug, do not file an issue.
+If you want to make sure you're using a tested and supported configuration, either change the TensorFlow version or the Deepray's version. 
+You can find the compatibility matrix in TensorFlow Addon's readme:
+https://github.com/tensorflow/addons
+  warnings.warn(
+/workspaces/Deepray2/examples/LanguageModeling/BERT/run_squad.py:468: UserWarning: Flag --model_dir has a non-None default value; therefore, mark_flag_as_required will pass even if flag is not specified in the command line!
+  flags.mark_flag_as_required('model_dir')
+I0615 13:09:05.664320 140627418781504 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+/workspaces/Deepray2/deepray/utils/ensure_tf_install.py:53: UserWarning: Tensorflow Addons supports using Python ops for all Tensorflow versions above or equal to 2.10.0 and strictly below 2.13.0 (nightly versions are not supported). 
+ The versions of TensorFlow you are currently using is 2.9.3 and is not supported. 
+Some things might work, some things might not.
+If you were to encounter a bug, do not file an issue.
+If you want to make sure you're using a tested and supported configuration, either change the TensorFlow version or the Deepray's version. 
+You can find the compatibility matrix in TensorFlow Addon's readme:
+https://github.com/tensorflow/addons
+  warnings.warn(
+/workspaces/Deepray2/examples/LanguageModeling/BERT/run_squad.py:468: UserWarning: Flag --model_dir has a non-None default value; therefore, mark_flag_as_required will pass even if flag is not specified in the command line!
+  flags.mark_flag_as_required('model_dir')
+I0615 13:09:05.671956 140110035396416 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+/workspaces/Deepray2/deepray/utils/ensure_tf_install.py:53: UserWarning: Tensorflow Addons supports using Python ops for all Tensorflow versions above or equal to 2.10.0 and strictly below 2.13.0 (nightly versions are not supported). 
+ The versions of TensorFlow you are currently using is 2.9.3 and is not supported. 
+Some things might work, some things might not.
+If you were to encounter a bug, do not file an issue.
+If you want to make sure you're using a tested and supported configuration, either change the TensorFlow version or the Deepray's version. 
+You can find the compatibility matrix in TensorFlow Addon's readme:
+https://github.com/tensorflow/addons
+  warnings.warn(
+/workspaces/Deepray2/examples/LanguageModeling/BERT/run_squad.py:468: UserWarning: Flag --model_dir has a non-None default value; therefore, mark_flag_as_required will pass even if flag is not specified in the command line!
+  flags.mark_flag_as_required('model_dir')
+I0615 13:09:05.673041 140468358596416 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+2023-06-15 13:09:05.675118: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-06-15 13:09:05.679644: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-06-15 13:09:05.687002: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-06-15 13:09:05.688179: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-06-15 13:09:07.142946: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 10505 MB memory:  -> device: 2, name: NVIDIA TITAN V, pci bus id: 0000:86:00.0, compute capability: 7.0
+2023-06-15 13:09:07.154822: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 10505 MB memory:  -> device: 3, name: NVIDIA TITAN V, pci bus id: 0000:af:00.0, compute capability: 7.0
+2023-06-15 13:09:07.155294: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 10505 MB memory:  -> device: 1, name: NVIDIA TITAN V, pci bus id: 0000:3b:00.0, compute capability: 7.0
+2023-06-15 13:09:07.159216: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 10505 MB memory:  -> device: 0, name: NVIDIA TITAN V, pci bus id: 0000:18:00.0, compute capability: 7.0
+I0615 13:09:12.146109 140110035396416 feature_map.py:34] File not exists: /workspaces/Deepray2/business/data/feature_map.csv
+I0615 13:09:12.173238 140627418781504 feature_map.py:34] File not exists: /workspaces/Deepray2/business/data/feature_map.csv
+I0615 13:09:12.392804 140468358596416 feature_map.py:34] File not exists: /workspaces/Deepray2/business/data/feature_map.csv
+I0615 13:09:12.668849 140110035396416 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+decayed_learning_rate_at_crossover_point = 1.890000e-04, adjusted_init_lr = 2.116402e-04
+I0615 13:09:12.677958 140110035396416 base_trainer.py:331] Checkpoint file /workspaces/bert_tf2/data/download/google_pretrained_weights/uncased_L-12_H-768_A-12/bert_model.ckpt found and restoring from initial checkpoint for core model.
+I0615 13:09:12.694365 140627418781504 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+I0615 13:09:12.694616 140627418781504 base_trainer.py:227]  20230615 13:09:12 Initialize training
+I0615 13:09:12.694701 140627418781504 base_trainer.py:229] 	tf.app.flags.FLAGS:
+I0615 13:09:12.694992 140627418781504 base_trainer.py:231] 	?                        = False
+I0615 13:09:12.695081 140627418781504 base_trainer.py:231] 	alsologtostderr          = False
+I0615 13:09:12.695153 140627418781504 base_trainer.py:231] 	aux_mlp_dims             = ['100', '50']
+I0615 13:09:12.695231 140627418781504 base_trainer.py:231] 	batch_size               = 8
+I0615 13:09:12.695309 140627418781504 base_trainer.py:231] 	benchmark                = True
+I0615 13:09:12.695387 140627418781504 base_trainer.py:231] 	benchmark_log_dir        = None
+I0615 13:09:12.695465 140627418781504 base_trainer.py:231] 	benchmark_logger_type    = BaseBenchmarkLogger
+I0615 13:09:12.695543 140627418781504 base_trainer.py:231] 	benchmark_test_id        = None
+I0615 13:09:12.695619 140627418781504 base_trainer.py:231] 	black_list               = None
+I0615 13:09:12.695695 140627418781504 base_trainer.py:231] 	clean                    = False
+I0615 13:09:12.695770 140627418781504 base_trainer.py:231] 	conf_file                = /workspaces/Deepray2/conf/dp.yaml
+I0615 13:09:12.695845 140627418781504 base_trainer.py:231] 	config_file              = /workspaces/bert_tf2/data/download/google_pretrained_weights/uncased_L-12_H-768_A-12/bert_config.json
+I0615 13:09:12.695921 140627418781504 base_trainer.py:231] 	data_dir                 = /tmp/movielens-data/
+I0615 13:09:12.695997 140627418781504 base_trainer.py:231] 	dataset                  = None
+I0615 13:09:12.696073 140627418781504 base_trainer.py:231] 	date                     = 2023-06-14
+I0615 13:09:12.696149 140627418781504 base_trainer.py:231] 	distribution_strategy    = mirrored
+I0615 13:09:12.696224 140627418781504 base_trainer.py:231] 	dllog_path               = deepray_dllogger.json
+I0615 13:09:12.696302 140627418781504 base_trainer.py:231] 	do_lower_case            = True
+I0615 13:09:12.696378 140627418781504 base_trainer.py:231] 	download_if_missing      = True
+I0615 13:09:12.696459 140627418781504 base_trainer.py:231] 	dropout_rate             = -1.0
+I0615 13:09:12.696543 140627418781504 base_trainer.py:231] 	dtype                    = fp16
+I0615 13:09:12.696621 140627418781504 base_trainer.py:231] 	embedding_dim            = 16
+I0615 13:09:12.696697 140627418781504 base_trainer.py:231] 	enable_xla               = True
+I0615 13:09:12.696774 140627418781504 base_trainer.py:231] 	end_date                 = None
+I0615 13:09:12.696850 140627418781504 base_trainer.py:231] 	epochs                   = 1
+I0615 13:09:12.696926 140627418781504 base_trainer.py:231] 	eval_batch_size          = None
+I0615 13:09:12.697002 140627418781504 base_trainer.py:231] 	eval_script              = None
+I0615 13:09:12.697078 140627418781504 base_trainer.py:231] 	feature_map              = /workspaces/Deepray2/business/data/feature_map.csv
+I0615 13:09:12.697154 140627418781504 base_trainer.py:231] 	fine_tune                = None
+I0615 13:09:12.697229 140627418781504 base_trainer.py:231] 	fp16_implementation      = keras
+I0615 13:09:12.697306 140627418781504 base_trainer.py:231] 	h                        = False
+I0615 13:09:12.697382 140627418781504 base_trainer.py:231] 	hbm_oom_exit             = True
+I0615 13:09:12.697458 140627418781504 base_trainer.py:231] 	help                     = False
+I0615 13:09:12.697533 140627418781504 base_trainer.py:231] 	helpfull                 = False
+I0615 13:09:12.697609 140627418781504 base_trainer.py:231] 	helpshort                = False
+I0615 13:09:12.697686 140627418781504 base_trainer.py:231] 	helpxml                  = False
+I0615 13:09:12.697762 140627418781504 base_trainer.py:231] 	hub_module_url           = None
+I0615 13:09:12.697838 140627418781504 base_trainer.py:231] 	init_checkpoint          = /workspaces/bert_tf2/data/download/google_pretrained_weights/uncased_L-12_H-768_A-12/bert_model.ckpt
+I0615 13:09:12.697913 140627418781504 base_trainer.py:231] 	init_weights             = 
+I0615 13:09:12.697989 140627418781504 base_trainer.py:231] 	input_meta_data_path     = /workspaces/bert_tf2/data/download/squad/v1.1/squad_v1.1_meta_data
+I0615 13:09:12.698064 140627418781504 base_trainer.py:231] 	interleave_block         = 2
+I0615 13:09:12.698139 140627418781504 base_trainer.py:231] 	interleave_cycle         = 16
+I0615 13:09:12.698215 140627418781504 base_trainer.py:231] 	keras_use_ctl            = True
+I0615 13:09:12.698292 140627418781504 base_trainer.py:231] 	label                    = []
+I0615 13:09:12.698375 140627418781504 base_trainer.py:231] 	learning_rate            = 5e-05
+I0615 13:09:12.698452 140627418781504 base_trainer.py:231] 	log_dir                  = 
+I0615 13:09:12.698528 140627418781504 base_trainer.py:231] 	log_steps                = 100
+I0615 13:09:12.698605 140627418781504 base_trainer.py:231] 	logger_levels            = {}
+I0615 13:09:12.698683 140627418781504 base_trainer.py:231] 	logtostderr              = False
+I0615 13:09:12.698759 140627418781504 base_trainer.py:231] 	loss_scale               = None
+I0615 13:09:12.698835 140627418781504 base_trainer.py:231] 	max_answer_length        = 30
+I0615 13:09:12.698911 140627418781504 base_trainer.py:231] 	max_seq_length           = 128
+I0615 13:09:12.698987 140627418781504 base_trainer.py:231] 	mode                     = train
+I0615 13:09:12.699062 140627418781504 base_trainer.py:231] 	model_dir                = /tmp/bert_train_benchmark_230615130858
+I0615 13:09:12.699139 140627418781504 base_trainer.py:231] 	model_export_path        = None
+I0615 13:09:12.699214 140627418781504 base_trainer.py:231] 	model_type               = bert
+I0615 13:09:12.699289 140627418781504 base_trainer.py:231] 	n_best_size              = 20
+I0615 13:09:12.699367 140627418781504 base_trainer.py:231] 	neg_sample_rate          = 0.0
+I0615 13:09:12.699442 140627418781504 base_trainer.py:231] 	num_accumulation_steps   = 5
+I0615 13:09:12.699519 140627418781504 base_trainer.py:231] 	num_gpus                 = 0
+I0615 13:09:12.699595 140627418781504 base_trainer.py:231] 	num_train_examples       = 88641
+I0615 13:09:12.699671 140627418781504 base_trainer.py:231] 	num_valid_examples       = -1
+I0615 13:09:12.699747 140627418781504 base_trainer.py:231] 	only_check_args          = False
+I0615 13:09:12.699823 140627418781504 base_trainer.py:231] 	op_conversion_fallback_to_while_loop= True
+I0615 13:09:12.699898 140627418781504 base_trainer.py:231] 	optimizer_type           = adam
+I0615 13:09:12.699974 140627418781504 base_trainer.py:231] 	parallel_parse           = 48
+I0615 13:09:12.700050 140627418781504 base_trainer.py:231] 	parallel_reads_per_file  = None
+I0615 13:09:12.700125 140627418781504 base_trainer.py:231] 	pdb                      = False
+I0615 13:09:12.700201 140627418781504 base_trainer.py:231] 	pdb_post_mortem          = False
+I0615 13:09:12.700277 140627418781504 base_trainer.py:231] 	prebatch                 = 1
+I0615 13:09:12.700352 140627418781504 base_trainer.py:231] 	predict_batch_size       = 8
+I0615 13:09:12.700428 140627418781504 base_trainer.py:231] 	predict_file             = None
+I0615 13:09:12.700505 140627418781504 base_trainer.py:231] 	prefetch_buffer          = 16
+I0615 13:09:12.700596 140627418781504 base_trainer.py:231] 	profile_file             = None
+I0615 13:09:12.700672 140627418781504 base_trainer.py:231] 	random_seed              = 12345
+I0615 13:09:12.700749 140627418781504 base_trainer.py:231] 	restore_date             = None
+I0615 13:09:12.700826 140627418781504 base_trainer.py:231] 	run_eagerly              = False
+I0615 13:09:12.700902 140627418781504 base_trainer.py:231] 	run_with_pdb             = False
+I0615 13:09:12.700978 140627418781504 base_trainer.py:231] 	run_with_profiling       = False
+I0615 13:09:12.701055 140627418781504 base_trainer.py:231] 	runtime_oom_exit         = True
+I0615 13:09:12.701131 140627418781504 base_trainer.py:231] 	save_checkpoint_steps    = 1000
+I0615 13:09:12.701207 140627418781504 base_trainer.py:231] 	scale_loss               = False
+I0615 13:09:12.701283 140627418781504 base_trainer.py:231] 	showprefixforinfo        = True
+I0615 13:09:12.701359 140627418781504 base_trainer.py:231] 	shuffle_buffer           = None
+I0615 13:09:12.701437 140627418781504 base_trainer.py:231] 	stage_one_mlp_dims       = ['200']
+I0615 13:09:12.701514 140627418781504 base_trainer.py:231] 	stage_two_mlp_dims       = ['200', '80']
+I0615 13:09:12.701576 140627418781504 base_trainer.py:231] 	start_date               = None
+I0615 13:09:12.701640 140627418781504 base_trainer.py:231] 	stderrthreshold          = fatal
+I0615 13:09:12.701718 140627418781504 base_trainer.py:231] 	steps_per_summary        = 200
+I0615 13:09:12.701795 140627418781504 base_trainer.py:231] 	task_index               = -1
+I0615 13:09:12.701872 140627418781504 base_trainer.py:231] 	test_random_seed         = 301
+I0615 13:09:12.701948 140627418781504 base_trainer.py:231] 	test_randomize_ordering_seed= 
+I0615 13:09:12.702024 140627418781504 base_trainer.py:231] 	test_srcdir              = 
+I0615 13:09:12.702100 140627418781504 base_trainer.py:231] 	test_tmpdir              = /tmp/absl_testing
+I0615 13:09:12.702177 140627418781504 base_trainer.py:231] 	tfhub_cache_dir          = None
+I0615 13:09:12.702252 140627418781504 base_trainer.py:231] 	tfhub_model_load_format  = AUTO
+I0615 13:09:12.702331 140627418781504 base_trainer.py:231] 	train_data               = ['/workspaces/bert_tf2/data/download/squad/v1.1/squad_v1.1_train.tf_record']
+I0615 13:09:12.702407 140627418781504 base_trainer.py:231] 	use_cprofile_for_profiling= True
+I0615 13:09:12.702482 140627418781504 base_trainer.py:231] 	use_dynamic_embedding    = False
+I0615 13:09:12.702557 140627418781504 base_trainer.py:231] 	use_horovod              = True
+I0615 13:09:12.702632 140627418781504 base_trainer.py:231] 	v                        = 0
+I0615 13:09:12.702709 140627418781504 base_trainer.py:231] 	valid_data               = None
+I0615 13:09:12.702784 140627418781504 base_trainer.py:231] 	verbose_logging          = False
+I0615 13:09:12.702860 140627418781504 base_trainer.py:231] 	verbosity                = 0
+I0615 13:09:12.702935 140627418781504 base_trainer.py:231] 	vocab_file               = /workspaces/bert_tf2/data/download/google_pretrained_weights/uncased_L-12_H-768_A-12/vocab.txt
+I0615 13:09:12.703011 140627418781504 base_trainer.py:231] 	warmup_path              = None
+I0615 13:09:12.703087 140627418781504 base_trainer.py:231] 	white_list               = None
+I0615 13:09:12.703162 140627418781504 base_trainer.py:231] 	worker_hosts             = None
+I0615 13:09:12.703238 140627418781504 base_trainer.py:231] 	xml_output_file          = 
+decayed_learning_rate_at_crossover_point = 1.890000e-04, adjusted_init_lr = 2.116402e-04
+I0615 13:09:12.713708 140627418781504 base_trainer.py:331] Checkpoint file /workspaces/bert_tf2/data/download/google_pretrained_weights/uncased_L-12_H-768_A-12/bert_model.ckpt found and restoring from initial checkpoint for core model.
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c90170dc0> and <deepray.layers.self_attention_mask.SelfAttentionMask object at 0x7f6c901ad2e0>).
+W0615 13:09:12.745393 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c90170dc0> and <deepray.layers.self_attention_mask.SelfAttentionMask object at 0x7f6c901ad2e0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c90157e20> and <deepray.layers.transformer.Transformer object at 0x7f6c90170dc0>).
+W0615 13:09:12.753170 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c90157e20> and <deepray.layers.transformer.Transformer object at 0x7f6c90170dc0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c90157580> and <deepray.layers.transformer.Transformer object at 0x7f6c90157e20>).
+W0615 13:09:12.760884 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c90157580> and <deepray.layers.transformer.Transformer object at 0x7f6c90157e20>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c901d3d00> and <deepray.layers.transformer.Transformer object at 0x7f6c90157580>).
+W0615 13:09:12.768594 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c901d3d00> and <deepray.layers.transformer.Transformer object at 0x7f6c90157580>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c30681130> and <deepray.layers.transformer.Transformer object at 0x7f6c901d3d00>).
+W0615 13:09:12.776298 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c30681130> and <deepray.layers.transformer.Transformer object at 0x7f6c901d3d00>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe5000b2c40> and <deepray.layers.self_attention_mask.SelfAttentionMask object at 0x7fe50007e100>).
+W0615 13:09:12.781444 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe5000b2c40> and <deepray.layers.self_attention_mask.SelfAttentionMask object at 0x7fe50007e100>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c305f3a60> and <deepray.layers.transformer.Transformer object at 0x7f6c30681130>).
+W0615 13:09:12.784024 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c305f3a60> and <deepray.layers.transformer.Transformer object at 0x7f6c30681130>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe5000c97f0> and <deepray.layers.transformer.Transformer object at 0x7fe5000b2c40>).
+W0615 13:09:12.789286 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe5000c97f0> and <deepray.layers.transformer.Transformer object at 0x7fe5000b2c40>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c901ddc70> and <deepray.layers.transformer.Transformer object at 0x7f6c305f3a60>).
+W0615 13:09:12.791837 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c901ddc70> and <deepray.layers.transformer.Transformer object at 0x7f6c305f3a60>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe500033310> and <deepray.layers.transformer.Transformer object at 0x7fe5000c97f0>).
+W0615 13:09:12.797431 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe500033310> and <deepray.layers.transformer.Transformer object at 0x7fe5000c97f0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c305d0190> and <deepray.layers.transformer.Transformer object at 0x7f6c901ddc70>).
+W0615 13:09:12.800190 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c305d0190> and <deepray.layers.transformer.Transformer object at 0x7f6c901ddc70>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a8595c40> and <deepray.layers.transformer.Transformer object at 0x7fe500033310>).
+W0615 13:09:12.805644 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a8595c40> and <deepray.layers.transformer.Transformer object at 0x7fe500033310>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c90197910> and <deepray.layers.transformer.Transformer object at 0x7f6c305d0190>).
+W0615 13:09:12.808236 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c90197910> and <deepray.layers.transformer.Transformer object at 0x7f6c305d0190>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe5025b3b80> and <deepray.layers.transformer.Transformer object at 0x7fe4a8595c40>).
+W0615 13:09:12.813799 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe5025b3b80> and <deepray.layers.transformer.Transformer object at 0x7fe4a8595c40>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c3066f6d0> and <deepray.layers.transformer.Transformer object at 0x7f6c90197910>).
+W0615 13:09:12.816220 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c3066f6d0> and <deepray.layers.transformer.Transformer object at 0x7f6c90197910>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a852e550> and <deepray.layers.transformer.Transformer object at 0x7fe5025b3b80>).
+W0615 13:09:12.821713 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a852e550> and <deepray.layers.transformer.Transformer object at 0x7fe5025b3b80>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c305e2b80> and <deepray.layers.transformer.Transformer object at 0x7f6c3066f6d0>).
+W0615 13:09:12.824285 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c305e2b80> and <deepray.layers.transformer.Transformer object at 0x7f6c3066f6d0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a8516490> and <deepray.layers.transformer.Transformer object at 0x7fe4a852e550>).
+W0615 13:09:12.829439 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a8516490> and <deepray.layers.transformer.Transformer object at 0x7fe4a852e550>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c30604c40> and <deepray.layers.transformer.Transformer object at 0x7f6c305e2b80>).
+W0615 13:09:12.831992 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f6c30604c40> and <deepray.layers.transformer.Transformer object at 0x7f6c305e2b80>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe5000fa6a0> and <deepray.layers.transformer.Transformer object at 0x7fe4a8516490>).
+W0615 13:09:12.837347 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe5000fa6a0> and <deepray.layers.transformer.Transformer object at 0x7fe4a8516490>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras.layers.core.dense.Dense object at 0x7f6c30563400> and <keras.layers.core.lambda_layer.Lambda object at 0x7f6c90170b80>).
+W0615 13:09:12.843604 140110035396416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras.layers.core.dense.Dense object at 0x7f6c30563400> and <keras.layers.core.lambda_layer.Lambda object at 0x7f6c90170b80>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a859c970> and <deepray.layers.transformer.Transformer object at 0x7fe5000fa6a0>).
+W0615 13:09:12.844978 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a859c970> and <deepray.layers.transformer.Transformer object at 0x7fe5000fa6a0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a8541ee0> and <deepray.layers.transformer.Transformer object at 0x7fe4a859c970>).
+W0615 13:09:12.852920 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a8541ee0> and <deepray.layers.transformer.Transformer object at 0x7fe4a859c970>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe5000cd730> and <deepray.layers.transformer.Transformer object at 0x7fe4a8541ee0>).
+W0615 13:09:12.859971 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe5000cd730> and <deepray.layers.transformer.Transformer object at 0x7fe4a8541ee0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a8563190> and <deepray.layers.transformer.Transformer object at 0x7fe5000cd730>).
+W0615 13:09:12.867340 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fe4a8563190> and <deepray.layers.transformer.Transformer object at 0x7fe5000cd730>).
+I0615 13:09:12.870811 140041562986304 feature_map.py:34] File not exists: /workspaces/Deepray2/business/data/feature_map.csv
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras.layers.core.dense.Dense object at 0x7fe4a85fd2b0> and <keras.layers.core.lambda_layer.Lambda object at 0x7fe5000b2460>).
+W0615 13:09:12.878926 140627418781504 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras.layers.core.dense.Dense object at 0x7fe4a85fd2b0> and <keras.layers.core.lambda_layer.Lambda object at 0x7fe5000b2460>).
+I0615 13:09:12.902342 140468358596416 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+decayed_learning_rate_at_crossover_point = 1.890000e-04, adjusted_init_lr = 2.116402e-04
+I0615 13:09:12.911949 140468358596416 base_trainer.py:331] Checkpoint file /workspaces/bert_tf2/data/download/google_pretrained_weights/uncased_L-12_H-768_A-12/bert_model.ckpt found and restoring from initial checkpoint for core model.
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf782e13a0> and <deepray.layers.self_attention_mask.SelfAttentionMask object at 0x7fbf782a9f40>).
+W0615 13:09:12.979595 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf782e13a0> and <deepray.layers.self_attention_mask.SelfAttentionMask object at 0x7fbf782a9f40>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf782e14c0> and <deepray.layers.transformer.Transformer object at 0x7fbf782e13a0>).
+W0615 13:09:12.987544 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf782e14c0> and <deepray.layers.transformer.Transformer object at 0x7fbf782e13a0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf7833c7f0> and <deepray.layers.transformer.Transformer object at 0x7fbf782e14c0>).
+W0615 13:09:12.995379 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf7833c7f0> and <deepray.layers.transformer.Transformer object at 0x7fbf782e14c0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf78335610> and <deepray.layers.transformer.Transformer object at 0x7fbf7833c7f0>).
+W0615 13:09:13.003179 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf78335610> and <deepray.layers.transformer.Transformer object at 0x7fbf7833c7f0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf782a0520> and <deepray.layers.transformer.Transformer object at 0x7fbf78335610>).
+W0615 13:09:13.010958 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf782a0520> and <deepray.layers.transformer.Transformer object at 0x7fbf78335610>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf782e8970> and <deepray.layers.transformer.Transformer object at 0x7fbf782a0520>).
+W0615 13:09:13.018725 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf782e8970> and <deepray.layers.transformer.Transformer object at 0x7fbf782a0520>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf78207af0> and <deepray.layers.transformer.Transformer object at 0x7fbf782e8970>).
+W0615 13:09:13.026498 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf78207af0> and <deepray.layers.transformer.Transformer object at 0x7fbf782e8970>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf7818a0d0> and <deepray.layers.transformer.Transformer object at 0x7fbf78207af0>).
+W0615 13:09:13.034178 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf7818a0d0> and <deepray.layers.transformer.Transformer object at 0x7fbf78207af0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf7816e910> and <deepray.layers.transformer.Transformer object at 0x7fbf7818a0d0>).
+W0615 13:09:13.041939 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf7816e910> and <deepray.layers.transformer.Transformer object at 0x7fbf7818a0d0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbfa0049310> and <deepray.layers.transformer.Transformer object at 0x7fbf7816e910>).
+W0615 13:09:13.049693 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbfa0049310> and <deepray.layers.transformer.Transformer object at 0x7fbf7816e910>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf7811ab80> and <deepray.layers.transformer.Transformer object at 0x7fbfa0049310>).
+W0615 13:09:13.057439 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf7811ab80> and <deepray.layers.transformer.Transformer object at 0x7fbfa0049310>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf7810fc40> and <deepray.layers.transformer.Transformer object at 0x7fbf7811ab80>).
+W0615 13:09:13.065182 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7fbf7810fc40> and <deepray.layers.transformer.Transformer object at 0x7fbf7811ab80>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras.layers.core.dense.Dense object at 0x7fbf780e9400> and <keras.layers.core.lambda_layer.Lambda object at 0x7fbf782e1310>).
+W0615 13:09:13.076700 140468358596416 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras.layers.core.dense.Dense object at 0x7fbf780e9400> and <keras.layers.core.lambda_layer.Lambda object at 0x7fbf782e1310>).
+I0615 13:09:13.416074 140041562986304 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+decayed_learning_rate_at_crossover_point = 1.890000e-04, adjusted_init_lr = 2.116402e-04
+I0615 13:09:13.425815 140041562986304 base_trainer.py:331] Checkpoint file /workspaces/bert_tf2/data/download/google_pretrained_weights/uncased_L-12_H-768_A-12/bert_model.ckpt found and restoring from initial checkpoint for core model.
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c18332970> and <deepray.layers.self_attention_mask.SelfAttentionMask object at 0x7f5c182a9490>).
+W0615 13:09:13.494370 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c18332970> and <deepray.layers.self_attention_mask.SelfAttentionMask object at 0x7f5c182a9490>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c40039f10> and <deepray.layers.transformer.Transformer object at 0x7f5c18332970>).
+W0615 13:09:13.502376 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c40039f10> and <deepray.layers.transformer.Transformer object at 0x7f5c18332970>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c428ab610> and <deepray.layers.transformer.Transformer object at 0x7f5c40039f10>).
+W0615 13:09:13.510278 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c428ab610> and <deepray.layers.transformer.Transformer object at 0x7f5c40039f10>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c18116c70> and <deepray.layers.transformer.Transformer object at 0x7f5c428ab610>).
+W0615 13:09:13.518167 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c18116c70> and <deepray.layers.transformer.Transformer object at 0x7f5c428ab610>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c18174d30> and <deepray.layers.transformer.Transformer object at 0x7f5c18116c70>).
+W0615 13:09:13.526021 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c18174d30> and <deepray.layers.transformer.Transformer object at 0x7f5c18116c70>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c1837f820> and <deepray.layers.transformer.Transformer object at 0x7f5c18174d30>).
+W0615 13:09:13.533887 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c1837f820> and <deepray.layers.transformer.Transformer object at 0x7f5c18174d30>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c18368b80> and <deepray.layers.transformer.Transformer object at 0x7f5c1837f820>).
+W0615 13:09:13.541733 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c18368b80> and <deepray.layers.transformer.Transformer object at 0x7f5c1837f820>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c182af760> and <deepray.layers.transformer.Transformer object at 0x7f5c18368b80>).
+W0615 13:09:13.549581 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c182af760> and <deepray.layers.transformer.Transformer object at 0x7f5c18368b80>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c18208820> and <deepray.layers.transformer.Transformer object at 0x7f5c182af760>).
+W0615 13:09:13.557427 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c18208820> and <deepray.layers.transformer.Transformer object at 0x7f5c182af760>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c1811e6a0> and <deepray.layers.transformer.Transformer object at 0x7f5c18208820>).
+W0615 13:09:13.565283 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c1811e6a0> and <deepray.layers.transformer.Transformer object at 0x7f5c18208820>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c181eb940> and <deepray.layers.transformer.Transformer object at 0x7f5c1811e6a0>).
+W0615 13:09:13.573287 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c181eb940> and <deepray.layers.transformer.Transformer object at 0x7f5c1811e6a0>).
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c181aa310> and <deepray.layers.transformer.Transformer object at 0x7f5c181eb940>).
+W0615 13:09:13.581152 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<deepray.layers.transformer.Transformer object at 0x7f5c181aa310> and <deepray.layers.transformer.Transformer object at 0x7f5c181eb940>).
+I0615 13:09:13.581217 140110035396416 base_trainer.py:336] Loading from checkpoint file completed
+WARNING:tensorflow:Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras.layers.core.dense.Dense object at 0x7f5c1821b1c0> and <keras.layers.core.lambda_layer.Lambda object at 0x7f5c183320a0>).
+W0615 13:09:13.592847 140041562986304 base.py:324] Inconsistent references when loading the checkpoint into this object graph. For example, in the saved checkpoint object, `model.layer.weight` and `model.layer_copy.weight` reference the same variable, while in the current object these are two different variables. The referenced variables are:(<keras.layers.core.dense.Dense object at 0x7f5c1821b1c0> and <keras.layers.core.lambda_layer.Lambda object at 0x7f5c183320a0>).
+I0615 13:09:13.616873 140627418781504 base_trainer.py:336] Loading from checkpoint file completed
+I0615 13:09:13.802472 140468358596416 base_trainer.py:336] Loading from checkpoint file completed
+I0615 13:09:14.321536 140041562986304 base_trainer.py:336] Loading from checkpoint file completed
+WARNING:tensorflow:Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+W0615 13:09:26.853973 140110035396416 utils.py:76] Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+WARNING:tensorflow:Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+W0615 13:09:26.891842 140627418781504 utils.py:76] Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+WARNING:tensorflow:Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+W0615 13:09:27.122767 140468358596416 utils.py:76] Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+WARNING:tensorflow:Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+W0615 13:09:27.456767 140041562986304 utils.py:76] Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+2023-06-15 13:09:39.848849: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f6b0000bd50 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2023-06-15 13:09:39.848899: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA TITAN V, Compute Capability 7.0
+2023-06-15 13:09:39.962651: I tensorflow/compiler/jit/xla_compilation_cache.cc:478] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2023-06-15 13:09:40.055639: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7fe37c0177d0 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2023-06-15 13:09:40.055699: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA TITAN V, Compute Capability 7.0
+2023-06-15 13:09:40.175601: I tensorflow/compiler/jit/xla_compilation_cache.cc:478] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2023-06-15 13:09:40.221599: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7fbe7000bd50 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2023-06-15 13:09:40.221647: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA TITAN V, Compute Capability 7.0
+2023-06-15 13:09:40.340107: I tensorflow/compiler/jit/xla_compilation_cache.cc:478] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2023-06-15 13:09:40.483467: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f5b080177d0 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2023-06-15 13:09:40.483520: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA TITAN V, Compute Capability 7.0
+2023-06-15 13:09:40.601742: I tensorflow/compiler/jit/xla_compilation_cache.cc:478] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+WARNING:tensorflow:Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+W0615 13:09:48.236312 140110035396416 utils.py:76] Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+WARNING:tensorflow:Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+W0615 13:09:48.697384 140468358596416 utils.py:76] Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+WARNING:tensorflow:Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+W0615 13:09:48.872398 140627418781504 utils.py:76] Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+WARNING:tensorflow:Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+W0615 13:09:49.328361 140041562986304 utils.py:76] Gradients do not exist for variables ['pooler_transform/kernel:0', 'pooler_transform/bias:0'] when minimizing the loss. If you're using `model.compile()`, did you forget to provide a `loss`argument?
+2023-06-15 13:10:14.762559: W tensorflow/compiler/jit/mark_for_compilation_pass.cc:1750] (One-time warning): Not using XLA:CPU for cluster.
+
+If you want XLA:CPU, do one of the following:
+
+ - set the TF_XLA_FLAGS to include "--tf_xla_cpu_global_jit", or
+ - set cpu_global_jit to true on this session's OptimizerOptions, or
+ - use experimental_jit_scope, or
+ - use tf.function(jit_compile=True).
+
+To confirm that XLA is active, pass --vmodule=xla_compilation_cache=1 (as a
+proper command-line flag, not via TF_XLA_FLAGS).
+2023-06-15 13:10:15.131555: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2023-06-15 13:10:15.166866: W tensorflow/compiler/jit/mark_for_compilation_pass.cc:1750] (One-time warning): Not using XLA:CPU for cluster.
+
+If you want XLA:CPU, do one of the following:
+
+ - set the TF_XLA_FLAGS to include "--tf_xla_cpu_global_jit", or
+ - set cpu_global_jit to true on this session's OptimizerOptions, or
+ - use experimental_jit_scope, or
+ - use tf.function(jit_compile=True).
+
+To confirm that XLA is active, pass --vmodule=xla_compilation_cache=1 (as a
+proper command-line flag, not via TF_XLA_FLAGS).
+2023-06-15 13:10:15.419513: W tensorflow/compiler/jit/mark_for_compilation_pass.cc:1750] (One-time warning): Not using XLA:CPU for cluster.
+
+If you want XLA:CPU, do one of the following:
+
+ - set the TF_XLA_FLAGS to include "--tf_xla_cpu_global_jit", or
+ - set cpu_global_jit to true on this session's OptimizerOptions, or
+ - use experimental_jit_scope, or
+ - use tf.function(jit_compile=True).
+
+To confirm that XLA is active, pass --vmodule=xla_compilation_cache=1 (as a
+proper command-line flag, not via TF_XLA_FLAGS).
+2023-06-15 13:10:15.541162: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2023-06-15 13:10:15.717350: W tensorflow/compiler/jit/mark_for_compilation_pass.cc:1750] (One-time warning): Not using XLA:CPU for cluster.
+
+If you want XLA:CPU, do one of the following:
+
+ - set the TF_XLA_FLAGS to include "--tf_xla_cpu_global_jit", or
+ - set cpu_global_jit to true on this session's OptimizerOptions, or
+ - use experimental_jit_scope, or
+ - use tf.function(jit_compile=True).
+
+To confirm that XLA is active, pass --vmodule=xla_compilation_cache=1 (as a
+proper command-line flag, not via TF_XLA_FLAGS).
+2023-06-15 13:10:15.771835: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2023-06-15 13:10:16.090667: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2023-06-15 13:10:49.496065: I tensorflow/stream_executor/gpu/asm_compiler.cc:323] ptxas warning : Registers are spilled to local memory in function 'input_fusion_reduce_19'
+
+2023-06-15 13:10:49.771057: I tensorflow/stream_executor/gpu/asm_compiler.cc:323] ptxas warning : Registers are spilled to local memory in function 'input_fusion_reduce_19'
+
+2023-06-15 13:10:50.187485: I tensorflow/stream_executor/gpu/asm_compiler.cc:323] ptxas warning : Registers are spilled to local memory in function 'input_fusion_reduce_19'
+
+2023-06-15 13:10:50.541574: I tensorflow/stream_executor/gpu/asm_compiler.cc:323] ptxas warning : Registers are spilled to local memory in function 'input_fusion_reduce_19'
+
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO Bootstrap : Using bond0.2074:10.0.74.1<0>
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO NET/Plugin : No plugin found (libnccl-net.so), using internal implementation
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO NET/IB : No device found.
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO NET/Socket : Using [0]bond0.2074:10.0.74.1<0> [1]lxcbr0:10.0.3.1<0> [2]bond0:fe80::c494:eeff:fe63:7b0c%bond0<0>
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO Using network Socket
+NCCL version 2.9.9+cuda11.3
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO Bootstrap : Using bond0.2074:10.0.74.1<0>
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO Bootstrap : Using bond0.2074:10.0.74.1<0>
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO Bootstrap : Using bond0.2074:10.0.74.1<0>
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO NET/Plugin : No plugin found (libnccl-net.so), using internal implementation
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO NET/Plugin : No plugin found (libnccl-net.so), using internal implementation
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO NET/Plugin : No plugin found (libnccl-net.so), using internal implementation
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO NET/IB : No device found.
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO NET/IB : No device found.
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO NET/IB : No device found.
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO NET/Socket : Using [0]bond0.2074:10.0.74.1<0> [1]lxcbr0:10.0.3.1<0> [2]bond0:fe80::c494:eeff:fe63:7b0c%bond0<0>
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO Using network Socket
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO NET/Socket : Using [0]bond0.2074:10.0.74.1<0> [1]lxcbr0:10.0.3.1<0> [2]bond0:fe80::c494:eeff:fe63:7b0c%bond0<0>
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO Using network Socket
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO NET/Socket : Using [0]bond0.2074:10.0.74.1<0> [1]lxcbr0:10.0.3.1<0> [2]bond0:fe80::c494:eeff:fe63:7b0c%bond0<0>
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO Using network Socket
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO Channel 00/02 :    0   1   2   3
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO Channel 01/02 :    0   1   2   3
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO Trees [0] 3/-1/-1->2->1 [1] 3/-1/-1->2->1
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO Setting affinity for GPU 2 to fff0,00fff000
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO Trees [0] 2/-1/-1->1->0 [1] 2/-1/-1->1->0
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO Setting affinity for GPU 1 to 0f,ff000fff
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO Trees [0] -1/-1/-1->3->2 [1] -1/-1/-1->3->2
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO Setting affinity for GPU 3 to fff0,00fff000
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO Setting affinity for GPU 0 to 0f,ff000fff
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO Channel 00 : 2[86000] -> 3[af000] via direct shared memory
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO Channel 00 : 3[af000] -> 0[18000] via direct shared memory
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO Channel 00 : 1[3b000] -> 2[86000] via direct shared memory
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO Channel 01 : 2[86000] -> 3[af000] via direct shared memory
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO Channel 01 : 3[af000] -> 0[18000] via direct shared memory
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO Channel 01 : 1[3b000] -> 2[86000] via direct shared memory
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO Channel 00 : 0[18000] -> 1[3b000] via direct shared memory
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO Channel 01 : 0[18000] -> 1[3b000] via direct shared memory
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO Connected all rings
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO Connected all rings
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO Connected all rings
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO Connected all rings
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO Channel 00 : 3[af000] -> 2[86000] via direct shared memory
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO Channel 01 : 3[af000] -> 2[86000] via direct shared memory
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO Channel 00 : 2[86000] -> 1[3b000] via direct shared memory
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO Channel 01 : 2[86000] -> 1[3b000] via direct shared memory
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO Channel 00 : 1[3b000] -> 0[18000] via direct shared memory
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO Channel 01 : 1[3b000] -> 0[18000] via direct shared memory
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO Connected all trees
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 8/8/512
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO 2 coll channels, 2 p2p channels, 2 p2p channels per peer
+op-arsenaldevk8s-gpu01:129499:129889 [3] NCCL INFO comm 0x7f6c7c34c310 rank 3 nranks 4 cudaDev 3 busId af000 - Init COMPLETE
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO Connected all trees
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 8/8/512
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO 2 coll channels, 2 p2p channels, 2 p2p channels per peer
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO comm 0x7fe4a437e630 rank 0 nranks 4 cudaDev 0 busId 18000 - Init COMPLETE
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO Connected all trees
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 8/8/512
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO 2 coll channels, 2 p2p channels, 2 p2p channels per peer
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO Connected all trees
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 8/8/512
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO 2 coll channels, 2 p2p channels, 2 p2p channels per peer
+op-arsenaldevk8s-gpu01:129498:129891 [2] NCCL INFO comm 0x7fbfec34d980 rank 2 nranks 4 cudaDev 2 busId 86000 - Init COMPLETE
+op-arsenaldevk8s-gpu01:129497:129890 [1] NCCL INFO comm 0x7f5c8c34dce0 rank 1 nranks 4 cudaDev 1 busId 3b000 - Init COMPLETE
+op-arsenaldevk8s-gpu01:129496:129888 [0] NCCL INFO Launch mode Parallel
+I0615 13:12:33.294680 140627418781504 module.py:105] Step: 200 Lr 0.000180741 Loss scale 2048
+I0615 13:12:33.294907 140627418781504 module.py:106] Train Step: 200/1000 / time=199.640 sec  loss=1.872015  end_positions_loss=1.856910  start_positions_loss=1.887142
+I0615 13:12:33.294987 140627418781504 module.py:107] Perf 160.26 samples/s
+I0615 13:13:54.018793 140627418781504 module.py:105] Step: 400 Lr 0.000138201 Loss scale 1024
+I0615 13:13:54.019003 140627418781504 module.py:106] Train Step: 400/1000 / time=80.716 sec  loss=1.477980  end_positions_loss=1.462374  start_positions_loss=1.493590
+I0615 13:13:54.019082 140627418781504 module.py:107] Perf 396.40 samples/s
+I0615 13:15:14.728281 140627418781504 module.py:105] Step: 600 Lr 9.56614e-05 Loss scale 512
+I0615 13:15:14.728490 140627418781504 module.py:106] Train Step: 600/1000 / time=80.701 sec  loss=1.295847  end_positions_loss=1.268970  start_positions_loss=1.322737
+I0615 13:15:14.728579 140627418781504 module.py:107] Perf 396.48 samples/s
+I0615 13:16:35.556450 140627418781504 module.py:105] Step: 800 Lr 5.31217e-05 Loss scale 512
+I0615 13:16:35.556670 140627418781504 module.py:106] Train Step: 800/1000 / time=80.820 sec  loss=1.215989  end_positions_loss=1.184719  start_positions_loss=1.247269
+I0615 13:16:35.556750 140627418781504 module.py:107] Perf 395.90 samples/s
+I0615 13:18:00.314289 140627418781504 module.py:41] Saved checkpoint to /tmp/bert_train_benchmark_230615130858/ckpt/ckpt-1000
+I0615 13:18:00.324019 140627418781504 module.py:105] Step: 1000 Lr 1.0582e-05 Loss scale 512
+I0615 13:18:00.324193 140627418781504 module.py:106] Train Step: 1000/1000 / time=80.819 sec  loss=1.184956  end_positions_loss=1.144633  start_positions_loss=1.225284
+I0615 13:18:00.324290 140627418781504 module.py:107] Perf 377.51 samples/s
+I0615 13:18:00.325561 140627418781504 module.py:233] save pb model to:/tmp/bert_train_benchmark_230615130858/pb/model/
+W0615 13:18:23.752067 140627418781504 save.py:233] Found untraced functions such as self_attention_layer_call_fn, self_attention_layer_call_and_return_conditional_losses, self_attention_output_layer_call_fn, self_attention_output_layer_call_and_return_conditional_losses, dropout_1_layer_call_fn while saving (showing 5 of 336). These functions will not be directly callable after loading.
+INFO:tensorflow:Assets written to: /tmp/bert_train_benchmark_230615130858/pb/model/assets
+I0615 13:18:31.535251 140627418781504 builder_impl.py:779] Assets written to: /tmp/bert_train_benchmark_230615130858/pb/model/assets
+I0615 13:18:32.799760 140627418781504 module.py:239] save pb model done at: /tmp/bert_train_benchmark_230615130858/pb/model/. spend 32.474s
+I0615 13:18:33.541321 140627418781504 module.py:41] Saved checkpoint to /tmp/bert_train_benchmark_230615130858/sub_ckpt/ckpt-2
+I0615 13:18:33.542651 140627418781504 base_trainer.py:92] Training Summary: 
+{'total_training_steps': 1000, 'train_loss': 1.1849560737609863}
+I0615 13:18:33.543596 140627418781504 base_trainer.py:747] -----------------------------
+I0615 13:18:33.543714 140627418781504 base_trainer.py:748]   Batch size = 8
+I0615 13:18:33.543792 140627418781504 base_trainer.py:749]   Num steps = 1000
+I0615 13:18:33.544144 140627418781504 base_trainer.py:750]   LR = 5e-05
+I0615 13:18:33.544220 140627418781504 base_trainer.py:752] Multi-GPU training with TF Horovod
+I0615 13:18:33.544306 140627418781504 base_trainer.py:753] hvd.size() = 4
+I0615 13:18:33.544375 140627418781504 base_trainer.py:754] Total Training Time = 526.68 for Examples = 160000
+I0615 13:18:33.544444 140627418781504 base_trainer.py:755] Throughput Average (examples/sec) with overhead = 303.78
+I0615 13:18:33.544652 140627418781504 base_trainer.py:757] Throughput Average (examples/sec) = 389.97
+I0615 13:18:33.544721 140627418781504 base_trainer.py:758] -----------------------------
+DLL 2023-06-15 13:18:33.544781 -  throughput_train : 389.965 sequences/s
+DLL 2023-06-15 13:18:33.544878 -  total_loss : 1.1850 

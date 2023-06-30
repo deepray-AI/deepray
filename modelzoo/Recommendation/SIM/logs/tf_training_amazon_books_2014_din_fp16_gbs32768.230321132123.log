@@ -1,0 +1,335 @@
+I0321 13:21:30.616142 139718205667136 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+I0321 13:21:30.626305 140557809956672 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+I0321 13:21:30.630159 139718205667136 feature_map.py:35] File not exists: /workspaces/Deepray2/business/data/feature_map.csv
+2023-03-21 13:21:30.633500: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+I0321 13:21:30.642315 140557809956672 feature_map.py:35] File not exists: /workspaces/Deepray2/business/data/feature_map.csv
+I0321 13:21:30.643014 140462243014464 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+2023-03-21 13:21:30.646238: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+I0321 13:21:30.651499 140050662381376 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+I0321 13:21:30.659368 140462243014464 feature_map.py:35] File not exists: /workspaces/Deepray2/business/data/feature_map.csv
+2023-03-21 13:21:30.662166: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+I0321 13:21:30.667784 140050662381376 feature_map.py:35] File not exists: /workspaces/Deepray2/business/data/feature_map.csv
+2023-03-21 13:21:30.670872: I tensorflow/core/platform/cpu_feature_guard.cc:193] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  AVX2 AVX512F FMA
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2023-03-21 13:21:31.883052: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 10515 MB memory:  -> device: 0, name: NVIDIA TITAN V, pci bus id: 0000:18:00.0, compute capability: 7.0
+I0321 13:21:31.932158 139718205667136 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+I0321 13:21:31.932431 139718205667136 base_trainer.py:262]  20230321 13:21:31 Initialize training
+I0321 13:21:31.932526 139718205667136 base_trainer.py:264] 	tf.app.flags.FLAGS:
+I0321 13:21:31.932827 139718205667136 base_trainer.py:266] 	?                        = False
+I0321 13:21:31.932905 139718205667136 base_trainer.py:266] 	alsologtostderr          = False
+I0321 13:21:31.932986 139718205667136 base_trainer.py:266] 	aux_mlp_dims             = ['100', '50']
+I0321 13:21:31.933062 139718205667136 base_trainer.py:266] 	batch_size               = 8192
+I0321 13:21:31.933135 139718205667136 base_trainer.py:266] 	bds                      = test_benchmark
+I0321 13:21:31.933208 139718205667136 base_trainer.py:266] 	benchmark                = True
+I0321 13:21:31.933283 139718205667136 base_trainer.py:266] 	benchmark_log_dir        = None
+I0321 13:21:31.933355 139718205667136 base_trainer.py:266] 	benchmark_logger_type    = BaseBenchmarkLogger
+I0321 13:21:31.933428 139718205667136 base_trainer.py:266] 	benchmark_test_id        = None
+I0321 13:21:31.933501 139718205667136 base_trainer.py:266] 	bert_config_file         = None
+I0321 13:21:31.933573 139718205667136 base_trainer.py:266] 	bigquery_data_set        = test_benchmark
+I0321 13:21:31.933645 139718205667136 base_trainer.py:266] 	bigquery_metric_table    = benchmark_metric
+I0321 13:21:31.933717 139718205667136 base_trainer.py:266] 	bigquery_run_status_table= benchmark_run_status
+I0321 13:21:31.933789 139718205667136 base_trainer.py:266] 	bigquery_run_table       = benchmark_run
+I0321 13:21:31.933862 139718205667136 base_trainer.py:266] 	black_list               = None
+I0321 13:21:31.933935 139718205667136 base_trainer.py:266] 	bld                      = None
+I0321 13:21:31.934008 139718205667136 base_trainer.py:266] 	bmt                      = benchmark_metric
+I0321 13:21:31.934080 139718205667136 base_trainer.py:266] 	brst                     = benchmark_run_status
+I0321 13:21:31.934152 139718205667136 base_trainer.py:266] 	brt                      = benchmark_run
+I0321 13:21:31.934224 139718205667136 base_trainer.py:266] 	bs                       = 8192
+I0321 13:21:31.934297 139718205667136 base_trainer.py:266] 	bti                      = None
+I0321 13:21:31.934369 139718205667136 base_trainer.py:266] 	clean                    = False
+I0321 13:21:31.934442 139718205667136 base_trainer.py:266] 	conf_file                = /workspaces/Deepray2/conf/dp.yaml
+I0321 13:21:31.934513 139718205667136 base_trainer.py:266] 	d                        = 2023-03-20
+I0321 13:21:31.934585 139718205667136 base_trainer.py:266] 	data_dir                 = /tmp/movielens-data/
+I0321 13:21:31.934658 139718205667136 base_trainer.py:266] 	dataset                  = None
+I0321 13:21:31.934731 139718205667136 base_trainer.py:266] 	date                     = 2023-03-20
+I0321 13:21:31.934803 139718205667136 base_trainer.py:266] 	distribution_strategy    = mirrored
+I0321 13:21:31.934875 139718205667136 base_trainer.py:266] 	dllog_path               = deepray_dllogger.json
+I0321 13:21:31.934948 139718205667136 base_trainer.py:266] 	do_lower_case            = True
+I0321 13:21:31.935021 139718205667136 base_trainer.py:266] 	download_if_missing      = True
+I0321 13:21:31.935098 139718205667136 base_trainer.py:266] 	dropout_rate             = -1.0
+I0321 13:21:31.935170 139718205667136 base_trainer.py:266] 	ds                       = mirrored
+I0321 13:21:31.935242 139718205667136 base_trainer.py:266] 	dt                       = fp32
+I0321 13:21:31.935314 139718205667136 base_trainer.py:266] 	dtype                    = fp32
+I0321 13:21:31.935387 139718205667136 base_trainer.py:266] 	e                        = None
+I0321 13:21:31.935459 139718205667136 base_trainer.py:266] 	embedding_dim            = 16
+I0321 13:21:31.935532 139718205667136 base_trainer.py:266] 	enable_xla               = True
+I0321 13:21:31.935604 139718205667136 base_trainer.py:266] 	end_date                 = None
+I0321 13:21:31.935676 139718205667136 base_trainer.py:266] 	epochs                   = 3
+I0321 13:21:31.935749 139718205667136 base_trainer.py:266] 	eval_batch_size          = None
+I0321 13:21:31.935822 139718205667136 base_trainer.py:266] 	eval_script              = None
+I0321 13:21:31.935894 139718205667136 base_trainer.py:266] 	feature_map              = /workspaces/Deepray2/business/data/feature_map.csv
+I0321 13:21:31.935967 139718205667136 base_trainer.py:266] 	fine_tune                = None
+I0321 13:21:31.936040 139718205667136 base_trainer.py:266] 	fp16_implementation      = keras
+I0321 13:21:31.936113 139718205667136 base_trainer.py:266] 	gcp_project              = None
+I0321 13:21:31.936185 139718205667136 base_trainer.py:266] 	gp                       = None
+I0321 13:21:31.936264 139718205667136 base_trainer.py:266] 	h                        = False
+I0321 13:21:31.936339 139718205667136 base_trainer.py:266] 	hbm_oom_exit             = True
+I0321 13:21:31.936411 139718205667136 base_trainer.py:266] 	help                     = False
+I0321 13:21:31.936484 139718205667136 base_trainer.py:266] 	helpfull                 = False
+I0321 13:21:31.936557 139718205667136 base_trainer.py:266] 	helpshort                = False
+I0321 13:21:31.936629 139718205667136 base_trainer.py:266] 	helpxml                  = False
+I0321 13:21:31.936702 139718205667136 base_trainer.py:266] 	hub_module_url           = None
+I0321 13:21:31.936775 139718205667136 base_trainer.py:266] 	init_checkpoint          = 
+I0321 13:21:31.936847 139718205667136 base_trainer.py:266] 	init_weights             = 
+I0321 13:21:31.936920 139718205667136 base_trainer.py:266] 	input_meta_data_path     = None
+I0321 13:21:31.936992 139718205667136 base_trainer.py:266] 	interleave_block         = 2
+I0321 13:21:31.937065 139718205667136 base_trainer.py:266] 	interleave_cycle         = 16
+I0321 13:21:31.937137 139718205667136 base_trainer.py:266] 	keras_use_ctl            = True
+I0321 13:21:31.937212 139718205667136 base_trainer.py:266] 	label                    = ['click', 'play']
+I0321 13:21:31.937288 139718205667136 base_trainer.py:266] 	learning_rate            = 0.01
+I0321 13:21:31.937359 139718205667136 base_trainer.py:266] 	log_dir                  = 
+I0321 13:21:31.937432 139718205667136 base_trainer.py:266] 	log_steps                = 100
+I0321 13:21:31.937505 139718205667136 base_trainer.py:266] 	logger_levels            = {}
+I0321 13:21:31.937577 139718205667136 base_trainer.py:266] 	logtostderr              = False
+I0321 13:21:31.937649 139718205667136 base_trainer.py:266] 	loss_scale               = None
+I0321 13:21:31.937722 139718205667136 base_trainer.py:266] 	ls                       = None
+I0321 13:21:31.937794 139718205667136 base_trainer.py:266] 	max_answer_length        = 30
+I0321 13:21:31.937866 139718205667136 base_trainer.py:266] 	max_seq_length           = 90
+I0321 13:21:31.937938 139718205667136 base_trainer.py:266] 	md                       = /results/tf_training_amazon_books_2014_din_fp16_gbs32768_230321132123
+I0321 13:21:31.938010 139718205667136 base_trainer.py:266] 	mode                     = train_and_predict
+I0321 13:21:31.938083 139718205667136 base_trainer.py:266] 	model_dir                = /results/tf_training_amazon_books_2014_din_fp16_gbs32768_230321132123
+I0321 13:21:31.938156 139718205667136 base_trainer.py:266] 	model_export_path        = /results/tf_training_amazon_books_2014_din_fp16_gbs32768_230321132123
+I0321 13:21:31.938228 139718205667136 base_trainer.py:266] 	model_type               = bert
+I0321 13:21:31.938300 139718205667136 base_trainer.py:266] 	n_best_size              = 20
+I0321 13:21:31.938374 139718205667136 base_trainer.py:266] 	neg_sample_rate          = 0.0
+I0321 13:21:31.938446 139718205667136 base_trainer.py:266] 	ng                       = 4
+I0321 13:21:31.938518 139718205667136 base_trainer.py:266] 	num_accumulation_steps   = 1
+I0321 13:21:31.938591 139718205667136 base_trainer.py:266] 	num_gpus                 = 4
+I0321 13:21:31.938663 139718205667136 base_trainer.py:266] 	num_train_examples       = 11932672
+I0321 13:21:31.938736 139718205667136 base_trainer.py:266] 	only_check_args          = False
+I0321 13:21:31.938808 139718205667136 base_trainer.py:266] 	op_conversion_fallback_to_while_loop= True
+I0321 13:21:31.938880 139718205667136 base_trainer.py:266] 	optimizer_type           = adam
+I0321 13:21:31.938953 139718205667136 base_trainer.py:266] 	parallel_parse           = None
+I0321 13:21:31.939025 139718205667136 base_trainer.py:266] 	parallel_reads_per_file  = None
+I0321 13:21:31.939098 139718205667136 base_trainer.py:266] 	pdb                      = False
+I0321 13:21:31.939171 139718205667136 base_trainer.py:266] 	pdb_post_mortem          = False
+I0321 13:21:31.939243 139718205667136 base_trainer.py:266] 	prebatch                 = 5
+I0321 13:21:31.939315 139718205667136 base_trainer.py:266] 	predict_batch_size       = 8
+I0321 13:21:31.939388 139718205667136 base_trainer.py:266] 	predict_file             = None
+I0321 13:21:31.939460 139718205667136 base_trainer.py:266] 	prefetch_buffer          = 16
+I0321 13:21:31.939532 139718205667136 base_trainer.py:266] 	profile_file             = None
+I0321 13:21:31.939604 139718205667136 base_trainer.py:266] 	r                        = None
+I0321 13:21:31.939677 139718205667136 base_trainer.py:266] 	random_seed              = 12345
+I0321 13:21:31.939749 139718205667136 base_trainer.py:266] 	restore_date             = None
+I0321 13:21:31.939821 139718205667136 base_trainer.py:266] 	run_eagerly              = False
+I0321 13:21:31.939893 139718205667136 base_trainer.py:266] 	run_with_pdb             = False
+I0321 13:21:31.939966 139718205667136 base_trainer.py:266] 	run_with_profiling       = False
+I0321 13:21:31.940038 139718205667136 base_trainer.py:266] 	runtime_oom_exit         = True
+I0321 13:21:31.940111 139718205667136 base_trainer.py:266] 	s                        = None
+I0321 13:21:31.940184 139718205667136 base_trainer.py:266] 	save_checkpoint_steps    = 1000
+I0321 13:21:31.940263 139718205667136 base_trainer.py:266] 	scale_loss               = False
+I0321 13:21:31.940336 139718205667136 base_trainer.py:266] 	showprefixforinfo        = True
+I0321 13:21:31.940409 139718205667136 base_trainer.py:266] 	shuffle_buffer           = None
+I0321 13:21:31.940483 139718205667136 base_trainer.py:266] 	stage_one_mlp_dims       = ['200']
+I0321 13:21:31.940556 139718205667136 base_trainer.py:266] 	stage_two_mlp_dims       = ['200', '80']
+I0321 13:21:31.940629 139718205667136 base_trainer.py:266] 	start_date               = None
+I0321 13:21:31.940701 139718205667136 base_trainer.py:266] 	stderrthreshold          = fatal
+I0321 13:21:31.940773 139718205667136 base_trainer.py:266] 	steps_per_summary        = 100
+I0321 13:21:31.940846 139718205667136 base_trainer.py:266] 	task_index               = -1
+I0321 13:21:31.940918 139718205667136 base_trainer.py:266] 	te                       = 3
+I0321 13:21:31.940990 139718205667136 base_trainer.py:266] 	test_random_seed         = 301
+I0321 13:21:31.941062 139718205667136 base_trainer.py:266] 	test_randomize_ordering_seed= 
+I0321 13:21:31.941135 139718205667136 base_trainer.py:266] 	test_srcdir              = 
+I0321 13:21:31.941207 139718205667136 base_trainer.py:266] 	test_tmpdir              = /tmp/absl_testing
+I0321 13:21:31.941279 139718205667136 base_trainer.py:266] 	train_data               = /workspaces/dataset/amazon_books_2014/tfrecord_path/
+I0321 13:21:31.941352 139718205667136 base_trainer.py:266] 	use_cprofile_for_profiling= True
+I0321 13:21:31.941425 139718205667136 base_trainer.py:266] 	use_dynamic_embedding    = False
+I0321 13:21:31.941498 139718205667136 base_trainer.py:266] 	use_fp16                 = True
+I0321 13:21:31.941569 139718205667136 base_trainer.py:266] 	use_horovod              = True
+I0321 13:21:31.941642 139718205667136 base_trainer.py:266] 	v                        = 0
+I0321 13:21:31.941714 139718205667136 base_trainer.py:266] 	verbose_logging          = False
+I0321 13:21:31.941786 139718205667136 base_trainer.py:266] 	verbosity                = 0
+I0321 13:21:31.941858 139718205667136 base_trainer.py:266] 	vocab_file               = None
+I0321 13:21:31.941931 139718205667136 base_trainer.py:266] 	warmup_path              = None
+I0321 13:21:31.942003 139718205667136 base_trainer.py:266] 	white_list               = None
+I0321 13:21:31.942075 139718205667136 base_trainer.py:266] 	worker_hosts             = None
+I0321 13:21:31.942147 139718205667136 base_trainer.py:266] 	xml_output_file          = 
+decayed_learning_rate_at_crossover_point = 3.856000e-02, adjusted_init_lr = 4.149378e-02
+2023-03-21 13:21:32.014830: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 10515 MB memory:  -> device: 3, name: NVIDIA TITAN V, pci bus id: 0000:af:00.0, compute capability: 7.0
+I0321 13:21:32.062433 140462243014464 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+decayed_learning_rate_at_crossover_point = 3.856000e-02, adjusted_init_lr = 4.149378e-02
+2023-03-21 13:21:32.073116: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 10515 MB memory:  -> device: 2, name: NVIDIA TITAN V, pci bus id: 0000:86:00.0, compute capability: 7.0
+2023-03-21 13:21:32.114949: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 10515 MB memory:  -> device: 1, name: NVIDIA TITAN V, pci bus id: 0000:3b:00.0, compute capability: 7.0
+I0321 13:21:32.122370 140050662381376 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+decayed_learning_rate_at_crossover_point = 3.856000e-02, adjusted_init_lr = 4.149378e-02
+I0321 13:21:32.162607 140557809956672 distribution_utils.py:137] Run horovod and turn off distribution strategy.
+decayed_learning_rate_at_crossover_point = 3.856000e-02, adjusted_init_lr = 4.149378e-02
+2023-03-21 13:21:32.478128: W tensorflow/compiler/jit/mark_for_compilation_pass.cc:1750] (One-time warning): Not using XLA:CPU for cluster.
+
+If you want XLA:CPU, do one of the following:
+
+ - set the TF_XLA_FLAGS to include "--tf_xla_cpu_global_jit", or
+ - set cpu_global_jit to true on this session's OptimizerOptions, or
+ - use experimental_jit_scope, or
+ - use tf.function(jit_compile=True).
+
+To confirm that XLA is active, pass --vmodule=xla_compilation_cache=1 (as a
+proper command-line flag, not via TF_XLA_FLAGS).
+2023-03-21 13:21:32.585277: W tensorflow/compiler/jit/mark_for_compilation_pass.cc:1750] (One-time warning): Not using XLA:CPU for cluster.
+
+If you want XLA:CPU, do one of the following:
+
+ - set the TF_XLA_FLAGS to include "--tf_xla_cpu_global_jit", or
+ - set cpu_global_jit to true on this session's OptimizerOptions, or
+ - use experimental_jit_scope, or
+ - use tf.function(jit_compile=True).
+
+To confirm that XLA is active, pass --vmodule=xla_compilation_cache=1 (as a
+proper command-line flag, not via TF_XLA_FLAGS).
+2023-03-21 13:21:32.680714: W tensorflow/compiler/jit/mark_for_compilation_pass.cc:1750] (One-time warning): Not using XLA:CPU for cluster.
+
+If you want XLA:CPU, do one of the following:
+
+ - set the TF_XLA_FLAGS to include "--tf_xla_cpu_global_jit", or
+ - set cpu_global_jit to true on this session's OptimizerOptions, or
+ - use experimental_jit_scope, or
+ - use tf.function(jit_compile=True).
+
+To confirm that XLA is active, pass --vmodule=xla_compilation_cache=1 (as a
+proper command-line flag, not via TF_XLA_FLAGS).
+2023-03-21 13:21:32.682377: W tensorflow/compiler/jit/mark_for_compilation_pass.cc:1750] (One-time warning): Not using XLA:CPU for cluster.
+
+If you want XLA:CPU, do one of the following:
+
+ - set the TF_XLA_FLAGS to include "--tf_xla_cpu_global_jit", or
+ - set cpu_global_jit to true on this session's OptimizerOptions, or
+ - use experimental_jit_scope, or
+ - use tf.function(jit_compile=True).
+
+To confirm that XLA is active, pass --vmodule=xla_compilation_cache=1 (as a
+proper command-line flag, not via TF_XLA_FLAGS).
+2023-03-21 13:21:45.866144: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f0fe153aac0 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2023-03-21 13:21:45.866194: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA TITAN V, Compute Capability 7.0
+2023-03-21 13:21:45.956655: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2023-03-21 13:21:46.143644: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7fbd2551be40 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2023-03-21 13:21:46.143699: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA TITAN V, Compute Capability 7.0
+2023-03-21 13:21:46.199750: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7fd34c02f130 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2023-03-21 13:21:46.199804: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA TITAN V, Compute Capability 7.0
+2023-03-21 13:21:46.235280: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2023-03-21 13:21:46.293454: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2023-03-21 13:21:46.381630: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f5d415389c0 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2023-03-21 13:21:46.381690: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA TITAN V, Compute Capability 7.0
+2023-03-21 13:21:46.473294: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2023-03-21 13:21:49.383641: I tensorflow/compiler/jit/xla_compilation_cache.cc:478] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2023-03-21 13:21:49.636295: I tensorflow/compiler/jit/xla_compilation_cache.cc:478] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2023-03-21 13:21:49.676673: I tensorflow/compiler/jit/xla_compilation_cache.cc:478] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2023-03-21 13:21:49.832453: I tensorflow/compiler/jit/xla_compilation_cache.cc:478] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO Bootstrap : Using bond0.2074:10.0.74.1<0>
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO NET/Plugin : No plugin found (libnccl-net.so), using internal implementation
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO NET/IB : No device found.
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO NET/Socket : Using [0]bond0.2074:10.0.74.1<0> [1]lxcbr0:10.0.3.1<0> [2]bond0:fe80::c494:eeff:fe63:7b0c%bond0<0>
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO Using network Socket
+NCCL version 2.9.9+cuda11.3
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO Bootstrap : Using bond0.2074:10.0.74.1<0>
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO Bootstrap : Using bond0.2074:10.0.74.1<0>
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO Bootstrap : Using bond0.2074:10.0.74.1<0>
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO NET/Plugin : No plugin found (libnccl-net.so), using internal implementation
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO NET/Plugin : No plugin found (libnccl-net.so), using internal implementation
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO NET/Plugin : No plugin found (libnccl-net.so), using internal implementation
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO NET/IB : No device found.
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO NET/IB : No device found.
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO NET/IB : No device found.
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO NET/Socket : Using [0]bond0.2074:10.0.74.1<0> [1]lxcbr0:10.0.3.1<0> [2]bond0:fe80::c494:eeff:fe63:7b0c%bond0<0>
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO Using network Socket
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO NET/Socket : Using [0]bond0.2074:10.0.74.1<0> [1]lxcbr0:10.0.3.1<0> [2]bond0:fe80::c494:eeff:fe63:7b0c%bond0<0>
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO Using network Socket
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO NET/Socket : Using [0]bond0.2074:10.0.74.1<0> [1]lxcbr0:10.0.3.1<0> [2]bond0:fe80::c494:eeff:fe63:7b0c%bond0<0>
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO Using network Socket
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO Channel 00/02 :    0   1   2   3
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO Channel 01/02 :    0   1   2   3
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO Trees [0] 3/-1/-1->2->1 [1] 3/-1/-1->2->1
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO Setting affinity for GPU 2 to fff0,00fff000
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO Trees [0] 2/-1/-1->1->0 [1] 2/-1/-1->1->0
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO Setting affinity for GPU 1 to 0f,ff000fff
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO Trees [0] -1/-1/-1->3->2 [1] -1/-1/-1->3->2
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO Setting affinity for GPU 3 to fff0,00fff000
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO Setting affinity for GPU 0 to 0f,ff000fff
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO Channel 00 : 2[86000] -> 3[af000] via direct shared memory
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO Channel 00 : 3[af000] -> 0[18000] via direct shared memory
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO Channel 01 : 2[86000] -> 3[af000] via direct shared memory
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO Channel 00 : 0[18000] -> 1[3b000] via direct shared memory
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO Channel 00 : 1[3b000] -> 2[86000] via direct shared memory
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO Channel 01 : 3[af000] -> 0[18000] via direct shared memory
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO Channel 01 : 0[18000] -> 1[3b000] via direct shared memory
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO Channel 01 : 1[3b000] -> 2[86000] via direct shared memory
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO Connected all rings
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO Connected all rings
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO Connected all rings
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO Connected all rings
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO Channel 00 : 3[af000] -> 2[86000] via direct shared memory
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO Channel 01 : 3[af000] -> 2[86000] via direct shared memory
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO Channel 00 : 2[86000] -> 1[3b000] via direct shared memory
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO Channel 00 : 1[3b000] -> 0[18000] via direct shared memory
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO Channel 01 : 2[86000] -> 1[3b000] via direct shared memory
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO Channel 01 : 1[3b000] -> 0[18000] via direct shared memory
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO Connected all trees
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 8/8/512
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO 2 coll channels, 2 p2p channels, 2 p2p channels per peer
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO comm 0x7f114d346540 rank 0 nranks 4 cudaDev 0 busId 18000 - Init COMPLETE
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO Connected all trees
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 8/8/512
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO 2 coll channels, 2 p2p channels, 2 p2p channels per peer
+op-arsenaldevk8s-gpu01:193949:194336 [3] NCCL INFO comm 0x7fbe3d344040 rank 3 nranks 4 cudaDev 3 busId af000 - Init COMPLETE
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO Connected all trees
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 8/8/512
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO 2 coll channels, 2 p2p channels, 2 p2p channels per peer
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO Connected all trees
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO threadThresholds 8/8/64 | 32/8/64 | 8/8/512
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO 2 coll channels, 2 p2p channels, 2 p2p channels per peer
+op-arsenaldevk8s-gpu01:193948:194335 [2] NCCL INFO comm 0x7f5e65344540 rank 2 nranks 4 cudaDev 2 busId 86000 - Init COMPLETE
+op-arsenaldevk8s-gpu01:193947:194334 [1] NCCL INFO comm 0x7fd47d344070 rank 1 nranks 4 cudaDev 1 busId 3b000 - Init COMPLETE
+op-arsenaldevk8s-gpu01:193946:194337 [0] NCCL INFO Launch mode Parallel
+I0321 13:22:15.968615 139718205667136 base_trainer.py:769] Step: 100 Lr 0.0388382 Loss scale 32768
+I0321 13:22:15.968821 139718205667136 base_trainer.py:770] Train Step: 100/1000 / time=43.428 sec  auc_accumulator=0.701326  loss=0.613848
+I0321 13:22:15.968903 139718205667136 base_trainer.py:771] Perf 75254.11 samples/s
+I0321 13:22:46.266762 139718205667136 base_trainer.py:769] Step: 200 Lr 0.0346888 Loss scale 32768
+I0321 13:22:46.267004 139718205667136 base_trainer.py:770] Train Step: 200/1000 / time=30.289 sec  auc_accumulator=0.833041  loss=0.494846
+I0321 13:22:46.267101 139718205667136 base_trainer.py:771] Perf 108146.74 samples/s
+I0321 13:23:16.497394 139718205667136 base_trainer.py:769] Step: 300 Lr 0.0305394 Loss scale 32768
+I0321 13:23:16.497630 139718205667136 base_trainer.py:770] Train Step: 300/1000 / time=30.221 sec  auc_accumulator=0.850623  loss=0.470767
+I0321 13:23:16.497710 139718205667136 base_trainer.py:771] Perf 108392.90 samples/s
+I0321 13:23:46.613125 139718205667136 base_trainer.py:769] Step: 400 Lr 0.02639 Loss scale 16384
+I0321 13:23:46.613337 139718205667136 base_trainer.py:770] Train Step: 400/1000 / time=30.106 sec  auc_accumulator=0.864683  loss=0.451969
+I0321 13:23:46.613420 139718205667136 base_trainer.py:771] Perf 108806.85 samples/s
+I0321 13:24:16.967655 139718205667136 base_trainer.py:769] Step: 500 Lr 0.0222407 Loss scale 4096
+I0321 13:24:16.967944 139718205667136 base_trainer.py:770] Train Step: 500/1000 / time=30.345 sec  auc_accumulator=0.878638  loss=0.445214
+I0321 13:24:16.968021 139718205667136 base_trainer.py:771] Perf 107950.48 samples/s
+I0321 13:24:47.397281 139718205667136 base_trainer.py:769] Step: 600 Lr 0.0180913 Loss scale 4096
+I0321 13:24:47.397494 139718205667136 base_trainer.py:770] Train Step: 600/1000 / time=30.420 sec  auc_accumulator=0.909223  loss=0.376240
+I0321 13:24:47.397583 139718205667136 base_trainer.py:771] Perf 107685.05 samples/s
+I0321 13:25:17.793329 139718205667136 base_trainer.py:769] Step: 700 Lr 0.0139419 Loss scale 4096
+I0321 13:25:17.793544 139718205667136 base_trainer.py:770] Train Step: 700/1000 / time=30.386 sec  auc_accumulator=0.920691  loss=0.353110
+I0321 13:25:17.793632 139718205667136 base_trainer.py:771] Perf 107803.67 samples/s
+I0321 13:25:47.871932 139718205667136 base_trainer.py:769] Step: 800 Lr 0.00979253 Loss scale 4096
+I0321 13:25:47.872143 139718205667136 base_trainer.py:770] Train Step: 800/1000 / time=30.069 sec  auc_accumulator=0.933193  loss=0.325430
+I0321 13:25:47.872229 139718205667136 base_trainer.py:771] Perf 108941.09 samples/s
+I0321 13:26:17.801509 139718205667136 base_trainer.py:769] Step: 900 Lr 0.00564315 Loss scale 4096
+I0321 13:26:17.801738 139718205667136 base_trainer.py:770] Train Step: 900/1000 / time=29.920 sec  auc_accumulator=0.932269  loss=0.328076
+I0321 13:26:17.801836 139718205667136 base_trainer.py:771] Perf 109484.26 samples/s
+2023-03-21 13:26:47.749801: W tensorflow/core/kernels/data/cache_dataset_ops.cc:856] The calling iterator did not fully read the dataset being cached. In order to avoid unexpected truncation of the dataset, the partially cached contents of the dataset  will be discarded. This can happen if you have an input pipeline similar to `dataset.cache().take(k).repeat()`. You should use `dataset.take(k).cache().repeat()` instead.
+2023-03-21 13:26:47.749859: W tensorflow/core/kernels/data/cache_dataset_ops.cc:856] The calling iterator did not fully read the dataset being cached. In order to avoid unexpected truncation of the dataset, the partially cached contents of the dataset  will be discarded. This can happen if you have an input pipeline similar to `dataset.cache().take(k).repeat()`. You should use `dataset.take(k).cache().repeat()` instead.
+2023-03-21 13:26:47.749932: W tensorflow/core/kernels/data/cache_dataset_ops.cc:856] The calling iterator did not fully read the dataset being cached. In order to avoid unexpected truncation of the dataset, the partially cached contents of the dataset  will be discarded. This can happen if you have an input pipeline similar to `dataset.cache().take(k).repeat()`. You should use `dataset.take(k).cache().repeat()` instead.
+I0321 13:26:48.455323 139718205667136 base_trainer.py:754] Saved checkpoint to /results/tf_training_amazon_books_2014_din_fp16_gbs32768_230321132123/ckpt-1
+I0321 13:26:48.465220 139718205667136 base_trainer.py:769] Step: 1000 Lr 0.00149378 Loss scale 4096
+I0321 13:26:48.465392 139718205667136 base_trainer.py:770] Train Step: 1000/1000 / time=29.946 sec  auc_accumulator=0.959570  loss=0.254894
+I0321 13:26:48.465480 139718205667136 base_trainer.py:771] Perf 106866.72 samples/s
+I0321 13:26:49.153756 139718205667136 base_trainer.py:101] Saving model as TF checkpoint: /results/tf_training_amazon_books_2014_din_fp16_gbs32768_230321132123/ctl_step_1000.ckpt-2
+I0321 13:26:49.158493 139718205667136 base_trainer.py:127] Training Summary: 
+{'total_training_steps': 1000, 'train_loss': 0.25489380955696106, 'last_auc_accumulator': 0.9595704674720764}
+I0321 13:26:49.159542 139718205667136 base_trainer.py:830] -----------------------------
+I0321 13:26:49.159677 139718205667136 base_trainer.py:831]   Batch size = 8192
+I0321 13:26:49.159765 139718205667136 base_trainer.py:832]   Num steps = 1000
+I0321 13:26:49.159843 139718205667136 base_trainer.py:833]   LR = 0.01
+I0321 13:26:49.159923 139718205667136 base_trainer.py:835] Multi-GPU training with TF Horovod
+I0321 13:26:49.160011 139718205667136 base_trainer.py:836] hvd.size() = 4
+I0321 13:26:49.160084 139718205667136 base_trainer.py:837] Total Training Time = 315.94 for Examples = 32768000
+I0321 13:26:49.160158 139718205667136 base_trainer.py:838] Throughput Average (examples/sec) with overhead = 103683.07
+I0321 13:26:49.160483 139718205667136 base_trainer.py:840] Throughput Average (examples/sec) = 108241.38
+I0321 13:26:49.160562 139718205667136 base_trainer.py:841] -----------------------------
+DLL 2023-03-21 13:26:49.160626 -  throughput_train : 108241.377 sequences/s
+DLL 2023-03-21 13:26:49.160736 -  total_loss : 0.2549 
+2023-03-21 13:26:49.160887: W tensorflow/core/kernels/data/cache_dataset_ops.cc:856] The calling iterator did not fully read the dataset being cached. In order to avoid unexpected truncation of the dataset, the partially cached contents of the dataset  will be discarded. This can happen if you have an input pipeline similar to `dataset.cache().take(k).repeat()`. You should use `dataset.take(k).cache().repeat()` instead.
