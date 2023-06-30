@@ -51,7 +51,7 @@ class EmbeddingTest(test_combinations.TestCase):
     with tf.GradientTape() as tape:
       output = l(inputs)
     gs = tape.gradient(output, l.weights)
-    opt = tf.compat.v1.train.AdagradOptimizer(0.1)
+    opt = tf.keras.optimizers.Adagrad(0.1)
     opt.apply_gradients(zip(gs, l.weights))
     self.assertAllEqual(len(gs), 1)
 
