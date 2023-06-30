@@ -24,7 +24,6 @@ from deepray.layers.adaptive_pooling import (
 )
 
 from deepray.layers.embedding_bag import EmbeddingBag
-from deepray.layers.gelu import GELU
 from deepray.layers.max_unpooling_2d import MaxUnpooling2D
 from deepray.layers.max_unpooling_2d_v2 import MaxUnpooling2DV2
 from deepray.layers.maxout import Maxout
