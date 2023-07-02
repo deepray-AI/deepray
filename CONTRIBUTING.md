@@ -26,17 +26,17 @@ review.
 
 ## Requirements for New Contributions to the Repository
 
-**All new components/features to Addons need to first be submitted as a feature 
+**All new components/features to Deepray need to first be submitted as a feature 
 request issue. This will allow the team to check with our counterparts in the TF
 ecosystem and ensure it is not roadmapped internally for Keras or TF core. These 
 feature requests will be labeled with `ecosystem-review` while we determine if it 
-should be included in Addons.**
+should be included in Deepray.**
 
 The tensorflow/deepray repository contains additional functionality
 fitting the following criteria:
 
 * The functionality is not otherwise available in TensorFlow
-* Addons have to be compatible with TensorFlow 2.x.
+* Deepray have to be compatible with TensorFlow 2.x.
 * The addon conforms to the code and documentation standards
 * The addon is impactful to the community (e.g. an implementation used
  in widely cited paper)
@@ -178,7 +178,7 @@ pip install tensorflow==2.12.0
 pip install -e ./
 ```
 
-It's going to install Addons in editable mode without compiling anything.
+It's going to install Deepray in editable mode without compiling anything.
 You can modify source files and changes will be seen at the next Python 
 interpreter startup. This command needs to be executed only once. 
 Now, anywhere on your system, if you do `import deepray`, it's 
@@ -379,7 +379,7 @@ context, see [this pull request](https://github.com/tensorflow/deepray/pull/928)
 You can import some common types 
 from [deepray/utils/types.py](deepray/utils/types.py).
 
-We recommend adding types if you add a new class/function to Addons' public API, 
+We recommend adding types if you add a new class/function to Deepray' public API, 
 but we don't enforce it.
 
 Since adding type hints can be hard, especially for people who are not

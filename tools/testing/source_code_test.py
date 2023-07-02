@@ -108,7 +108,7 @@ def test_no_private_tf_api():
           "A private tensorflow API import was found in {} at line {}.\n"
           "tensorflow.python refers to TensorFlow's internal source "
           "code and private functions/classes.\n"
-          "The use of those is forbidden in Addons for stability reasons."
+          "The use of those is forbidden in Deepray for stability reasons."
           "\nYou should find a public alternative or ask the "
           "TensorFlow team to expose publicly the function/class "
           "that you are using.\n"

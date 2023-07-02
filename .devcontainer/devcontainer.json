@@ -1,5 +1,5 @@
 {
-	"name": "Tensorflow Addons SIG Dev Container",
+	"name": "Tensorflow Deepray SIG Dev Container",
 	// Uncomment this for GPU image
 	// "build": { 
 	// 		"args": { 

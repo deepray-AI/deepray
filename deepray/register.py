@@ -9,7 +9,7 @@ from deepray.utils.resource_loader import get_path_to_datafile
 def register_all(keras_objects: bool = True, custom_kernels: bool = True) -> None:
   """Register Deepray' objects in TensorFlow global dictionaries.
 
-    When loading a Keras model that has a TF Addons' function, it is needed
+    When loading a Keras model that has a TF Deepray' function, it is needed
     for this function to be known by the Keras deserialization process.
 
     There are two ways to do this, either do
@@ -53,13 +53,13 @@ def register_all(keras_objects: bool = True, custom_kernels: bool = True) -> Non
             Keras objects
             with `tf.keras.utils.register_keras_serializable(package="Deepray")`
             If set to False, doesn't register any Keras objects
-            of Addons in TensorFlow.
+            of Deepray in TensorFlow.
         custom_kernels: boolean, `True` by default. If `True`, loads all
             custom kernels of Deepray with
             `tf.load_op_library("path/to/so/file.so")`. Loading the SO files
             register them automatically. If `False` doesn't load and register
             the shared objects files. Not that it might be useful to turn it off
-            if your installation of Addons doesn't work well with custom ops.
+            if your installation of Deepray doesn't work well with custom ops.
     Returns:
         None
     """
@@ -82,7 +82,7 @@ def register_custom_kernels() -> None:
   if not all_shared_objects:
     raise FileNotFoundError(
         "No shared objects files were found in the custom ops "
-        "directory in Tensorflow Addons, check your installation again, "
+        "directory in Tensorflow Deepray, check your installation again, "
         "or, if you don't need custom ops, call `dp.register_all(custom_kernels=False)`"
         " instead."
     )

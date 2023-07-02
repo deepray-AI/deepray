@@ -174,7 +174,7 @@ def adjust_hsv_in_yiq(
 
     if not options.is_custom_kernel_disabled():
       warnings.warn(
-          "C++/CUDA kernel of `adjust_hsv_in_yiq` will be removed in Addons `0.13`.",
+          "C++/CUDA kernel of `adjust_hsv_in_yiq` will be removed in Deepray `0.13`.",
           DeprecationWarning,
       )
       try:

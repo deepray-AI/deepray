@@ -98,7 +98,7 @@ class MultiHeadAttention(tf.keras.layers.Layer):
       **kwargs,
   ):
     warnings.warn(
-        "`MultiHeadAttention` will be deprecated in Addons 0.13. "
+        "`MultiHeadAttention` will be deprecated in Deepray 0.13. "
         "Please use `tf.keras.layers.MultiHeadAttention` instead.",
         DeprecationWarning,
     )

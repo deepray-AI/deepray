@@ -1,4 +1,4 @@
-# Addons - Callbacks
+# Deepray - Callbacks
 
 ## Contents
 https://www.tensorflow.org/deepray/api_docs/python/dp/callbacks

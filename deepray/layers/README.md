@@ -1,4 +1,4 @@
-# Addons - Layers
+# Deepray - Layers
 
 ## Components
 https://www.tensorflow.org/deepray/api_docs/python/dp/layers

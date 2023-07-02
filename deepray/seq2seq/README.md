@@ -1,4 +1,4 @@
-# Addons - Seq2seq
+# Deepray - Seq2seq
 
 ## Contents
 https://www.tensorflow.org/deepray/api_docs/python/dp/seq2seq

@@ -1,4 +1,4 @@
-# Addons - Custom Ops
+# Deepray - Custom Ops
 
 ## Contents
 | Sub-Package  | Description                             |

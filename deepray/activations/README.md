@@ -1,4 +1,4 @@
-# Addons - Activations
+# Deepray - Activations
 
 ## Contents
 https://www.tensorflow.org/deepray/api_docs/python/dp/activations

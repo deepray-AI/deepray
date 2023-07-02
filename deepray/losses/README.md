@@ -1,4 +1,4 @@
-# Addons - Losses
+# Deepray - Losses
 
 ## Components
 https://www.tensorflow.org/deepray/api_docs/python/dp/losses

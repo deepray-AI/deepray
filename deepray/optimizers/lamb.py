@@ -81,7 +81,7 @@ class LAMB(KerasLegacyOptimizer):
     if "weight_decay_rate" in kwargs:
       warnings.warn(
           "weight_decay_rate has been renamed to weight_decay,"
-          "and will be deprecated in Addons 0.18.",
+          "and will be deprecated in Deepray 0.18.",
           DeprecationWarning,
       )
       weight_decay = kwargs["weight_decay_rate"]

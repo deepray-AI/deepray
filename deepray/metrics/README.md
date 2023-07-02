@@ -1,4 +1,4 @@
-# Addons - Metrics
+# Deepray - Metrics
 
 ## Contents
 https://www.tensorflow.org/deepray/api_docs/python/dp/metrics

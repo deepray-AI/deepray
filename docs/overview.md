@@ -68,7 +68,7 @@ pip install artifacts/deepray-*.whl
 
 #### Standardized API within Subpackages
 User experience and project maintainability are core concepts in
-TF-Addons. In order to achieve these we require that our additions
+Deepray. In order to achieve these we require that our additions
 conform to established API patterns seen in core TensorFlow.
 
 #### GPU/CPU Custom-Ops
@@ -77,7 +77,7 @@ a CUDA 10 installation not be found then the op will automatically fall back to
 a CPU implementation.
 
 #### Proxy Maintainership
-Addons has been designed to compartmentalize subpackages and submodules so 
+Deepray has been designed to compartmentalize subpackages and submodules so 
 that they can be maintained by users who have expertise and a vested interest 
 in that component. 
 
@@ -125,7 +125,7 @@ warning.
 
 
 ## Contributing
-TF-Addons is a community led open source project. As such, the project
+Deepray is a community led open source project. As such, the project
 depends on public contributions, bug-fixes, and documentation. Please see 
 [contribution guidelines](https://github.com/tensorflow/deepray/blob/master/CONTRIBUTING.md) 
 for a guide on how to contribute. This project adheres to [TensorFlow's code of conduct](https://github.com/tensorflow/deepray/blob/master/CODE_OF_CONDUCT.md).

@@ -5,7 +5,7 @@ Deepray welcomes and highly encourages tutorial contributions.
 
 ## How To Contribute
 
-Addons tutorials are created using [Google Colab](https://colab.research.google.com/) 
+Deepray tutorials are created using [Google Colab](https://colab.research.google.com/) 
 and the jupyter notebooks are saved to this directory in the repository. To do 
 this, follow the below steps:
 
@@ -18,4 +18,4 @@ URL boxes so that they match the name of your new example notebook
 4. Follow the guidelines of the template
 5. "Save a copy in GitHub" and select your new branch. The notebook should be 
 named `subpackage_submodule`
-6. Submit the branch as a PR on the TF-Addons GitHub
+6. Submit the branch as a PR on the Deepray GitHub

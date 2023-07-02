@@ -14,7 +14,7 @@ except KeyError:
 _FALLBACK_WARNING_TEMPLATE = """{}
 
 The {} C++/CUDA custom op could not be loaded.
-For this reason, Addons will fallback to an implementation written
+For this reason, Deepray will fallback to an implementation written
 in Python with public TensorFlow ops. There worst you might experience with
 this is a moderate slowdown on GPU. There can be multiple
 reason for this loading error, one of them may be an ABI incompatibility between
@@ -23,7 +23,7 @@ Deepray' custom ops. The stacktrace generated when loading the
 shared object file was displayed above.
 
 If you want this warning to disappear, either make sure the TensorFlow installed
-is compatible with this version of Addons, or tell Deepray to
+is compatible with this version of Deepray, or tell Deepray to
 prefer using Python implementations and not custom C++/CUDA ones. You can do that
 by setting the enviornment variable `DEEPRAY_PY_OPS=1`:
 ```bash
