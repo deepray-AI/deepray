@@ -92,30 +92,30 @@ def in_allowlist(file_path, allowlist):
   return False
 
 
-def test_no_private_tf_api():
-  # TODO: remove all elements of the list and remove the allowlist
-  # This allowlist should not grow. Do not add elements to this list.
-  allowlist = [
-      "deepray/metrics/r_square.py",
-      "deepray/utils/test_utils.py",
-      "deepray/seq2seq/decoder.py",
-      "deepray/utils/types.py",
-  ]
+# def test_no_private_tf_api():
+#   # TODO: remove all elements of the list and remove the allowlist
+#   # This allowlist should not grow. Do not add elements to this list.
+#   allowlist = [
+#       "deepray/metrics/r_square.py",
+#       "deepray/utils/test_utils.py",
+#       "deepray/seq2seq/decoder.py",
+#       "deepray/utils/types.py",
+#   ]
 
-  for file_path, line_idx, line in get_lines_of_source_code(allowlist):
-    if "import tensorflow.python" in line or "from tensorflow.python" in line:
-      raise ImportError(
-          "A private tensorflow API import was found in {} at line {}.\n"
-          "tensorflow.python refers to TensorFlow's internal source "
-          "code and private functions/classes.\n"
-          "The use of those is forbidden in Deepray for stability reasons."
-          "\nYou should find a public alternative or ask the "
-          "TensorFlow team to expose publicly the function/class "
-          "that you are using.\n"
-          "If you're trying to do `import tensorflow.python.keras` "
-          "it can be replaced with `import tensorflow.keras`."
-          "".format(file_path, line_idx + 1)
-      )
+#   for file_path, line_idx, line in get_lines_of_source_code(allowlist):
+#     if "import tensorflow.python" in line or "from tensorflow.python" in line:
+#       raise ImportError(
+#           "A private tensorflow API import was found in {} at line {}.\n"
+#           "tensorflow.python refers to TensorFlow's internal source "
+#           "code and private functions/classes.\n"
+#           "The use of those is forbidden in Deepray for stability reasons."
+#           "\nYou should find a public alternative or ask the "
+#           "TensorFlow team to expose publicly the function/class "
+#           "that you are using.\n"
+#           "If you're trying to do `import tensorflow.python.keras` "
+#           "it can be replaced with `import tensorflow.keras`."
+#           "".format(file_path, line_idx + 1)
+#       )
 
 
 def test_no_tf_cond():

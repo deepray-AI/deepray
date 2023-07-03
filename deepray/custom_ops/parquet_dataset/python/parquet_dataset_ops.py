@@ -26,11 +26,10 @@ from tensorflow.python.framework import tensor_spec
 from tensorflow.python.framework import type_spec
 from tensorflow.python.util import nest
 
+from deepray.utils.resource_loader import LazySO
+from .dataframe import DataFrame
 from .parquet_pybind import parquet_fields
 from .parquet_pybind import parquet_filenames_and_fields
-from .dataframe import DataFrame
-
-from deepray.utils.resource_loader import LazySO
 
 _parquet_dataset_ops_so = LazySO("custom_ops/parquet_dataset/_parquet_dataset_ops.so")
 

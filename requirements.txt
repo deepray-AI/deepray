@@ -1,2 +1,3 @@
 typeguard>=2.7,<3.0.0
 packaging
+pandas
