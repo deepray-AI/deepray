@@ -1,8 +1,8 @@
+load("//deepray:deepray.bzl", "custom_op_library")
+
 licenses(["notice"])  # Apache 2.0
 
 package(default_visibility = ["//visibility:public"])
-
-load("//deepray:deepray.bzl", "custom_op_library")
 
 custom_op_library(
     name = "_beam_search_ops.so",
