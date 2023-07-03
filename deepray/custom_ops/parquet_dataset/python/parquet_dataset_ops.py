@@ -49,8 +49,7 @@ class DataFrameValueSpec(type_spec.BatchableTypeSpec):
       batch_size: The batch_size of DataFrame.
     """
     if field.incomplete:
-      raise ValueError(
-        f'Field {field} is incomplete, please specify dtype and ragged_rank')
+      raise ValueError(f'Field {field} is incomplete, please specify dtype and ragged_rank')
     self._field = field
     self._batch_size = batch_size
 
@@ -92,11 +91,7 @@ class DataFrameValueSpec(type_spec.BatchableTypeSpec):
 class _ParquetDataset(dataset_ops.DatasetSource):  # pylint: disable=abstract-method
   """A Parquet Dataset that reads batches from parquet files."""
 
-  def __init__(
-      self, filename, batch_size, fields,
-      partition_count=1,
-      partition_index=0,
-      drop_remainder=False):
+  def __init__(self, filename, batch_size, fields, partition_count=1, partition_index=0, drop_remainder=False):
     """Create a `ParquetDataset`.
 
     Args:
@@ -108,35 +103,32 @@ class _ParquetDataset(dataset_ops.DatasetSource):  # pylint: disable=abstract-me
       drop_remainder: (Optional.) If True, only keep batches with exactly
         `batch_size` samples.
     """
-    self._filename = ops.convert_to_tensor(
-      filename, dtype=dtypes.string, name='filename')
-    self._batch_size = ops.convert_to_tensor(
-      batch_size, dtype=dtypes.int64, name='batch_size')
+    self._filename = ops.convert_to_tensor(filename, dtype=dtypes.string, name='filename')
+    self._batch_size = ops.convert_to_tensor(batch_size, dtype=dtypes.int64, name='batch_size')
     self._fields = fields
     self._output_specs = {
-      f.name: (
-        DataFrameValueSpec(f, batch_size if drop_remainder else None)
-        if f.ragged_rank > 0
-        else tensor_spec.TensorSpec(
-          shape=[batch_size if drop_remainder else None], dtype=f.dtype))
-      for f in self._fields}
+        f.name: (
+            DataFrameValueSpec(f, batch_size if drop_remainder else None) if f.ragged_rank > 0 else
+            tensor_spec.TensorSpec(shape=[batch_size if drop_remainder else None], dtype=f.dtype)
+        ) for f in self._fields
+    }
     self._field_names = nest.flatten({f.name: f.name for f in self._fields})
     self._field_dtypes = nest.flatten({f.name: f.dtype for f in self._fields})
-    self._field_ragged_ranks = nest.flatten(
-      {f.name: f.ragged_rank for f in self._fields})
+    self._field_ragged_ranks = nest.flatten({f.name: f.ragged_rank for f in self._fields})
     self._partition_count = partition_count
     self._partition_index = partition_index
     self._drop_remainder = drop_remainder
 
     variant_tensor = _parquet_dataset_ops_so.ops.parquet_tabular_dataset_v1(
-      self._filename,
-      self._batch_size,
-      field_names=self._field_names,
-      field_dtypes=self._field_dtypes,
-      field_ragged_ranks=self._field_ragged_ranks,
-      partition_count=self._partition_count,
-      partition_index=self._partition_index,
-      drop_remainder=self._drop_remainder)
+        self._filename,
+        self._batch_size,
+        field_names=self._field_names,
+        field_dtypes=self._field_dtypes,
+        field_ragged_ranks=self._field_ragged_ranks,
+        partition_count=self._partition_count,
+        partition_index=self._partition_index,
+        drop_remainder=self._drop_remainder
+    )
     super().__init__(variant_tensor)
 
   @property
@@ -164,14 +156,16 @@ class ParquetDataset(dataset_ops.DatasetV2):  # pylint: disable=abstract-method
     return parquet_fields(filename, fields, lower=lower)
 
   def __init__(
-      self, filenames,
+      self,
+      filenames,
       batch_size=1,
       fields=None,
       partition_count=1,
       partition_index=0,
       drop_remainder=False,
       num_parallel_reads=None,
-      num_sequential_reads=1):
+      num_sequential_reads=1
+  ):
     """Create a `ParquetDataset`.
 
     Args:
@@ -204,9 +198,8 @@ class ParquetDataset(dataset_ops.DatasetV2):  # pylint: disable=abstract-method
         drop_remainder=self._drop_remainder)
 
     self._impl = self._build_dataset(
-      _create_dataset, filenames,
-      num_parallel_reads=num_parallel_reads,
-      num_sequential_reads=num_sequential_reads)
+        _create_dataset, filenames, num_parallel_reads=num_parallel_reads, num_sequential_reads=num_sequential_reads
+    )
     super().__init__(self._impl._variant_tensor)  # pylint: disable=protected-access
 
   @property
@@ -232,23 +225,21 @@ class ParquetDataset(dataset_ops.DatasetV2):  # pylint: disable=abstract-method
   def element_spec(self):
     return self._impl.element_spec  # pylint: disable=protected-access
 
-  def _build_dataset(
-      self, dataset_creator, filenames,
-      num_parallel_reads=None,
-      num_sequential_reads=1):
+  def _build_dataset(self, dataset_creator, filenames, num_parallel_reads=None, num_sequential_reads=1):
     """Internal method to create a `ParquetDataset`."""
     if num_parallel_reads is None:
       return filenames.flat_map(dataset_creator)
     if num_parallel_reads == dataset_ops.AUTOTUNE:
-      return filenames.interleave(
-        dataset_creator, num_parallel_calls=num_parallel_reads)
+      return filenames.interleave(dataset_creator, num_parallel_calls=num_parallel_reads)
     return readers.ParallelInterleaveDataset(
-      filenames, dataset_creator,
-      cycle_length=num_parallel_reads,
-      block_length=num_sequential_reads,
-      sloppy=True,
-      buffer_output_elements=None,
-      prefetch_input_elements=1)
+        filenames,
+        dataset_creator,
+        cycle_length=num_parallel_reads,
+        block_length=num_sequential_reads,
+        sloppy=True,
+        buffer_output_elements=None,
+        prefetch_input_elements=1
+    )
 
 
 def read_parquet(
@@ -258,7 +249,8 @@ def read_parquet(
     partition_index=0,
     drop_remainder=False,
     num_parallel_reads=None,
-    num_sequential_reads=1):
+    num_sequential_reads=1
+):
   """Create a `ParquetDataset` from filenames dataset.
 
     Args:
@@ -277,13 +269,14 @@ def read_parquet(
 
   def _apply_fn(filenames):
     return ParquetDataset(
-      filenames,
-      batch_size=batch_size,
-      fields=fields,
-      partition_count=partition_count,
-      partition_index=partition_index,
-      drop_remainder=drop_remainder,
-      num_parallel_reads=num_parallel_reads,
-      num_sequential_reads=num_sequential_reads)
+        filenames,
+        batch_size=batch_size,
+        fields=fields,
+        partition_count=partition_count,
+        partition_index=partition_index,
+        drop_remainder=drop_remainder,
+        num_parallel_reads=num_parallel_reads,
+        num_sequential_reads=num_sequential_reads
+    )
 
   return _apply_fn
