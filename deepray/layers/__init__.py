@@ -27,7 +27,6 @@ from deepray.layers.embedding_bag import EmbeddingBag
 from deepray.layers.max_unpooling_2d import MaxUnpooling2D
 from deepray.layers.max_unpooling_2d_v2 import MaxUnpooling2DV2
 from deepray.layers.maxout import Maxout
-from deepray.layers.multihead_attention import MultiHeadAttention
 from deepray.layers.normalizations import FilterResponseNormalization
 from deepray.layers.normalizations import GroupNormalization
 from deepray.layers.normalizations import InstanceNormalization

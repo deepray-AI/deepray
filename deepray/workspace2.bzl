@@ -143,7 +143,6 @@ def _tf_repositories():
         sha256 = "6450d3970578c794b23e9e1645440c6f42f63be3f82383097660db5cf2fba685",
         strip_prefix = "aliyun-oss-c-sdk-3.7.0",
         urls = [
-            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/aliyun/aliyun-oss-c-sdk/archive/3.7.0.tar.gz",
             "https://github.com/aliyun/aliyun-oss-c-sdk/archive/3.7.0.tar.gz",
         ],
     )
@@ -154,7 +153,6 @@ def _tf_repositories():
         sha256 = "6e6bed6f75cf54006b6bafb01b3b96df19605572131a2260fddaf0e87949ced0",
         strip_prefix = "aws-checksums-0.1.5",
         urls = [
-            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/awslabs/aws-checksums/archive/v0.1.5.tar.gz",
             "https://github.com/awslabs/aws-checksums/archive/v0.1.5.tar.gz",
         ],
     )
@@ -165,7 +163,6 @@ def _tf_repositories():
         sha256 = "01c2a58553a37b3aa5914d9e0bf7bf14507ff4937bc5872a678892ca20fcae1f",
         strip_prefix = "aws-c-common-0.4.29",
         urls = [
-            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/awslabs/aws-c-common/archive/v0.4.29.tar.gz",
             "https://github.com/awslabs/aws-c-common/archive/v0.4.29.tar.gz",
         ],
     )
@@ -176,7 +173,6 @@ def _tf_repositories():
         sha256 = "31d880d1c868d3f3df1e1f4b45e56ac73724a4dc3449d04d47fc0746f6f077b6",
         strip_prefix = "aws-c-event-stream-0.1.4",
         urls = [
-            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/awslabs/aws-c-event-stream/archive/v0.1.4.tar.gz",
             "https://github.com/awslabs/aws-c-event-stream/archive/v0.1.4.tar.gz",
         ],
     )
@@ -191,7 +187,6 @@ def _tf_repositories():
         sha256 = "749322a8be4594472512df8a21d9338d7181c643a00e08a0ff12f07e831e3346",
         strip_prefix = "aws-sdk-cpp-1.8.186",
         urls = [
-            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/aws/aws-sdk-cpp/archive/1.8.186.tar.gz",
             "https://github.com/aws/aws-sdk-cpp/archive/1.8.186.tar.gz",
         ],
     )
@@ -210,6 +205,12 @@ def _tf_repositories():
         build_file = "@pybind11_bazel//:pybind11.BUILD",
         strip_prefix = "pybind11-2.10.4",
         urls = ["https://github.com/pybind/pybind11/archive/refs/tags/v2.10.4.tar.gz"],
+    )
+
+    git_repository(
+        name = "boringssl",
+        commit = "f7f897f45dcc46501b89e6fb3f5338428977ece2",
+        remote = "https://boringssl.googlesource.com/boringssl",
     )
 
 def workspace():
