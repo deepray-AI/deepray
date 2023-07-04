@@ -104,8 +104,8 @@ cc_library(
     }),
     deps = [
         "@aws-c-event-stream",
-        "@com_github_google_boringssl//:crypto",
-        "@com_github_google_boringssl//:ssl",
+        "@boringssl//:crypto",
+        "@boringssl//:ssl",
         "@curl",
     ],
 )

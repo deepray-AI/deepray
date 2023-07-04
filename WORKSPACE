@@ -45,9 +45,9 @@ load("@//deepray:workspace2.bzl", "dp_workspace2")
 
 dp_workspace2()
 
-load("@//deepray:workspace1.bzl", "dp_workspace1")
+# load("@//deepray:workspace1.bzl", "dp_workspace1")
 
-dp_workspace1()
+# dp_workspace1()
 
 load("@//deepray:workspace0.bzl", "dp_workspace0")
 

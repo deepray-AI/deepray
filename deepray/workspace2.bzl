@@ -49,16 +49,6 @@ def _tf_repositories():
         build_file = Label("//third_party:openblas.BUILD"),
     )
 
-    FLAT_VERSION = "1.12.0"
-    http_archive(
-        name = "com_github_google_flatbuffers",
-        urls = [
-            "https://github.com/google/flatbuffers/archive/v{}.tar.gz".format(FLAT_VERSION),
-        ],
-        strip_prefix = "flatbuffers-" + FLAT_VERSION,
-        # sha256 = "d84cb25686514348e615163b458ae0767001b24b42325f426fd56406fd384238",
-    )
-
     ARROW_VERSION = "7.0.0"
     http_archive(
         name = "com_github_apache_arrow",
@@ -70,11 +60,6 @@ def _tf_repositories():
         ],
     )
 
-    # git_repository(
-    #     name = "com_github_google_brotli",
-    #     remote = "https://github.com/google/brotli",
-    #     tag = "v1.0.9",
-    # )
     http_archive(
         name = "com_github_google_brotli",  # MIT license
         build_file = Label("//third_party:brotli.BUILD"),
@@ -105,13 +90,6 @@ def _tf_repositories():
         build_file = Label("//third_party:rapidjson.BUILD"),
         sha256 = "b4339b8118d57f70de7a17ed8f07997080f98940ca538f43e1ca4b95a835221d",
     )
-
-    # new_git_repository(
-    #     name = "com_github_apache_thrift",
-    #     remote = "https://github.com/apache/thrift",
-    #     branch = "0.16.0",
-    #     build_file = Label("//third_party/thrift:thrift.BUILD"),
-    # )
 
     http_archive(
         name = "com_github_apache_thrift",  # Apache License 2.0
@@ -189,28 +167,6 @@ def _tf_repositories():
         urls = [
             "https://github.com/aws/aws-sdk-cpp/archive/1.8.186.tar.gz",
         ],
-    )
-
-    PB_COMMIT = "b162c7c88a253e3f6b673df0c621aca27596ce6b"
-
-    http_archive(
-        name = "pybind11_bazel",
-        strip_prefix = "pybind11_bazel-{}".format(PB_COMMIT),
-        urls = ["https://github.com/pybind/pybind11_bazel/archive/{}.zip".format(PB_COMMIT)],
-    )
-
-    # We still require the pybind library.
-    http_archive(
-        name = "pybind11",
-        build_file = "@pybind11_bazel//:pybind11.BUILD",
-        strip_prefix = "pybind11-2.10.4",
-        urls = ["https://github.com/pybind/pybind11/archive/refs/tags/v2.10.4.tar.gz"],
-    )
-
-    git_repository(
-        name = "com_github_google_boringssl",
-        commit = "f7f897f45dcc46501b89e6fb3f5338428977ece2",
-        remote = "https://boringssl.googlesource.com/boringssl",
     )
 
 def workspace():
