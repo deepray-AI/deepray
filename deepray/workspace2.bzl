@@ -62,7 +62,7 @@ def _tf_repositories():
     ARROW_VERSION = "7.0.0"
     http_archive(
         name = "com_github_apache_arrow",
-        # sha256 = "57e13c62f27b710e1de54fd30faed612aefa22aa41fa2c0c3bacd204dd18a8f3",
+        sha256 = "57e13c62f27b710e1de54fd30faed612aefa22aa41fa2c0c3bacd204dd18a8f3",
         build_file = Label("//third_party/arrow:arrow.BUILD"),
         strip_prefix = "arrow-apache-arrow-" + ARROW_VERSION,
         urls = [
@@ -208,7 +208,7 @@ def _tf_repositories():
     )
 
     git_repository(
-        name = "boringssl",
+        name = "com_github_google_boringssl",
         commit = "f7f897f45dcc46501b89e6fb3f5338428977ece2",
         remote = "https://boringssl.googlesource.com/boringssl",
     )
