@@ -68,3 +68,60 @@ pybind_extension(
         "@pybind11",
     ],
 )
+
+py_library(
+    name = "parquet_pybind",
+    srcs = ["python/parquet_pybind.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":_parquet_pybind",
+        ":dataframe",
+    ],
+)
+
+py_library(
+    name = "dataframe",
+    srcs = ["python/dataframe.py"],
+    srcs_version = "PY2AND3",
+)
+
+# TODO: Once TF exports symbols in a DLL we can enable parse_time_op for windows
+# https://github.com/tensorflow/addons/issues/782
+py_library(
+    name = "parquet_dataset",
+    srcs = glob(
+        [
+            "python/*.py",
+            "*.py",
+        ],
+    ),
+    data = [
+        ":_parquet_dataset_ops.so",
+        "//deepray/testing",
+        "//deepray/utils",
+    ],
+    deps = [
+        ":dataframe",
+        ":parquet_pybind",
+        "//deepray/utils",
+    ],
+)
+
+py_test(
+    name = "parquet_dataset_test",
+    size = "small",
+    srcs = glob(["python/tests/*"]),
+    main = "python/tests/run_all_test.py",
+    deps = [
+        ":parquet_dataset",
+    ],
+)
+
+py_binary(
+    name = "read_parquet_deepray",
+    srcs = ["read_parquet_deepray.py"],
+    deps = [
+        "//deepray/custom_ops/parquet_dataset",
+    ],
+)
