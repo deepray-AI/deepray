@@ -1,2 +1,2 @@
-from .python import parquet_dataset_ops
-from .python import dataframe
+from deepray.custom_ops.parquet_dataset.python import parquet_dataset_ops
+from deepray.custom_ops.parquet_dataset.python import dataframe
