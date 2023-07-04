@@ -193,56 +193,7 @@ install Deepray from PyPI, the release version, do:
 pip uninstall deepray
 ```
 
-#### Run the tests with pytest
 
-If Deepray is installed in editable mode, you can then just run your tests by 
-running Pytest. For example:
-```bash
-pip install -r tools/install_deps/pytest.txt
-python -m pytest deepray/rnn/tests/cell_test.py
-# or even
-python -m pytest deepray/rnn/
-# or even 
-python -m pytest deepray/
-# or even if pytest is in the PATH
-pytest deepray/
-```
-
-Pytest has many cool options to help you make great tests:
-
-```bash
-# Use multiprocessing to run the tests, 3 workers
-pytest -n 3 deepray/
-pytest -n auto deepray/
-
-# Run the whole test suite without compiling any custom ops (.so files).
-pytest -v --skip-custom-ops deepray/
-
-# Open the debugger to inspect variables and execute code when 
-# an exception is raised.
-pytest --pdb deepray/ 
-
-# or if you prefer the Ipython debugger
-pytest --pdb --pdbcls=IPython.terminal.debugger:TerminalPdb --capture no deepray/
-
-# by defaults print() aren't displayed with pytest
-# if you like to debug with prints (you might get 
-# the output scrambled)
-pytest -s deepray/
-
-# get the list of functions you ran
-pytest -v deepray/
-
-# to rerun all previous tests, running the ones that failed first
-pytest --ff deepray/
-
-# You know which function to execute, but you're too 
-# lazy to type the file path
-pytest -k "test_get_all_shared_objects" ./deepray/
-
-# get the 10 slowest functions
-pytest --duration=10 deepray/
-```
 
 #### Testing with Pycharm
 
