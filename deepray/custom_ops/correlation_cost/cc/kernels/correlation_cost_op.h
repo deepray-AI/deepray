@@ -23,7 +23,8 @@ namespace tensorflow {
 namespace deepray {
 namespace functor {
 
-template <typename Device, typename T> struct CorrelationCostFunctor {
+template <typename Device, typename T>
+struct CorrelationCostFunctor {
   Status operator()(OpKernelContext *context, const Tensor &input_a_t,
                     const Tensor &input_b_t, Tensor *output_t,
                     /* params */
@@ -31,7 +32,8 @@ template <typename Device, typename T> struct CorrelationCostFunctor {
                     int stride_2, int pad, TensorFormat data_format);
 };
 
-template <typename Device, typename T> struct CorrelationCostGradFunctor {
+template <typename Device, typename T>
+struct CorrelationCostGradFunctor {
   Status operator()(OpKernelContext *context, const Tensor &input_a_t,
                     const Tensor &input_b_t, const Tensor &topdiff_t,
                     Tensor *output_a_gradient_t, Tensor *output_b_gradient_t,
@@ -40,8 +42,8 @@ template <typename Device, typename T> struct CorrelationCostGradFunctor {
                     int stride_2, int pad, TensorFormat data_format);
 };
 
-} // namespace functor
-} // namespace deepray
-} // namespace tensorflow
+}  // namespace functor
+}  // namespace deepray
+}  // namespace tensorflow
 
-#endif // DEEPRAY_LAYERS_KERNELS_CORRELATION_COST_OP_H_
+#endif  // DEEPRAY_LAYERS_KERNELS_CORRELATION_COST_OP_H_

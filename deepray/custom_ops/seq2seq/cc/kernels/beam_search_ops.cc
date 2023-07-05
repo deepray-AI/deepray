@@ -17,7 +17,7 @@ limitations under the License.
 
 #if GOOGLE_CUDA
 #define EIGEN_USE_GPU
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA
 
 #include "deepray/custom_ops/seq2seq/cc/kernels/beam_search_ops.h"
 
@@ -41,17 +41,18 @@ namespace deepray {
 typedef Eigen::ThreadPoolDevice CPUDevice;
 typedef Eigen::GpuDevice GPUDevice;
 
-template <typename Device, typename T> class GatherTreeOp : public OpKernel {
-public:
-  explicit GatherTreeOp(OpKernelConstruction *ctx) : OpKernel(ctx) {}
+template <typename Device, typename T>
+class GatherTreeOp : public OpKernel {
+ public:
+  explicit GatherTreeOp(OpKernelConstruction* ctx) : OpKernel(ctx) {}
 
-  void Compute(OpKernelContext *ctx) override {
-    const Device &device = ctx->eigen_device<Device>();
-    const Tensor &step_ids = ctx->input(0);
-    const Tensor &parent_ids = ctx->input(1);
-    const Tensor &max_sequence_lengths = ctx->input(2);
-    const Tensor &end_token = ctx->input(3);
-    const TensorShape &step_ids_shape = step_ids.shape();
+  void Compute(OpKernelContext* ctx) override {
+    const Device& device = ctx->eigen_device<Device>();
+    const Tensor& step_ids = ctx->input(0);
+    const Tensor& parent_ids = ctx->input(1);
+    const Tensor& max_sequence_lengths = ctx->input(2);
+    const Tensor& end_token = ctx->input(3);
+    const TensorShape& step_ids_shape = step_ids.shape();
     OP_REQUIRES(
         ctx, step_ids_shape.dims() == 3,
         errors::InvalidArgument("step_ids must be a 3-tensor, saw shape: ",
@@ -78,7 +79,7 @@ public:
                                 "but shapes are: ",
                                 step_ids_shape.DebugString(), " and ",
                                 max_sequence_lengths.shape().DebugString()));
-    Tensor *beams;
+    Tensor* beams;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, step_ids_shape, &beams));
     typename TTypes<T, 3>::ConstTensor step_ids_t(step_ids.tensor<T, 3>());
     typename TTypes<T, 3>::ConstTensor parent_ids_t(parent_ids.tensor<T, 3>());
@@ -92,9 +93,9 @@ public:
   }
 };
 
-#define REGISTER_KERNEL(T)                                                     \
-  REGISTER_KERNEL_BUILDER(                                                     \
-      Name("Deepray>GatherTree").Device(DEVICE_CPU).TypeConstraint<T>("T"),     \
+#define REGISTER_KERNEL(T)                                                  \
+  REGISTER_KERNEL_BUILDER(                                                  \
+      Name("Deepray>GatherTree").Device(DEVICE_CPU).TypeConstraint<T>("T"), \
       GatherTreeOp<CPUDevice, T>);
 REGISTER_KERNEL(int32);
 #undef REGISTER_KERNEL
@@ -102,8 +103,9 @@ REGISTER_KERNEL(int32);
 namespace functor {
 
 // CPU specialization
-template <> struct GatherTree<CPUDevice, int32> {
-  void operator()(OpKernelContext *ctx, const CPUDevice &d,
+template <>
+struct GatherTree<CPUDevice, int32> {
+  void operator()(OpKernelContext* ctx, const CPUDevice& d,
                   TTypes<int32, 3>::ConstTensor step_ids,
                   TTypes<int32, 3>::ConstTensor parent_ids,
                   TTypes<int32>::ConstVec max_sequence_lengths,
@@ -161,34 +163,34 @@ template <> struct GatherTree<CPUDevice, int32> {
   }
 };
 
-} // namespace functor
+}  // namespace functor
 
 #if GOOGLE_CUDA
 namespace functor {
-#define DECLARE_GPU_SPEC(T)                                                    \
-  template <>                                                                  \
-  void GatherTree<GPUDevice, T>::operator()(                                   \
-      OpKernelContext *ctx, const GPUDevice &d,                                \
-      typename TTypes<T, 3>::ConstTensor step_ids,                             \
-      typename TTypes<T, 3>::ConstTensor parent_ids,                           \
-      TTypes<int32>::ConstVec max_sequence_lengths, const T end_token,         \
-      typename TTypes<T, 3>::Tensor beams);                                    \
+#define DECLARE_GPU_SPEC(T)                                            \
+  template <>                                                          \
+  void GatherTree<GPUDevice, T>::operator()(                           \
+      OpKernelContext* ctx, const GPUDevice& d,                        \
+      typename TTypes<T, 3>::ConstTensor step_ids,                     \
+      typename TTypes<T, 3>::ConstTensor parent_ids,                   \
+      TTypes<int32>::ConstVec max_sequence_lengths, const T end_token, \
+      typename TTypes<T, 3>::Tensor beams);                            \
   extern template struct GatherTree<GPUDevice, T>;
 
 DECLARE_GPU_SPEC(int32);
 #undef DECLARE_GPU_SPEC
-} // end namespace functor
+}  // end namespace functor
 
-#define REGISTER_GPU_KERNEL(T)                                                 \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>GatherTree")                            \
-                              .Device(DEVICE_GPU)                              \
-                              .TypeConstraint<T>("T")                          \
-                              .HostMemory("end_token"),                        \
+#define REGISTER_GPU_KERNEL(T)                          \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>GatherTree")    \
+                              .Device(DEVICE_GPU)       \
+                              .TypeConstraint<T>("T")   \
+                              .HostMemory("end_token"), \
                           GatherTreeOp<GPUDevice, T>);
 
 REGISTER_GPU_KERNEL(int32);
 #undef REGISTER_GPU_KERNEL
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA
 
-} // end namespace deepray
-} // end namespace tensorflow
+}  // end namespace deepray
+}  // end namespace tensorflow

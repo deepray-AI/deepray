@@ -78,12 +78,13 @@ __global__ void pad_and_no_transpose(const float *__restrict__ input,
 }
 
 template <unsigned int THREADS_PER_BLOCK>
-__global__ void
-Correlation_forward(float *__restrict__ output, int Cout, int Hout, int Wout,
-                    const float *__restrict__ pInput1, int Cin, int Hin,
-                    int Win, const float *__restrict__ pInput2, int pad,
-                    int kernel_size, int max_displacement, int stride1,
-                    int stride2) {
+__global__ void Correlation_forward(float *__restrict__ output, int Cout,
+                                    int Hout, int Wout,
+                                    const float *__restrict__ pInput1, int Cin,
+                                    int Hin, int Win,
+                                    const float *__restrict__ pInput2, int pad,
+                                    int kernel_size, int max_displacement,
+                                    int stride1, int stride2) {
   const int pWin = Win + 2 * pad;
   const int pHin = Hin + 2 * pad;
 
@@ -295,9 +296,10 @@ __global__ void Correlation_backward_input2(
   }
 }
 
-}; // namespace
+};  // namespace
 
-template <typename Dtype> struct CorrelationCostFunctor<GPUDevice, Dtype> {
+template <typename Dtype>
+struct CorrelationCostFunctor<GPUDevice, Dtype> {
   Status operator()(OpKernelContext *context, const Tensor &input_a_t,
                     const Tensor &input_b_t, Tensor *output_t,
                     /* params */
@@ -368,7 +370,8 @@ template <typename Dtype> struct CorrelationCostFunctor<GPUDevice, Dtype> {
   }
 };
 
-template <typename Dtype> struct CorrelationCostGradFunctor<GPUDevice, Dtype> {
+template <typename Dtype>
+struct CorrelationCostGradFunctor<GPUDevice, Dtype> {
   Status operator()(OpKernelContext *context, const Tensor &input_a_t,
                     const Tensor &input_b_t, const Tensor &topdiff_t,
                     Tensor *output_a_gradient_t, Tensor *output_b_gradient_t,
@@ -456,8 +459,8 @@ template <typename Dtype> struct CorrelationCostGradFunctor<GPUDevice, Dtype> {
 template struct CorrelationCostFunctor<GPUDevice, float>;
 template struct CorrelationCostGradFunctor<GPUDevice, float>;
 
-} // namespace functor
-} // namespace deepray
-} // namespace tensorflow
+}  // namespace functor
+}  // namespace deepray
+}  // namespace tensorflow
 
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA

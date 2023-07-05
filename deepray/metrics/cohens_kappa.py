@@ -24,6 +24,7 @@ from typeguard import typechecked
 from typing import Optional
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class CohenKappa(Metric):
   """Computes Kappa score between two raters.
 
@@ -113,20 +114,18 @@ class CohenKappa(Metric):
     elif num_classes > 2:
       self._update = self._update_multi_class_model
     else:
-      raise ValueError(
-        """Number of classes must be
-                              greater than or euqal to two"""
-      )
+      raise ValueError("""Number of classes must be
+                              greater than or euqal to two""")
 
     self.weightage = weightage
     self.num_classes = num_classes
     self.regression = regression
     self.sparse_labels = sparse_labels
     self.conf_mtx = self.add_weight(
-      "conf_mtx",
-      shape=(self.num_classes, self.num_classes),
-      initializer=tf.keras.initializers.zeros,
-      dtype=tf.float32,
+        "conf_mtx",
+        shape=(self.num_classes, self.num_classes),
+        initializer=tf.keras.initializers.zeros,
+        dtype=tf.float32,
     )
 
   def update_state(self, y_true, y_pred, sample_weight=None):
@@ -190,11 +189,11 @@ class CohenKappa(Metric):
     y_pred = self._safe_squeeze(y_pred)
 
     new_conf_mtx = tf.math.confusion_matrix(
-      labels=y_true,
-      predictions=y_pred,
-      num_classes=self.num_classes,
-      weights=sample_weight,
-      dtype=tf.float32,
+        labels=y_true,
+        predictions=y_pred,
+        num_classes=self.num_classes,
+        weights=sample_weight,
+        dtype=tf.float32,
     )
 
     return self.conf_mtx.assign_add(new_conf_mtx)
@@ -236,19 +235,19 @@ class CohenKappa(Metric):
     numerator = tf.reduce_sum(conf_mtx * weight_mtx)
     denominator = tf.reduce_sum(out_prod * weight_mtx)
     return tf.cond(
-      tf.math.is_nan(denominator),
-      true_fn=lambda: 0.0,
-      false_fn=lambda: 1 - (numerator / denominator),
+        tf.math.is_nan(denominator),
+        true_fn=lambda: 0.0,
+        false_fn=lambda: 1 - (numerator / denominator),
     )
 
   def get_config(self):
     """Returns the serializable config of the metric."""
 
     config = {
-      "num_classes": self.num_classes,
-      "weightage": self.weightage,
-      "sparse_labels": self.sparse_labels,
-      "regression": self.regression,
+        "num_classes": self.num_classes,
+        "weightage": self.weightage,
+        "sparse_labels": self.sparse_labels,
+        "regression": self.regression,
     }
     base_config = super().get_config()
     return {**base_config, **config}
@@ -258,8 +257,8 @@ class CohenKappa(Metric):
 
     for v in self.variables:
       K.set_value(
-        v,
-        np.zeros((self.num_classes, self.num_classes), v.dtype.as_numpy_dtype),
+          v,
+          np.zeros((self.num_classes, self.num_classes), v.dtype.as_numpy_dtype),
       )
 
   def reset_states(self):

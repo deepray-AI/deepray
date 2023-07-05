@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Implements `Dot Interaction` Layer of DLRM model."""
 
 from typing import List, Optional
@@ -41,11 +40,9 @@ class DotInteraction(tf.keras.layers.Layer):
     name: String name of the layer.
   """
 
-  def __init__(self,
-               self_interaction: bool = False,
-               skip_gather: bool = False,
-               name: Optional[str] = None,
-               **kwargs) -> None:
+  def __init__(
+      self, self_interaction: bool = False, skip_gather: bool = False, name: Optional[str] = None, **kwargs
+  ) -> None:
     self._self_interaction = self_interaction
     self._skip_gather = skip_gather
     super().__init__(name=name, **kwargs)
@@ -72,8 +69,7 @@ class DotInteraction(tf.keras.layers.Layer):
     # concat_features shape: batch_size, num_features, feature_dim
     try:
       concat_features = tf.concat(inputs, axis=-1)
-      concat_features = tf.reshape(concat_features,
-                                   [batch_size, -1, feature_dim])
+      concat_features = tf.reshape(concat_features, [batch_size, -1, feature_dim])
     except (ValueError, tf.errors.InvalidArgumentError) as e:
       raise ValueError(f"Input tensors` dimensions must be equal, original"
                        f"error message: {e}")
@@ -94,9 +90,7 @@ class DotInteraction(tf.keras.layers.Layer):
 
     if self._skip_gather:
       # Setting upper tiangle part of the interaction matrix to zeros.
-      activations = tf.where(condition=tf.cast(upper_tri_mask, tf.bool),
-                             x=tf.zeros_like(xactions),
-                             y=xactions)
+      activations = tf.where(condition=tf.cast(upper_tri_mask, tf.bool), x=tf.zeros_like(xactions), y=xactions)
       out_dim = num_features * num_features
     else:
       activations = tf.boolean_mask(xactions, lower_tri_mask)

@@ -23,6 +23,7 @@ from deepray.utils.types import AcceptableDTypes, FloatTensorLike
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class MatthewsCorrelationCoefficient(tf.keras.metrics.Metric):
   """Computes the Matthews Correlation Coefficient.
 
@@ -70,10 +71,10 @@ class MatthewsCorrelationCoefficient(tf.keras.metrics.Metric):
     super().__init__(name=name, dtype=dtype)
     self.num_classes = num_classes
     self.conf_mtx = self.add_weight(
-      "conf_mtx",
-      shape=(self.num_classes, self.num_classes),
-      initializer=tf.keras.initializers.zeros,
-      dtype=self.dtype,
+        "conf_mtx",
+        shape=(self.num_classes, self.num_classes),
+        initializer=tf.keras.initializers.zeros,
+        dtype=self.dtype,
     )
 
   # TODO: sample_weights
@@ -82,17 +83,16 @@ class MatthewsCorrelationCoefficient(tf.keras.metrics.Metric):
     y_pred = tf.cast(y_pred, dtype=self.dtype)
 
     new_conf_mtx = tf.math.confusion_matrix(
-      labels=tf.argmax(y_true, 1),
-      predictions=tf.argmax(y_pred, 1),
-      num_classes=self.num_classes,
-      weights=sample_weight,
-      dtype=self.dtype,
+        labels=tf.argmax(y_true, 1),
+        predictions=tf.argmax(y_pred, 1),
+        num_classes=self.num_classes,
+        weights=sample_weight,
+        dtype=self.dtype,
     )
 
     self.conf_mtx.assign_add(new_conf_mtx)
 
   def result(self):
-
     true_sum = tf.reduce_sum(self.conf_mtx, axis=1)
     pred_sum = tf.reduce_sum(self.conf_mtx, axis=0)
     num_correct = tf.linalg.trace(self.conf_mtx)
@@ -101,9 +101,9 @@ class MatthewsCorrelationCoefficient(tf.keras.metrics.Metric):
     # covariance true-pred
     cov_ytyp = num_correct * num_samples - tf.tensordot(true_sum, pred_sum, axes=1)
     # covariance pred-pred
-    cov_ypyp = num_samples ** 2 - tf.tensordot(pred_sum, pred_sum, axes=1)
+    cov_ypyp = num_samples**2 - tf.tensordot(pred_sum, pred_sum, axes=1)
     # covariance true-true
-    cov_ytyt = num_samples ** 2 - tf.tensordot(true_sum, true_sum, axes=1)
+    cov_ytyt = num_samples**2 - tf.tensordot(true_sum, true_sum, axes=1)
 
     mcc = cov_ytyp / tf.math.sqrt(cov_ytyt * cov_ypyp)
 
@@ -116,7 +116,7 @@ class MatthewsCorrelationCoefficient(tf.keras.metrics.Metric):
     """Returns the serializable config of the metric."""
 
     config = {
-      "num_classes": self.num_classes,
+        "num_classes": self.num_classes,
     }
     base_config = super().get_config()
     return {**base_config, **config}
@@ -126,8 +126,8 @@ class MatthewsCorrelationCoefficient(tf.keras.metrics.Metric):
 
     for v in self.variables:
       K.set_value(
-        v,
-        np.zeros((self.num_classes, self.num_classes), v.dtype.as_numpy_dtype),
+          v,
+          np.zeros((self.num_classes, self.num_classes), v.dtype.as_numpy_dtype),
       )
 
   def reset_states(self):

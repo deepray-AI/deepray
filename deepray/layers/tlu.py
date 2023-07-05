@@ -20,6 +20,7 @@ from typeguard import typechecked
 from deepray.utils import types
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class TLU(tf.keras.layers.Layer):
   r"""Thresholded Linear Unit.
 
@@ -66,23 +67,23 @@ class TLU(tf.keras.layers.Layer):
   def build(self, input_shape):
     param_shape = list(input_shape[1:])
     self.tau = self.add_weight(
-      shape=param_shape,
-      name="tau",
-      initializer=self.tau_initializer,
-      regularizer=self.tau_regularizer,
-      constraint=self.tau_constraint,
-      synchronization=tf.VariableSynchronization.AUTO,
-      aggregation=tf.VariableAggregation.MEAN,
+        shape=param_shape,
+        name="tau",
+        initializer=self.tau_initializer,
+        regularizer=self.tau_regularizer,
+        constraint=self.tau_constraint,
+        synchronization=tf.VariableSynchronization.AUTO,
+        aggregation=tf.VariableAggregation.MEAN,
     )
     if self.affine:
       self.alpha = self.add_weight(
-        shape=param_shape,
-        name="alpha",
-        initializer=self.alpha_initializer,
-        regularizer=self.alpha_regularizer,
-        constraint=self.alpha_constraint,
-        synchronization=tf.VariableSynchronization.AUTO,
-        aggregation=tf.VariableAggregation.MEAN,
+          shape=param_shape,
+          name="alpha",
+          initializer=self.alpha_initializer,
+          regularizer=self.alpha_regularizer,
+          constraint=self.alpha_constraint,
+          synchronization=tf.VariableSynchronization.AUTO,
+          aggregation=tf.VariableAggregation.MEAN,
       )
 
     axes = {i: input_shape[i] for i in range(1, len(input_shape))}
@@ -95,22 +96,16 @@ class TLU(tf.keras.layers.Layer):
 
   def get_config(self):
     config = {
-      "tau_initializer": tf.keras.initializers.serialize(self.tau_initializer),
-      "tau_regularizer": tf.keras.regularizers.serialize(self.tau_regularizer),
-      "tau_constraint": tf.keras.constraints.serialize(self.tau_constraint),
-      "affine": self.affine,
+        "tau_initializer": tf.keras.initializers.serialize(self.tau_initializer),
+        "tau_regularizer": tf.keras.regularizers.serialize(self.tau_regularizer),
+        "tau_constraint": tf.keras.constraints.serialize(self.tau_constraint),
+        "affine": self.affine,
     }
 
     if self.affine:
-      config["alpha_initializer"] = tf.keras.initializers.serialize(
-        self.alpha_initializer
-      )
-      config["alpha_regularizer"] = tf.keras.regularizers.serialize(
-        self.alpha_regularizer
-      )
-      config["alpha_constraint"] = tf.keras.constraints.serialize(
-        self.alpha_constraint
-      )
+      config["alpha_initializer"] = tf.keras.initializers.serialize(self.alpha_initializer)
+      config["alpha_regularizer"] = tf.keras.regularizers.serialize(self.alpha_regularizer)
+      config["alpha_constraint"] = tf.keras.constraints.serialize(self.alpha_constraint)
 
     base_config = super().get_config()
     return {**base_config, **config}

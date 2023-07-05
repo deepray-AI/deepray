@@ -1,7 +1,7 @@
-# Addons - RNN
+# Deepray - RNN
 
 ## Components
-https://www.tensorflow.org/addons/api_docs/python/dp/rnn
+https://www.tensorflow.org/deepray/api_docs/python/dp/rnn
 
 ## Contribution Guidelines
 #### Prerequisites
@@ -14,7 +14,7 @@ https://www.tensorflow.org/addons/api_docs/python/dp/rnn
 In order to conform with the current API standard, all cells must:
  * Inherit from either `keras.layers.AbstractRNNCell` or `keras.layers.Layer` with
    required properties.
- * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Addons')`
+ * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package="Deepray")`
 
 #### Testing Requirements
  * To run your `tf.functions` in eager mode and graph mode in the tests, 

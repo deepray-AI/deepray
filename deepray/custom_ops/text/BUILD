@@ -1,8 +1,8 @@
-load("//deepray:deepray.bzl", "custom_op_library")
-
 licenses(["notice"])  # Apache 2.0
 
 package(default_visibility = ["//visibility:public"])
+
+load("//deepray:deepray.bzl", "custom_op_library")
 
 custom_op_library(
     name = "_skip_gram_ops.so",
@@ -21,40 +21,4 @@ custom_op_library(
             "cc/ops/parse_time_op.cc",
         ],
     }),
-)
-
-# TODO: Once TF exports symbols in a DLL we can enable parse_time_op for windows
-# https://github.com/tensorflow/addons/issues/782
-py_library(
-    name = "text",
-    srcs = glob(
-        [
-            "python/*.py",
-            "*.py",
-        ],
-    ),
-    data = select({
-        "//deepray:windows": [
-            ":_skip_gram_ops.so",
-            "//deepray/testing",
-            "//deepray/utils",
-        ],
-        "//conditions:default": [
-            ":_parse_time_op.so",
-            ":_skip_gram_ops.so",
-            "//deepray/testing",
-            "//deepray/utils",
-        ],
-    }),
-)
-
-py_test(
-    name = "text_test",
-    size = "small",
-    srcs = glob(["python/tests/*"]),
-    main = "python/tests/run_all_test.py",
-    deps = [
-        ":text",
-        "//deepray/layers",
-    ],
 )

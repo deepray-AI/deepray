@@ -39,33 +39,30 @@ FLAGS(
 
 
 def main(_):
-    _strategy = distribution_utils.get_distribution_strategy()
-    data_pipe = Movielens1MRating()
-    with distribution_utils.get_strategy_scope(_strategy):
-        model = DualChannelsDeepModel(
-            user_embedding_size=32,
-            movie_embedding_size=32,
-            embedding_initializer=tf.keras.initializers.RandomNormal(0.0, 0.5),
-        )
-
-    trainer = Trainer(
-        model_or_fn=model,
-        loss=tf.keras.losses.MeanSquaredError(
-            reduction=tf.keras.losses.Reduction.SUM
-        ),
-        # metrics=[tf.keras.metrics.AUC(num_thresholds=1000)],
-        use_horovod=FLAGS.use_horovod,
+  _strategy = distribution_utils.get_distribution_strategy()
+  data_pipe = Movielens1MRating()
+  with distribution_utils.get_strategy_scope(_strategy):
+    model = DualChannelsDeepModel(
+        user_embedding_size=32,
+        movie_embedding_size=32,
+        embedding_initializer=tf.keras.initializers.RandomNormal(0.0, 0.5),
     )
 
-    train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
-    trainer.fit(
-        train_input=train_input_fn,
-        # run_eagerly=False,
-    )
+  trainer = Trainer(
+      model_or_fn=model,
+      loss=tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.SUM),
+      # metrics=[tf.keras.metrics.AUC(num_thresholds=1000)],
+      use_horovod=FLAGS.use_horovod,
+  )
 
-    trainer.export_tfra()
+  train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
+  trainer.fit(train_input=train_input_fn,
+              # run_eagerly=False,
+             )
+
+  trainer.export_tfra()
 
 
 if __name__ == "__main__":
-    flags.mark_flag_as_required("model_dir")
-    app.run(main)
+  flags.mark_flag_as_required("model_dir")
+  app.run(main)

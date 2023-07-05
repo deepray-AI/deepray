@@ -1,14 +1,14 @@
-# Addons - Losses
+# Deepray - Losses
 
 ## Components
-https://www.tensorflow.org/addons/api_docs/python/dp/losses
+https://www.tensorflow.org/deepray/api_docs/python/dp/losses
 
 ## Contribution Guidelines
 #### Standard API
 In order to conform with the current API standard, all losses
 must:
  * Inherit from `keras.losses.Loss`.
- * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Addons')`
+ * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Deepray')`
 
 #### Testing Requirements
  * Simple unittests that demonstrate the loss is behaving as expected on

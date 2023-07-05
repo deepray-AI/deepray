@@ -63,9 +63,8 @@ class DataFrame(object):  # pylint: disable=useless-object-inheritance
         for _ in shape:
           shape_rank += 1
         if ragged_rank is not None and ragged_rank != shape_rank:
-          raise ValueError(
-            f'Field {name} is a nested list ({ragged_rank}) '
-            f'with shape {shape}')
+          raise ValueError(f'Field {name} is a nested list ({ragged_rank}) '
+                           f'with shape {shape}')
         self._ragged_rank = shape_rank
       elif ragged_rank is not None:
         shape = tensor_shape.TensorShape([None for _ in xrange(ragged_rank)])
@@ -114,13 +113,10 @@ class DataFrame(object):  # pylint: disable=useless-object-inheritance
       if rank is None:
         rank = self.ragged_rank
       if self.incomplete:
-        raise ValueError(
-          f'Field {self} is incomplete, please specify dtype and ragged_rank')
+        raise ValueError(f'Field {self} is incomplete, please specify dtype and ragged_rank')
       if rank == 0:
         return func(0)
-      return DataFrame.Value(
-        func(0),
-        [func(i + 1) for i in xrange(rank)])
+      return DataFrame.Value(func(0), [func(i + 1) for i in xrange(rank)])
 
     @property
     def ragged_indices(self):
@@ -136,27 +132,22 @@ class DataFrame(object):  # pylint: disable=useless-object-inheritance
 
     def output_shapes(self, batch_size=None):
       if self._shape is None:
-        return self.map(lambda i: tensor_shape.TensorShape(batch_size) if i == 0
-        else tensor_shape.TensorShape(None))
+        return self.map(lambda i: tensor_shape.TensorShape(batch_size) if i == 0 else tensor_shape.TensorShape(None))
       return self.map(
-        lambda i: tensor_shape.TensorShape(batch_size).concatenate(self._shape) if i == 0
-        else tensor_shape.TensorShape(None))
+          lambda i: tensor_shape.TensorShape(batch_size).concatenate(self._shape)
+          if i == 0 else tensor_shape.TensorShape(None)
+      )
 
     def output_specs(self, batch_size=None):
       shape = tensor_shape.TensorShape(batch_size)
       if self._shape is not None:
         shape = shape.concatenate(self._shape)
       specs = [tensor_spec.TensorSpec(shape, dtype=self._dtype)]
-      specs += [
-        tensor_spec.TensorSpec([None], dtype=dtypes.int32)
-        for _ in xrange(self._ragged_rank)]
+      specs += [tensor_spec.TensorSpec([None], dtype=dtypes.int32) for _ in xrange(self._ragged_rank)]
       return specs
 
   # pylint: disable=inherit-non-class
-  class Value(
-    collections.namedtuple(
-      'DataFrameValue',
-      ['values', 'nested_row_splits'])):
+  class Value(collections.namedtuple('DataFrameValue', ['values', 'nested_row_splits'])):
     """A structure represents a value in DataFrame."""
 
     def __new__(cls, values, nested_row_splits=None):
@@ -164,8 +155,7 @@ class DataFrame(object):  # pylint: disable=useless-object-inheritance
         nested_row_splits = tuple()
       else:
         nested_row_splits = tuple(nested_row_splits)
-      return super(DataFrame.Value, cls).__new__(
-        cls, values, nested_row_splits)
+      return super(DataFrame.Value, cls).__new__(cls, values, nested_row_splits)
 
     def __repr__(self):
       return f'{{{self.values}, splits={self.nested_row_splits}}}'
@@ -175,12 +165,10 @@ class DataFrame(object):  # pylint: disable=useless-object-inheritance
         return self.values
       if len(self.nested_row_splits) == 1 and self.values.shape.ndims > 1:
         return self.values
-      sparse_value = gen_ragged_conversion_ops.ragged_tensor_to_sparse(
-        self.nested_row_splits, self.values, name=name)
+      sparse_value = gen_ragged_conversion_ops.ragged_tensor_to_sparse(self.nested_row_splits, self.values, name=name)
       return sparse_tensor.SparseTensor(
-        sparse_value.sparse_indices,
-        sparse_value.sparse_values,
-        sparse_value.sparse_dense_shape)
+          sparse_value.sparse_indices, sparse_value.sparse_values, sparse_value.sparse_dense_shape
+      )
 
   @classmethod
   def to_sparse(cls, features):
@@ -201,36 +189,28 @@ class DataFrame(object):  # pylint: disable=useless-object-inheritance
   def unbatch_and_to_sparse(cls, features):
     """Unbatch and convert a row of DataFrame to tensors or sparse tensors."""
     if isinstance(features, dict):
-      return {
-        f: cls.unbatch_and_to_sparse(features[f])
-        for f in features}
+      return {f: cls.unbatch_and_to_sparse(features[f]) for f in features}
     if isinstance(features, DataFrame.Value):
       if len(features.nested_row_splits) > 1:
         features = features.to_sparse()
-        features = sparse_ops.sparse_reshape(
-          features, features.dense_shape[1:])
+        features = sparse_ops.sparse_reshape(features, features.dense_shape[1:])
       elif len(features.nested_row_splits) == 1:
-        num_elems = math_ops.cast(
-          features.nested_row_splits[0][1], dtype=dtypes.int64)
+        num_elems = math_ops.cast(features.nested_row_splits[0][1], dtype=dtypes.int64)
         indices = math_ops.range(num_elems)
         indices = array_ops.reshape(indices, [-1, 1])
-        features = sparse_tensor.SparseTensor(
-          indices, features.values, [-1])
+        features = sparse_tensor.SparseTensor(indices, features.values, [-1])
       else:
         features = features.values
       return features
     if isinstance(features, ragged_tensor.RaggedTensor):
       if features.ragged_rank > 1:
         features = features.to_sparse()
-        features = sparse_ops.sparse_reshape(
-          features, features.dense_shape[1:])
+        features = sparse_ops.sparse_reshape(features, features.dense_shape[1:])
       elif features.ragged_rank == 1:
-        actual_batch_size = math_ops.cast(
-          features.row_splits[1], dtype=dtypes.int64)
+        actual_batch_size = math_ops.cast(features.row_splits[1], dtype=dtypes.int64)
         indices = math_ops.range(actual_batch_size)
         indices = array_ops.reshape(indices, [-1, 1])
-        features = sparse_tensor.SparseTensor(
-          indices, features.values, [-1])
+        features = sparse_tensor.SparseTensor(indices, features.values, [-1])
       return features
     if isinstance(features, ops.Tensor):
       return features
@@ -241,9 +221,7 @@ def to_sparse(num_parallel_calls=None):
   """Convert values to tensors or sparse tensors from input dataset."""
 
   def _apply_fn(dataset):
-    return dataset.map(
-      DataFrame.to_sparse,
-      num_parallel_calls=num_parallel_calls)
+    return dataset.map(DataFrame.to_sparse, num_parallel_calls=num_parallel_calls)
 
   return _apply_fn
 
@@ -252,9 +230,7 @@ def unbatch_and_to_sparse(num_parallel_calls=None):
   """Unbatch and convert a row to tensors or sparse tensors from input dataset."""
 
   def _apply_fn(dataset):
-    return dataset.map(
-      DataFrame.unbatch_and_to_sparse,
-      num_parallel_calls=num_parallel_calls)
+    return dataset.map(DataFrame.unbatch_and_to_sparse, num_parallel_calls=num_parallel_calls)
 
   return _apply_fn
 

@@ -33,16 +33,17 @@ using GPUDevice = Eigen::GpuDevice;
 
 namespace {
 
-#define GET_DATA_POINT(x, y)                                                   \
-  data[batch_id * data_batch_stride + data_channels * (y * data_width + x) +   \
+#define GET_DATA_POINT(x, y)                                                 \
+  data[batch_id * data_batch_stride + data_channels * (y * data_width + x) + \
        chan]
 
 template <typename T>
-__global__ void
-Resampler2DKernel(const T *__restrict__ data, const T *__restrict__ warp,
-                  T *__restrict__ output, const int batch_size,
-                  const int data_height, const int data_width,
-                  const int data_channels, const int num_sampling_points) {
+__global__ void Resampler2DKernel(const T* __restrict__ data,
+                                  const T* __restrict__ warp,
+                                  T* __restrict__ output, const int batch_size,
+                                  const int data_height, const int data_width,
+                                  const int data_channels,
+                                  const int num_sampling_points) {
   const int output_data_size = batch_size * num_sampling_points * data_channels;
   GPU_1D_KERNEL_LOOP(index, output_data_size) {
     const int out_index = index;
@@ -105,14 +106,15 @@ Resampler2DKernel(const T *__restrict__ data, const T *__restrict__ warp,
   }
 }
 
-} // namespace
+}  // namespace
 
 namespace functor {
 
-template <typename T> struct Resampler2DFunctor<GPUDevice, T> {
-  void operator()(OpKernelContext *ctx, const GPUDevice &d,
-                  const T *__restrict__ data, const T *__restrict__ warp,
-                  T *__restrict__ output, const int batch_size,
+template <typename T>
+struct Resampler2DFunctor<GPUDevice, T> {
+  void operator()(OpKernelContext* ctx, const GPUDevice& d,
+                  const T* __restrict__ data, const T* __restrict__ warp,
+                  T* __restrict__ output, const int batch_size,
                   const int data_height, const int data_width,
                   const int data_channels, const int num_sampling_points) {
     const int output_data_size =
@@ -129,23 +131,22 @@ template struct Resampler2DFunctor<GPUDevice, Eigen::half>;
 template struct Resampler2DFunctor<GPUDevice, float>;
 template struct Resampler2DFunctor<GPUDevice, double>;
 
-} // namespace functor
+}  // namespace functor
 
 namespace {
 
-#define UPDATE_GRAD_DATA_POINT(x, y, v)                                        \
-  GpuAtomicAdd(grad_data + (batch_id * data_batch_stride +                     \
-                            data_channels * (y * data_width + x) + chan),      \
+#define UPDATE_GRAD_DATA_POINT(x, y, v)                                   \
+  GpuAtomicAdd(grad_data + (batch_id * data_batch_stride +                \
+                            data_channels * (y * data_width + x) + chan), \
                v)
 
 template <typename T>
-__global__ void
-ResamplerGrad2DKernel(const T *__restrict__ data, const T *__restrict__ warp,
-                      const T *__restrict__ grad_output,
-                      T *__restrict__ grad_data, T *__restrict__ grad_warp,
-                      const int batch_size, const int data_height,
-                      const int data_width, const int data_channels,
-                      const int num_sampling_points) {
+__global__ void ResamplerGrad2DKernel(
+    const T* __restrict__ data, const T* __restrict__ warp,
+    const T* __restrict__ grad_output, T* __restrict__ grad_data,
+    T* __restrict__ grad_warp, const int batch_size, const int data_height,
+    const int data_width, const int data_channels,
+    const int num_sampling_points) {
   const int resampler_output_size =
       batch_size * num_sampling_points * data_channels;
   GPU_1D_KERNEL_LOOP(index, resampler_output_size) {
@@ -233,15 +234,16 @@ ResamplerGrad2DKernel(const T *__restrict__ data, const T *__restrict__ warp,
 #undef GET_DATA_POINT
 #undef UPDATE_GRAD_DATA_POINT
 
-} // namespace
+}  // namespace
 
 namespace functor {
 
-template <typename T> struct ResamplerGrad2DFunctor<GPUDevice, T> {
-  void operator()(OpKernelContext *ctx, const GPUDevice &d,
-                  const T *__restrict__ data, const T *__restrict__ warp,
-                  const T *__restrict__ grad_output, T *__restrict__ grad_data,
-                  T *__restrict__ grad_warp, const int batch_size,
+template <typename T>
+struct ResamplerGrad2DFunctor<GPUDevice, T> {
+  void operator()(OpKernelContext* ctx, const GPUDevice& d,
+                  const T* __restrict__ data, const T* __restrict__ warp,
+                  const T* __restrict__ grad_output, T* __restrict__ grad_data,
+                  T* __restrict__ grad_warp, const int batch_size,
                   const int data_height, const int data_width,
                   const int data_channels, const int num_sampling_points) {
     // Set gradients to 0, because the kernel incrementally updates the
@@ -275,7 +277,7 @@ template struct ResamplerGrad2DFunctor<GPUDevice, Eigen::half>;
 template struct ResamplerGrad2DFunctor<GPUDevice, float>;
 template struct ResamplerGrad2DFunctor<GPUDevice, double>;
 
-} // namespace functor
-} // namespace deepray
-} // namespace tensorflow
-#endif // GOOGLE_CUDA
+}  // namespace functor
+}  // namespace deepray
+}  // namespace tensorflow
+#endif  // GOOGLE_CUDA

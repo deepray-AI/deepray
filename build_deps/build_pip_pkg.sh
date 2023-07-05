@@ -74,6 +74,7 @@ function main() {
   pushd ${TMPDIR}
   echo $(date) : "=== Building wheel"
 
+
   BUILD_CMD="setup.py bdist_wheel --platlib-patch"
   if is_macos; then
     if [[ x"$(arch)" == x"arm64" ]]; then

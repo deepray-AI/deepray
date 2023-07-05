@@ -24,43 +24,41 @@ from deepray.utils import test_utils
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def layer_test_esn(dtype):
-    inp = np.asanyarray(
-        [[[1.0, 1.0, 1.0, 1.0]], [[2.0, 2.0, 2.0, 2.0]], [[3.0, 3.0, 3.0, 3.0]]]
-    ).astype(dtype)
-    out = np.asarray([[2.5, 2.5, 2.5], [4.5, 4.5, 4.5], [6.5, 6.5, 6.5]]).astype(dtype)
+  inp = np.asanyarray([[[1.0, 1.0, 1.0, 1.0]], [[2.0, 2.0, 2.0, 2.0]], [[3.0, 3.0, 3.0, 3.0]]]).astype(dtype)
+  out = np.asarray([[2.5, 2.5, 2.5], [4.5, 4.5, 4.5], [6.5, 6.5, 6.5]]).astype(dtype)
 
-    const_initializer = tf.constant_initializer(0.5)
-    kwargs = {
-        "units": 3,
-        "connectivity": 1,
-        "leaky": 1,
-        "spectral_radius": 0.9,
-        "use_norm2": True,
-        "use_bias": True,
-        "activation": None,
-        "kernel_initializer": const_initializer,
-        "recurrent_initializer": const_initializer,
-        "bias_initializer": const_initializer,
-        "dtype": dtype,
-    }
+  const_initializer = tf.constant_initializer(0.5)
+  kwargs = {
+      "units": 3,
+      "connectivity": 1,
+      "leaky": 1,
+      "spectral_radius": 0.9,
+      "use_norm2": True,
+      "use_bias": True,
+      "activation": None,
+      "kernel_initializer": const_initializer,
+      "recurrent_initializer": const_initializer,
+      "bias_initializer": const_initializer,
+      "dtype": dtype,
+  }
 
-    test_utils.layer_test(ESN, kwargs=kwargs, input_data=inp, expected_output=out)
+  test_utils.layer_test(ESN, kwargs=kwargs, input_data=inp, expected_output=out)
 
 
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def test_serialization(dtype):
-    esn = ESN(
-        units=3,
-        connectivity=1,
-        leaky=1,
-        spectral_radius=0.9,
-        use_norm2=False,
-        use_bias=True,
-        activation=None,
-        kernel_initializer="ones",
-        recurrent_initializer="ones",
-        bias_initializer="ones",
-    )
-    serialized_esn = tf.keras.layers.serialize(esn)
-    new_layer = tf.keras.layers.deserialize(serialized_esn)
-    assert esn.get_config() == new_layer.get_config()
+  esn = ESN(
+      units=3,
+      connectivity=1,
+      leaky=1,
+      spectral_radius=0.9,
+      use_norm2=False,
+      use_bias=True,
+      activation=None,
+      kernel_initializer="ones",
+      recurrent_initializer="ones",
+      bias_initializer="ones",
+  )
+  serialized_esn = tf.keras.layers.serialize(esn)
+  new_layer = tf.keras.layers.deserialize(serialized_esn)
+  assert esn.get_config() == new_layer.get_config()

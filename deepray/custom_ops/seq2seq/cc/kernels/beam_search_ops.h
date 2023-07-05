@@ -27,16 +27,17 @@ namespace deepray {
 
 namespace functor {
 
-template <typename Device, typename T> struct GatherTree {
-  void operator()(OpKernelContext *ctx, const Device &d,
+template <typename Device, typename T>
+struct GatherTree {
+  void operator()(OpKernelContext* ctx, const Device& d,
                   typename TTypes<T, 3>::ConstTensor step_ids,
                   typename TTypes<T, 3>::ConstTensor parent_ids,
                   TTypes<int32>::ConstVec max_sequence_lengths,
                   const T end_token, typename TTypes<T, 3>::Tensor beams);
 };
 
-} // namespace functor
-} // end namespace deepray
-} // namespace tensorflow
+}  // namespace functor
+}  // end namespace deepray
+}  // namespace tensorflow
 
-#endif // DEEPRAY_SEQ2SEQ_KERNELS_BEAM_SEARCH_OPS_H_
+#endif  // DEEPRAY_SEQ2SEQ_KERNELS_BEAM_SEARCH_OPS_H_

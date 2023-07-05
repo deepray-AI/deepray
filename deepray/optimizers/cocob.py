@@ -20,6 +20,7 @@ import tensorflow as tf
 from deepray.optimizers import KerasLegacyOptimizer
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class COCOB(KerasLegacyOptimizer):
   """Optimizer that implements COCOB Backprop Algorithm
 
@@ -91,23 +92,22 @@ class COCOB(KerasLegacyOptimizer):
     reward_update_op = reward.assign(reward_update)
 
     return tf.group(
-      *[
-        gradients_sum_update_op,
-        var_update_op,
-        grad_norm_sum_update_op,
-        tilde_w_update_op,
-        reward_update_op,
-        lr_update_op,
-      ]
+        *[
+            gradients_sum_update_op,
+            var_update_op,
+            grad_norm_sum_update_op,
+            tilde_w_update_op,
+            reward_update_op,
+            lr_update_op,
+        ]
     )
 
   def _resource_apply_sparse(self, grad, handle, indices, apply_state=None):
     raise NotImplementedError()
 
   def get_config(self):
-
     config = {
-      "alpha": self._serialize_hyperparameter("alpha"),
+        "alpha": self._serialize_hyperparameter("alpha"),
     }
     base_config = super().get_config()
     return {**base_config, **config}

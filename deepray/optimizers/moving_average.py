@@ -22,6 +22,7 @@ from typing import Union
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class MovingAverage(AveragedOptimizerWrapper):
   """Optimizer that computes a moving average of the variables.
 
@@ -78,16 +79,12 @@ class MovingAverage(AveragedOptimizerWrapper):
     if self._num_updates is not None:
       if isinstance(self._num_updates, tf.Variable):
         tf.debugging.assert_integer(
-          self._num_updates,
-          (
-            'type of argument "num_updates" must be '
-            "int; got {} instead".format(self._num_updates.dtype)
-          ),
+            self._num_updates,
+            ('type of argument "num_updates" must be '
+             "int; got {} instead".format(self._num_updates.dtype)),
         )
       num_updates = tf.cast(self._num_updates, tf.float32, name="num_updates")
-      average_decay = tf.minimum(
-        average_decay, (1.0 + num_updates) / (10.0 + num_updates)
-      )
+      average_decay = tf.minimum(average_decay, (1.0 + num_updates) / (10.0 + num_updates))
 
     self._set_hyper("average_decay", average_decay)
     self._start_step = start_step
@@ -108,21 +105,17 @@ class MovingAverage(AveragedOptimizerWrapper):
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
     super()._prepare_local(var_device, var_dtype, apply_state)
-    apply_state[(var_device, var_dtype)]["tfa_ma_decay"] = self._get_decay(
-      self._optimizer.iterations
-    )
+    apply_state[(var_device, var_dtype)]["dp_ma_decay"] = self._get_decay(self._optimizer.iterations)
 
   def average_op(self, var, average_var, local_apply_state):
-    return tf.keras.backend.moving_average_update(
-      average_var, var, local_apply_state["tfa_ma_decay"]
-    )
+    return tf.keras.backend.moving_average_update(average_var, var, local_apply_state["dp_ma_decay"])
 
   def get_config(self):
     config = {
-      "average_decay": self._serialize_hyperparameter("average_decay"),
-      "num_updates": self._num_updates,
-      "start_step": self._start_step,
-      "dynamic_decay": self._dynamic_decay,
+        "average_decay": self._serialize_hyperparameter("average_decay"),
+        "num_updates": self._num_updates,
+        "start_step": self._start_step,
+        "dynamic_decay": self._dynamic_decay,
     }
     base_config = super().get_config()
     return {**base_config, **config}
@@ -159,12 +152,12 @@ class MovingAverage(AveragedOptimizerWrapper):
       strategy = tf.distribute.get_strategy()
       return strategy.run(self._swap_weights, args=())
     else:
-      raise ValueError(
-        "Swapping weights must occur under a " "tf.distribute.Strategy"
-      )
+      raise ValueError("Swapping weights must occur under a "
+                       "tf.distribute.Strategy")
 
   @tf.function
   def _swap_weights(self):
+
     def fn_0(a, b):
       return a.assign_add(b, use_locking=self._use_locking)
 
@@ -177,15 +170,9 @@ class MovingAverage(AveragedOptimizerWrapper):
     def swap(strategy, a, b):
       """Swap `a` and `b` and mirror to all devices."""
       for a_element, b_element in zip(a, b):
-        strategy.extended.update(
-          a_element, fn_0, args=(b_element,)
-        )  # a = a + b
-        strategy.extended.update(
-          b_element, fn_1, args=(a_element,)
-        )  # b = a - b
-        strategy.extended.update(
-          a_element, fn_2, args=(b_element,)
-        )  # a = a - b
+        strategy.extended.update(a_element, fn_0, args=(b_element,))  # a = a + b
+        strategy.extended.update(b_element, fn_1, args=(a_element,))  # b = a - b
+        strategy.extended.update(a_element, fn_2, args=(b_element,))  # a = a - b
 
     ctx = tf.distribute.get_replica_context()
     return ctx.merge_call(swap, args=(self._average_weights, self._model_weights))

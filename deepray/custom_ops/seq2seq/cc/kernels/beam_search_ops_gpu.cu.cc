@@ -28,10 +28,10 @@ typedef Eigen::GpuDevice GPUDevice;
 
 template <typename T>
 __global__ void GatherTreeOpKernel(const int32 batch_size, const int32 max_time,
-                                   const int32 beam_width, const T *step_ids,
-                                   const T *parent_ids,
-                                   const int32 *max_sequence_lengths,
-                                   const T end_token, T *beams) {
+                                   const int32 beam_width, const T* step_ids,
+                                   const T* parent_ids,
+                                   const int32* max_sequence_lengths,
+                                   const T end_token, T* beams) {
   CUDA_1D_KERNEL_LOOP(i, batch_size * beam_width) {
     const int32 batch = i / beam_width;
     const int32 beam = i % beam_width;
@@ -42,7 +42,7 @@ __global__ void GatherTreeOpKernel(const int32 batch_size, const int32 max_time,
       continue;
     }
 
-#define GET_IX(time_ix, beam_ix)                                               \
+#define GET_IX(time_ix, beam_ix) \
   (batch_size * beam_width * (time_ix) + beam_width * batch + (beam_ix))
     const int32 initial_beam_ix = GET_IX(max_seq_len_b - 1, beam);
     beams[initial_beam_ix] = ldg(step_ids + initial_beam_ix);
@@ -78,8 +78,9 @@ __global__ void GatherTreeOpKernel(const int32 batch_size, const int32 max_time,
   }
 }
 
-template <typename T> struct GatherTree<GPUDevice, T> {
-  void operator()(OpKernelContext *ctx, const GPUDevice &d,
+template <typename T>
+struct GatherTree<GPUDevice, T> {
+  void operator()(OpKernelContext* ctx, const GPUDevice& d,
                   typename TTypes<T, 3>::ConstTensor step_ids,
                   typename TTypes<T, 3>::ConstTensor parent_ids,
                   TTypes<int32>::ConstVec max_sequence_length,
@@ -104,7 +105,7 @@ template <typename T> struct GatherTree<GPUDevice, T> {
 DEFINE_GPU_SPECS(int32);
 #undef DEFINE_GPU_SPECS
 
-} // end namespace functor
-} // end namespace deepray
-} // end namespace tensorflow
-#endif // GOOGLE_CUDA
+}  // end namespace functor
+}  // end namespace deepray
+}  // end namespace tensorflow
+#endif  // GOOGLE_CUDA

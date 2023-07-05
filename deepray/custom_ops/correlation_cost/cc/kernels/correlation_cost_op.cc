@@ -17,7 +17,7 @@ limitations under the License.
 
 #if GOOGLE_CUDA
 #define EIGEN_USE_GPU
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA
 
 #include "deepray/custom_ops/correlation_cost/cc/kernels/correlation_cost_op.h"
 
@@ -36,7 +36,8 @@ typedef Eigen::GpuDevice GPUDevice;
 
 namespace functor {
 
-template <typename Dtype> struct CorrelationCostFunctor<CPUDevice, Dtype> {
+template <typename Dtype>
+struct CorrelationCostFunctor<CPUDevice, Dtype> {
   Status operator()(OpKernelContext *context, const Tensor &input_a_t,
                     const Tensor &input_b_t, Tensor *output_t,
                     /* params */
@@ -117,7 +118,8 @@ template <typename Dtype> struct CorrelationCostFunctor<CPUDevice, Dtype> {
   }
 };
 
-template <typename Dtype> struct CorrelationCostGradFunctor<CPUDevice, Dtype> {
+template <typename Dtype>
+struct CorrelationCostGradFunctor<CPUDevice, Dtype> {
   Status operator()(OpKernelContext *context, const Tensor &input_a_t,
                     const Tensor &input_b_t, const Tensor &topdiff_t,
                     Tensor *output_a_gradient_t, Tensor *output_b_gradient_t,
@@ -213,11 +215,11 @@ template <typename Dtype> struct CorrelationCostGradFunctor<CPUDevice, Dtype> {
   }
 };
 
-} // end namespace functor
+}  // end namespace functor
 
 template <typename Device, typename T>
 class CorrelationCostOp : public OpKernel {
-public:
+ public:
   explicit CorrelationCostOp(OpKernelConstruction *context)
       : OpKernel(context) {
     OP_REQUIRES_OK(context, context->GetAttr("kernel_size", &kernel_size));
@@ -280,7 +282,7 @@ public:
     OP_REQUIRES_OK(context, s);
   }
 
-private:
+ private:
   int kernel_size;
   int max_displacement;
   int stride_1;
@@ -291,7 +293,7 @@ private:
 
 template <typename Device, typename T>
 class CorrelationCostGradOp : public OpKernel {
-public:
+ public:
   explicit CorrelationCostGradOp(OpKernelConstruction *context)
       : OpKernel(context) {
     OP_REQUIRES_OK(context, context->GetAttr("kernel_size", &kernel_size));
@@ -334,7 +336,7 @@ public:
     OP_REQUIRES_OK(context, s);
   }
 
-private:
+ private:
   int kernel_size;
   int max_displacement;
   int stride_1;
@@ -344,14 +346,14 @@ private:
 };
 
 // Register the CPU kernels.
-#define REGISTER_CORRELATIONCOST_OP_CPU(T)                                     \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCost")                       \
-                              .Device(DEVICE_CPU)                              \
-                              .TypeConstraint<T>("T"),                         \
-                          CorrelationCostOp<CPUDevice, T>)                     \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCostGrad")                   \
-                              .Device(DEVICE_CPU)                              \
-                              .TypeConstraint<T>("T"),                         \
+#define REGISTER_CORRELATIONCOST_OP_CPU(T)                    \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCost")     \
+                              .Device(DEVICE_CPU)             \
+                              .TypeConstraint<T>("T"),        \
+                          CorrelationCostOp<CPUDevice, T>)    \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCostGrad") \
+                              .Device(DEVICE_CPU)             \
+                              .TypeConstraint<T>("T"),        \
                           CorrelationCostGradOp<CPUDevice, T>)
 
 TF_CALL_float(REGISTER_CORRELATIONCOST_OP_CPU);
@@ -360,20 +362,20 @@ TF_CALL_float(REGISTER_CORRELATIONCOST_OP_CPU);
 // Register the GPU kernels.
 #if GOOGLE_CUDA
 
-#define REGISTER_CORRELATIONCOST_OP_GPU(T)                                     \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCost")                       \
-                              .Device(DEVICE_GPU)                              \
-                              .TypeConstraint<T>("T"),                         \
-                          CorrelationCostOp<GPUDevice, T>)                     \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCostGrad")                   \
-                              .Device(DEVICE_GPU)                              \
-                              .TypeConstraint<T>("T"),                         \
+#define REGISTER_CORRELATIONCOST_OP_GPU(T)                    \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCost")     \
+                              .Device(DEVICE_GPU)             \
+                              .TypeConstraint<T>("T"),        \
+                          CorrelationCostOp<GPUDevice, T>)    \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>CorrelationCostGrad") \
+                              .Device(DEVICE_GPU)             \
+                              .TypeConstraint<T>("T"),        \
                           CorrelationCostGradOp<GPUDevice, T>)
 
 TF_CALL_float(REGISTER_CORRELATIONCOST_OP_GPU);
 #undef REGISTER_CORRELATIONCOST_OP_GPU
 
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA
 
-} // namespace deepray
-} // namespace tensorflow
+}  // namespace deepray
+}  // namespace tensorflow

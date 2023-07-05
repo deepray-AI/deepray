@@ -21,11 +21,9 @@ from deepray.utils.types import TensorLike, FloatTensorLike
 
 
 @tf.function
-
-def pinball_loss(
-    y_true: TensorLike, y_pred: TensorLike, tau: FloatTensorLike = 0.5
-) -> tf.Tensor:
-    """Computes the pinball loss between `y_true` and `y_pred`.
+@tf.keras.utils.register_keras_serializable(package="Deepray")
+def pinball_loss(y_true: TensorLike, y_pred: TensorLike, tau: FloatTensorLike = 0.5) -> tf.Tensor:
+  """Computes the pinball loss between `y_true` and `y_pred`.
 
     `loss = maximum(tau * (y_true - y_pred), (tau - 1) * (y_true - y_pred))`
 
@@ -57,21 +55,21 @@ def pinball_loss(
       - https://en.wikipedia.org/wiki/Quantile_regression
       - https://projecteuclid.org/download/pdfview_1/euclid.bj/1297173840
     """
-    y_pred = tf.convert_to_tensor(y_pred)
-    y_true = tf.cast(y_true, y_pred.dtype)
+  y_pred = tf.convert_to_tensor(y_pred)
+  y_true = tf.cast(y_true, y_pred.dtype)
 
-    # Broadcast the pinball slope along the batch dimension
-    tau = tf.expand_dims(tf.cast(tau, y_pred.dtype), 0)
-    one = tf.cast(1, tau.dtype)
+  # Broadcast the pinball slope along the batch dimension
+  tau = tf.expand_dims(tf.cast(tau, y_pred.dtype), 0)
+  one = tf.cast(1, tau.dtype)
 
-    delta_y = y_true - y_pred
-    pinball = tf.math.maximum(tau * delta_y, (tau - one) * delta_y)
-    return tf.reduce_mean(pinball, axis=-1)
+  delta_y = y_true - y_pred
+  pinball = tf.math.maximum(tau * delta_y, (tau - one) * delta_y)
+  return tf.reduce_mean(pinball, axis=-1)
 
 
-
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class PinballLoss(LossFunctionWrapper):
-    """Computes the pinball loss between `y_true` and `y_pred`.
+  """Computes the pinball loss between `y_true` and `y_pred`.
 
     `loss = maximum(tau * (y_true - y_pred), (tau - 1) * (y_true - y_pred))`
 
@@ -114,11 +112,11 @@ class PinballLoss(LossFunctionWrapper):
       - https://projecteuclid.org/download/pdfview_1/euclid.bj/1297173840
     """
 
-    @typechecked
-    def __init__(
-        self,
-        tau: FloatTensorLike = 0.5,
-        reduction: str = tf.keras.losses.Reduction.AUTO,
-        name: str = "pinball_loss",
-    ):
-        super().__init__(pinball_loss, reduction=reduction, name=name, tau=tau)
+  @typechecked
+  def __init__(
+      self,
+      tau: FloatTensorLike = 0.5,
+      reduction: str = tf.keras.losses.Reduction.AUTO,
+      name: str = "pinball_loss",
+  ):
+    super().__init__(pinball_loss, reduction=reduction, name=name, tau=tau)

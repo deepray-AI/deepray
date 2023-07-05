@@ -23,6 +23,7 @@ from deepray.optimizers import KerasLegacyOptimizer
 from deepray.utils.types import FloatTensorLike
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class ProximalAdagrad(KerasLegacyOptimizer):
   """Optimizer that implements the Proximal Adagrad algorithm.
 
@@ -86,64 +87,52 @@ class ProximalAdagrad(KerasLegacyOptimizer):
 
   def _resource_apply_dense(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = (apply_state or {}).get(
-      (var_device, var_dtype)
-    ) or self._fallback_apply_state(var_device, var_dtype)
+    coefficients = (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
 
     acc = self.get_slot(var, "accumulator")
     return tf.raw_ops.ResourceApplyProximalAdagrad(
-      var=var.handle,
-      accum=acc.handle,
-      lr=coefficients["lr_t"],
-      l1=coefficients["l1_regularization_strength"],
-      l2=coefficients["l2_regularization_strength"],
-      grad=grad,
-      use_locking=self._use_locking,
+        var=var.handle,
+        accum=acc.handle,
+        lr=coefficients["lr_t"],
+        l1=coefficients["l1_regularization_strength"],
+        l2=coefficients["l2_regularization_strength"],
+        grad=grad,
+        use_locking=self._use_locking,
     )
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
     super()._prepare_local(var_device, var_dtype, apply_state)
     apply_state[(var_device, var_dtype)].update(
-      {
-        "l1_regularization_strength": tf.identity(
-          self._get_hyper("l1_regularization_strength", var_dtype)
-        ),
-        "l2_regularization_strength": tf.identity(
-          self._get_hyper("l2_regularization_strength", var_dtype)
-        ),
-      }
+        {
+            "l1_regularization_strength": tf.identity(self._get_hyper("l1_regularization_strength", var_dtype)),
+            "l2_regularization_strength": tf.identity(self._get_hyper("l2_regularization_strength", var_dtype)),
+        }
     )
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = (apply_state or {}).get(
-      (var_device, var_dtype)
-    ) or self._fallback_apply_state(var_device, var_dtype)
+    coefficients = (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
 
     acc = self.get_slot(var, "accumulator")
     return tf.raw_ops.ResourceSparseApplyProximalAdagrad(
-      var=var.handle,
-      accum=acc.handle,
-      lr=coefficients["lr_t"],
-      l1=coefficients["l1_regularization_strength"],
-      l2=coefficients["l2_regularization_strength"],
-      grad=grad,
-      indices=indices,
-      use_locking=self._use_locking,
+        var=var.handle,
+        accum=acc.handle,
+        lr=coefficients["lr_t"],
+        l1=coefficients["l1_regularization_strength"],
+        l2=coefficients["l2_regularization_strength"],
+        grad=grad,
+        indices=indices,
+        use_locking=self._use_locking,
     )
 
   def get_config(self):
     config = super().get_config()
     config.update(
-      {
-        "learning_rate": self._serialize_hyperparameter("learning_rate"),
-        "initial_accumulator_value": self._initial_accumulator_value,
-        "l1_regularization_strength": self._serialize_hyperparameter(
-          "l1_regularization_strength"
-        ),
-        "l2_regularization_strength": self._serialize_hyperparameter(
-          "l2_regularization_strength"
-        ),
-      }
+        {
+            "learning_rate": self._serialize_hyperparameter("learning_rate"),
+            "initial_accumulator_value": self._initial_accumulator_value,
+            "l1_regularization_strength": self._serialize_hyperparameter("l1_regularization_strength"),
+            "l2_regularization_strength": self._serialize_hyperparameter("l2_regularization_strength"),
+        }
     )
     return config

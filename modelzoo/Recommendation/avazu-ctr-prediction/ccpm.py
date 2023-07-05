@@ -16,6 +16,7 @@ FLAGS = flags.FLAGS
 
 
 class KMaxPooling(Layer):
+
   def __init__(self, k, dim):
     super(KMaxPooling, self).__init__()
     self.k = k
@@ -47,10 +48,10 @@ class CCPM(keras.Model):
         self.p.append(3)
     self.max_pooling_list = [KMaxPooling(k, dim=2) for k in self.p]
 
-    self.padding_list = [ZeroPadding2D(padding=(0, conv_kernel_width[i] - 1))
-                         for i in range(self.conv_len)]
-    self.conv_list = [Conv2D(filters=conv_filters[i], kernel_size=(1, conv_kernel_width[i]))
-                      for i in range(self.conv_len)]
+    self.padding_list = [ZeroPadding2D(padding=(0, conv_kernel_width[i] - 1)) for i in range(self.conv_len)]
+    self.conv_list = [
+        Conv2D(filters=conv_filters[i], kernel_size=(1, conv_kernel_width[i])) for i in range(self.conv_len)
+    ]
 
     self.flatten = Flatten()
     self.dense = Dense(units=1)
@@ -58,24 +59,24 @@ class CCPM(keras.Model):
   def build(self, input_shape):
     self.embedding_layers = {}
     self.hash_long_kernel = {}
-    for name, dim, voc_size, hash_size, dtype in self.feature_map[(self.feature_map['ftype'] == "Categorical")][["name", "dim", "voc_size", "hash_size", "dtype"]].values:
+    for name, dim, voc_size, hash_size, dtype in self.feature_map[(self.feature_map['ftype'] == "Categorical")][[
+        "name", "dim", "voc_size", "hash_size", "dtype"
+    ]].values:
       if not math.isnan(hash_size):
         self.hash_long_kernel[name] = Hash(int(hash_size))
         voc_size = int(hash_size)
 
       if not FLAGS.use_horovod:
         self.embedding_layers[name] = EmbeddingLayerGPU(
-          embedding_size=dim,
-          # mini_batch_regularizer=l2(feature.emb_reg_l2),
-          # mask_value=feature.default_value,
-          key_dtype=dtype,
-          value_dtype=tf.float32,
-          initializer=tf.keras.initializers.GlorotUniform(),
-          name='embedding_' + name,
-          # init_capacity=800000,
-          kv_creator=de.CuckooHashTableCreator(
-            saver=de.FileSystemSaver()
-          )
+            embedding_size=dim,
+            # mini_batch_regularizer=l2(feature.emb_reg_l2),
+            # mask_value=feature.default_value,
+            key_dtype=dtype,
+            value_dtype=tf.float32,
+            initializer=tf.keras.initializers.GlorotUniform(),
+            name='embedding_' + name,
+            # init_capacity=800000,
+            kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver())
         )
       else:
         import horovod.tensorflow as hvd
@@ -84,18 +85,15 @@ class CCPM(keras.Model):
         mpi_size = hvd.size()
         mpi_rank = hvd.rank()
         self.embedding_layers[name] = de.keras.layers.HvdAllToAllEmbedding(
-          # mpi_size=mpi_size,
-          embedding_size=dim,
-          key_dtype=dtype,
-          value_dtype=tf.float32,
-          initializer=tf.keras.initializers.GlorotUniform(),
-          devices=gpu_device,
-          init_capacity=800000,
-          name='embedding_' + name,
-          kv_creator=de.CuckooHashTableCreator(
-            saver=de.FileSystemSaver(proc_size=mpi_size,
-                                     proc_rank=mpi_rank)
-          )
+            # mpi_size=mpi_size,
+            embedding_size=dim,
+            key_dtype=dtype,
+            value_dtype=tf.float32,
+            initializer=tf.keras.initializers.GlorotUniform(),
+            devices=gpu_device,
+            init_capacity=800000,
+            name='embedding_' + name,
+            kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank))
         )
 
       # self.embedding_layers[name] = Embedding(

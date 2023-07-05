@@ -1,14 +1,14 @@
-# Addons - Metrics
+# Deepray - Metrics
 
 ## Contents
-https://www.tensorflow.org/addons/api_docs/python/dp/metrics
+https://www.tensorflow.org/deepray/api_docs/python/dp/metrics
 
 ## Contribution Guidelines
 #### Standard API
 In order to conform with the current API standard, all metrics
 must:
  * Inherit from `tf.keras.metrics.Metric`.
- * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Addons')`
+ * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Deepray')`
 
 #### Metric Requirements
 

@@ -29,12 +29,12 @@ namespace deepray {
 typedef Eigen::ThreadPoolDevice CPUDevice;
 typedef Eigen::GpuDevice GPUDevice;
 
-#define GET_INDEX(i, j, k, c)                                                  \
+#define GET_INDEX(i, j, k, c) \
   (k * height * width * channels + i * width * channels + j * channels + c)
 
 template <typename T>
-EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void Distance(const T *f, T *d, int *v,
-                                                    T *z, int n) {
+EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void Distance(const T* f, T* d, int* v,
+                                                    T* z, int n) {
   // index of rightmost parabola in lower envelope
   int k = 0;
   v[0] = 0;
@@ -43,7 +43,7 @@ EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void Distance(const T *f, T *d, int *v,
   // compute lowest envelope:
   for (int q = 1; q <= n - 1; q++) {
     T s(0);
-    k++; // this compensates for first line of next do-while block
+    k++;  // this compensates for first line of next do-while block
     do {
       k--;
       // compute horizontal position of intersection between the parabola from
@@ -67,9 +67,9 @@ EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void Distance(const T *f, T *d, int *v,
 }
 
 template <typename T>
-EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void
-EuclideanDistanceTransformSample(const uint8 *input, T *output, int k, int c,
-                                 int height, int width, int channels) {
+EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void EuclideanDistanceTransformSample(
+    const uint8* input, T* output, int k, int c, int height, int width,
+    int channels) {
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       int index = GET_INDEX(i, j, k, c);
@@ -81,14 +81,14 @@ EuclideanDistanceTransformSample(const uint8 *input, T *output, int k, int c,
     }
   }
   int max = Eigen::numext::maxi(height, width);
-  T *f = new T[max];
-  T *d = new T[max];
+  T* f = new T[max];
+  T* d = new T[max];
   // locations of parabolas in lower envelope
-  int *vw = new int[width];
-  int *vh = new int[height];
+  int* vw = new int[width];
+  int* vh = new int[height];
   // locations of boundaries between parabolas
-  T *zw = new T[width + 1];
-  T *zh = new T[height + 1];
+  T* zw = new T[width + 1];
+  T* zh = new T[height + 1];
   for (int i = 0; i < height; i++) {
     for (int j = 0; j < width; j++) {
       int index = GET_INDEX(i, j, k, c);
@@ -130,12 +130,12 @@ template <typename Device, typename T>
 struct EuclideanDistanceTransformFunctor {
   typedef typename TTypes<uint8, 4>::ConstTensor InputType;
   typedef typename TTypes<T, 4>::Tensor OutputType;
-  void operator()(OpKernelContext *ctx, OutputType *output,
-                  const InputType &images) const;
+  void operator()(OpKernelContext* ctx, OutputType* output,
+                  const InputType& images) const;
 };
-} // end namespace functor
+}  // end namespace functor
 
-} // end namespace deepray
-} // end namespace tensorflow
+}  // end namespace deepray
+}  // end namespace tensorflow
 
-#endif // DEEPRAY_IMAGE_KERNELS_EUCLIDEAN_DISTANCE_TRANSFORM_OP_H_
+#endif  // DEEPRAY_IMAGE_KERNELS_EUCLIDEAN_DISTANCE_TRANSFORM_OP_H_

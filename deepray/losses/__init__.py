@@ -14,70 +14,26 @@
 # ==============================================================================
 """Additional losses that conform to Keras API."""
 
-import abc
-
-import tensorflow as tf
-from absl import flags
-from keras.engine import compile_utils
-from tensorflow.keras.losses import BinaryCrossentropy
-
 from deepray.losses.contrastive import contrastive_loss, ContrastiveLoss
 from deepray.losses.focal_loss import (
-  sigmoid_focal_crossentropy,
-  SigmoidFocalCrossEntropy,
+    sigmoid_focal_crossentropy,
+    SigmoidFocalCrossEntropy,
 )
 from deepray.losses.giou_loss import giou_loss, GIoULoss
-from deepray.losses.kappa_loss import WeightedKappaLoss
 from deepray.losses.lifted import lifted_struct_loss, LiftedStructLoss
-from deepray.losses.npairs import (
-  npairs_loss,
-  NpairsLoss,
-  npairs_multilabel_loss,
-  NpairsMultilabelLoss,
-)
-from deepray.losses.quantiles import pinball_loss, PinballLoss
 from deepray.losses.sparsemax_loss import sparsemax_loss, SparsemaxLoss
 from deepray.losses.triplet import (
-  triplet_semihard_loss,
-  triplet_hard_loss,
-  TripletSemiHardLoss,
-  TripletHardLoss,
+    triplet_semihard_loss,
+    triplet_hard_loss,
+    TripletSemiHardLoss,
+    TripletHardLoss,
 )
-from deepray.losses.weighted_sparse_categorical_crossentropy import loss as weighted_sparse_categorical_crossentropy_loss
-from deepray.losses.weighted_sparse_categorical_crossentropy import per_example_loss as weighted_sparse_categorical_crossentropy_per_example_loss
+from deepray.losses.quantiles import pinball_loss, PinballLoss
 
-FLAGS = flags.FLAGS
-
-
-class Loss(compile_utils.LossesContainer):
-  """Abstract class for all metrics."""
-
-  def __init__(self, losses=BinaryCrossentropy(reduction=tf.keras.losses.Reduction.NONE)):
-    super().__init__(losses)
-
-  @abc.abstractmethod
-  def call(self, y_true, y_pred, sample_weight=None):
-    """
-    must defined in subclass
-    """
-    raise NotImplementedError("call: not implemented!")
-
-  def __call__(
-      self, y_true, y_pred, sample_weight=None, regularization_losses=None
-  ):
-    if not self._built:
-      self._built = True
-    loss_value = self.call(y_true, y_pred, sample_weight)
-    total_loss_mean_value = tf.nn.compute_average_loss(loss_value, global_batch_size=FLAGS.batch_size * FLAGS.num_accumulation_steps)
-
-    self._loss_metric.update_state(
-      total_loss_mean_value,
-      # sample_weight=batch_dim
-    )
-    return total_loss_mean_value
-
-  def __repr__(self):
-    return str(self)
-
-  def __str__(self):
-    return self.__class__.__name__
+from deepray.losses.npairs import (
+    npairs_loss,
+    NpairsLoss,
+    npairs_multilabel_loss,
+    NpairsMultilabelLoss,
+)
+from deepray.losses.kappa_loss import WeightedKappaLoss

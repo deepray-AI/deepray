@@ -23,17 +23,17 @@ from typing import Optional, Callable
 
 
 class MeanMetricWrapper(tf.keras.metrics.Mean):
-    """Wraps a stateless metric function with the Mean metric."""
+  """Wraps a stateless metric function with the Mean metric."""
 
-    @typechecked
-    def __init__(
-        self,
-        fn: Callable,
-        name: Optional[str] = None,
-        dtype: AcceptableDTypes = None,
-        **kwargs,
-    ):
-        """Creates a `MeanMetricWrapper` instance.
+  @typechecked
+  def __init__(
+      self,
+      fn: Callable,
+      name: Optional[str] = None,
+      dtype: AcceptableDTypes = None,
+      **kwargs,
+  ):
+    """Creates a `MeanMetricWrapper` instance.
         Args:
           fn: The metric function to wrap, with signature
             `fn(y_true, y_pred, **kwargs)`.
@@ -41,12 +41,12 @@ class MeanMetricWrapper(tf.keras.metrics.Mean):
           dtype: (Optional) data type of the metric result.
           **kwargs: The keyword arguments that are passed on to `fn`.
         """
-        super().__init__(name=name, dtype=dtype)
-        self._fn = fn
-        self._fn_kwargs = kwargs
+    super().__init__(name=name, dtype=dtype)
+    self._fn = fn
+    self._fn_kwargs = kwargs
 
-    def update_state(self, y_true, y_pred, sample_weight=None):
-        """Accumulates metric statistics.
+  def update_state(self, y_true, y_pred, sample_weight=None):
+    """Accumulates metric statistics.
 
         `y_true` and `y_pred` should have the same shape.
         Args:
@@ -58,37 +58,35 @@ class MeanMetricWrapper(tf.keras.metrics.Mean):
         Returns:
           Update op.
         """
-        y_true = tf.cast(y_true, self._dtype)
-        y_pred = tf.cast(y_pred, self._dtype)
-        # TODO: Add checks for ragged tensors and dimensions:
-        #   `ragged_assert_compatible_and_get_flat_values`
-        #   and `squeeze_or_expand_dimensions`
-        matches = self._fn(y_true, y_pred, **self._fn_kwargs)
-        return super().update_state(matches, sample_weight=sample_weight)
+    y_true = tf.cast(y_true, self._dtype)
+    y_pred = tf.cast(y_pred, self._dtype)
+    # TODO: Add checks for ragged tensors and dimensions:
+    #   `ragged_assert_compatible_and_get_flat_values`
+    #   and `squeeze_or_expand_dimensions`
+    matches = self._fn(y_true, y_pred, **self._fn_kwargs)
+    return super().update_state(matches, sample_weight=sample_weight)
 
-    def get_config(self):
-        config = {k: v for k, v in self._fn_kwargs.items()}
-        base_config = super().get_config()
-        return {**base_config, **config}
+  def get_config(self):
+    config = {k: v for k, v in self._fn_kwargs.items()}
+    base_config = super().get_config()
+    return {**base_config, **config}
 
 
 def _get_model(metric, num_output):
-    # Test API comptibility with tf.keras Model
-    model = tf.keras.Sequential()
-    model.add(tf.keras.layers.Dense(64, activation="relu"))
-    model.add(tf.keras.layers.Dense(num_output, activation="softmax"))
-    model.compile(
-        optimizer="adam", loss="categorical_crossentropy", metrics=["acc", metric]
-    )
+  # Test API comptibility with tf.keras Model
+  model = tf.keras.Sequential()
+  model.add(tf.keras.layers.Dense(64, activation="relu"))
+  model.add(tf.keras.layers.Dense(num_output, activation="softmax"))
+  model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["acc", metric])
 
-    data = np.random.random((10, 3))
-    labels = np.random.random((10, num_output))
-    model.fit(data, labels, epochs=1, batch_size=5, verbose=0)
+  data = np.random.random((10, 3))
+  labels = np.random.random((10, num_output))
+  model.fit(data, labels, epochs=1, batch_size=5, verbose=0)
 
 
 def sample_weight_shape_match(v, sample_weight):
-    if sample_weight is None:
-        return tf.ones_like(v)
-    if np.size(sample_weight) == 1:
-        return tf.fill(v.shape, sample_weight)
-    return tf.convert_to_tensor(sample_weight)
+  if sample_weight is None:
+    return tf.ones_like(v)
+  if np.size(sample_weight) == 1:
+    return tf.fill(v.shape, sample_weight)
+  return tf.convert_to_tensor(sample_weight)

@@ -23,11 +23,9 @@ from deepray.utils import test_utils
 
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def test_hardshrink(dtype):
-    x = tf.constant([-2.0, -0.5, 0.0, 0.5, 2.0], dtype=dtype)
-    expected_result = tf.constant([-2.0, 0.0, 0.0, 0.0, 2.0], dtype=dtype)
-    test_utils.assert_allclose_according_to_type(hardshrink(x), expected_result)
+  x = tf.constant([-2.0, -0.5, 0.0, 0.5, 2.0], dtype=dtype)
+  expected_result = tf.constant([-2.0, 0.0, 0.0, 0.0, 2.0], dtype=dtype)
+  test_utils.assert_allclose_according_to_type(hardshrink(x), expected_result)
 
-    expected_result = tf.constant([-2.0, 0.0, 0.0, 0.0, 2.0], dtype=dtype)
-    test_utils.assert_allclose_according_to_type(
-        hardshrink(x, lower=-1.0, upper=1.0), expected_result
-    )
+  expected_result = tf.constant([-2.0, 0.0, 0.0, 0.0, 2.0], dtype=dtype)
+  test_utils.assert_allclose_according_to_type(hardshrink(x, lower=-1.0, upper=1.0), expected_result)

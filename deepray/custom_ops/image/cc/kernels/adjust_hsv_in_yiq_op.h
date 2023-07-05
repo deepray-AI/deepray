@@ -16,7 +16,7 @@ limitations under the License.
 
 #if GOOGLE_CUDA
 #define EIGEN_USE_GPU
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA
 
 #include <cmath>
 
@@ -34,9 +34,9 @@ static constexpr int kChannelSize = 3;
 namespace internal {
 
 template <int MATRIX_SIZE>
-EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void
-compute_transformation_matrix(const float delta_h, const float scale_s,
-                              const float scale_v, float *matrix) {
+EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void compute_transformation_matrix(
+    const float delta_h, const float scale_s, const float scale_v,
+    float* matrix) {
   static_assert(MATRIX_SIZE == kChannelSize * kChannelSize,
                 "Size of matrix should be 9.");
   // Projection matrix from RGB to YIQ. Numbers from wikipedia
@@ -65,7 +65,7 @@ compute_transformation_matrix(const float delta_h, const float scale_s,
   Eigen::Map<Eigen::Matrix<float, 3, 3, Eigen::ColMajor>> eigen_matrix(matrix);
   eigen_matrix = yiq_inverse * hsv_transform * yiq;
 }
-} // namespace internal
+}  // namespace internal
 
 #if GOOGLE_CUDA
 typedef Eigen::GpuDevice GPUDevice;
@@ -73,17 +73,17 @@ typedef Eigen::GpuDevice GPUDevice;
 namespace functor {
 
 struct AdjustHsvInYiqGPU {
-  void operator()(OpKernelContext *ctx, int channel_count,
-                  const Tensor *const input, const float *const delta_h,
-                  const float *const scale_s, const float *const scale_v,
-                  Tensor *const output);
+  void operator()(OpKernelContext* ctx, int channel_count,
+                  const Tensor* const input, const float* const delta_h,
+                  const float* const scale_s, const float* const scale_v,
+                  Tensor* const output);
 };
 
-} // namespace functor
+}  // namespace functor
 
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA
 
-} // end namespace deepray
-} // namespace tensorflow
+}  // end namespace deepray
+}  // namespace tensorflow
 
-#endif // DEEPRAY_IMAGE_KERNELS_ADJUST_HSV_IN_YIQ_OP_H_
+#endif  // DEEPRAY_IMAGE_KERNELS_ADJUST_HSV_IN_YIQ_OP_H_

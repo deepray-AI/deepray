@@ -19,9 +19,9 @@ from typeguard import typechecked
 from typing import Union, List
 
 
-
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class PoincareNormalize(tf.keras.layers.Layer):
-    """Project into the Poincare ball with `norm <= 1.0 - epsilon`.
+  """Project into the Poincare ball with `norm <= 1.0 - epsilon`.
 
     See [Poincaré Embeddings for Learning Hierarchical Representations](https://arxiv.org/pdf/1705.08039.pdf),
     and [wiki](https://en.wikipedia.org/wiki/Poincare_ball_model).
@@ -41,26 +41,24 @@ class PoincareNormalize(tf.keras.layers.Layer):
         numerical stability.
     """
 
-    @typechecked
-    def __init__(
-        self, axis: Union[None, int, List[int]] = 1, epsilon: float = 1e-5, **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.axis = axis
-        self.epsilon = epsilon
+  @typechecked
+  def __init__(self, axis: Union[None, int, List[int]] = 1, epsilon: float = 1e-5, **kwargs):
+    super().__init__(**kwargs)
+    self.axis = axis
+    self.epsilon = epsilon
 
-    def call(self, inputs):
-        x = tf.convert_to_tensor(inputs)
-        square_sum = tf.math.reduce_sum(tf.math.square(x), self.axis, keepdims=True)
-        x_inv_norm = tf.math.rsqrt(square_sum)
-        x_inv_norm = tf.math.minimum((1.0 - self.epsilon) * x_inv_norm, 1.0)
-        outputs = tf.math.multiply(x, x_inv_norm)
-        return outputs
+  def call(self, inputs):
+    x = tf.convert_to_tensor(inputs)
+    square_sum = tf.math.reduce_sum(tf.math.square(x), self.axis, keepdims=True)
+    x_inv_norm = tf.math.rsqrt(square_sum)
+    x_inv_norm = tf.math.minimum((1.0 - self.epsilon) * x_inv_norm, 1.0)
+    outputs = tf.math.multiply(x, x_inv_norm)
+    return outputs
 
-    def compute_output_shape(self, input_shape):
-        return input_shape
+  def compute_output_shape(self, input_shape):
+    return input_shape
 
-    def get_config(self):
-        config = {"axis": self.axis, "epsilon": self.epsilon}
-        base_config = super().get_config()
-        return {**base_config, **config}
+  def get_config(self):
+    config = {"axis": self.axis, "epsilon": self.epsilon}
+    base_config = super().get_config()
+    return {**base_config, **config}

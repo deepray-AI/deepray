@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 
-
 import pytest
 import numpy as np
 
@@ -24,40 +23,40 @@ test_obs = 17
 
 
 def _np_sparsemax(z):
-    z = z - np.mean(z, axis=1)[:, np.newaxis]
+  z = z - np.mean(z, axis=1)[:, np.newaxis]
 
-    # sort z
-    z_sorted = np.sort(z, axis=1)[:, ::-1]
+  # sort z
+  z_sorted = np.sort(z, axis=1)[:, ::-1]
 
-    # calculate k(z)
-    z_cumsum = np.cumsum(z_sorted, axis=1)
-    k = np.arange(1, z.shape[1] + 1)
-    z_check = 1 + k * z_sorted > z_cumsum
-    # use argmax to get the index by row as .nonzero() doesn't
-    # take an axis argument. np.argmax return the first index, but the last
-    # index is required here, use np.flip to get the last index and
-    # `z.shape[axis]` to compensate for np.flip afterwards.
-    k_z = z.shape[1] - np.argmax(z_check[:, ::-1], axis=1)
+  # calculate k(z)
+  z_cumsum = np.cumsum(z_sorted, axis=1)
+  k = np.arange(1, z.shape[1] + 1)
+  z_check = 1 + k * z_sorted > z_cumsum
+  # use argmax to get the index by row as .nonzero() doesn't
+  # take an axis argument. np.argmax return the first index, but the last
+  # index is required here, use np.flip to get the last index and
+  # `z.shape[axis]` to compensate for np.flip afterwards.
+  k_z = z.shape[1] - np.argmax(z_check[:, ::-1], axis=1)
 
-    # calculate tau(z)
-    tau_sum = z_cumsum[np.arange(0, z.shape[0]), k_z - 1]
-    tau_z = ((tau_sum - 1) / k_z).reshape(-1, 1)
+  # calculate tau(z)
+  tau_sum = z_cumsum[np.arange(0, z.shape[0]), k_z - 1]
+  tau_z = ((tau_sum - 1) / k_z).reshape(-1, 1)
 
-    # calculate p
-    return np.maximum(0, z - tau_z)
+  # calculate p
+  return np.maximum(0, z - tau_z)
 
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize("dtype", [np.float32, np.float64])
 def test_sparsemax_layer_against_numpy(dtype):
-    """check sparsemax kernel against numpy."""
-    random = np.random.RandomState(1)
+  """check sparsemax kernel against numpy."""
+  random = np.random.RandomState(1)
 
-    z = random.uniform(low=-3, high=3, size=(test_obs, 10)).astype(dtype)
+  z = random.uniform(low=-3, high=3, size=(test_obs, 10)).astype(dtype)
 
-    test_utils.layer_test(
-        Sparsemax,
-        kwargs={"dtype": dtype},
-        input_data=z,
-        expected_output=_np_sparsemax(z).astype(dtype),
-    )
+  test_utils.layer_test(
+      Sparsemax,
+      kwargs={"dtype": dtype},
+      input_data=z,
+      expected_output=_np_sparsemax(z).astype(dtype),
+  )

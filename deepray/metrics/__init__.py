@@ -17,23 +17,23 @@
 from deepray.metrics.cohens_kappa import CohenKappa
 from deepray.metrics.f_scores import F1Score, FBetaScore
 from deepray.metrics.hamming import (
-  HammingLoss,
-  hamming_distance,
-  hamming_loss_fn,
+    HammingLoss,
+    hamming_distance,
+    hamming_loss_fn,
 )
 from deepray.metrics.utils import MeanMetricWrapper
 from deepray.metrics.matthews_correlation_coefficient import (
-  MatthewsCorrelationCoefficient,
+    MatthewsCorrelationCoefficient,
 )
 from deepray.metrics.multilabel_confusion_matrix import (
-  MultiLabelConfusionMatrix,
+    MultiLabelConfusionMatrix,
 )
 from deepray.metrics.r_square import RSquare
 from deepray.metrics.geometric_mean import GeometricMean
 from deepray.metrics.harmonic_mean import HarmonicMean
 from deepray.metrics.streaming_correlations import (
-  KendallsTauB,
-  KendallsTauC,
-  PearsonsCorrelation,
-  SpearmansRank,
+    KendallsTauB,
+    KendallsTauC,
+    PearsonsCorrelation,
+    SpearmansRank,
 )

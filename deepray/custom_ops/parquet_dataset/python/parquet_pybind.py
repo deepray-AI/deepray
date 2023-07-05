@@ -45,11 +45,8 @@ def parquet_fields(filename, fields=None, lower=False):
   logging.info(f'Reading fields from {filename} ...')
   all_field_tuples = _lib.parquet_file_get_fields(filename)  # pylint: disable=c-extension-no-member
   if not all_field_tuples:
-    raise ValueError(
-      f'No supported fields found in parquet file {filename}')
-  all_fields = {
-    f[0]: {'dtype': f[1], 'ragged_rank': f[2]}
-    for f in all_field_tuples}
+    raise ValueError(f'No supported fields found in parquet file {filename}')
+  all_fields = {f[0]: {'dtype': f[1], 'ragged_rank': f[2]} for f in all_field_tuples}
   if fields is None:
     fields = all_fields.keys()
   fields = tuple(fields)
@@ -57,49 +54,36 @@ def parquet_fields(filename, fields=None, lower=False):
   for f in fields:
     if isinstance(f, DataFrame.Field):
       if lower and f.name not in all_fields:
-        f = DataFrame.Field(
-          f.name.lower(),
-          dtype=f.dtype,
-          shape=f.shape,
-          ragged_rank=f.ragged_rank)
+        f = DataFrame.Field(f.name.lower(), dtype=f.dtype, shape=f.shape, ragged_rank=f.ragged_rank)
       if f.name not in all_fields:
-        raise ValueError(
-          f'Field {f.name} is not found in the parquet file {filename}')
+        raise ValueError(f'Field {f.name} is not found in the parquet file {filename}')
       dtype = f.dtype
       actual_dtype = np.dtype(all_fields[f.name]['dtype'])
       if dtype is None:
         dtype = actual_dtype
       elif dtype != actual_dtype:
-        raise ValueError(
-          f'Field {f.name} should has dtype {actual_dtype} not {dtype}')
+        raise ValueError(f'Field {f.name} should has dtype {actual_dtype} not {dtype}')
       ragged_rank = f.ragged_rank
       actual_ragged_rank = all_fields[f.name]['ragged_rank']
       if ragged_rank is None:
         ragged_rank = actual_ragged_rank
       elif ragged_rank != actual_ragged_rank:
-        raise ValueError(
-          f'Field {f.name} should has ragged_rank {actual_ragged_rank} '
-          f'not {ragged_rank}')
-      f = DataFrame.Field(
-        f.name,
-        dtype=dtype,
-        ragged_rank=ragged_rank,
-        shape=f.shape)
+        raise ValueError(f'Field {f.name} should has ragged_rank {actual_ragged_rank} '
+                         f'not {ragged_rank}')
+      f = DataFrame.Field(f.name, dtype=dtype, ragged_rank=ragged_rank, shape=f.shape)
       new_fields.append(f)
       continue
     if not isinstance(f, string):
-      raise ValueError(
-        f'Field {f} is not a DataFrame.Field or a string')
+      raise ValueError(f'Field {f} is not a DataFrame.Field or a string')
     if lower and f not in all_fields:
       f = f.lower()
     if f not in all_fields:
-      raise ValueError(
-        f'Field {f} is not found in the parquet file {filename}')
-    new_fields.append(DataFrame.Field(
-      f,
-      dtype=np.dtype(all_fields[f]['dtype']),
-      ragged_rank=all_fields[f]['ragged_rank'],
-      shape=None))
+      raise ValueError(f'Field {f} is not found in the parquet file {filename}')
+    new_fields.append(
+        DataFrame.Field(
+            f, dtype=np.dtype(all_fields[f]['dtype']), ragged_rank=all_fields[f]['ragged_rank'], shape=None
+        )
+    )
   return tuple(new_fields)
 
 
@@ -124,13 +108,10 @@ def parquet_filenames_and_fields(filenames, fields, lower=False):
     fields = parquet_fields(filenames[0], fields, lower=lower)
   elif isinstance(filenames, dataset_ops.Dataset):
     if filenames.output_types != dtypes.string:
-      raise TypeError(
-        '`filenames` must be a `tf.data.Dataset` of `tf.string` elements.')
-    if not filenames.output_shapes.is_compatible_with(
-        tensor_shape.TensorShape([])):
-      raise ValueError(
-        '`filenames` must be a `tf.data.Dataset` of scalar `tf.string` '
-        'elements.')
+      raise TypeError('`filenames` must be a `tf.data.Dataset` of `tf.string` elements.')
+    if not filenames.output_shapes.is_compatible_with(tensor_shape.TensorShape([])):
+      raise ValueError('`filenames` must be a `tf.data.Dataset` of scalar `tf.string` '
+                       'elements.')
     if fields is None:
       raise ValueError('`fields` must be specified.')
     if not isinstance(fields, (tuple, list)):
@@ -139,12 +120,10 @@ def parquet_filenames_and_fields(filenames, fields, lower=False):
       if not isinstance(f, DataFrame.Field):
         raise ValueError(f'Field {f} must be `hb.data.DataFrame.Field`.')
       if f.incomplete:
-        raise ValueError(
-          f'Field {f} is incomplete, please specify dtype and ragged_rank')
+        raise ValueError(f'Field {f} is incomplete, please specify dtype and ragged_rank')
   elif isinstance(filenames, ops.Tensor):
     if filenames.dtype != dtypes.string:
-      raise TypeError(
-        '`filenames` must be a `tf.Tensor` of `tf.string`.')
+      raise TypeError('`filenames` must be a `tf.Tensor` of `tf.string`.')
     if fields is None:
       raise ValueError('`fields` must be specified.')
     if not isinstance(fields, (tuple, list)):
@@ -153,13 +132,13 @@ def parquet_filenames_and_fields(filenames, fields, lower=False):
       if not isinstance(f, DataFrame.Field):
         raise ValueError(f'Field {f} must be `hb.data.DataFrame.Field`.')
       if f.incomplete:
-        raise ValueError(
-          f'Field {f} is incomplete, please specify dtype and ragged_rank')
+        raise ValueError(f'Field {f} is incomplete, please specify dtype and ragged_rank')
   else:
     raise ValueError(
-      f'`filenames` {filenames} must be a `tf.data.Dataset` of scalar '
-      '`tf.string` elements or can be converted to a `tf.Tensor` of '
-      '`tf.string`.')
+        f'`filenames` {filenames} must be a `tf.data.Dataset` of scalar '
+        '`tf.string` elements or can be converted to a `tf.Tensor` of '
+        '`tf.string`.'
+    )
 
   if not isinstance(filenames, dataset_ops.Dataset):
     filenames = ops.convert_to_tensor(filenames, dtype=dtypes.string)

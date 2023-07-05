@@ -23,6 +23,6 @@ from deepray.utils import test_utils
 
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def test_tanh(dtype):
-    x = tf.constant([-1.0, 0.0, 1.0], dtype=dtype)
-    expected_result = tf.constant([-0.23840582, 0.0, 0.238405825], dtype=dtype)
-    test_utils.assert_allclose_according_to_type(tanhshrink(x), expected_result)
+  x = tf.constant([-1.0, 0.0, 1.0], dtype=dtype)
+  expected_result = tf.constant([-0.23840582, 0.0, 0.238405825], dtype=dtype)
+  test_utils.assert_allclose_according_to_type(tanhshrink(x), expected_result)

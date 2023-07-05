@@ -19,7 +19,7 @@ from deepray.optimizers.average_wrapper import AveragedOptimizerWrapper
 
 
 class AverageModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
-    r"""The callback that saves average model weights.
+  r"""The callback that saves average model weights.
 
     The callback that should be used with optimizers that extend
     `dp.optimizers.AveragedOptimizerWrapper`, i.e.,
@@ -36,61 +36,59 @@ class AverageModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
         See `tf.keras.callbacks.ModelCheckpoint` for the other args.
     """
 
-    @typechecked
-    def __init__(
-        self,
-        update_weights: bool,
-        filepath: str,
-        monitor: str = "val_loss",
-        verbose: int = 0,
-        save_best_only: bool = False,
-        save_weights_only: bool = False,
-        mode: str = "auto",
-        save_freq: str = "epoch",
+  @typechecked
+  def __init__(
+      self,
+      update_weights: bool,
+      filepath: str,
+      monitor: str = "val_loss",
+      verbose: int = 0,
+      save_best_only: bool = False,
+      save_weights_only: bool = False,
+      mode: str = "auto",
+      save_freq: str = "epoch",
+      **kwargs,
+  ):
+    self.update_weights = update_weights
+    super().__init__(
+        filepath,
+        monitor,
+        verbose,
+        save_best_only,
+        save_weights_only,
+        mode,
+        save_freq,
         **kwargs,
-    ):
-        self.update_weights = update_weights
-        super().__init__(
-            filepath,
-            monitor,
-            verbose,
-            save_best_only,
-            save_weights_only,
-            mode,
-            save_freq,
-            **kwargs,
-        )
+    )
 
-    def _get_optimizer(self):
-        optimizer = self.model.optimizer
-        if type(optimizer).__name__ in ["LossScaleOptimizer", "LossScaleOptimizerV1"]:
-            optimizer = optimizer.inner_optimizer
+  def _get_optimizer(self):
+    optimizer = self.model.optimizer
+    if type(optimizer).__name__ in ["LossScaleOptimizer", "LossScaleOptimizerV1"]:
+      optimizer = optimizer.inner_optimizer
 
-        return optimizer
+    return optimizer
 
-    def set_model(self, model):
-        super().set_model(model)
-        optimizer = self._get_optimizer()
-        if not isinstance(optimizer, AveragedOptimizerWrapper):
-            raise TypeError(
-                "AverageModelCheckpoint is only used when training"
-                "with MovingAverage or StochasticAverage"
-            )
+  def set_model(self, model):
+    super().set_model(model)
+    optimizer = self._get_optimizer()
+    if not isinstance(optimizer, AveragedOptimizerWrapper):
+      raise TypeError("AverageModelCheckpoint is only used when training"
+                      "with MovingAverage or StochasticAverage")
 
-    def _save_model(self, *args, **kwargs):
-        optimizer = self._get_optimizer()
-        assert isinstance(optimizer, AveragedOptimizerWrapper)
+  def _save_model(self, *args, **kwargs):
+    optimizer = self._get_optimizer()
+    assert isinstance(optimizer, AveragedOptimizerWrapper)
 
-        if self.update_weights:
-            optimizer.assign_average_vars(self.model.trainable_weights)
-            return super()._save_model(*args, **kwargs)
-        else:
-            # Note: `model.get_weights()` gives us the weights (non-ref)
-            # whereas `model.variables` returns references to the variables.
-            non_avg_weights = self.model.get_weights()
-            optimizer.assign_average_vars(self.model.trainable_weights)
-            # result is currently None, since `super._save_model` doesn't
-            # return anything, but this may change in the future.
-            result = super()._save_model(*args, **kwargs)
-            self.model.set_weights(non_avg_weights)
-            return result
+    if self.update_weights:
+      optimizer.assign_average_vars(self.model.trainable_weights)
+      return super()._save_model(*args, **kwargs)
+    else:
+      # Note: `model.get_weights()` gives us the weights (non-ref)
+      # whereas `model.variables` returns references to the variables.
+      non_avg_weights = self.model.get_weights()
+      optimizer.assign_average_vars(self.model.trainable_weights)
+      # result is currently None, since `super._save_model` doesn't
+      # return anything, but this may change in the future.
+      result = super()._save_model(*args, **kwargs)
+      self.model.set_weights(non_avg_weights)
+      return result

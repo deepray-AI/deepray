@@ -17,7 +17,6 @@ import pytest
 import tensorflow as tf
 from deepray import activations
 
-
 ALL_ACTIVATIONS = [
     "hardshrink",
     "lisht",
@@ -32,18 +31,18 @@ ALL_ACTIVATIONS = [
 
 @pytest.mark.parametrize("name", ALL_ACTIVATIONS)
 def test_serialization(name):
-    fn = tf.keras.activations.get("Deepray>" + name)
-    ref_fn = getattr(activations, name)
-    assert fn == ref_fn
-    config = tf.keras.activations.serialize(fn)
-    fn = tf.keras.activations.deserialize(config)
-    assert fn == ref_fn
+  fn = tf.keras.activations.get("Deepray>" + name)
+  ref_fn = getattr(activations, name)
+  assert fn == ref_fn
+  config = tf.keras.activations.serialize(fn)
+  fn = tf.keras.activations.deserialize(config)
+  assert fn == ref_fn
 
 
 @pytest.mark.parametrize("name", ALL_ACTIVATIONS)
 def test_serialization_with_layers(name):
-    layer = tf.keras.layers.Dense(3, activation=getattr(activations, name))
-    config = tf.keras.layers.serialize(layer)
-    deserialized_layer = tf.keras.layers.deserialize(config)
-    assert deserialized_layer.__class__.__name__ == layer.__class__.__name__
-    assert deserialized_layer.activation.__name__ == name
+  layer = tf.keras.layers.Dense(3, activation=getattr(activations, name))
+  config = tf.keras.layers.serialize(layer)
+  deserialized_layer = tf.keras.layers.deserialize(config)
+  assert deserialized_layer.__class__.__name__ == layer.__class__.__name__
+  assert deserialized_layer.activation.__name__ == name

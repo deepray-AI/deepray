@@ -22,6 +22,7 @@ from typeguard import typechecked
 from typing import Union, Iterable
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class SpatialPyramidPooling2D(tf.keras.layers.Layer):
   """Performs Spatial Pyramid Pooling.
 
@@ -87,9 +88,7 @@ class SpatialPyramidPooling2D(tf.keras.layers.Layer):
 
         new_inp = inputs[:, :new_input_height, :new_input_width, :]
         output = self.pool_layers[index](new_inp)
-        output = tf.reshape(
-          output, [dynamic_input_shape[0], bin[0] * bin[1], inputs.shape[-1]]
-        )
+        output = tf.reshape(output, [dynamic_input_shape[0], bin[0] * bin[1], inputs.shape[-1]])
         outputs.append(output)
         index += 1
       outputs = tf.concat(outputs, axis=1)
@@ -102,9 +101,7 @@ class SpatialPyramidPooling2D(tf.keras.layers.Layer):
 
         new_inp = inputs[:, :, :new_input_height, :new_input_width]
         output = self.pool_layers[index](new_inp)
-        output = tf.reshape(
-          output, [dynamic_input_shape[0], inputs.shape[1], bin[0] * bin[1]]
-        )
+        output = tf.reshape(output, [dynamic_input_shape[0], inputs.shape[1], bin[0] * bin[1]])
         outputs.append(output)
         index += 1
 

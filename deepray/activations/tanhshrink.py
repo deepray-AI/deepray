@@ -18,8 +18,9 @@ import tensorflow as tf
 from deepray.utils.types import TensorLike
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 def tanhshrink(x: TensorLike) -> tf.Tensor:
-    r"""Tanh shrink function.
+  r"""Tanh shrink function.
 
     Applies the element-wise function:
 
@@ -39,5 +40,5 @@ def tanhshrink(x: TensorLike) -> tf.Tensor:
     Returns:
         A `Tensor`. Has the same type as `x`.
     """
-    x = tf.convert_to_tensor(x)
-    return x - tf.math.tanh(x)
+  x = tf.convert_to_tensor(x)
+  return x - tf.math.tanh(x)

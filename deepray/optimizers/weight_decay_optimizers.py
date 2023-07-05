@@ -102,10 +102,10 @@ class DecoupledWeightDecayExtension:
   def get_config(self):
     config = super().get_config()
     config.update(
-      {
-        "weight_decay": self._serialize_hyperparameter("weight_decay"),
-        "exclude_from_weight_decay": self.exclude_from_weight_decay,
-      }
+        {
+            "weight_decay": self._serialize_hyperparameter("weight_decay"),
+            "exclude_from_weight_decay": self.exclude_from_weight_decay,
+        }
     )
     return config
 
@@ -115,13 +115,13 @@ class DecoupledWeightDecayExtension:
     if "learning_rate" in config:
       if isinstance(config["learning_rate"], dict):
         config["learning_rate"] = tf.keras.optimizers.schedules.deserialize(
-          config["learning_rate"], custom_objects=custom_objects
+            config["learning_rate"], custom_objects=custom_objects
         )
 
     if "weight_decay" in config:
       if isinstance(config["weight_decay"], dict):
         config["weight_decay"] = tf.keras.optimizers.schedules.deserialize(
-          config["weight_decay"], custom_objects=custom_objects
+            config["weight_decay"], custom_objects=custom_objects
         )
 
     return cls(**config)
@@ -165,9 +165,7 @@ class DecoupledWeightDecayExtension:
             ValueError: If some of the variables are not `Variable` objects.
         """
     self._set_decay_var_list(var_list, decay_var_list)
-    return super().minimize(
-      loss, var_list=var_list, grad_loss=grad_loss, name=name, tape=tape
-    )
+    return super().minimize(loss, var_list=var_list, grad_loss=grad_loss, name=name, tape=tape)
 
   def apply_gradients(self, grads_and_vars, name=None, decay_var_list=None, **kwargs):
     """Apply gradients to variables.
@@ -198,9 +196,8 @@ class DecoupledWeightDecayExtension:
   def _decay_weights_op(self, var, apply_state=None):
     if self._do_use_weight_decay(var):
       var_device, var_dtype = var.device, var.dtype.base_dtype
-      coefficients = (apply_state or {}).get(
-        (var_device, var_dtype)
-      ) or self._fallback_apply_state(var_device, var_dtype)
+      coefficients = (apply_state or {}).get((var_device, var_dtype)
+                                            ) or self._fallback_apply_state(var_device, var_dtype)
 
       return var.assign_sub(coefficients["wd_t"] * var, self._use_locking)
     return tf.no_op()
@@ -208,18 +205,15 @@ class DecoupledWeightDecayExtension:
   def _decay_weights_sparse_op(self, var, indices, apply_state=None):
     if self._do_use_weight_decay(var):
       var_device, var_dtype = var.device, var.dtype.base_dtype
-      coefficients = (apply_state or {}).get(
-        (var_device, var_dtype)
-      ) or self._fallback_apply_state(var_device, var_dtype)
+      coefficients = (apply_state or {}).get((var_device, var_dtype)
+                                            ) or self._fallback_apply_state(var_device, var_dtype)
 
       update = -coefficients["wd_t"] * tf.gather(var, indices)
       return self._resource_scatter_add(var, indices, update)
     return tf.no_op()
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
-    super(DecoupledWeightDecayExtension, self)._prepare_local(
-      var_device, var_dtype, apply_state
-    )
+    super(DecoupledWeightDecayExtension, self)._prepare_local(var_device, var_dtype, apply_state)
 
     if "weight_decay" in self._hyper:
       wd_t = tf.identity(self._decayed_wd(var_dtype))
@@ -237,26 +231,20 @@ class DecoupledWeightDecayExtension:
   # super().apply_x resolves to the apply_x function of the BaseOptimizer.
 
   def _resource_apply_dense(self, grad, var, apply_state=None):
-    with tf.control_dependencies(
-        [self._decay_weights_op(var, apply_state=apply_state)]
-    ):
+    with tf.control_dependencies([self._decay_weights_op(var, apply_state=apply_state)]):
       return super()._resource_apply_dense(grad, var, apply_state=apply_state)
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     decay_op = self._decay_weights_sparse_op(var, indices, apply_state=apply_state)
     with tf.control_dependencies([decay_op]):
-      return super()._resource_apply_sparse(
-        grad, var, indices, apply_state=apply_state
-      )
+      return super()._resource_apply_sparse(grad, var, indices, apply_state=apply_state)
 
   def _set_decay_var_list(self, var_list, decay_var_list=None):
     if decay_var_list:
       self._decay_var_list = set(v.ref() for v in decay_var_list)
     elif self.exclude_from_weight_decay:
       self._decay_var_list = set(
-        v.ref()
-        for v in var_list
-        if not is_variable_matched_by_regexes(v, self.exclude_from_weight_decay)
+          v.ref() for v in var_list if not is_variable_matched_by_regexes(v, self.exclude_from_weight_decay)
       )
     else:
       self._decay_var_list = None
@@ -269,17 +257,13 @@ class DecoupledWeightDecayExtension:
 
 
 if importlib.util.find_spec("tensorflow.keras.optimizers.legacy") is not None:
-  keras_legacy_optimizer = Union[
-    tf.keras.optimizers.legacy.Optimizer, tf.keras.optimizers.Optimizer
-  ]
+  keras_legacy_optimizer = Union[tf.keras.optimizers.legacy.Optimizer, tf.keras.optimizers.Optimizer]
 else:
   keras_legacy_optimizer = tf.keras.optimizers.Optimizer
 
 
 @typechecked
-def extend_with_decoupled_weight_decay(
-    base_optimizer: Type[keras_legacy_optimizer],
-) -> Type[keras_legacy_optimizer]:
+def extend_with_decoupled_weight_decay(base_optimizer: Type[keras_legacy_optimizer],) -> Type[keras_legacy_optimizer]:
   """Factory function returning an optimizer class with decoupled weight
     decay.
 
@@ -341,9 +325,7 @@ def extend_with_decoupled_weight_decay(
         and base_optimizer.
     """
 
-  class OptimizerWithDecoupledWeightDecay(
-    DecoupledWeightDecayExtension, base_optimizer
-  ):
+  class OptimizerWithDecoupledWeightDecay(DecoupledWeightDecayExtension, base_optimizer):
     """Base_optimizer with decoupled weight decay.
 
         This class computes the update step of `base_optimizer` and
@@ -379,6 +361,7 @@ else:
   SGD_CLASS = tf.keras.optimizers.SGD
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class SGDW(DecoupledWeightDecayExtension, SGD_CLASS):
   """Optimizer that implements the Momentum algorithm with weight_decay.
 
@@ -448,15 +431,16 @@ class SGDW(DecoupledWeightDecayExtension, SGD_CLASS):
                 variables excluded from weight decay.
         """
     super().__init__(
-      weight_decay,
-      learning_rate=learning_rate,
-      momentum=momentum,
-      nesterov=nesterov,
-      name=name,
-      **kwargs,
+        weight_decay,
+        learning_rate=learning_rate,
+        momentum=momentum,
+        nesterov=nesterov,
+        name=name,
+        **kwargs,
     )
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class AdamW(DecoupledWeightDecayExtension, ADAM_CLASS):
   """Optimizer that implements the Adam algorithm with weight decay.
 
@@ -538,12 +522,12 @@ class AdamW(DecoupledWeightDecayExtension, ADAM_CLASS):
                 variables excluded from weight decay.
         """
     super().__init__(
-      weight_decay,
-      learning_rate=learning_rate,
-      beta_1=beta_1,
-      beta_2=beta_2,
-      epsilon=epsilon,
-      amsgrad=amsgrad,
-      name=name,
-      **kwargs,
+        weight_decay,
+        learning_rate=learning_rate,
+        beta_1=beta_1,
+        beta_2=beta_2,
+        epsilon=epsilon,
+        amsgrad=amsgrad,
+        name=name,
+        **kwargs,
     )

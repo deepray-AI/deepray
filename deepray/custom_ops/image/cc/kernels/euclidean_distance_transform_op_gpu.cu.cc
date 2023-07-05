@@ -30,11 +30,10 @@ namespace deepray {
 namespace functor {
 
 template <typename T>
-__global__ void
-EuclideanDistanceTransformGPUKernel(const uint8 *__restrict__ input_ptr,
-                                    T *__restrict__ output_ptr,
-                                    const int batch_size, const int height,
-                                    const int width, const int channels) {
+__global__ void EuclideanDistanceTransformGPUKernel(
+    const uint8 *__restrict__ input_ptr, T *__restrict__ output_ptr,
+    const int batch_size, const int height, const int width,
+    const int channels) {
   for (int index : GpuGridRangeX<int>(batch_size * channels)) {
     int batch_id = index / channels;
     int channel = index % channels;
@@ -43,7 +42,8 @@ EuclideanDistanceTransformGPUKernel(const uint8 *__restrict__ input_ptr,
   }
 }
 
-template <typename T> struct EuclideanDistanceTransformFunctor<GPUDevice, T> {
+template <typename T>
+struct EuclideanDistanceTransformFunctor<GPUDevice, T> {
   typedef typename TTypes<uint8, 4>::ConstTensor InputType;
   typedef typename TTypes<T, 4>::Tensor OutputType;
 
@@ -65,9 +65,9 @@ template struct EuclideanDistanceTransformFunctor<GPUDevice, Eigen::half>;
 template struct EuclideanDistanceTransformFunctor<GPUDevice, float>;
 template struct EuclideanDistanceTransformFunctor<GPUDevice, double>;
 
-} // end namespace functor
+}  // end namespace functor
 
-} // end namespace deepray
-} // end namespace tensorflow
+}  // end namespace deepray
+}  // end namespace tensorflow
 
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA

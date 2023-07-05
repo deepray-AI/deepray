@@ -1,0 +1,187 @@
+# Deepray Codeowners
+
+# Submodule Owners
+# These will not always trigger a GitHub review because submodule owners do not
+# always have write access. However, a bot will notify them of the needed review.
+
+/deepray/activations/hardshrink.py @windqaq
+/deepray/activations/tests/hardshrink_test.py @windqaq
+/deepray/activations/lisht.py @windqaq
+/deepray/activations/tests/lisht_test.py @windqaq
+/deepray/activations/mish.py @windqaq @digantamisra98
+/deepray/activations/tests/mish_test.py @windqaq @digantamisra98
+/deepray/activations/rrelu.py @fsx950223
+/deepray/activations/tests/rrelu_test.py @fsx950223
+/deepray/activations/softshrink.py @windqaq
+/deepray/activations/tests/softshrink_test.py @windqaq
+/deepray/activations/sparsemax.py @andreasmadsen
+/deepray/activations/tests/sparsemax_test.py @andreasmadsen
+/deepray/activations/tanhshrink.py @fsx950223
+/deepray/activations/tests/tanhshrink_test.py @fsx950223
+/deepray/activations/snake.py @failure-to-thrive
+/deepray/activations/tests/snake_test.py @failure-to-thrive
+
+/deepray/callbacks/average_model_checkpoint.py @squadrick
+/deepray/callbacks/time_stopping.py @shun-lin
+/deepray/callbacks/tests/time_stopping_test.py @shun-lin
+/deepray/callbacks/tqdm_progress_bar.py @shun-lin
+/deepray/callbacks/tests/tqdm_progress_bar_test.py @shun-lin
+
+/deepray/image/color_ops.py @abhichou4
+/deepray/image/tests/color_ops_test.py @abhichou4
+/deepray/image/connected_components.py @sayoojbk
+/deepray/image/tests/connected_components_test.py @sayoojbk
+/deepray/image/cutout_ops.py @fsx950223
+/deepray/image/tests/cutout_ops_test.py @fsx950223
+/deepray/image/dense_image_warp.py @windQAQ
+/deepray/image/tests/dense_image_warp_test.py @windQAQ
+/deepray/image/distance_transform.py @mels630
+/deepray/image/tests/distance_transform_test.py @mels630
+/deepray/image/distort_image_ops.py @windqaq
+/deepray/image/tests/distort_image_ops_test.py @windqaq
+/deepray/image/filters.py @mainak431 @ghosalsattam
+/deepray/image/tests/filters_test.py @mainak431 @ghosalsattam
+/deepray/image/interpolate_spline.py
+/deepray/image/tests/interpolate_spline_test.py
+/deepray/image/resampler_ops.py @autoih
+/deepray/image/tests/resampler_ops_test.py @autoih
+/deepray/image/sparse_image_warp.py
+/deepray/image/tests/sparse_image_warp_test.py
+/deepray/image/transform_ops.py @mels630
+/deepray/image/tests/transform_ops_test.py @mels630
+/deepray/image/translate_ops.py @sayoojbk
+/deepray/image/tests/translate_ops_test.py @sayoojbk
+
+/deepray/layers/adaptive_pooling.py @Susmit-A
+/deepray/layers/crf.py @howl-anderson
+/deepray/layers/tests/crf_test.py @howl-anderson
+/deepray/layers/tests/adaptive_pooling_test.py @Susmit-A
+/deepray/layers/maxout.py @failure-to-thrive
+/deepray/layers/tests/maxout_test.py @failure-to-thrive
+/deepray/layers/multihead_attention.py @cgarciae
+/deepray/layers/tests/multihead_attention_test.py @cgarciae
+/deepray/layers/netvlad.py @joel-shor
+/deepray/layers/tests/netvlad_test.py @joel-shor
+/deepray/layers/normalizations.py @smokrow
+/deepray/layers/tests/normalizations_test.py @smokrow
+/deepray/layers/optical_flow.py @failure-to-thrive
+/deepray/layers/tests/optical_flow_test.py @failure-to-thrive
+/deepray/layers/poincare.py @rahulunair
+/deepray/layers/tests/poincare_test.py @rahulunair
+/deepray/layers/polynomial.py @tanzhenyu
+/deepray/layers/tests/polynomial_test.py @tanzhenyu
+/deepray/layers/sparsemax.py @andreasmadsen
+/deepray/layers/tests/sparsemax_test.py @andreasmadsen
+/deepray/layers/spectral_normalization.py @charlielito
+/deepray/layers/tests/spectral_normalization_test.py @charlielito
+/deepray/layers/spatial_pyramid_pooling.py @Susmit-A
+/deepray/layers/tests/spatial_pyramid_pooling_test.py @Susmit-A
+/deepray/layers/tlu.py @aakashkumarnain
+/deepray/layers/tests/tlu_test.py @aakashkumarnain
+/deepray/layers/wrappers.py @seanpmorgan
+/deepray/layers/tests/wrappers_test.py @seanpmorgan
+/deepray/layers/esn.py @pedrolarben
+/deepray/layers/tests/esn_test.py @pedrolarben
+/deepray/layers/snake.py @failure-to-thrive
+/deepray/layers/tests/snake_test.py @failure-to-thrive
+/deepray/layers/stochastic_depth.py @mhstadler @windqaq
+/deepray/layers/tests/stochastic_depth_test.py @mhstadler @windqaq
+/deepray/layers/noisy_dense.py @markub3327
+/deepray/layers/tests/noisy_dense_test.py @markub3327
+/deepray/layers/max_unpooling_2d.py @thaink
+/deepray/layers/tests/max_unpooling_2d_test.py @thaink
+/deepray/layers/max_unpooling_2d_v2.py @midsterx
+/deepray/layers/tests/max_unpooling_2d_v2_test.py @midsterx
+/deepray/layers/embedding_bag.py @rocketknight1
+/deepray/layers/tests/embedding_bag_test.py @rocketknight1
+
+/deepray/losses/contrastive.py @windqaq
+/deepray/losses/tests/contrastive_test.py @windqaq
+/deepray/losses/focal_loss.py @aakashkumarnain @ssaishruthi
+/deepray/losses/tests/focal_loss_test.py @aakashkumarnain @ssaishruthi
+/deepray/losses/giou_loss.py @fsx950223
+/deepray/losses/tests/giou_loss_test.py @fsx950223
+/deepray/losses/lifted.py @rahulunair
+/deepray/losses/tests/lifted_test.py @rahulunair
+/deepray/losses/metric_learning.py
+/deepray/losses/npairs.py @windqaq
+/deepray/losses/tests/npairs_test.py @windqaq
+/deepray/losses/quantiles.py @romainbrault
+/deepray/losses/tests/quantiles_test.py @romainbrault
+/deepray/losses/sparsemax_loss.py @andreasmadsen
+/deepray/losses/tests/sparsemax_loss_test.py @andreasmadsen
+/deepray/losses/triplet.py @lc0
+/deepray/losses/tests/triplet_test.py @lc0
+/deepray/losses/kappa_loss.py @wenmin-wu
+/deepray/losses/tests/kappa_loss_test.py @wenmin-wu
+
+/deepray/metrics/cohens_kappa.py @aakashkumarnain
+/deepray/metrics/tests/cohens_kappa_test.py @aakashkumarnain
+/deepray/metrics/f_scores.py @ssaishruthi @marload
+/deepray/metrics/tests/f_scores_test.py @ssaishruthi @marload
+/deepray/metrics/hamming.py @ssaishruthi
+/deepray/metrics/tests/hamming_test.py @ssaishruthi
+/deepray/metrics/matthews_correlation_coefficient.py @autoih @marload
+/deepray/metrics/tests/matthews_correlation_coefficient_test.py @autoih @marload
+/deepray/metrics/multilabel_confusion_matrix.py @ssaishruthi
+/deepray/metrics/tests/multilabel_confusion_matrix_test.py @ssaishruthi
+/deepray/metrics/r_square.py @ssaishruthi @marload
+/deepray/metrics/tests/r_square_test.py @ssaishruthi @marload
+/deepray/metrics/geometric_mean.py @marload
+/deepray/metrics/tests/geometric_mean_test.py @marload
+/deepray/metrics/streaming_correlations.py @sorensenjs @nicolaspi
+/deepray/metrics/tests/streaming_correlations_test.py @sorensenjs @nicolaspi
+
+/deepray/optimizers/average_wrapper.py @squadrick
+/deepray/optimizers/conditional_gradient.py @pkan2 @lokhande-vishnu
+/deepray/optimizers/tests/conditional_gradient_test.py @pkan2 @lokhande-vishnu
+/deepray/optimizers/cyclical_learning_rate.py @raphaelmeudec
+/deepray/optimizers/tests/cyclical_learning_rate_test.py @raphaelmeudec
+/deepray/optimizers/discriminative_layer_training.py @hyang0129
+/deepray/optimizers/tests/discriminative_layer_training_test.py @hyang0129
+/deepray/optimizers/lamb.py @junjiek
+/deepray/optimizers/tests/lamb_test.py @junjiek
+/deepray/optimizers/lazy_adam.py @ssaishruthi
+/deepray/optimizers/tests/lazy_adam_test.py @ssaishruthi
+/deepray/optimizers/lookahead.py @cyberzhg
+/deepray/optimizers/tests/lookahead_test.py @cyberzhg
+/deepray/optimizers/moving_average.py @squadrick
+/deepray/optimizers/tests/moving_average_test.py @squadrick
+/deepray/optimizers/novograd.py @szutenberg
+/deepray/optimizers/tests/novograd_test.py @szutenberg
+/deepray/optimizers/proximal_adagrad.py @WindQAQ
+/deepray/optimizers/tests/proximal_adagrad_test.py @WindQAQ
+/deepray/optimizers/rectified_adam.py @szutenberg
+/deepray/optimizers/tests/rectified_adam_test.py @szutenberg
+/deepray/optimizers/stochastic_weight_averaging.py @szutenberg
+/deepray/optimizers/tests/stochastic_weight_averaging_test.py @szutenberg
+/deepray/optimizers/weight_decay_optimizers.py @philjd
+/deepray/optimizers/tests/weight_decay_optimizers_test.py @philjd
+/deepray/optimizers/yogi.py @manzilz
+/deepray/optimizers/tests/yogi_test.py @manzilz
+/deepray/optimizers/cocob.py @rehanguha
+/deepray/optimizers/tests/cocob_test.py @rehanguha
+/deepray/optimizers/adabelief.py @juntang-zhuang
+/deepray/optimizers/tests/adabelief_test.py @juntang-zhuang
+
+/deepray/rnn/esn_cell.py @pedrolarben
+/deepray/rnn/tests/esn_cell_test.py @pedrolarben
+/deepray/rnn/layer_norm_lstm_cell.py @qlzh727
+/deepray/rnn/tests/layer_norm_lstm_cell_test.py @qlzh727
+/deepray/rnn/layer_norm_simple_rnn_cell.py @qlzh727
+/deepray/rnn/tests/layer_norm_simple_rnn_cell_test.py @qlzh727
+/deepray/rnn/nas_cell.py @qlzh727
+/deepray/rnn/tests/nas_cell_test.py @qlzh727
+/deepray/rnn/peephole_lstm_cell.py @qlzh727
+/deepray/rnn/tests/peephole_lstm_cell_test.py @qlzh727
+
+/deepray/seq2seq/ @qlzh727 @guillaumekln
+
+/deepray/text/crf.py @howl-anderson
+/deepray/text/tests/crf_test.py @howl-anderson
+/deepray/text/crf_wrapper.py @howl-anderson
+/deepray/text/tests/crf_wrapper_test.py @howl-anderson
+/deepray/text/parse_time_op.py @helinwang
+/deepray/text/tests/parse_time_op_test.py @helinwang
+/deepray/text/skip_gram_ops.py @rahulunair
+/deepray/text/tests/skip_gram_ops_test.py @rahulunair

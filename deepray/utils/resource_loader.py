@@ -27,12 +27,12 @@ SKIP_CUSTOM_OPS = False
 
 
 def get_project_root():
-    """Returns project root folder."""
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+  """Returns project root folder."""
+  return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def get_path_to_datafile(path, is_so=False):
-    """Get the path to the specified file in the data dependencies.
+  """Get the path to the specified file in the data dependencies.
 
     The path is relative to deepray/
 
@@ -41,82 +41,79 @@ def get_path_to_datafile(path, is_so=False):
     Returns:
       The path to the specified data file
     """
-    root_dir = get_project_root()
-    if is_so:
-        bazel_bin_dir = os.path.join(os.path.dirname(root_dir), "bazel-bin")
-        if os.path.isdir(bazel_bin_dir):
-            root_dir = os.path.join(bazel_bin_dir, "deepray")
-    return os.path.join(root_dir, path.replace("/", os.sep))
+  root_dir = get_project_root()
+  if is_so:
+    bazel_bin_dir = os.path.join(os.path.dirname(root_dir), "bazel-bin")
+    if os.path.isdir(bazel_bin_dir):
+      root_dir = os.path.join(bazel_bin_dir, "deepray")
+  return os.path.join(root_dir, path.replace("/", os.sep))
 
 
 class LazySO:
-    def __init__(self, relative_path):
-        self.relative_path = relative_path
-        self._ops = None
 
-    @property
-    def ops(self):
-        if SKIP_CUSTOM_OPS:
-            import pytest
+  def __init__(self, relative_path):
+    self.relative_path = relative_path
+    self._ops = None
 
-            pytest.skip(
-                "Skipping the test because a custom ops "
-                "was being loaded while --skip-custom-ops was set."
-            )
-        if self._ops is None:
-            self.display_warning_if_incompatible()
-            self._ops = tf.load_op_library(
-                get_path_to_datafile(self.relative_path, is_so=True)
-            )
-        return self._ops
+  @property
+  def ops(self):
+    if SKIP_CUSTOM_OPS:
+      import pytest
 
-    def display_warning_if_incompatible(self):
-        global abi_warning_already_raised
-        if abi_is_compatible() or abi_warning_already_raised:
-            return
+      pytest.skip("Skipping the test because a custom ops "
+                  "was being loaded while --skip-custom-ops was set.")
+    if self._ops is None:
+      self.display_warning_if_incompatible()
+      self._ops = tf.load_op_library(get_path_to_datafile(self.relative_path, is_so=True))
+    return self._ops
 
-        warnings.warn(
-            "You are currently using TensorFlow {} and trying to load a custom op ({})."
-            "\n"
-            "DeePray has compiled its custom ops against TensorFlow {}, "
-            "and there are no compatibility guarantees between the two versions. "
-            "\n"
-            "This means that you might get segfaults when loading the custom op, "
-            "or other kind of low-level errors.\n If you do, do not file an issue "
-            "on Github. This is a known limitation."
-            "\n\n"
-            "It might help you to fallback to pure Python "
-            "ops by setting environment variable `TF_DEEPRAY_PY_OPS=1` or using `dp.options.disable_custom_kernel()` in your code. "
-            "To do that, see "
-            "https://github.com/tensorflow/addons#gpucpu-custom-ops "
-            "\n\n"
-            "You can also change the TensorFlow version installed on your system. "
-            "You would need a TensorFlow version equal to or above {} and strictly "
-            "below {}.\n Note that nightly versions of TensorFlow, "
-            "as well as non-pip TensorFlow like `conda install tensorflow` or compiled "
-            "from source are not supported."
-            "\n\n"
-            "The last solution is to find the DeePray version that has "
-            "custom ops compatible with the TensorFlow installed on your "
-            "system. To do that, refer to the readme: "
-            "https://github.com/tensorflow/addons"
-            "".format(
-                tf.__version__,
-                self.relative_path,
-                INCLUSIVE_MIN_TF_VERSION_FOR_ABI_COMPATIBILITY,
-                INCLUSIVE_MIN_TF_VERSION_FOR_ABI_COMPATIBILITY,
-                EXCLUSIVE_MAX_TF_VERSION_FOR_ABI_COMPATIBILITY,
-            ),
-            UserWarning,
-        )
-        abi_warning_already_raised = True
+  def display_warning_if_incompatible(self):
+    global abi_warning_already_raised
+    if abi_is_compatible() or abi_warning_already_raised:
+      return
+
+    warnings.warn(
+        "You are currently using TensorFlow {} and trying to load a custom op ({})."
+        "\n"
+        "Deepray has compiled its custom ops against TensorFlow {}, "
+        "and there are no compatibility guarantees between the two versions. "
+        "\n"
+        "This means that you might get segfaults when loading the custom op, "
+        "or other kind of low-level errors.\n If you do, do not file an issue "
+        "on Github. This is a known limitation."
+        "\n\n"
+        "It might help you to fallback to pure Python "
+        "ops by setting environment variable `DEEPRAY_PY_OPS=1` or using `dp.options.disable_custom_kernel()` in your code. "
+        "To do that, see "
+        "https://github.com/tensorflow/deepray#gpucpu-custom-ops "
+        "\n\n"
+        "You can also change the TensorFlow version installed on your system. "
+        "You would need a TensorFlow version equal to or above {} and strictly "
+        "below {}.\n Note that nightly versions of TensorFlow, "
+        "as well as non-pip TensorFlow like `conda install tensorflow` or compiled "
+        "from source are not supported."
+        "\n\n"
+        "The last solution is to find the Deepray version that has "
+        "custom ops compatible with the TensorFlow installed on your "
+        "system. To do that, refer to the readme: "
+        "https://github.com/tensorflow/deepray"
+        "".format(
+            tf.__version__,
+            self.relative_path,
+            INCLUSIVE_MIN_TF_VERSION_FOR_ABI_COMPATIBILITY,
+            INCLUSIVE_MIN_TF_VERSION_FOR_ABI_COMPATIBILITY,
+            EXCLUSIVE_MAX_TF_VERSION_FOR_ABI_COMPATIBILITY,
+        ),
+        UserWarning,
+    )
+    abi_warning_already_raised = True
 
 
 def abi_is_compatible():
-    if "dev" in tf.__version__:
-        # tf-nightly
-        return False
+  if "dev" in tf.__version__:
+    # tf-nightly
+    return False
 
-    min_version = Version(INCLUSIVE_MIN_TF_VERSION_FOR_ABI_COMPATIBILITY)
-    max_version = Version(EXCLUSIVE_MAX_TF_VERSION_FOR_ABI_COMPATIBILITY)
-    return min_version <= Version(tf.__version__) < max_version
+  min_version = Version(INCLUSIVE_MIN_TF_VERSION_FOR_ABI_COMPATIBILITY)
+  max_version = Version(EXCLUSIVE_MAX_TF_VERSION_FOR_ABI_COMPATIBILITY)
+  return min_version <= Version(tf.__version__) < max_version

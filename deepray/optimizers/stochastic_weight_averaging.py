@@ -30,6 +30,7 @@ from deepray.utils import types
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class SWA(AveragedOptimizerWrapper):
   """This class extends optimizers with Stochastic Weight Averaging (SWA).
 
@@ -118,8 +119,8 @@ class SWA(AveragedOptimizerWrapper):
     # number of times snapshots of weights have been taken (using max to
     # avoid negative values of num_snapshots).
     num_snapshots = tf.math.maximum(
-      tf.cast(0, tf.int64),
-      tf.math.floordiv(self.iterations - start_averaging, average_period),
+        tf.cast(0, tf.int64),
+        tf.math.floordiv(self.iterations - start_averaging, average_period),
     )
 
     # The average update should happen iff two conditions are met:
@@ -135,8 +136,8 @@ class SWA(AveragedOptimizerWrapper):
 
   def get_config(self):
     config = {
-      "average_period": self._serialize_hyperparameter("average_period"),
-      "start_averaging": self._serialize_hyperparameter("start_averaging"),
+        "average_period": self._serialize_hyperparameter("average_period"),
+        "start_averaging": self._serialize_hyperparameter("start_averaging"),
     }
     base_config = super().get_config()
     return {**base_config, **config}

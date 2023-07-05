@@ -3,13 +3,11 @@ from tensorflow import keras
 from tensorflow.keras import layers
 
 from deepray.layers.swin_transformer import SwinTransformer
-
 """
 ### Build the model
 
 We put together the Swin Transformer model.
 """
-
 """
 ## Model training and evaluation
 
@@ -21,6 +19,7 @@ images on top of which we will later use the Swin Transformer class we built.
 
 
 class PatchExtract(layers.Layer):
+
   def __init__(self, patch_size, **kwargs):
     super().__init__(**kwargs)
     self.patch_size_x = patch_size[0]
@@ -29,11 +28,11 @@ class PatchExtract(layers.Layer):
   def call(self, images):
     batch_size = tf.shape(images)[0]
     patches = tf.image.extract_patches(
-      images=images,
-      sizes=(1, self.patch_size_x, self.patch_size_y, 1),
-      strides=(1, self.patch_size_x, self.patch_size_y, 1),
-      rates=(1, 1, 1, 1),
-      padding="VALID",
+        images=images,
+        sizes=(1, self.patch_size_x, self.patch_size_y, 1),
+        strides=(1, self.patch_size_x, self.patch_size_y, 1),
+        rates=(1, 1, 1, 1),
+        padding="VALID",
     )
     patch_dim = patches.shape[-1]
     patch_num = patches.shape[1]
@@ -41,6 +40,7 @@ class PatchExtract(layers.Layer):
 
 
 class PatchEmbedding(layers.Layer):
+
   def __init__(self, num_patch, embed_dim, **kwargs):
     super().__init__(**kwargs)
     self.num_patch = num_patch
@@ -53,6 +53,7 @@ class PatchEmbedding(layers.Layer):
 
 
 class PatchMerging(tf.keras.layers.Layer):
+
   def __init__(self, num_patch, embed_dim):
     super().__init__()
     self.num_patch = num_patch
@@ -73,18 +74,20 @@ class PatchMerging(tf.keras.layers.Layer):
 
 
 class BaseModel():
-  def __init__(self,
-               input_shape=(32, 32, 3),
-               patch_size=(2, 2),  # 2-by-2 sized patches
-               dropout_rate=0.03,  # Dropout rate
-               num_heads=8,  # Attention heads
-               embed_dim=64,  # Embedding dimension
-               num_mlp=256,  # MLP layer size
-               qkv_bias=True,  # Convert embedded patches to query, key, and values with a learnable additive value
-               window_size=2,  # Size of attention window
-               shift_size=1,  # Size of shifting window
-               image_dimension=32,  # Initial image size
-               ):
+
+  def __init__(
+      self,
+      input_shape=(32, 32, 3),
+      patch_size=(2, 2),  # 2-by-2 sized patches
+      dropout_rate=0.03,  # Dropout rate
+      num_heads=8,  # Attention heads
+      embed_dim=64,  # Embedding dimension
+      num_mlp=256,  # MLP layer size
+      qkv_bias=True,  # Convert embedded patches to query, key, and values with a learnable additive value
+      window_size=2,  # Size of attention window
+      shift_size=1,  # Size of shifting window
+      image_dimension=32,  # Initial image size
+  ):
     num_patch_x = input_shape[0] // patch_size[0]
     num_patch_y = input_shape[1] // patch_size[1]
 
@@ -92,24 +95,24 @@ class BaseModel():
     self.extract = PatchExtract(patch_size)
     self.embedding = PatchEmbedding(num_patch_x * num_patch_y, embed_dim)
     self.swin0 = SwinTransformer(
-      dim=embed_dim,
-      num_patch=(num_patch_x, num_patch_y),
-      num_heads=num_heads,
-      window_size=window_size,
-      shift_size=0,
-      num_mlp=num_mlp,
-      qkv_bias=qkv_bias,
-      dropout_rate=dropout_rate,
+        dim=embed_dim,
+        num_patch=(num_patch_x, num_patch_y),
+        num_heads=num_heads,
+        window_size=window_size,
+        shift_size=0,
+        num_mlp=num_mlp,
+        qkv_bias=qkv_bias,
+        dropout_rate=dropout_rate,
     )
     self.swin1 = SwinTransformer(
-      dim=embed_dim,
-      num_patch=(num_patch_x, num_patch_y),
-      num_heads=num_heads,
-      window_size=window_size,
-      shift_size=shift_size,
-      num_mlp=num_mlp,
-      qkv_bias=qkv_bias,
-      dropout_rate=dropout_rate,
+        dim=embed_dim,
+        num_patch=(num_patch_x, num_patch_y),
+        num_heads=num_heads,
+        window_size=window_size,
+        shift_size=shift_size,
+        num_mlp=num_mlp,
+        qkv_bias=qkv_bias,
+        dropout_rate=dropout_rate,
     )
     self.merging = PatchMerging((num_patch_x, num_patch_y), embed_dim=embed_dim)
     self.input_shape = input_shape

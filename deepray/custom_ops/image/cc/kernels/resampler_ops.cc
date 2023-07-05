@@ -37,10 +37,11 @@ using GPUDevice = Eigen::GpuDevice;
 
 namespace functor {
 
-template <typename T> struct Resampler2DFunctor<CPUDevice, T> {
-  void operator()(OpKernelContext *ctx, const CPUDevice &d,
-                  const T *__restrict__ data, const T *__restrict__ warp,
-                  T *__restrict__ output, const int batch_size,
+template <typename T>
+struct Resampler2DFunctor<CPUDevice, T> {
+  void operator()(OpKernelContext* ctx, const CPUDevice& d,
+                  const T* __restrict__ data, const T* __restrict__ warp,
+                  T* __restrict__ output, const int batch_size,
                   const int data_height, const int data_width,
                   const int data_channels, const int num_sampling_points) {
     const int warp_batch_stride = num_sampling_points * 2;
@@ -121,24 +122,25 @@ template <typename T> struct Resampler2DFunctor<CPUDevice, T> {
   }
 };
 
-} // namespace functor
+}  // namespace functor
 
-template <typename Device, typename T> class ResamplerOp : public OpKernel {
-public:
-  explicit ResamplerOp(OpKernelConstruction *context) : OpKernel(context) {}
+template <typename Device, typename T>
+class ResamplerOp : public OpKernel {
+ public:
+  explicit ResamplerOp(OpKernelConstruction* context) : OpKernel(context) {}
 
-  void Compute(OpKernelContext *ctx) override {
-    const Tensor &data = ctx->input(0);
-    const Tensor &warp = ctx->input(1);
+  void Compute(OpKernelContext* ctx) override {
+    const Tensor& data = ctx->input(0);
+    const Tensor& warp = ctx->input(1);
 
-    const TensorShape &data_shape = data.shape();
+    const TensorShape& data_shape = data.shape();
     OP_REQUIRES(ctx, data_shape.dims() == 4,
                 errors::Unimplemented(
                     "Only bilinear interpolation is currently supported. The "
                     "input data shape must be [batch_size, data_height, "
                     "data_width, data_channels], but is: ",
                     data_shape.DebugString()));
-    const TensorShape &warp_shape = warp.shape();
+    const TensorShape& warp_shape = warp.shape();
     OP_REQUIRES(
         ctx, TensorShapeUtils::IsMatrixOrHigher(warp_shape),
         errors::InvalidArgument("warp should be at least a matrix, got shape ",
@@ -161,7 +163,7 @@ public:
     const int data_channels = data_shape.dim_size(3);
     TensorShape output_shape = warp.shape();
     output_shape.set_dim(output_shape.dims() - 1, data_channels);
-    Tensor *output = nullptr;
+    Tensor* output = nullptr;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, output_shape, &output));
 
     // Execute kernel only for nonempty output; otherwise Eigen crashes on GPU.
@@ -174,13 +176,13 @@ public:
     }
   }
 
-private:
+ private:
   TF_DISALLOW_COPY_AND_ASSIGN(ResamplerOp);
 };
 
-#define REGISTER(TYPE)                                                         \
-  REGISTER_KERNEL_BUILDER(                                                     \
-      Name("Deepray>Resampler").Device(DEVICE_CPU).TypeConstraint<TYPE>("T"),   \
+#define REGISTER(TYPE)                                                        \
+  REGISTER_KERNEL_BUILDER(                                                    \
+      Name("Deepray>Resampler").Device(DEVICE_CPU).TypeConstraint<TYPE>("T"), \
       ResamplerOp<CPUDevice, TYPE>);
 
 TF_CALL_half(REGISTER);
@@ -189,24 +191,25 @@ TF_CALL_double(REGISTER);
 #undef REGISTER
 
 #if GOOGLE_CUDA
-#define REGISTER(TYPE)                                                         \
-  REGISTER_KERNEL_BUILDER(                                                     \
-      Name("Deepray>Resampler").Device(DEVICE_GPU).TypeConstraint<TYPE>("T"),   \
+#define REGISTER(TYPE)                                                        \
+  REGISTER_KERNEL_BUILDER(                                                    \
+      Name("Deepray>Resampler").Device(DEVICE_GPU).TypeConstraint<TYPE>("T"), \
       ResamplerOp<GPUDevice, TYPE>)
 
 TF_CALL_half(REGISTER);
 TF_CALL_float(REGISTER);
 TF_CALL_double(REGISTER);
 #undef REGISTER
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA
 
 namespace functor {
 
-template <typename T> struct ResamplerGrad2DFunctor<CPUDevice, T> {
-  void operator()(OpKernelContext *ctx, const CPUDevice &d,
-                  const T *__restrict__ data, const T *__restrict__ warp,
-                  const T *__restrict__ grad_output, T *__restrict__ grad_data,
-                  T *__restrict__ grad_warp, const int batch_size,
+template <typename T>
+struct ResamplerGrad2DFunctor<CPUDevice, T> {
+  void operator()(OpKernelContext* ctx, const CPUDevice& d,
+                  const T* __restrict__ data, const T* __restrict__ warp,
+                  const T* __restrict__ grad_output, T* __restrict__ grad_data,
+                  T* __restrict__ grad_warp, const int batch_size,
                   const int data_height, const int data_width,
                   const int data_channels, const int num_sampling_points) {
     // Set gradients to 0, because the kernel incrementally updates the
@@ -216,11 +219,11 @@ template <typename T> struct ResamplerGrad2DFunctor<CPUDevice, T> {
     const int grad_warp_size = resampler_output_size / data_channels * 2;
     const int grad_data_size =
         data_height * data_width * data_channels * batch_size;
-    memset(static_cast<void *>(grad_data), 0, sizeof(T) * grad_data_size);
-    memset(static_cast<void *>(grad_warp), 0, sizeof(T) * grad_warp_size);
+    memset(static_cast<void*>(grad_data), 0, sizeof(T) * grad_data_size);
+    memset(static_cast<void*>(grad_warp), 0, sizeof(T) * grad_warp_size);
 
-    const auto &&data_batch_stride = data_height * data_width * data_channels;
-    const auto &&warp_batch_stride = num_sampling_points * 2;
+    const auto&& data_batch_stride = data_height * data_width * data_channels;
+    const auto&& warp_batch_stride = num_sampling_points * 2;
     const int output_batch_stride = num_sampling_points * data_channels;
     const T zero = static_cast<T>(0.0);
     const T one = static_cast<T>(1.0);
@@ -287,15 +290,15 @@ template <typename T> struct ResamplerGrad2DFunctor<CPUDevice, T> {
               const T img_cxfy = get_data_point(cx, fy, chan);
 
               // Update partial gradients wrt relevant warp field entries
-              update_grad_warp(sample_id, 0,
-                               grad_output_value *
-                                   ((one - dy) * (img_cxcy - img_fxcy) +
-                                    dy * (img_cxfy - img_fxfy)));
+              update_grad_warp(
+                  sample_id, 0,
+                  grad_output_value * ((one - dy) * (img_cxcy - img_fxcy) +
+                                       dy * (img_cxfy - img_fxfy)));
 
-              update_grad_warp(sample_id, 1,
-                               grad_output_value *
-                                   ((one - dx) * (img_cxcy - img_cxfy) +
-                                    dx * (img_fxcy - img_fxfy)));
+              update_grad_warp(
+                  sample_id, 1,
+                  grad_output_value * ((one - dx) * (img_cxcy - img_cxfy) +
+                                       dx * (img_fxcy - img_fxfy)));
 
               // Update partial gradients wrt sampled data
               update_grad_data(fx, fy, chan, grad_output_value * dx * dy);
@@ -324,18 +327,19 @@ template <typename T> struct ResamplerGrad2DFunctor<CPUDevice, T> {
   }
 };
 
-} // namespace functor
+}  // namespace functor
 
-template <typename Device, typename T> class ResamplerGradOp : public OpKernel {
-public:
-  explicit ResamplerGradOp(OpKernelConstruction *context) : OpKernel(context) {}
+template <typename Device, typename T>
+class ResamplerGradOp : public OpKernel {
+ public:
+  explicit ResamplerGradOp(OpKernelConstruction* context) : OpKernel(context) {}
 
-  void Compute(OpKernelContext *ctx) override {
-    const Tensor &data = ctx->input(0);
-    const Tensor &warp = ctx->input(1);
-    const Tensor &grad_output = ctx->input(2);
+  void Compute(OpKernelContext* ctx) override {
+    const Tensor& data = ctx->input(0);
+    const Tensor& warp = ctx->input(1);
+    const Tensor& grad_output = ctx->input(2);
 
-    const TensorShape &data_shape = data.shape();
+    const TensorShape& data_shape = data.shape();
     OP_REQUIRES(ctx, data_shape.dims() == 4,
                 errors::Unimplemented(
                     "Only bilinear interpolation is supported, the input data "
@@ -347,7 +351,7 @@ public:
     const int data_height = data_shape.dim_size(1);
     const int data_width = data_shape.dim_size(2);
     const int data_channels = data_shape.dim_size(3);
-    const TensorShape &warp_shape = warp.shape();
+    const TensorShape& warp_shape = warp.shape();
     OP_REQUIRES(
         ctx, TensorShapeUtils::IsMatrixOrHigher(warp_shape),
         errors::InvalidArgument("warp should be at least a matrix, got shape ",
@@ -358,7 +362,7 @@ public:
                     "coordinates must be 2D; warp shape last entry should be "
                     "2, but shape vector is: ",
                     warp_shape.DebugString()));
-    const TensorShape &grad_output_shape = grad_output.shape();
+    const TensorShape& grad_output_shape = grad_output.shape();
     TensorShape resampler_output_shape = warp.shape();
     resampler_output_shape.set_dim(resampler_output_shape.dims() - 1,
                                    data_channels);
@@ -368,8 +372,8 @@ public:
                     "shapes; it should be ",
                     resampler_output_shape.DebugString(), " but is ",
                     grad_output_shape.DebugString()));
-    Tensor *grad_data = nullptr;
-    Tensor *grad_warp = nullptr;
+    Tensor* grad_data = nullptr;
+    Tensor* grad_warp = nullptr;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(0, data.shape(), &grad_data));
     OP_REQUIRES_OK(ctx, ctx->allocate_output(1, warp.shape(), &grad_warp));
     // Execute kernel only for nonempty output; otherwise Eigen crashes on GPU.
@@ -383,14 +387,14 @@ public:
     }
   }
 
-private:
+ private:
   TF_DISALLOW_COPY_AND_ASSIGN(ResamplerGradOp);
 };
 
-#define REGISTER(TYPE)                                                         \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>ResamplerGrad")                         \
-                              .Device(DEVICE_CPU)                              \
-                              .TypeConstraint<TYPE>("T"),                      \
+#define REGISTER(TYPE)                                    \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>ResamplerGrad")   \
+                              .Device(DEVICE_CPU)         \
+                              .TypeConstraint<TYPE>("T"), \
                           ResamplerGradOp<CPUDevice, TYPE>);
 
 TF_CALL_half(REGISTER);
@@ -399,17 +403,17 @@ TF_CALL_double(REGISTER);
 #undef REGISTER
 
 #if GOOGLE_CUDA
-#define REGISTER(TYPE)                                                         \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>ResamplerGrad")                         \
-                              .Device(DEVICE_GPU)                              \
-                              .TypeConstraint<TYPE>("T"),                      \
+#define REGISTER(TYPE)                                    \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>ResamplerGrad")   \
+                              .Device(DEVICE_GPU)         \
+                              .TypeConstraint<TYPE>("T"), \
                           ResamplerGradOp<GPUDevice, TYPE>)
 
 TF_CALL_half(REGISTER);
 TF_CALL_double(REGISTER);
 TF_CALL_float(REGISTER);
 #undef REGISTER
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA
 
-} // end namespace deepray
-} // namespace tensorflow
+}  // end namespace deepray
+}  // namespace tensorflow

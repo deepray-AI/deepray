@@ -28,9 +28,9 @@ from deepray.utils.types import (
 )
 
 
-
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class LayerNormSimpleRNNCell(keras.layers.SimpleRNNCell):
-    """Cell class for LayerNormSimpleRNN.
+  """Cell class for LayerNormSimpleRNN.
 
     References:
     [1] Ba, Jimmy Lei, Jamie Ryan Kiros, and Geoffrey E. Hinton.
@@ -115,66 +115,66 @@ class LayerNormSimpleRNNCell(keras.layers.SimpleRNNCell):
 
     """
 
-    @typechecked
-    def __init__(
-        self,
-        units: TensorLike,
-        activation: Activation = "tanh",
-        use_bias: bool = True,
-        layernorm_epsilon: FloatTensorLike = 1e-05,
-        kernel_initializer: Initializer = "glorot_uniform",
-        recurrent_initializer: Initializer = "orthogonal",
-        bias_initializer: Initializer = "zeros",
-        gamma_initializer: Initializer = "ones",
-        kernel_regularizer: Regularizer = None,
-        recurrent_regularizer: Regularizer = None,
-        bias_regularizer: Regularizer = None,
-        gamma_regularizer: Regularizer = None,
-        kernel_constraint: Regularizer = None,
-        recurrent_constraint: Constraint = None,
-        bias_constraint: Constraint = None,
-        gamma_constraint: Constraint = None,
-        dropout: FloatTensorLike = 0.0,
-        recurrent_dropout: FloatTensorLike = 0.0,
+  @typechecked
+  def __init__(
+      self,
+      units: TensorLike,
+      activation: Activation = "tanh",
+      use_bias: bool = True,
+      layernorm_epsilon: FloatTensorLike = 1e-05,
+      kernel_initializer: Initializer = "glorot_uniform",
+      recurrent_initializer: Initializer = "orthogonal",
+      bias_initializer: Initializer = "zeros",
+      gamma_initializer: Initializer = "ones",
+      kernel_regularizer: Regularizer = None,
+      recurrent_regularizer: Regularizer = None,
+      bias_regularizer: Regularizer = None,
+      gamma_regularizer: Regularizer = None,
+      kernel_constraint: Regularizer = None,
+      recurrent_constraint: Constraint = None,
+      bias_constraint: Constraint = None,
+      gamma_constraint: Constraint = None,
+      dropout: FloatTensorLike = 0.0,
+      recurrent_dropout: FloatTensorLike = 0.0,
+      **kwargs,
+  ):
+    super(LayerNormSimpleRNNCell, self).__init__(
+        units,
+        activation=activation,
+        use_bias=use_bias,
+        kernel_initializer=kernel_initializer,
+        recurrent_initializer=recurrent_initializer,
+        bias_initializer=bias_initializer,
+        kernel_regularizer=kernel_regularizer,
+        recurrent_regularizer=recurrent_regularizer,
+        bias_regularizer=bias_regularizer,
+        kernel_constraint=kernel_constraint,
+        recurrent_constraint=recurrent_constraint,
+        bias_constraint=bias_constraint,
+        dropout=dropout,
+        recurrent_dropout=recurrent_dropout,
         **kwargs,
-    ):
-        super(LayerNormSimpleRNNCell, self).__init__(
-            units,
-            activation=activation,
-            use_bias=use_bias,
-            kernel_initializer=kernel_initializer,
-            recurrent_initializer=recurrent_initializer,
-            bias_initializer=bias_initializer,
-            kernel_regularizer=kernel_regularizer,
-            recurrent_regularizer=recurrent_regularizer,
-            bias_regularizer=bias_regularizer,
-            kernel_constraint=kernel_constraint,
-            recurrent_constraint=recurrent_constraint,
-            bias_constraint=bias_constraint,
-            dropout=dropout,
-            recurrent_dropout=recurrent_dropout,
-            **kwargs,
-        )
-        self.layernorm = keras.layers.LayerNormalization(
-            axis=-1,
-            epsilon=layernorm_epsilon,
-            center=False,
-            scale=True,
-            beta_initializer=None,
-            gamma_initializer=gamma_initializer,
-            beta_regularizer=None,
-            gamma_regularizer=gamma_regularizer,
-            beta_constraint=None,
-            gamma_constraint=gamma_constraint,
-            **kwargs,
-        )
+    )
+    self.layernorm = keras.layers.LayerNormalization(
+        axis=-1,
+        epsilon=layernorm_epsilon,
+        center=False,
+        scale=True,
+        beta_initializer=None,
+        gamma_initializer=gamma_initializer,
+        beta_regularizer=None,
+        gamma_regularizer=gamma_regularizer,
+        beta_constraint=None,
+        gamma_constraint=gamma_constraint,
+        **kwargs,
+    )
 
-    def build(self, input_shape):
-        super(LayerNormSimpleRNNCell, self).build(input_shape)
-        self.layernorm.build((None, self.units))
+  def build(self, input_shape):
+    super(LayerNormSimpleRNNCell, self).build(input_shape)
+    self.layernorm.build((None, self.units))
 
-    def call(self, inputs, states, training=None):
-        """Formulas.
+  def call(self, inputs, states, training=None):
+    """Formulas.
 
         Notation:
             y_t : Cell output at t (`output`)
@@ -223,45 +223,44 @@ class LayerNormSimpleRNNCell(keras.layers.SimpleRNNCell):
               net = d1(x_t) * W_xh + d2(y_{t-1}) * W_hh
               y_t = f(ln(net) + b)
         """
-        prev_output = states[0]
-        dp_mask = self.get_dropout_mask_for_cell(inputs, training)
-        rec_dp_mask = self.get_recurrent_dropout_mask_for_cell(prev_output, training)
+    prev_output = states[0]
+    dp_mask = self.get_dropout_mask_for_cell(inputs, training)
+    rec_dp_mask = self.get_recurrent_dropout_mask_for_cell(prev_output, training)
 
-        if dp_mask is not None:
-            h = keras.backend.dot(inputs * dp_mask, self.kernel)
-        else:
-            h = keras.backend.dot(inputs, self.kernel)
+    if dp_mask is not None:
+      h = keras.backend.dot(inputs * dp_mask, self.kernel)
+    else:
+      h = keras.backend.dot(inputs, self.kernel)
 
-        # don't add bias to "h" here
-        # add bias after scaling with layer normalization to "output"
+    # don't add bias to "h" here
+    # add bias after scaling with layer normalization to "output"
 
-        if rec_dp_mask is not None:
-            prev_output = prev_output * rec_dp_mask
-        output = h + keras.backend.dot(prev_output, self.recurrent_kernel)  # "net"
+    if rec_dp_mask is not None:
+      prev_output = prev_output * rec_dp_mask
+    output = h + keras.backend.dot(prev_output, self.recurrent_kernel)  # "net"
 
-        output = self.layernorm(output)
+    output = self.layernorm(output)
 
-        if self.bias is not None:
-            output = keras.backend.bias_add(output, self.bias)
+    if self.bias is not None:
+      output = keras.backend.bias_add(output, self.bias)
 
-        if self.activation is not None:
-            output = self.activation(output)
+    if self.activation is not None:
+      output = self.activation(output)
 
-        return output, [output]
+    return output, [output]
 
-    # use SimpleRNNCell's get_initial_state method
+  # use SimpleRNNCell's get_initial_state method
 
-    def get_config(self):
-        cell_config = super(LayerNormSimpleRNNCell, self).get_config()
-        del cell_config["name"]
+  def get_config(self):
+    cell_config = super(LayerNormSimpleRNNCell, self).get_config()
+    del cell_config["name"]
 
-        ln_config = self.layernorm.get_config()
-        ln_config = {
-            k: v
-            for k, v in ln_config.items()
-            if k
-            in ["epsilon", "gamma_initializer", "gamma_regularizer", "gamma_constraint"]
-        }
+    ln_config = self.layernorm.get_config()
+    ln_config = {
+        k: v
+        for k, v in ln_config.items()
+        if k in ["epsilon", "gamma_initializer", "gamma_regularizer", "gamma_constraint"]
+    }
 
-        ln_config["layernorm_epsilon"] = ln_config.pop("epsilon")
-        return dict(list(cell_config.items()) + list(ln_config.items()))
+    ln_config["layernorm_epsilon"] = ln_config.pop("epsilon")
+    return dict(list(cell_config.items()) + list(ln_config.items()))

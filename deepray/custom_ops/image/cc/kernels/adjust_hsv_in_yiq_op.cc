@@ -15,7 +15,7 @@ limitations under the License.
 
 #if GOOGLE_CUDA
 #define EIGEN_USE_GPU
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA
 
 #include "deepray/custom_ops/image/cc/kernels/adjust_hsv_in_yiq_op.h"
 
@@ -35,7 +35,7 @@ typedef Eigen::ThreadPoolDevice CPUDevice;
 typedef Eigen::GpuDevice GPUDevice;
 
 class AdjustHsvInYiqOpBase : public OpKernel {
-protected:
+ protected:
   explicit AdjustHsvInYiqOpBase(OpKernelConstruction *context)
       : OpKernel(context) {}
 
@@ -92,10 +92,12 @@ protected:
   }
 };
 
-template <class Device> class AdjustHsvInYiqOp;
+template <class Device>
+class AdjustHsvInYiqOp;
 
-template <> class AdjustHsvInYiqOp<CPUDevice> : public AdjustHsvInYiqOpBase {
-public:
+template <>
+class AdjustHsvInYiqOp<CPUDevice> : public AdjustHsvInYiqOpBase {
+ public:
   explicit AdjustHsvInYiqOp(OpKernelConstruction *context)
       : AdjustHsvInYiqOpBase(context) {}
 
@@ -138,13 +140,15 @@ public:
   }
 };
 
-REGISTER_KERNEL_BUILDER(
-    Name("Deepray>AdjustHsvInYiq").Device(DEVICE_CPU).TypeConstraint<float>("T"),
-    AdjustHsvInYiqOp<CPUDevice>);
+REGISTER_KERNEL_BUILDER(Name("Deepray>AdjustHsvInYiq")
+                            .Device(DEVICE_CPU)
+                            .TypeConstraint<float>("T"),
+                        AdjustHsvInYiqOp<CPUDevice>);
 
 #if GOOGLE_CUDA
-template <> class AdjustHsvInYiqOp<GPUDevice> : public AdjustHsvInYiqOpBase {
-public:
+template <>
+class AdjustHsvInYiqOp<GPUDevice> : public AdjustHsvInYiqOpBase {
+ public:
   explicit AdjustHsvInYiqOp(OpKernelConstruction *context)
       : AdjustHsvInYiqOpBase(context) {}
 
@@ -161,10 +165,11 @@ public:
   }
 };
 
-REGISTER_KERNEL_BUILDER(
-    Name("Deepray>AdjustHsvInYiq").Device(DEVICE_GPU).TypeConstraint<float>("T"),
-    AdjustHsvInYiqOp<GPUDevice>);
+REGISTER_KERNEL_BUILDER(Name("Deepray>AdjustHsvInYiq")
+                            .Device(DEVICE_GPU)
+                            .TypeConstraint<float>("T"),
+                        AdjustHsvInYiqOp<GPUDevice>);
 #endif
 
-} // end namespace deepray
-} // namespace tensorflow
+}  // end namespace deepray
+}  // namespace tensorflow

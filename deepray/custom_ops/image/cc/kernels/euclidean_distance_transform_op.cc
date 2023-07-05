@@ -17,7 +17,7 @@ limitations under the License.
 
 #if GOOGLE_CUDA
 #define EIGEN_USE_GPU
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA
 
 #include "deepray/custom_ops/image/cc/kernels/euclidean_distance_transform_op.h"
 
@@ -31,7 +31,8 @@ namespace deepray {
 
 namespace functor {
 
-template <typename T> struct EuclideanDistanceTransformFunctor<CPUDevice, T> {
+template <typename T>
+struct EuclideanDistanceTransformFunctor<CPUDevice, T> {
   typedef typename TTypes<uint8, 4>::ConstTensor InputType;
   typedef typename TTypes<T, 4>::Tensor OutputType;
   void operator()(OpKernelContext *ctx, OutputType *output,
@@ -56,16 +57,16 @@ template struct EuclideanDistanceTransformFunctor<CPUDevice, Eigen::half>;
 template struct EuclideanDistanceTransformFunctor<CPUDevice, float>;
 template struct EuclideanDistanceTransformFunctor<CPUDevice, double>;
 
-} // end namespace functor
+}  // end namespace functor
 
 using functor::EuclideanDistanceTransformFunctor;
 
 template <typename Device, typename T>
 class EuclideanDistanceTransform : public OpKernel {
-private:
+ private:
   EuclideanDistanceTransformFunctor<Device, T> functor_;
 
-public:
+ public:
   explicit EuclideanDistanceTransform(OpKernelConstruction *ctx)
       : OpKernel(ctx) {}
 
@@ -87,10 +88,10 @@ public:
   }
 };
 
-#define REGISTER(TYPE)                                                         \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>EuclideanDistanceTransform")            \
-                              .Device(DEVICE_CPU)                              \
-                              .TypeConstraint<TYPE>("dtype"),                  \
+#define REGISTER(TYPE)                                               \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>EuclideanDistanceTransform") \
+                              .Device(DEVICE_CPU)                    \
+                              .TypeConstraint<TYPE>("dtype"),        \
                           EuclideanDistanceTransform<CPUDevice, TYPE>)
 
 TF_CALL_half(REGISTER);
@@ -105,23 +106,23 @@ typedef Eigen::GpuDevice GPUDevice;
 
 namespace functor {
 
-#define DECLARE_FUNCTOR(TYPE)                                                  \
-  template <>                                                                  \
-  void EuclideanDistanceTransformFunctor<GPUDevice, TYPE>::operator()(         \
-      OpKernelContext *ctx, OutputType *output, const InputType &images)       \
-      const;                                                                   \
+#define DECLARE_FUNCTOR(TYPE)                                            \
+  template <>                                                            \
+  void EuclideanDistanceTransformFunctor<GPUDevice, TYPE>::operator()(   \
+      OpKernelContext *ctx, OutputType *output, const InputType &images) \
+      const;                                                             \
   extern template struct EuclideanDistanceTransformFunctor<GPUDevice, TYPE>
 
 TF_CALL_half(DECLARE_FUNCTOR);
 TF_CALL_float(DECLARE_FUNCTOR);
 TF_CALL_double(DECLARE_FUNCTOR);
 
-} // end namespace functor
+}  // end namespace functor
 
-#define REGISTER(TYPE)                                                         \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>EuclideanDistanceTransform")            \
-                              .Device(DEVICE_GPU)                              \
-                              .TypeConstraint<TYPE>("dtype"),                  \
+#define REGISTER(TYPE)                                               \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>EuclideanDistanceTransform") \
+                              .Device(DEVICE_GPU)                    \
+                              .TypeConstraint<TYPE>("dtype"),        \
                           EuclideanDistanceTransform<GPUDevice, TYPE>)
 
 TF_CALL_half(REGISTER);
@@ -130,7 +131,7 @@ TF_CALL_double(REGISTER);
 
 #undef REGISTER
 
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA
 
-} // end namespace deepray
-} // end namespace tensorflow
+}  // end namespace deepray
+}  // end namespace tensorflow

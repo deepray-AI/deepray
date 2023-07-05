@@ -18,8 +18,9 @@ import tensorflow as tf
 from deepray.utils.types import TensorLike
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 def lisht(x: TensorLike) -> tf.Tensor:
-    r"""LiSHT: Non-Parameteric Linearly Scaled Hyperbolic Tangent Activation Function.
+  r"""LiSHT: Non-Parameteric Linearly Scaled Hyperbolic Tangent Activation Function.
 
     Computes linearly scaled hyperbolic tangent (LiSHT):
 
@@ -41,5 +42,5 @@ def lisht(x: TensorLike) -> tf.Tensor:
     Returns:
         A `Tensor`. Has the same type as `x`.
     """
-    x = tf.convert_to_tensor(x)
-    return x * tf.math.tanh(x)
+  x = tf.convert_to_tensor(x)
+  return x * tf.math.tanh(x)

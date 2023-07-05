@@ -27,9 +27,7 @@ from deepray.utils.types import AcceptableDTypes
 _VALID_MULTIOUTPUT = {"raw_values", "uniform_average", "variance_weighted"}
 
 
-def _reduce_average(
-    input_tensor: tf.Tensor, axis=None, keepdims=False, weights=None
-) -> tf.Tensor:
+def _reduce_average(input_tensor: tf.Tensor, axis=None, keepdims=False, weights=None) -> tf.Tensor:
   """Computes the (weighted) mean of elements across dimensions of a tensor."""
   if weights is None:
     return tf.reduce_mean(input_tensor, axis=axis, keepdims=keepdims)
@@ -40,6 +38,7 @@ def _reduce_average(
   return average
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class RSquare(Metric):
   """Compute R^2 score.
 
@@ -92,16 +91,14 @@ class RSquare(Metric):
 
     if "y_shape" in kwargs:
       warnings.warn(
-        "y_shape has been removed, because it's automatically derived,"
-        "and will be deprecated in Addons 0.18.",
-        DeprecationWarning,
+          "y_shape has been removed, because it's automatically derived,"
+          "and will be deprecated in Deepray 0.18.",
+          DeprecationWarning,
       )
 
     if multioutput not in _VALID_MULTIOUTPUT:
       raise ValueError(
-        "The multioutput argument must be one of {}, but was: {}".format(
-          _VALID_MULTIOUTPUT, multioutput
-        )
+          "The multioutput argument must be one of {}, but was: {}".format(_VALID_MULTIOUTPUT, multioutput)
       )
     self.multioutput = multioutput
     self.num_regressors = num_regressors
@@ -110,31 +107,31 @@ class RSquare(Metric):
   def update_state(self, y_true, y_pred, sample_weight=None) -> None:
     if not hasattr(self, "squared_sum"):
       self.squared_sum = self.add_weight(
-        name="squared_sum",
-        shape=y_true.shape[1:],
-        initializer="zeros",
-        dtype=self._dtype,
+          name="squared_sum",
+          shape=y_true.shape[1:],
+          initializer="zeros",
+          dtype=self._dtype,
       )
     if not hasattr(self, "sum"):
       self.sum = self.add_weight(
-        name="sum",
-        shape=y_true.shape[1:],
-        initializer="zeros",
-        dtype=self._dtype,
+          name="sum",
+          shape=y_true.shape[1:],
+          initializer="zeros",
+          dtype=self._dtype,
       )
     if not hasattr(self, "res"):
       self.res = self.add_weight(
-        name="residual",
-        shape=y_true.shape[1:],
-        initializer="zeros",
-        dtype=self._dtype,
+          name="residual",
+          shape=y_true.shape[1:],
+          initializer="zeros",
+          dtype=self._dtype,
       )
     if not hasattr(self, "count"):
       self.count = self.add_weight(
-        name="count",
-        shape=y_true.shape[1:],
-        initializer="zeros",
-        dtype=self._dtype,
+          name="count",
+          shape=y_true.shape[1:],
+          initializer="zeros",
+          dtype=self._dtype,
       )
 
     y_true = tf.cast(y_true, dtype=self._dtype)
@@ -142,16 +139,12 @@ class RSquare(Metric):
     if sample_weight is None:
       sample_weight = 1
     sample_weight = tf.cast(sample_weight, dtype=self._dtype)
-    sample_weight = weights_broadcast_ops.broadcast_weights(
-      weights=sample_weight, values=y_true
-    )
+    sample_weight = weights_broadcast_ops.broadcast_weights(weights=sample_weight, values=y_true)
 
     weighted_y_true = y_true * sample_weight
     self.sum.assign_add(tf.reduce_sum(weighted_y_true, axis=0))
     self.squared_sum.assign_add(tf.reduce_sum(y_true * weighted_y_true, axis=0))
-    self.res.assign_add(
-      tf.reduce_sum((y_true - y_pred) ** 2 * sample_weight, axis=0)
-    )
+    self.res.assign_add(tf.reduce_sum((y_true - y_pred)**2 * sample_weight, axis=0))
     self.count.assign_add(tf.reduce_sum(sample_weight, axis=0))
     self.num_samples.assign_add(tf.size(y_true))
 
@@ -169,26 +162,20 @@ class RSquare(Metric):
       r2_score = _reduce_average(raw_scores, weights=total)
     else:
       raise RuntimeError(
-        "The multioutput attribute must be one of {}, but was: {}".format(
-          _VALID_MULTIOUTPUT, self.multioutput
-        )
+          "The multioutput attribute must be one of {}, but was: {}".format(_VALID_MULTIOUTPUT, self.multioutput)
       )
 
     if self.num_regressors < 0:
-      raise ValueError(
-        "num_regressors parameter should be greater than or equal to zero"
-      )
+      raise ValueError("num_regressors parameter should be greater than or equal to zero")
 
     if self.num_regressors != 0:
       if self.num_regressors > self.num_samples - 1:
         UserWarning(
-          "More independent predictors than datapoints in adjusted r2 score. Falls back to standard r2 "
-          "score."
+            "More independent predictors than datapoints in adjusted r2 score. Falls back to standard r2 "
+            "score."
         )
       elif self.num_regressors == self.num_samples - 1:
-        UserWarning(
-          "Division by zero in adjusted r2 score. Falls back to standard r2 score."
-        )
+        UserWarning("Division by zero in adjusted r2 score. Falls back to standard r2 score.")
       else:
         n = tf.cast(self.num_samples, dtype=tf.float32)
         p = tf.cast(self.num_regressors, dtype=tf.float32)
@@ -211,7 +198,7 @@ class RSquare(Metric):
 
   def get_config(self):
     config = {
-      "multioutput": self.multioutput,
+        "multioutput": self.multioutput,
     }
     base_config = super().get_config()
     return {**base_config, **config}

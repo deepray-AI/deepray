@@ -47,40 +47,31 @@ from deepray.utils.flags import common_flags
 FLAGS = flags.FLAGS
 
 MODEL_CLASSES = {
-  'bert': (modeling.BertConfig, squad_lib_wp, tokenization.FullTokenizer),
-  'albert': (modeling.AlbertConfig, squad_lib_sp,
-             tokenization.FullSentencePieceTokenizer),
+    'bert': (modeling.BertConfig, squad_lib_wp, tokenization.FullTokenizer),
+    'albert': (modeling.AlbertConfig, squad_lib_sp, tokenization.FullSentencePieceTokenizer),
 }
 
 DTYPE_MAP = {
-  "fp16": tf.float16,
-  "bf16": tf.bfloat16,
-  "fp32": tf.float32,
+    "fp16": tf.float16,
+    "bf16": tf.bfloat16,
+    "fp32": tf.float32,
 }
 
 
 def get_raw_results(predictions):
   """Converts multi-replica predictions to RawResult."""
   squad_lib = MODEL_CLASSES[FLAGS.model_type][1]
-  for unique_ids, start_logits, end_logits in zip(predictions['unique_ids'],
-                                                  predictions['start_positions'],
-                                                  predictions['end_positions']):
-    for values in zip(unique_ids.numpy(),
-                      start_logits.numpy(),
-                      end_logits.numpy()):
-      yield squad_lib.RawResult(
-        unique_id=values[0],
-        start_logits=values[1].tolist(),
-        end_logits=values[2].tolist())
+  for unique_ids, start_logits, end_logits in zip(
+      predictions['unique_ids'], predictions['start_positions'], predictions['end_positions']
+  ):
+    for values in zip(unique_ids.numpy(), start_logits.numpy(), end_logits.numpy()):
+      yield squad_lib.RawResult(unique_id=values[0], start_logits=values[1].tolist(), end_logits=values[2].tolist())
 
 
-def predict_squad_customized(input_meta_data, bert_config,
-                             predict_tfrecord_path, num_steps):
+def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path, num_steps):
   """Make predictions using a Bert-based squad model."""
   data_pipe = Squad(max_seq_length=input_meta_data['max_seq_length'], dataset_type="squad")
-  predict_dataset = data_pipe(predict_tfrecord_path,
-                              FLAGS.predict_batch_size,
-                              is_training=False)
+  predict_dataset = data_pipe(predict_tfrecord_path, FLAGS.predict_batch_size, is_training=False)
 
   strategy = distribution_utils.get_distribution_strategy()
   predict_iterator = distribution_utils.make_distributed_iterator(strategy, predict_dataset)
@@ -94,7 +85,8 @@ def predict_squad_customized(input_meta_data, bert_config,
   else:
     with distribution_utils.get_strategy_scope(strategy):
       squad_model, _ = bert_models.squad_model(
-        bert_config, input_meta_data['max_seq_length'], float_type=DTYPE_MAP[FLAGS.dtype])
+          bert_config, input_meta_data['max_seq_length'], float_type=DTYPE_MAP[FLAGS.dtype]
+      )
 
     if FLAGS.init_checkpoint:
       checkpoint = tf.train.Checkpoint(model=squad_model)
@@ -125,11 +117,10 @@ def predict_squad_customized(input_meta_data, bert_config,
       return x,
 
     if strategy:
-      outputs = strategy.run(
-        _replicated_step, args=(next(iterator),))
+      outputs = strategy.run(_replicated_step, args=(next(iterator),))
       map_func = strategy.experimental_local_results
     else:
-      outputs = _replicated_step(next(iterator), )
+      outputs = _replicated_step(next(iterator),)
       map_func = tuple_fun
     return tf.nest.map_structure(map_func, outputs)
 
@@ -163,8 +154,9 @@ def predict_squad_customized(input_meta_data, bert_config,
   logging.info("Batch size = %d", FLAGS.predict_batch_size)
   logging.info("Sequence Length = %d", input_meta_data['max_seq_length'])
   logging.info("Precision = %s", FLAGS.dtype)
-  logging.info("Total Inference Time = %0.2f for Sentences = %d", eval_time_elapsed,
-               num_steps * FLAGS.predict_batch_size)
+  logging.info(
+      "Total Inference Time = %0.2f for Sentences = %d", eval_time_elapsed, num_steps * FLAGS.predict_batch_size
+  )
 
   if FLAGS.benchmark:
     eval_time_wo_overhead = sum(time_list)
@@ -179,8 +171,10 @@ def predict_squad_customized(input_meta_data, bert_config,
     cf_100 = max(time_list[:int(len(time_list) * 1)])
     ss_sentences_per_second = num_sentences * 1.0 / eval_time_wo_overhead
 
-    logging.info("Total Inference Time W/O Overhead = %0.2f for Sequences = %d", eval_time_wo_overhead,
-                 (num_steps - 4) * FLAGS.predict_batch_size)
+    logging.info(
+        "Total Inference Time W/O Overhead = %0.2f for Sequences = %d", eval_time_wo_overhead,
+        (num_steps - 4) * FLAGS.predict_batch_size
+    )
     logging.info("Latency Confidence Level 50 (ms) = %0.2f", cf_50 * 1000)
     logging.info("Latency Confidence Level 90 (ms) = %0.2f", cf_90 * 1000)
     logging.info("Latency Confidence Level 95 (ms) = %0.2f", cf_95 * 1000)
@@ -197,21 +191,20 @@ def predict_squad_customized(input_meta_data, bert_config,
   return all_results
 
 
-def train_squad(input_meta_data,
-                custom_callbacks=None, ):
+def train_squad(
+    input_meta_data,
+    custom_callbacks=None,
+):
   """Run bert squad training."""
 
-  bert_config = MODEL_CLASSES[FLAGS.model_type][0].from_json_file(
-    FLAGS.config_file)
+  bert_config = MODEL_CLASSES[FLAGS.model_type][0].from_json_file(FLAGS.config_file)
   max_seq_length = input_meta_data['max_seq_length']
 
   def _get_squad_model():
     """Get Squad model and optimizer."""
     squad_model, core_model = bert_models.squad_model(
-      bert_config,
-      max_seq_length,
-      float_type=DTYPE_MAP[FLAGS.dtype],
-      hub_module_url=FLAGS.hub_module_url)
+        bert_config, max_seq_length, float_type=DTYPE_MAP[FLAGS.dtype], hub_module_url=FLAGS.hub_module_url
+    )
 
     return squad_model, core_model
 
@@ -224,19 +217,30 @@ def train_squad(input_meta_data,
   with distribution_utils.get_strategy_scope(strategy):
     model, sub_model = _get_squad_model()
 
-  data_pipe = Squad(max_seq_length=max_seq_length, dataset_type="squad", use_horovod=FLAGS.use_horovod, )
-  train_input = data_pipe(FLAGS.train_data,
-                          FLAGS.batch_size,
-                          is_training=True,
-                          )
-  trainer = Trainer(model_or_fn=model,
-                    sub_model_or_fn=sub_model,
-                    loss={"start_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                          "end_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)},
-                    loss_weights={"start_positions": 0.5, "end_positions": 0.5},
-                    callbacks=custom_callbacks,
-                    )
-  trainer.fit(train_input=train_input, )
+  data_pipe = Squad(
+      max_seq_length=max_seq_length,
+      dataset_type="squad",
+      use_horovod=FLAGS.use_horovod,
+  )
+  train_input = data_pipe(
+      FLAGS.train_data,
+      FLAGS.batch_size,
+      is_training=True,
+  )
+  trainer = Trainer(
+      model_or_fn=model,
+      sub_model_or_fn=sub_model,
+      loss={
+          "start_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+          "end_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+      },
+      loss_weights={
+          "start_positions": 0.5,
+          "end_positions": 0.5
+      },
+      callbacks=custom_callbacks,
+  )
+  trainer.fit(train_input=train_input,)
 
 
 def predict_squad(input_meta_data):
@@ -245,22 +249,19 @@ def predict_squad(input_meta_data):
   config_cls, squad_lib, tokenizer_cls = MODEL_CLASSES[FLAGS.model_type]
   bert_config = config_cls.from_json_file(FLAGS.config_file)
   if tokenizer_cls == tokenization.FullTokenizer:
-    tokenizer = tokenizer_cls(
-      vocab_file=FLAGS.vocab_file, do_lower_case=FLAGS.do_lower_case)
+    tokenizer = tokenizer_cls(vocab_file=FLAGS.vocab_file, do_lower_case=FLAGS.do_lower_case)
   else:
     assert tokenizer_cls == tokenization.FullSentencePieceTokenizer
     tokenizer = tokenizer_cls(sp_model_file=FLAGS.sp_model_file)
   doc_stride = input_meta_data['doc_stride']
   max_query_length = input_meta_data['max_query_length']
   # Whether data should be in Ver 2.0 format.
-  version_2_with_negative = input_meta_data.get('version_2_with_negative',
-                                                False)
-  eval_examples = squad_lib.read_squad_examples(input_file=FLAGS.predict_file,
-                                                is_training=False,
-                                                version_2_with_negative=version_2_with_negative)
+  version_2_with_negative = input_meta_data.get('version_2_with_negative', False)
+  eval_examples = squad_lib.read_squad_examples(
+      input_file=FLAGS.predict_file, is_training=False, version_2_with_negative=version_2_with_negative
+  )
 
-  eval_writer = squad_lib.FeatureWriter(filename=os.path.join(FLAGS.model_dir, 'eval.tf_record'),
-                                        is_training=False)
+  eval_writer = squad_lib.FeatureWriter(filename=os.path.join(FLAGS.model_dir, 'eval.tf_record'), is_training=False)
   eval_features = []
 
   def _append_feature(feature, is_padding):
@@ -272,14 +273,16 @@ def predict_squad(input_meta_data):
   # of examples must be a multiple of the batch size, or else examples
   # will get dropped. So we pad with fake examples which are ignored
   # later on.
-  kwargs = dict(examples=eval_examples,
-                tokenizer=tokenizer,
-                max_seq_length=input_meta_data['max_seq_length'],
-                doc_stride=doc_stride,
-                max_query_length=max_query_length,
-                is_training=False,
-                output_fn=_append_feature,
-                batch_size=FLAGS.predict_batch_size)
+  kwargs = dict(
+      examples=eval_examples,
+      tokenizer=tokenizer,
+      max_seq_length=input_meta_data['max_seq_length'],
+      doc_stride=doc_stride,
+      max_query_length=max_query_length,
+      is_training=False,
+      output_fn=_append_feature,
+      batch_size=FLAGS.predict_batch_size
+  )
 
   # squad_lib_sp requires one more argument 'do_lower_case'.
   if squad_lib == squad_lib_sp:
@@ -295,8 +298,7 @@ def predict_squad(input_meta_data):
   num_steps = int(dataset_size / FLAGS.predict_batch_size)
   if FLAGS.benchmark and num_steps > 1000:
     num_steps = 1000
-  all_results = predict_squad_customized(input_meta_data, bert_config,
-                                         eval_writer.filename, num_steps)
+  all_results = predict_squad_customized(input_meta_data, bert_config, eval_writer.filename, num_steps)
 
   if FLAGS.benchmark:
     return
@@ -305,20 +307,21 @@ def predict_squad(input_meta_data):
   output_nbest_file = os.path.join(FLAGS.model_dir, 'nbest_predictions.json')
   output_null_log_odds_file = os.path.join(FLAGS.model_dir, 'null_odds.json')
 
-  squad_lib.write_predictions(eval_examples,
-                              eval_features,
-                              all_results,
-                              FLAGS.n_best_size,
-                              FLAGS.max_answer_length,
-                              FLAGS.do_lower_case,
-                              output_prediction_file,
-                              output_nbest_file,
-                              output_null_log_odds_file,
-                              verbose=FLAGS.verbose_logging)
+  squad_lib.write_predictions(
+      eval_examples,
+      eval_features,
+      all_results,
+      FLAGS.n_best_size,
+      FLAGS.max_answer_length,
+      FLAGS.do_lower_case,
+      output_prediction_file,
+      output_nbest_file,
+      output_null_log_odds_file,
+      verbose=FLAGS.verbose_logging
+  )
 
   if FLAGS.eval_script:
-    eval_out = subprocess.check_output([sys.executable, FLAGS.eval_script,
-                                        FLAGS.predict_file, output_prediction_file])
+    eval_out = subprocess.check_output([sys.executable, FLAGS.eval_script, FLAGS.predict_file, output_prediction_file])
     scores = str(eval_out).strip()
     exact_match = float(scores.split(":")[1].split(",")[0])
     if version_2_with_negative:
@@ -343,12 +346,11 @@ def export_squad(model_export_path, input_meta_data):
   """
   if not model_export_path:
     raise ValueError('Export path is not specified: %s' % model_export_path)
-  bert_config = MODEL_CLASSES[FLAGS.model_type][0].from_json_file(
-    FLAGS.config_file)
-  squad_model, _ = bert_models.squad_model(
-    bert_config, input_meta_data['max_seq_length'], float_type=tf.float32)
+  bert_config = MODEL_CLASSES[FLAGS.model_type][0].from_json_file(FLAGS.config_file)
+  squad_model, _ = bert_models.squad_model(bert_config, input_meta_data['max_seq_length'], float_type=tf.float32)
   model_saving_utils.export_bert_model(
-    model_export_path + '/savedmodel', model=squad_model, checkpoint_dir=FLAGS.model_dir)
+      model_export_path + '/savedmodel', model=squad_model, checkpoint_dir=FLAGS.model_dir
+  )
 
   model_name = FLAGS.triton_model_name
 
@@ -367,13 +369,18 @@ def export_squad(model_export_path, input_meta_data):
       os.rename(model_export_path + '/savedmodel', final_model_folder)
       print("WARNING: Existing model was overwritten. Model dir: {}".format(final_model_folder))
     else:
-      print("ERROR: Could not save Triton model. Folder already exists. Use '--triton_model_overwrite=True' if you would like to overwrite an existing model. Model dir: {}".format(final_model_folder))
+      print(
+          "ERROR: Could not save Triton model. Folder already exists. Use '--triton_model_overwrite=True' if you would like to overwrite an existing model. Model dir: {}"
+          .format(final_model_folder)
+      )
       return
 
   config_filename = os.path.join(model_folder, "config.pbtxt")
   if os.path.exists(config_filename) and not FLAGS.triton_model_overwrite:
-    print("ERROR: Could not save Triton model config. Config file already exists. Use '--triton_model_overwrite=True' if you would like to overwrite an existing model config. Model config: {}".format(
-      config_filename))
+    print(
+        "ERROR: Could not save Triton model config. Config file already exists. Use '--triton_model_overwrite=True' if you would like to overwrite an existing model config. Model config: {}"
+        .format(config_filename)
+    )
     return
 
   config_template = r"""
@@ -432,12 +439,12 @@ dynamic_batching {{
 }}""".format(", ".join([str(x) for x in pref_batch_size]), int(FLAGS.triton_dyn_batching_delay * 1000.0))
 
   config_values = {
-    "model_name": model_name,
-    "max_batch_size": max_batch_size,
-    "seq_length": input_meta_data['max_seq_length'],
-    "dynamic_batching": batching_str,
-    "gpu_list": ", ".join([x.name.split(":")[-1] for x in tf.config.list_physical_devices('GPU')]),
-    "engine_count": FLAGS.triton_engine_count
+      "model_name": model_name,
+      "max_batch_size": max_batch_size,
+      "seq_length": input_meta_data['max_seq_length'],
+      "dynamic_batching": batching_str,
+      "gpu_list": ", ".join([x.name.split(":")[-1] for x in tf.config.list_physical_devices('GPU')]),
+      "engine_count": FLAGS.triton_engine_count
   }
 
   with open(model_folder + "/config.pbtxt", "w") as file:
@@ -459,7 +466,8 @@ def main(_):
 
   if FLAGS.mode in ('train', 'train_and_predict'):
     train_squad(input_meta_data)
-  if FLAGS.mode in ('predict', 'sm_predict', 'trt_predict', 'train_and_predict') and (not FLAGS.use_horovod or hvd.rank() == 0):
+  if FLAGS.mode in ('predict', 'sm_predict', 'trt_predict',
+                    'train_and_predict') and (not FLAGS.use_horovod or hvd.rank() == 0):
     predict_squad(input_meta_data)
 
 

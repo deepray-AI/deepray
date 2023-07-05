@@ -133,6 +133,7 @@ cc_library(
         "@//third_party/hadoop:hdfs",
         "@aws-sdk-cpp//:identity-management",
         "@aws-sdk-cpp//:s3",
+        "@boost//:multiprecision",
         "@boringssl//:crypto",
         "@com_github_apache_thrift//:thrift",
         "@com_github_facebook_zstd//:zstd",

@@ -14,37 +14,43 @@ int formatted_code;
 void formatted_code_again;
 ```
 
-Install Clang-format 9 with:
+Install Clang-format 9 for Ubuntu:
 
 ```bash
-wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add - 
 sudo add-apt-repository -u 'http://apt.llvm.org/bionic/ llvm-toolchain-bionic-9 main'
 sudo apt install clang-format-9
 ```
 
 format all with:
 ```bash
-clang-format-9 -i --style=google **/*.cc **/*.h
+clang-format-9 -i --style=google ./deepray/**/*.cc ./deepray/**/*.h
+```
+
+Install Clang-format for MacOS:
+```bash
+brew update
+brew install clang-format
+```
+
+format all with:
+```bash
+clang-format -i --style=google **/*.cc deepray/**/*.h
 ```
 
 #### Python
-
-Deepray uses [flake8](http://flake8.pycqa.org/en/latest/) to check pep8 compliance and 
-code analysis.
-
-Deepray use [Black](https://black.readthedocs.io/en/stable/) to format our code.
+Deepray use [Yapf](https://github.com/google/yapf) to format our code.
 The continuous integration check will fail if you do not use it.
 
 Install them with:
 ```
-pip install flake8 black
+pip install yapf
 ```
 
-Be sure to run them both before you push your commits, otherwise the CI will fail!
+Be sure to run it before you push your commits, otherwise the CI will fail!
 
 ```
-python -m black ./
-python -m flake8
+yapf --style=./.yapf -ir ./**/*.py
 ```
 
 #### TensorFlow Conventions

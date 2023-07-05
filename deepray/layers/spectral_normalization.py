@@ -17,6 +17,7 @@ import tensorflow as tf
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class SpectralNormalization(tf.keras.layers.Wrapper):
   """Performs spectral normalization on weights.
 
@@ -56,8 +57,8 @@ class SpectralNormalization(tf.keras.layers.Wrapper):
     super().__init__(layer, **kwargs)
     if power_iterations <= 0:
       raise ValueError(
-        "`power_iterations` should be greater than zero, got "
-        "`power_iterations={}`".format(power_iterations)
+          "`power_iterations` should be greater than zero, got "
+          "`power_iterations={}`".format(power_iterations)
       )
     self.power_iterations = power_iterations
     self._initialized = False
@@ -73,19 +74,17 @@ class SpectralNormalization(tf.keras.layers.Wrapper):
     elif hasattr(self.layer, "embeddings"):
       self.w = self.layer.embeddings
     else:
-      raise AttributeError(
-        "{} object has no attribute 'kernel' nor "
-        "'embeddings'".format(type(self.layer).__name__)
-      )
+      raise AttributeError("{} object has no attribute 'kernel' nor "
+                           "'embeddings'".format(type(self.layer).__name__))
 
     self.w_shape = self.w.shape.as_list()
 
     self.u = self.add_weight(
-      shape=(1, self.w_shape[-1]),
-      initializer=tf.initializers.TruncatedNormal(stddev=0.02),
-      trainable=False,
-      name="sn_u",
-      dtype=self.w.dtype,
+        shape=(1, self.w_shape[-1]),
+        initializer=tf.initializers.TruncatedNormal(stddev=0.02),
+        trainable=False,
+        name="sn_u",
+        dtype=self.w.dtype,
     )
 
   def call(self, inputs, training=None):
@@ -120,9 +119,7 @@ class SpectralNormalization(tf.keras.layers.Wrapper):
       v = tf.stop_gradient(v)
       sigma = tf.matmul(tf.matmul(v, w), u, transpose_b=True)
       self.u.assign(tf.cast(u, self.u.dtype))
-      self.w.assign(
-        tf.cast(tf.reshape(self.w / sigma, self.w_shape), self.w.dtype)
-      )
+      self.w.assign(tf.cast(tf.reshape(self.w / sigma, self.w_shape), self.w.dtype))
 
   def get_config(self):
     config = {"power_iterations": self.power_iterations}

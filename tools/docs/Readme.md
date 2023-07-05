@@ -1,6 +1,6 @@
 ## 1. Generated API docs
 
-[tensorflow.org/addons/api_docs/python/dp](https://tensorflow.org/addons/api_docs/python/dp)
+[tensorflow.org/deepray/api_docs/python/dp](https://tensorflow.org/deepray/api_docs/python/dp)
 
 `build_docs.py` controls executed this docs generation. To test-run it:
 
@@ -15,5 +15,5 @@ bazel build //tools/docs:build_docs
 # Use current branch
 bazel-bin/tools/docs/build_docs --git_branch=$(git rev-parse --abbrev-ref HEAD)
 # or specified explicitly
-bazel-bin/tools/docs/build_docs --git_branch=master --output_dir=/tmp/tfa_api
+bazel-bin/tools/docs/build_docs --git_branch=master --output_dir=/tmp/dp_api
 ```

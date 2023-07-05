@@ -2,6 +2,7 @@ import tensorflow as tf
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class StochasticDepth(tf.keras.layers.Layer):
   """Stochastic Depth layer.
 
@@ -64,9 +65,7 @@ class StochasticDepth(tf.keras.layers.Layer):
     shortcut, residual = x
 
     # Random bernoulli variable indicating whether the branch should be kept or not or not
-    b_l = tf.keras.backend.random_bernoulli(
-      [], p=self.survival_probability, dtype=self._compute_dtype_object
-    )
+    b_l = tf.keras.backend.random_bernoulli([], p=self.survival_probability, dtype=self._compute_dtype_object)
 
     def _call_train():
       return shortcut + b_l * residual
@@ -74,9 +73,7 @@ class StochasticDepth(tf.keras.layers.Layer):
     def _call_test():
       return shortcut + self.survival_probability * residual
 
-    return tf.keras.backend.in_train_phase(
-      _call_train, _call_test, training=training
-    )
+    return tf.keras.backend.in_train_phase(_call_train, _call_test, training=training)
 
   def compute_output_shape(self, input_shape):
     return input_shape[0]

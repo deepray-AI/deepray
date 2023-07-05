@@ -21,6 +21,7 @@ from typing import Union, Callable
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class NovoGrad(KerasLegacyOptimizer):
   """Optimizer that implements NovoGrad.
 
@@ -118,9 +119,7 @@ class NovoGrad(KerasLegacyOptimizer):
     for var in var_list:
       self.add_slot(var=var, slot_name="m", initializer="zeros")
     for var in var_list:
-      self.add_slot(
-        var=var, slot_name="v", initializer=tf.zeros(shape=[], dtype=var.dtype)
-      )
+      self.add_slot(var=var, slot_name="v", initializer=tf.zeros(shape=[], dtype=var.dtype))
     if self.amsgrad:
       for var in var_list:
         self.add_slot(var, "vhat")
@@ -130,13 +129,13 @@ class NovoGrad(KerasLegacyOptimizer):
     beta_1_t = tf.identity(self._get_hyper("beta_1", var_dtype))
     beta_2_t = tf.identity(self._get_hyper("beta_2", var_dtype))
     apply_state[(var_device, var_dtype)].update(
-      dict(
-        epsilon=tf.convert_to_tensor(self.epsilon, var_dtype),
-        beta_1_t=beta_1_t,
-        beta_2_t=beta_2_t,
-        one_minus_beta_2_t=1 - beta_2_t,
-        one_minus_beta_1_t=1 - beta_1_t,
-      )
+        dict(
+            epsilon=tf.convert_to_tensor(self.epsilon, var_dtype),
+            beta_1_t=beta_1_t,
+            beta_2_t=beta_2_t,
+            one_minus_beta_2_t=1 - beta_2_t,
+            one_minus_beta_1_t=1 - beta_1_t,
+        )
     )
 
   def set_weights(self, weights):
@@ -146,24 +145,21 @@ class NovoGrad(KerasLegacyOptimizer):
     # optimizer has 2x + 1 variables. Filter vhats out for compatibility.
     num_vars = int((len(params) - 1) / 2)
     if len(weights) == 3 * num_vars + 1:
-      weights = weights[: len(params)]
+      weights = weights[:len(params)]
     super().set_weights(weights)
 
   def _resource_apply_dense(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = (apply_state or {}).get(
-      (var_device, var_dtype)
-    ) or self._fallback_apply_state(var_device, var_dtype)
+    coefficients = (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
     weight_decay = self._get_hyper("weight_decay", var_dtype)
     grad_averaging = self._get_hyper("grad_averaging")
 
     v = self.get_slot(var, "v")
     g_2 = tf.reduce_sum(tf.square(grad))
     v_t = tf.cond(
-      tf.equal(self.iterations, 0),
-      lambda: g_2,
-      lambda: v * coefficients["beta_2_t"]
-              + g_2 * coefficients["one_minus_beta_2_t"],
+        tf.equal(self.iterations, 0),
+        lambda: g_2,
+        lambda: v * coefficients["beta_2_t"] + g_2 * coefficients["one_minus_beta_2_t"],
     )
     v_t = v.assign(v_t, use_locking=self._use_locking)
 
@@ -173,30 +169,26 @@ class NovoGrad(KerasLegacyOptimizer):
       grad = grad / (tf.sqrt(vhat_t) + self.epsilon)
     else:
       grad = grad / (tf.sqrt(v_t) + self.epsilon)
+    grad = tf.cond(tf.greater(weight_decay, 0), lambda: grad + weight_decay * var, lambda: grad)
     grad = tf.cond(
-      tf.greater(weight_decay, 0), lambda: grad + weight_decay * var, lambda: grad
-    )
-    grad = tf.cond(
-      tf.logical_and(grad_averaging, tf.not_equal(self.iterations, 0)),
-      lambda: grad * coefficients["one_minus_beta_1_t"],
-      lambda: grad,
+        tf.logical_and(grad_averaging, tf.not_equal(self.iterations, 0)),
+        lambda: grad * coefficients["one_minus_beta_1_t"],
+        lambda: grad,
     )
     m = self.get_slot(var, "m")
     return tf.raw_ops.ResourceApplyKerasMomentum(
-      var=var.handle,
-      accum=m.handle,
-      lr=coefficients["lr_t"],
-      grad=grad,
-      momentum=coefficients["beta_1_t"],
-      use_locking=self._use_locking,
-      use_nesterov=False,
+        var=var.handle,
+        accum=m.handle,
+        lr=coefficients["lr_t"],
+        grad=grad,
+        momentum=coefficients["beta_1_t"],
+        use_locking=self._use_locking,
+        use_nesterov=False,
     )
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = (apply_state or {}).get(
-      (var_device, var_dtype)
-    ) or self._fallback_apply_state(var_device, var_dtype)
+    coefficients = (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
     weight_decay = self._get_hyper("weight_decay", var_dtype)
     grad_averaging = self._get_hyper("grad_averaging")
 
@@ -204,10 +196,9 @@ class NovoGrad(KerasLegacyOptimizer):
     g_2 = tf.reduce_sum(tf.square(grad))
     # v is just a scalar and does not need to involve sparse tensors.
     v_t = tf.cond(
-      tf.equal(self.iterations, 0),
-      lambda: g_2,
-      lambda: v * coefficients["beta_2_t"]
-              + g_2 * coefficients["one_minus_beta_2_t"],
+        tf.equal(self.iterations, 0),
+        lambda: g_2,
+        lambda: v * coefficients["beta_2_t"] + g_2 * coefficients["one_minus_beta_2_t"],
     )
     v_t = v.assign(v_t, use_locking=self._use_locking)
 
@@ -218,37 +209,37 @@ class NovoGrad(KerasLegacyOptimizer):
     else:
       grad = grad / (tf.sqrt(v_t) + self.epsilon)
     grad = tf.cond(
-      tf.greater(weight_decay, 0),
-      lambda: grad + weight_decay * tf.gather(var, indices),
-      lambda: grad,
+        tf.greater(weight_decay, 0),
+        lambda: grad + weight_decay * tf.gather(var, indices),
+        lambda: grad,
     )
     grad = tf.cond(
-      tf.logical_and(grad_averaging, tf.not_equal(self.iterations, 0)),
-      lambda: grad * coefficients["one_minus_beta_1_t"],
-      lambda: grad,
+        tf.logical_and(grad_averaging, tf.not_equal(self.iterations, 0)),
+        lambda: grad * coefficients["one_minus_beta_1_t"],
+        lambda: grad,
     )
     m = self.get_slot(var, "m")
     return tf.raw_ops.ResourceSparseApplyKerasMomentum(
-      var=var.handle,
-      accum=m.handle,
-      lr=coefficients["lr_t"],
-      grad=grad,
-      indices=indices,
-      momentum=coefficients["beta_1_t"],
-      use_locking=self._use_locking,
-      use_nesterov=False,
+        var=var.handle,
+        accum=m.handle,
+        lr=coefficients["lr_t"],
+        grad=grad,
+        indices=indices,
+        momentum=coefficients["beta_1_t"],
+        use_locking=self._use_locking,
+        use_nesterov=False,
     )
 
   def get_config(self):
     config = super().get_config()
     config.update(
-      {
-        "learning_rate": self._serialize_hyperparameter("learning_rate"),
-        "beta_1": self._serialize_hyperparameter("beta_1"),
-        "beta_2": self._serialize_hyperparameter("beta_2"),
-        "epsilon": self.epsilon,
-        "weight_decay": self._serialize_hyperparameter("weight_decay"),
-        "grad_averaging": self._serialize_hyperparameter("grad_averaging"),
-      }
+        {
+            "learning_rate": self._serialize_hyperparameter("learning_rate"),
+            "beta_1": self._serialize_hyperparameter("beta_1"),
+            "beta_2": self._serialize_hyperparameter("beta_2"),
+            "epsilon": self.epsilon,
+            "weight_decay": self._serialize_hyperparameter("weight_decay"),
+            "grad_averaging": self._serialize_hyperparameter("grad_averaging"),
+        }
     )
     return config

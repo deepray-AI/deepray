@@ -39,29 +39,29 @@ classes_to_test = discover_classes(optimizers, KerasLegacyOptimizer, class_excep
 @pytest.mark.parametrize("optimizer", classes_to_test)
 @pytest.mark.parametrize("serialize", [True, False])
 def test_optimizer_minimize_serialize(optimizer, serialize, tmpdir):
-    """
+  """
     Purpose of this test is to confirm that the optimizer can minimize the loss in toy conditions.
     It also tests for serialization as a parameter.
     """
-    model = tf.keras.Sequential([tf.keras.Input(shape=[1]), tf.keras.layers.Dense(1)])
+  model = tf.keras.Sequential([tf.keras.Input(shape=[1]), tf.keras.layers.Dense(1)])
 
-    x = np.array(np.ones([1]))
-    y = np.array(np.zeros([1]))
+  x = np.array(np.ones([1]))
+  y = np.array(np.zeros([1]))
 
-    opt = optimizer()
-    loss = tf.keras.losses.MSE
+  opt = optimizer()
+  loss = tf.keras.losses.MSE
 
-    model.compile(optimizer=opt, loss=loss)
+  model.compile(optimizer=opt, loss=loss)
 
-    # serialize whole model including optimizer, clear the session, then reload the whole model.
-    # successfully serialized optimizers should not require a compile before training
-    if serialize:
-        model.save(str(tmpdir), save_format="tf")
-        tf.keras.backend.clear_session()
-        model = tf.keras.models.load_model(str(tmpdir))
+  # serialize whole model including optimizer, clear the session, then reload the whole model.
+  # successfully serialized optimizers should not require a compile before training
+  if serialize:
+    model.save(str(tmpdir), save_format="tf")
+    tf.keras.backend.clear_session()
+    model = tf.keras.models.load_model(str(tmpdir))
 
-    history = model.fit(x, y, batch_size=1, epochs=10)
+  history = model.fit(x, y, batch_size=1, epochs=10)
 
-    loss_values = history.history["loss"]
+  loss_values = history.history["loss"]
 
-    np.testing.assert_array_less(loss_values[-1], loss_values[0])
+  np.testing.assert_array_less(loss_values[-1], loss_values[0])

@@ -17,8 +17,9 @@ import tensorflow as tf
 from deepray.utils.types import Number, TensorLike
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 def hardshrink(x: TensorLike, lower: Number = -0.5, upper: Number = 0.5) -> tf.Tensor:
-    r"""Hard shrink function.
+  r"""Hard shrink function.
 
     Computes hard shrink function:
 
@@ -45,15 +46,15 @@ def hardshrink(x: TensorLike, lower: Number = -0.5, upper: Number = 0.5) -> tf.T
     Returns:
         A `Tensor`. Has the same type as `x`.
     """
-    if lower > upper:
-        raise ValueError(
-            "The value of lower is {} and should"
-            " not be higher than the value "
-            "variable upper, which is {} .".format(lower, upper)
-        )
-    x = tf.convert_to_tensor(x)
-    mask_lower = x < lower
-    mask_upper = upper < x
-    mask = tf.logical_or(mask_lower, mask_upper)
-    mask = tf.cast(mask, x.dtype)
-    return x * mask
+  if lower > upper:
+    raise ValueError(
+        "The value of lower is {} and should"
+        " not be higher than the value "
+        "variable upper, which is {} .".format(lower, upper)
+    )
+  x = tf.convert_to_tensor(x)
+  mask_lower = x < lower
+  mask_upper = upper < x
+  mask = tf.logical_or(mask_lower, mask_upper)
+  mask = tf.cast(mask, x.dtype)
+  return x * mask

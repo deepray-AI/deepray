@@ -20,6 +20,7 @@ from typeguard import typechecked
 from deepray.utils.types import AcceptableDTypes
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class HarmonicMean(tf.keras.metrics.Mean):
   """Compute Harmonic Mean
     The harmonic mean is a kind of mean. It can be expressed as the reciprocal of
@@ -36,9 +37,7 @@ class HarmonicMean(tf.keras.metrics.Mean):
     """
 
   @typechecked
-  def __init__(
-      self, name: str = "harmonic_mean", dtype: AcceptableDTypes = None, **kwargs
-  ):
+  def __init__(self, name: str = "harmonic_mean", dtype: AcceptableDTypes = None, **kwargs):
     super().__init__(name=name, dtype=dtype, **kwargs)
 
   def update_state(self, values, sample_weight=None) -> None:

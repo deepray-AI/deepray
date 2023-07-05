@@ -29,6 +29,7 @@ from deepray.utils.types import FloatTensorLike
 from deepray.optimizers.utils import is_variable_matched_by_regexes
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class LAMB(KerasLegacyOptimizer):
   """Optimizer that implements the Layer-wise Adaptive Moments (LAMB).
 
@@ -79,9 +80,9 @@ class LAMB(KerasLegacyOptimizer):
 
     if "weight_decay_rate" in kwargs:
       warnings.warn(
-        "weight_decay_rate has been renamed to weight_decay,"
-        "and will be deprecated in Addons 0.18.",
-        DeprecationWarning,
+          "weight_decay_rate has been renamed to weight_decay,"
+          "and will be deprecated in Deepray 0.18.",
+          DeprecationWarning,
       )
       weight_decay = kwargs["weight_decay_rate"]
       del kwargs["weight_decay_rate"]
@@ -128,23 +129,21 @@ class LAMB(KerasLegacyOptimizer):
     beta_1_power = tf.pow(beta_1_t, local_step)
     beta_2_power = tf.pow(beta_2_t, local_step)
     apply_state[(var_device, var_dtype)].update(
-      dict(
-        weight_decay=weight_decay,
-        epsilon=tf.convert_to_tensor(self.epsilon, var_dtype),
-        beta_1_t=beta_1_t,
-        beta_1_power=beta_1_power,
-        one_minus_beta_1_t=1 - beta_1_t,
-        beta_2_t=beta_2_t,
-        beta_2_power=beta_2_power,
-        one_minus_beta_2_t=1 - beta_2_t,
-      )
+        dict(
+            weight_decay=weight_decay,
+            epsilon=tf.convert_to_tensor(self.epsilon, var_dtype),
+            beta_1_t=beta_1_t,
+            beta_1_power=beta_1_power,
+            one_minus_beta_1_t=1 - beta_1_t,
+            beta_2_t=beta_2_t,
+            beta_2_power=beta_2_power,
+            one_minus_beta_2_t=1 - beta_2_t,
+        )
     )
 
   def _resource_apply_dense(self, grad, var, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = (apply_state or {}).get(
-      (var_device, var_dtype)
-    ) or self._fallback_apply_state(var_device, var_dtype)
+    coefficients = (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
 
     # m_t = beta1 * m + (1 - beta1) * g_t
     m = self.get_slot(var, "m")
@@ -171,9 +170,9 @@ class LAMB(KerasLegacyOptimizer):
       w_norm = tf.norm(var, ord=2)
       g_norm = tf.norm(update, ord=2)
       ratio = tf.where(
-        tf.greater(w_norm, 0),
-        tf.where(tf.greater(g_norm, 0), (w_norm / g_norm), 1.0),
-        1.0,
+          tf.greater(w_norm, 0),
+          tf.where(tf.greater(g_norm, 0), (w_norm / g_norm), 1.0),
+          1.0,
       )
 
     var_update = var - ratio * coefficients["lr_t"] * update
@@ -181,9 +180,7 @@ class LAMB(KerasLegacyOptimizer):
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = (apply_state or {}).get(
-      (var_device, var_dtype)
-    ) or self._fallback_apply_state(var_device, var_dtype)
+    coefficients = (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
 
     # m_t = beta1 * m + (1 - beta1) * g_t
     m = self.get_slot(var, "m")
@@ -213,41 +210,35 @@ class LAMB(KerasLegacyOptimizer):
       w_norm = tf.norm(var, ord=2)
       g_norm = tf.norm(update, ord=2)
       ratio = tf.where(
-        tf.greater(w_norm, 0),
-        tf.where(tf.greater(g_norm, 0), (w_norm / g_norm), 1.0),
-        1.0,
+          tf.greater(w_norm, 0),
+          tf.where(tf.greater(g_norm, 0), (w_norm / g_norm), 1.0),
+          1.0,
       )
 
-    var_update = var.assign_sub(
-      ratio * coefficients["lr_t"] * update, use_locking=self._use_locking
-    )
+    var_update = var.assign_sub(ratio * coefficients["lr_t"] * update, use_locking=self._use_locking)
     return tf.group(*[var_update, m_t, v_t])
 
   def get_config(self):
     config = super().get_config()
     config.update(
-      {
-        "learning_rate": self._serialize_hyperparameter("learning_rate"),
-        "weight_decay": self._serialize_hyperparameter("weight_decay"),
-        "decay": self._serialize_hyperparameter("decay"),
-        "beta_1": self._serialize_hyperparameter("beta_1"),
-        "beta_2": self._serialize_hyperparameter("beta_2"),
-        "epsilon": self.epsilon,
-        "exclude_from_weight_decay": self.exclude_from_weight_decay,
-        "exclude_from_layer_adaptation": self.exclude_from_layer_adaptation,
-      }
+        {
+            "learning_rate": self._serialize_hyperparameter("learning_rate"),
+            "weight_decay": self._serialize_hyperparameter("weight_decay"),
+            "decay": self._serialize_hyperparameter("decay"),
+            "beta_1": self._serialize_hyperparameter("beta_1"),
+            "beta_2": self._serialize_hyperparameter("beta_2"),
+            "epsilon": self.epsilon,
+            "exclude_from_weight_decay": self.exclude_from_weight_decay,
+            "exclude_from_layer_adaptation": self.exclude_from_layer_adaptation,
+        }
     )
     return config
 
   def _do_use_weight_decay(self, variable):
     """Whether to use L2 weight decay for `param_name`."""
-    return not is_variable_matched_by_regexes(
-      variable, self.exclude_from_weight_decay
-    )
+    return not is_variable_matched_by_regexes(variable, self.exclude_from_weight_decay)
 
   def _do_layer_adaptation(self, variable):
     """Whether to do layer-wise learning rate adaptation for
         `param_name`."""
-    return not is_variable_matched_by_regexes(
-      variable, self.exclude_from_layer_adaptation
-    )
+    return not is_variable_matched_by_regexes(variable, self.exclude_from_layer_adaptation)

@@ -23,30 +23,30 @@ namespace tensorflow {
 namespace deepray {
 namespace internal {
 
-__global__ void compute_transformation_matrix_cuda(const float *const delta_h,
-                                                   const float *const scale_s,
-                                                   const float *const scale_v,
-                                                   float *const matrix,
+__global__ void compute_transformation_matrix_cuda(const float* const delta_h,
+                                                   const float* const scale_s,
+                                                   const float* const scale_v,
+                                                   float* const matrix,
                                                    const int matrix_size) {
   if (matrix_size == kChannelSize * kChannelSize) {
     compute_transformation_matrix<kChannelSize * kChannelSize>(
         *delta_h, *scale_s, *scale_v, matrix);
   }
 }
-} // namespace internal
+}  // namespace internal
 
 namespace functor {
 
-void AdjustHsvInYiqGPU::operator()(OpKernelContext *ctx, int channel_count,
-                                   const Tensor *const input,
-                                   const float *const delta_h,
-                                   const float *const scale_s,
-                                   const float *const scale_v,
-                                   Tensor *const output) {
+void AdjustHsvInYiqGPU::operator()(OpKernelContext* ctx, int channel_count,
+                                   const Tensor* const input,
+                                   const float* const delta_h,
+                                   const float* const scale_s,
+                                   const float* const scale_v,
+                                   Tensor* const output) {
   const uint64 m = channel_count;
   const uint64 k = kChannelSize;
   const uint64 n = kChannelSize;
-  auto *cu_stream = ctx->eigen_device<GPUDevice>().stream();
+  auto* cu_stream = ctx->eigen_device<GPUDevice>().stream();
   OP_REQUIRES(ctx, cu_stream, errors::Internal("No GPU stream available."));
   Tensor transformation_matrix;
   OP_REQUIRES_OK(ctx, ctx->allocate_temp(
@@ -63,7 +63,7 @@ void AdjustHsvInYiqGPU::operator()(OpKernelContext *ctx, int channel_count,
   auto a_ptr = StreamExecutorUtil::AsDeviceMemory<float>(*input);
   auto b_ptr = StreamExecutorUtil::AsDeviceMemory<float>(transformation_matrix);
   auto c_ptr = StreamExecutorUtil::AsDeviceMemory<float>(*output);
-  auto *stream = ctx->op_device_context()->stream();
+  auto* stream = ctx->op_device_context()->stream();
   OP_REQUIRES(ctx, stream, errors::Internal("No GPU stream available."));
   // TODO(huangyp): share/use autotune cublas algorithms in Matmul.op.
   bool blas_launch_status =
@@ -76,8 +76,8 @@ void AdjustHsvInYiqGPU::operator()(OpKernelContext *ctx, int channel_count,
                                     ", n=", n, ", k=", k));
   }
 }
-} // namespace functor
-} // end namespace deepray
-} // namespace tensorflow
+}  // namespace functor
+}  // end namespace deepray
+}  // namespace tensorflow
 
-#endif // GOOGLE_CUDA
+#endif  // GOOGLE_CUDA

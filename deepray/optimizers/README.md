@@ -1,14 +1,14 @@
-# Addons - Optimizers
+# Deepray - Optimizers
 
 ## Components
-https://www.tensorflow.org/addons/api_docs/python/dp/optimizers
+https://www.tensorflow.org/deepray/api_docs/python/dp/optimizers
 
 ## Contribution Guidelines
 #### Standard API
 In order to conform with the current API standard, all optimizers
 must:
  * Inherit from either `keras.optimizer_v2.OptimizerV2` or its subclasses.
- * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Addons')`
+ * Register as a keras global object so it can be serialized properly: `@tf.keras.utils.register_keras_serializable(package='Deepray')`
 
 #### Testing Requirements
  * To run your `tf.functions` in eager mode and graph mode in the tests, 

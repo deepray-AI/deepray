@@ -28,12 +28,15 @@ from deepray.utils import test_utils
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def test_layer(dtype):
-    x = np.random.rand(2, 5).astype(dtype)
-    a = np.random.randn()
-    val = snake(x, a)
-    test_utils.layer_test(
-        Snake,
-        kwargs={"frequency_initializer": tf.constant_initializer(a), "dtype": dtype},
-        input_data=x,
-        expected_output=val,
-    )
+  x = np.random.rand(2, 5).astype(dtype)
+  a = np.random.randn()
+  val = snake(x, a)
+  test_utils.layer_test(
+      Snake,
+      kwargs={
+          "frequency_initializer": tf.constant_initializer(a),
+          "dtype": dtype
+      },
+      input_data=x,
+      expected_output=val,
+  )

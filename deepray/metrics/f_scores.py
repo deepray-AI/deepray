@@ -22,6 +22,7 @@ from deepray.utils.types import AcceptableDTypes, FloatTensorLike
 from typing import Optional
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class FBetaScore(tf.keras.metrics.Metric):
   r"""Computes F-Beta score.
 
@@ -101,10 +102,8 @@ class FBetaScore(tf.keras.metrics.Metric):
     super().__init__(name=name, dtype=dtype)
 
     if average not in (None, "micro", "macro", "weighted"):
-      raise ValueError(
-        "Unknown average type. Acceptable values "
-        "are: [None, 'micro', 'macro', 'weighted']"
-      )
+      raise ValueError("Unknown average type. Acceptable values "
+                       "are: [None, 'micro', 'macro', 'weighted']")
 
     if not isinstance(beta, float):
       raise TypeError("The value of beta should be a python float")
@@ -130,9 +129,7 @@ class FBetaScore(tf.keras.metrics.Metric):
       self.init_shape = [self.num_classes]
 
     def _zero_wt_init(name):
-      return self.add_weight(
-        name, shape=self.init_shape, initializer="zeros", dtype=self.dtype
-      )
+      return self.add_weight(name, shape=self.init_shape, initializer="zeros", dtype=self.dtype)
 
     self.true_positives = _zero_wt_init("true_positives")
     self.false_positives = _zero_wt_init("false_positives")
@@ -157,21 +154,13 @@ class FBetaScore(tf.keras.metrics.Metric):
       return tf.reduce_sum(val, axis=self.axis)
 
     self.true_positives.assign_add(_weighted_sum(y_pred * y_true, sample_weight))
-    self.false_positives.assign_add(
-      _weighted_sum(y_pred * (1 - y_true), sample_weight)
-    )
-    self.false_negatives.assign_add(
-      _weighted_sum((1 - y_pred) * y_true, sample_weight)
-    )
+    self.false_positives.assign_add(_weighted_sum(y_pred * (1 - y_true), sample_weight))
+    self.false_negatives.assign_add(_weighted_sum((1 - y_pred) * y_true, sample_weight))
     self.weights_intermediate.assign_add(_weighted_sum(y_true, sample_weight))
 
   def result(self):
-    precision = tf.math.divide_no_nan(
-      self.true_positives, self.true_positives + self.false_positives
-    )
-    recall = tf.math.divide_no_nan(
-      self.true_positives, self.true_positives + self.false_negatives
-    )
+    precision = tf.math.divide_no_nan(self.true_positives, self.true_positives + self.false_positives)
+    recall = tf.math.divide_no_nan(self.true_positives, self.true_positives + self.false_negatives)
 
     mul_value = precision * recall
     add_value = (tf.math.square(self.beta) * precision) + recall
@@ -179,9 +168,7 @@ class FBetaScore(tf.keras.metrics.Metric):
     f1_score = mean * (1 + tf.math.square(self.beta))
 
     if self.average == "weighted":
-      weights = tf.math.divide_no_nan(
-        self.weights_intermediate, tf.reduce_sum(self.weights_intermediate)
-      )
+      weights = tf.math.divide_no_nan(self.weights_intermediate, tf.reduce_sum(self.weights_intermediate))
       f1_score = tf.reduce_sum(f1_score * weights)
 
     elif self.average is not None:  # [micro, macro]
@@ -193,10 +180,10 @@ class FBetaScore(tf.keras.metrics.Metric):
     """Returns the serializable config of the metric."""
 
     config = {
-      "num_classes": self.num_classes,
-      "average": self.average,
-      "beta": self.beta,
-      "threshold": self.threshold,
+        "num_classes": self.num_classes,
+        "average": self.average,
+        "beta": self.beta,
+        "threshold": self.threshold,
     }
 
     base_config = super().get_config()
@@ -213,6 +200,7 @@ class FBetaScore(tf.keras.metrics.Metric):
     return self.reset_state()
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class F1Score(FBetaScore):
   r"""Computes F-1 Score.
 

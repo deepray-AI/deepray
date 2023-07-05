@@ -23,7 +23,7 @@ from deepray.utils import test_utils
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def test_activation(dtype):
-    x = dtype(np.random.rand(2, 5))
-    a = dtype(np.random.randn())
-    expected_result = x + np.power(np.sin(a * x), 2) / a
-    test_utils.assert_allclose_according_to_type(snake(x, a), expected_result)
+  x = dtype(np.random.rand(2, 5))
+  a = dtype(np.random.randn())
+  expected_result = x + np.power(np.sin(a * x), 2) / a
+  test_utils.assert_allclose_according_to_type(snake(x, a), expected_result)

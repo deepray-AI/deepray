@@ -12,6 +12,7 @@ FLAGS = flags.FLAGS
 
 
 class KMaxPooling(Layer):
+
   def __init__(self, k, dim):
     super(KMaxPooling, self).__init__()
     self.k = k
@@ -43,18 +44,20 @@ class CCPM(keras.Model):
         self.p.append(3)
     self.max_pooling_list = [KMaxPooling(k, dim=2) for k in self.p]
 
-    self.padding_list = [ZeroPadding2D(padding=(0, conv_kernel_width[i] - 1))
-                         for i in range(self.conv_len)]
-    self.conv_list = [Conv2D(filters=conv_filters[i], kernel_size=(1, conv_kernel_width[i]))
-                      for i in range(self.conv_len)]
+    self.padding_list = [ZeroPadding2D(padding=(0, conv_kernel_width[i] - 1)) for i in range(self.conv_len)]
+    self.conv_list = [
+        Conv2D(filters=conv_filters[i], kernel_size=(1, conv_kernel_width[i])) for i in range(self.conv_len)
+    ]
 
     self.flatten = Flatten()
     self.dense = Dense(units=1)
 
   def build(self, input_shape):
-    fold_columns = ["hour", "id", "C1", "banner_pos", "site_id", "site_domain", "site_category",
-                    "app_id", "app_domain", "app_category", "device_id", "device_ip", "device_model",
-                    "device_type", "device_conn_type", "C14", "C15", "C16", "C17", "C18", "C19", "C20", "C21"]
+    fold_columns = [
+        "hour", "id", "C1", "banner_pos", "site_id", "site_domain", "site_category", "app_id", "app_domain",
+        "app_category", "device_id", "device_ip", "device_model", "device_type", "device_conn_type", "C14", "C15",
+        "C16", "C17", "C18", "C19", "C20", "C21"
+    ]
     self.embedding_group = DiamondEmbedding(self.feature_map, fold_columns)
 
   def call(self, inputs, training=None, mask=None):

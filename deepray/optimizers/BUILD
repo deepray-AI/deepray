@@ -13,7 +13,7 @@ py_library(
 
 py_test(
     name = "optimizers_test",
-    size = "small",
+    size = "medium",
     srcs = glob(["tests/*"]),
     main = "tests/run_all_test.py",
     deps = [

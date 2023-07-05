@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Implements `Cross` Layer, the cross layer in Deep & Cross Network (DCN)."""
 
 from typing import Union, Text, Optional
@@ -85,15 +84,12 @@ class Cross(tf.keras.layers.Layer):
       diag_scale: Optional[float] = 0.0,
       use_bias: bool = True,
       preactivation: Optional[Union[str, tf.keras.layers.Activation]] = None,
-      kernel_initializer: Union[
-          Text, tf.keras.initializers.Initializer] = "truncated_normal",
-      bias_initializer: Union[Text,
-                              tf.keras.initializers.Initializer] = "zeros",
-      kernel_regularizer: Union[Text, None,
-                                tf.keras.regularizers.Regularizer] = None,
-      bias_regularizer: Union[Text, None,
-                              tf.keras.regularizers.Regularizer] = None,
-      **kwargs):
+      kernel_initializer: Union[Text, tf.keras.initializers.Initializer] = "truncated_normal",
+      bias_initializer: Union[Text, tf.keras.initializers.Initializer] = "zeros",
+      kernel_regularizer: Union[Text, None, tf.keras.regularizers.Regularizer] = None,
+      bias_regularizer: Union[Text, None, tf.keras.regularizers.Regularizer] = None,
+      **kwargs
+  ):
 
     super(Cross, self).__init__(**kwargs)
 
@@ -110,9 +106,7 @@ class Cross(tf.keras.layers.Layer):
     self._supports_masking = True
 
     if self._diag_scale < 0:  # pytype: disable=unsupported-operands
-      raise ValueError(
-          "`diag_scale` should be non-negative. Got `diag_scale` = {}".format(
-              self._diag_scale))
+      raise ValueError("`diag_scale` should be non-negative. Got `diag_scale` = {}".format(self._diag_scale))
 
   def build(self, input_shape):
     last_dim = input_shape[-1]
@@ -170,8 +164,8 @@ class Cross(tf.keras.layers.Layer):
     if x0.shape[-1] != x.shape[-1]:
       raise ValueError(
           "`x0` and `x` dimension mismatch! Got `x0` dimension {}, and x "
-          "dimension {}. This case is not supported yet.".format(
-              x0.shape[-1], x.shape[-1]))
+          "dimension {}. This case is not supported yet.".format(x0.shape[-1], x.shape[-1])
+      )
 
     if self._projection_dim is None:
       prod_output = self._dense(x)
@@ -187,22 +181,14 @@ class Cross(tf.keras.layers.Layer):
 
   def get_config(self):
     config = {
-        "projection_dim":
-            self._projection_dim,
-        "diag_scale":
-            self._diag_scale,
-        "use_bias":
-            self._use_bias,
-        "preactivation":
-            tf.keras.activations.serialize(self._preactivation),
-        "kernel_initializer":
-            tf.keras.initializers.serialize(self._kernel_initializer),
-        "bias_initializer":
-            tf.keras.initializers.serialize(self._bias_initializer),
-        "kernel_regularizer":
-            tf.keras.regularizers.serialize(self._kernel_regularizer),
-        "bias_regularizer":
-            tf.keras.regularizers.serialize(self._bias_regularizer),
+        "projection_dim": self._projection_dim,
+        "diag_scale": self._diag_scale,
+        "use_bias": self._use_bias,
+        "preactivation": tf.keras.activations.serialize(self._preactivation),
+        "kernel_initializer": tf.keras.initializers.serialize(self._kernel_initializer),
+        "bias_initializer": tf.keras.initializers.serialize(self._bias_initializer),
+        "kernel_regularizer": tf.keras.regularizers.serialize(self._kernel_regularizer),
+        "bias_regularizer": tf.keras.regularizers.serialize(self._bias_regularizer),
     }
     base_config = super().get_config()
     return dict(list(base_config.items()) + list(config.items()))

@@ -33,6 +33,7 @@ else:
   adam_optimizer_class = tf.keras.optimizers.Adam
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class LazyAdam(adam_optimizer_class):
   """Variant of the Adam optimizer that handles sparse updates more
     efficiently.
@@ -91,13 +92,13 @@ class LazyAdam(adam_optimizer_class):
             `learning_rate` instead.
         """
     super().__init__(
-      learning_rate=learning_rate,
-      beta_1=beta_1,
-      beta_2=beta_2,
-      epsilon=epsilon,
-      amsgrad=amsgrad,
-      name=name,
-      **kwargs,
+        learning_rate=learning_rate,
+        beta_1=beta_1,
+        beta_2=beta_2,
+        epsilon=epsilon,
+        amsgrad=amsgrad,
+        name=name,
+        **kwargs,
     )
 
   def _resource_apply_sparse(self, grad, var, indices):
@@ -118,9 +119,7 @@ class LazyAdam(adam_optimizer_class):
 
     # \\(v := beta2 * v + (1 - beta2) * (g_t * g_t)\\)
     v = self.get_slot(var, "v")
-    v_t_slice = beta_2_t * tf.gather(v, indices) + (1 - beta_2_t) * tf.math.square(
-      grad
-    )
+    v_t_slice = beta_2_t * tf.gather(v, indices) + (1 - beta_2_t) * tf.math.square(grad)
     v_update_op = self._resource_scatter_update(v, indices, v_t_slice)
 
     # \\(variable += -learning_rate * m_t / (epsilon_t + sqrt(v_t))\\)
@@ -130,20 +129,16 @@ class LazyAdam(adam_optimizer_class):
     return tf.group(*[var_update_op, m_update_op, v_update_op])
 
   def _resource_scatter_update(self, resource, indices, update):
-    return self._resource_scatter_operate(
-      resource, indices, update, tf.raw_ops.ResourceScatterUpdate
-    )
+    return self._resource_scatter_operate(resource, indices, update, tf.raw_ops.ResourceScatterUpdate)
 
   def _resource_scatter_sub(self, resource, indices, update):
-    return self._resource_scatter_operate(
-      resource, indices, update, tf.raw_ops.ResourceScatterSub
-    )
+    return self._resource_scatter_operate(resource, indices, update, tf.raw_ops.ResourceScatterSub)
 
   def _resource_scatter_operate(self, resource, indices, update, resource_scatter_op):
     resource_update_kwargs = {
-      "resource": resource.handle,
-      "indices": indices,
-      "updates": update,
+        "resource": resource.handle,
+        "indices": indices,
+        "updates": update,
     }
 
     return resource_scatter_op(**resource_update_kwargs)

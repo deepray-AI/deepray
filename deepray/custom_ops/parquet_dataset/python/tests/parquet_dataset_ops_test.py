@@ -32,23 +32,23 @@ from tensorflow.python.data.ops.dataset_ops import AUTOTUNE
 
 
 class ParquetDatasetTest(test_base.DatasetTestBase):
+
   @classmethod
   def setUpClass(self):
     os.environ['CUDA_VISIBLE_DEVICES'] = ''
     self._workspace = tempfile.mkdtemp()
     self._filename = os.path.join(self._workspace, 'test.parquet')
-    self._df = pd.DataFrame(
-        np.random.randint(0, 100, size=(200, 4), dtype=np.int64),
-    columns=list('ABCd'))
+    self._df = pd.DataFrame(np.random.randint(0, 100, size=(200, 4), dtype=np.int64), columns=list('ABCd'))
     self._df.to_parquet(self._filename)
 
   def test_read(self):
     batch_size = 32
     ds = parquet_dataset_ops.ParquetDataset(
-      self._filename,
-      batch_size=batch_size,
-      fields=[parquet_dataset_ops.DataFrame.Field('A', tf.int64),
-              parquet_dataset_ops.DataFrame.Field('C', tf.int64)])
+        self._filename,
+        batch_size=batch_size,
+        fields=[parquet_dataset_ops.DataFrame.Field('A', tf.int64),
+                parquet_dataset_ops.DataFrame.Field('C', tf.int64)]
+    )
     ds = ds.prefetch(4)
     # batch = tf.data.make_one_shot_iterator(ds).get_next()
 
@@ -56,12 +56,12 @@ class ParquetDatasetTest(test_base.DatasetTestBase):
     c = self._df['C']
     i = 0
     for result in ds.take(3):
-       print(result)
-        # i += 1
-        # start_row = i * batch_size
-        # end_row = (i + 1) * batch_size
-        # np.testing.assert_equal(result['A'], a[start_row:end_row].to_numpy())
-        # np.testing.assert_equal(result['C'], c[start_row:end_row].to_numpy())
+      print(result)
+      # i += 1
+      # start_row = i * batch_size
+      # end_row = (i + 1) * batch_size
+      # np.testing.assert_equal(result['A'], a[start_row:end_row].to_numpy())
+      # np.testing.assert_equal(result['C'], c[start_row:end_row].to_numpy())
 
   # def test_schema_auto_detection_read(self):
   #   batch_size = 32
@@ -194,4 +194,4 @@ class ParquetDatasetTest(test_base.DatasetTestBase):
 
 
 if __name__ == "__main__":
-    test.main()
+  test.main()

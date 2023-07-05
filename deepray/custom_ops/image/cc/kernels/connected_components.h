@@ -34,9 +34,15 @@ namespace deepray {
 
 namespace functor {
 
-template <typename T> bool is_nonzero(T value) { return value != T(0); }
+template <typename T>
+bool is_nonzero(T value) {
+  return value != T(0);
+}
 
-template <> bool is_nonzero(string value) { return value.size() != 0; }
+template <>
+bool is_nonzero(string value) {
+  return value.size() != 0;
+}
 
 // Processes each pixel of an image for union-find, in parallel blocks. This is
 // loosely based on the algorithm in "GPU Computing Gems" by Ondrej Stava and
@@ -52,15 +58,21 @@ template <> bool is_nonzero(string value) { return value.size() != 0; }
 // memory, with one image block per CUDA thread block. On the CPU, we just start
 // with a block size of a single pixel, and borrow the rest of the algorithm
 // unchanged.
-template <typename T> class BlockedImageUnionFindFunctor {
-public:
+template <typename T>
+class BlockedImageUnionFindFunctor {
+ public:
   using OutputType = int64;
 
   EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE BlockedImageUnionFindFunctor(
-      const T *images, const int64 num_rows, const int64 num_cols,
-      OutputType *forest, OutputType *rank)
-      : images_(images), num_rows_(num_rows), num_cols_(num_cols),
-        block_height_(1), block_width_(1), forest_(forest), rank_(rank) {}
+      const T* images, const int64 num_rows, const int64 num_cols,
+      OutputType* forest, OutputType* rank)
+      : images_(images),
+        num_rows_(num_rows),
+        num_cols_(num_cols),
+        block_height_(1),
+        block_width_(1),
+        forest_(forest),
+        rank_(rank) {}
 
   // Returns the root of the tree that the pixel at the given index belongs to.
   EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE OutputType
@@ -111,9 +123,9 @@ public:
   // Processes pairs of pixels within the block which were adjacent in the four
   // sub-blocks. This must be done at each stage so that the connected
   // components in each block are joined correctly.
-  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void
-  merge_internal_block_edges(int64 image_index, int64 block_vertical_index,
-                             int64 block_horizontal_index) const {
+  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void merge_internal_block_edges(
+      int64 image_index, int64 block_vertical_index,
+      int64 block_horizontal_index) const {
     int64 block_start_y = block_vertical_index * block_height_;
     int64 block_start_x = block_horizontal_index * block_width_;
     // Merge the 4 sub-blocks horizontally (fixing the vertical seam).
@@ -136,9 +148,9 @@ public:
     }
   }
 
-private:
+ private:
   // The input image(s).
-  const T *const images_;
+  const T* const images_;
   const int64 num_rows_;
   const int64 num_cols_;
   // Current height of each sub-block of the image.
@@ -148,14 +160,15 @@ private:
   // Union-find forest. This has the same size as `images_`, and each entry
   // holds the index of its parent in `images_` (roots hold their own index).
   // Cycles should not occur.
-  OutputType *const forest_;
+  OutputType* const forest_;
   // Union-find rank of each pixel.
-  OutputType *const rank_;
+  OutputType* const rank_;
 
   // Unions the pixel with the pixel below it if applicable (both pixels are
   // true, and the pixel is not in the last row).
-  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void
-  union_down(OutputType batch, OutputType row, OutputType col) const {
+  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void union_down(OutputType batch,
+                                                        OutputType row,
+                                                        OutputType col) const {
     T pixel = read_pixel(batch, row, col);
     if (is_nonzero<T>(pixel)) {
       const int64 index_a = col + num_cols_ * (row + num_rows_ * batch);
@@ -167,8 +180,9 @@ private:
   }
 
   // Unions the pixel with the pixel to the right of it if applicable.
-  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void
-  union_right(OutputType batch, OutputType row, OutputType col) const {
+  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void union_right(OutputType batch,
+                                                         OutputType row,
+                                                         OutputType col) const {
     T pixel = read_pixel(batch, row, col);
     if (is_nonzero<T>(pixel)) {
       const int64 index_a = col + num_cols_ * (row + num_rows_ * batch);
@@ -188,8 +202,8 @@ private:
 
   // Unions the trees that the two pixels belong to, using their index in the
   // `images_` array.
-  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void
-  do_union(OutputType index_a, OutputType index_b) const {
+  EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE void do_union(
+      OutputType index_a, OutputType index_b) const {
     // Find the roots of index_a and index_b in the forest, and make one the
     // child of the other.
     index_a = find(index_a);
@@ -213,31 +227,33 @@ private:
 
 // Runs the ImageUnionFindFunctor on all pixels. Will require different CPU and
 // GPU implementations.
-template <typename Device, typename T> class ImageConnectedComponentsFunctor {
-public:
+template <typename Device, typename T>
+class ImageConnectedComponentsFunctor {
+ public:
   using OutputType = typename BlockedImageUnionFindFunctor<T>::OutputType;
 
-  void operator()(OpKernelContext *ctx,
+  void operator()(OpKernelContext* ctx,
                   typename TTypes<T, 3>::ConstTensor images,
                   typename TTypes<OutputType, 3>::Tensor forest,
                   typename TTypes<OutputType, 3>::Tensor rank);
 };
 
 // Fills a flat Tensor with indices from 0 to n - 1.
-template <typename Device> class TensorRangeFunctor {
-public:
+template <typename Device>
+class TensorRangeFunctor {
+ public:
   using OutputType = typename BlockedImageUnionFindFunctor<bool>::OutputType;
 
-  void operator()(const Device &device,
+  void operator()(const Device& device,
                   typename TTypes<OutputType>::Flat tensor) {
     tensor.device(device) = tensor.generate(TensorRangeGenerator());
   }
 
-private:
+ private:
   class TensorRangeGenerator {
-  public:
+   public:
     EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE OutputType
-    operator()(const Eigen::array<Eigen::DenseIndex, 1> &coords) const {
+    operator()(const Eigen::array<Eigen::DenseIndex, 1>& coords) const {
       return coords[0];
     }
   };
@@ -246,30 +262,31 @@ private:
 // Given the union-find forest, generates the root index for each node. This
 // gives us arbitrary, usually non-consecutive ids for each connected component.
 // The ids are massaged in Python to get deterministic, consecutive ids.
-template <typename Device, typename T> class FindRootFunctor {
-public:
+template <typename Device, typename T>
+class FindRootFunctor {
+ public:
   using OutputType = typename BlockedImageUnionFindFunctor<T>::OutputType;
 
-  void operator()(const Device &device,
+  void operator()(const Device& device,
                   typename TTypes<OutputType>::Flat component_ids,
-                  const T *images,
-                  const BlockedImageUnionFindFunctor<T> &union_find) {
+                  const T* images,
+                  const BlockedImageUnionFindFunctor<T>& union_find) {
     component_ids.device(device) =
         component_ids.generate(FindRootGenerator(images, union_find));
   }
 
-private:
+ private:
   class FindRootGenerator {
-    const T *const images_;
+    const T* const images_;
     const BlockedImageUnionFindFunctor<T> union_find_;
 
-  public:
+   public:
     EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE FindRootGenerator(
-        const T *images, BlockedImageUnionFindFunctor<T> union_find)
+        const T* images, BlockedImageUnionFindFunctor<T> union_find)
         : images_(images), union_find_(union_find) {}
 
     EIGEN_DEVICE_FUNC EIGEN_ALWAYS_INLINE OutputType
-    operator()(const Eigen::array<Eigen::DenseIndex, 1> &coords) const {
+    operator()(const Eigen::array<Eigen::DenseIndex, 1>& coords) const {
       if (is_nonzero<T>(images_[coords[0]])) {
         // True pixels have an arbitrary segment id > 0. The segment ids will be
         // made contiguous later.
@@ -282,9 +299,9 @@ private:
   };
 };
 
-} // end namespace functor
+}  // end namespace functor
 
-} // end namespace deepray
-} // namespace tensorflow
+}  // end namespace deepray
+}  // namespace tensorflow
 
-#endif // DEEPRAY_IMAGE_KERNELS_CONNECTED_COMPONENTS_OPS_H_
+#endif  // DEEPRAY_IMAGE_KERNELS_CONNECTED_COMPONENTS_OPS_H_

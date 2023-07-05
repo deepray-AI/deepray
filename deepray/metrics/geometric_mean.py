@@ -23,6 +23,7 @@ from deepray.utils.types import AcceptableDTypes
 from deepray.metrics.utils import sample_weight_shape_match
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class GeometricMean(Metric):
   """Compute Geometric Mean
 
@@ -45,16 +46,10 @@ class GeometricMean(Metric):
     """
 
   @typechecked
-  def __init__(
-      self, name: str = "geometric_mean", dtype: AcceptableDTypes = None, **kwargs
-  ):
+  def __init__(self, name: str = "geometric_mean", dtype: AcceptableDTypes = None, **kwargs):
     super().__init__(name=name, dtype=dtype, **kwargs)
-    self.total = self.add_weight(
-      "total", shape=None, initializer="zeros", dtype=dtype
-    )
-    self.count = self.add_weight(
-      "count", shape=None, initializer="zeros", dtype=dtype
-    )
+    self.total = self.add_weight("total", shape=None, initializer="zeros", dtype=dtype)
+    self.count = self.add_weight("count", shape=None, initializer="zeros", dtype=dtype)
 
   def update_state(self, values, sample_weight=None) -> None:
     values = tf.cast(values, dtype=self.dtype)

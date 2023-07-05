@@ -30,15 +30,15 @@ from deepray.models.rec.tfra_demo import build_keras_model
 
 FLAGS = flags.FLAGS
 FLAGS(
-  [
-    sys.argv[0],
-    "--train_data=movielens/100k-ratings",
-    # "--distribution_strategy=off",
-    # "--run_eagerly=true",
-    "--steps_per_summary=20",
-    "--use_dynamic_embedding=True",
-    # "--batch_size=1024",
-  ]
+    [
+        sys.argv[0],
+        "--train_data=movielens/100k-ratings",
+        # "--distribution_strategy=off",
+        # "--run_eagerly=true",
+        "--steps_per_summary=20",
+        "--use_dynamic_embedding=True",
+        # "--batch_size=1024",
+    ]
 )
 
 
@@ -47,20 +47,16 @@ def main(_):
   data_pipe = Movielens100kRating()
   with distribution_utils.get_strategy_scope(_strategy):
     import horovod.tensorflow as hvd
-    model = build_keras_model(is_training=True,
-                              mpi_size=hvd.size(),
-                              mpi_rank=hvd.rank())
+    model = build_keras_model(is_training=True, mpi_size=hvd.size(), mpi_rank=hvd.rank())
 
   trainer = Trainer(
-    model_or_fn=model,
-    loss="binary_crossentropy",
-    metrics=tf.keras.metrics.AUC(num_thresholds=1000, summation_method='minoring'),
+      model_or_fn=model,
+      loss="binary_crossentropy",
+      metrics=tf.keras.metrics.AUC(num_thresholds=1000, summation_method='minoring'),
   )
 
   train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
-  trainer.fit(
-    train_input=train_input_fn,
-  )
+  trainer.fit(train_input=train_input_fn,)
 
   # trainer.export_tfra()
 

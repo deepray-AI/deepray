@@ -20,6 +20,7 @@ from deepray.optimizers import KerasLegacyOptimizer
 from typeguard import typechecked
 
 
+@tf.keras.utils.register_keras_serializable(package="Deepray")
 class Lookahead(KerasLegacyOptimizer):
   """This class allows to extend optimizers with the lookahead mechanism.
 
@@ -70,19 +71,12 @@ class Lookahead(KerasLegacyOptimizer):
     super().__init__(name, **kwargs)
 
     if isinstance(optimizer, str):
-      if (
-          hasattr(tf.keras.optimizers, "legacy")
-          and KerasLegacyOptimizer == tf.keras.optimizers.legacy.Optimizer
-      ):
-        optimizer = tf.keras.optimizers.get(
-          optimizer, use_legacy_optimizer=True
-        )
+      if (hasattr(tf.keras.optimizers, "legacy") and KerasLegacyOptimizer == tf.keras.optimizers.legacy.Optimizer):
+        optimizer = tf.keras.optimizers.get(optimizer, use_legacy_optimizer=True)
       else:
         optimizer = tf.keras.optimizers.get(optimizer)
     if not isinstance(optimizer, KerasLegacyOptimizer):
-      raise TypeError(
-        "optimizer is not an object of tf.keras.optimizers.legacy.Optimizer "
-      )
+      raise TypeError("optimizer is not an object of tf.keras.optimizers.legacy.Optimizer ")
 
     self._optimizer = optimizer
     self._set_hyper("sync_period", sync_period)
@@ -91,9 +85,7 @@ class Lookahead(KerasLegacyOptimizer):
     self._track_trackable(self._optimizer, "lh_base_optimizer")
 
   def _create_slots(self, var_list):
-    self._optimizer._create_slots(
-      var_list=var_list
-    )  # pylint: disable=protected-access
+    self._optimizer._create_slots(var_list=var_list)  # pylint: disable=protected-access
     for var in var_list:
       self.add_slot(var, "slow", initializer=var)
 
@@ -101,14 +93,10 @@ class Lookahead(KerasLegacyOptimizer):
     self._optimizer._create_hypers()  # pylint: disable=protected-access
 
   def _prepare(self, var_list):
-    return self._optimizer._prepare(
-      var_list=var_list
-    )  # pylint: disable=protected-access
+    return self._optimizer._prepare(var_list=var_list)  # pylint: disable=protected-access
 
   def apply_gradients(self, grads_and_vars, name=None, **kwargs):
-    self._optimizer._iterations = (
-      self.iterations
-    )  # pylint: disable=protected-access
+    self._optimizer._iterations = (self.iterations)  # pylint: disable=protected-access
     return super().apply_gradients(grads_and_vars, name, **kwargs)
 
   def _look_ahead_op(self, var):
@@ -118,17 +106,15 @@ class Lookahead(KerasLegacyOptimizer):
     sync_period = self._get_hyper("sync_period", tf.dtypes.int64)
     slow_step_size = self._get_hyper("slow_step_size", var_dtype)
     step_back = slow_var + slow_step_size * (var - slow_var)
-    sync_cond = tf.equal(
-      tf.math.floordiv(local_step, sync_period) * sync_period, local_step
-    )
+    sync_cond = tf.equal(tf.math.floordiv(local_step, sync_period) * sync_period, local_step)
     with tf.control_dependencies([step_back]):
       slow_update = slow_var.assign(
-        tf.where(sync_cond, step_back, slow_var),
-        use_locking=self._use_locking,
+          tf.where(sync_cond, step_back, slow_var),
+          use_locking=self._use_locking,
       )
       var_update = var.assign(
-        tf.where(sync_cond, step_back, var),
-        use_locking=self._use_locking,
+          tf.where(sync_cond, step_back, var),
+          use_locking=self._use_locking,
       )
     return tf.group(slow_update, var_update)
 
@@ -137,18 +123,16 @@ class Lookahead(KerasLegacyOptimizer):
     return self._weights + self._optimizer.weights
 
   def _resource_apply_dense(self, grad, var):
-    train_op = self._optimizer._resource_apply_dense(
-      grad, var
-    )  # pylint: disable=protected-access
+    train_op = self._optimizer._resource_apply_dense(grad, var)  # pylint: disable=protected-access
     with tf.control_dependencies([train_op]):
       look_ahead_op = self._look_ahead_op(var)
     return tf.group(train_op, look_ahead_op)
 
   def _resource_apply_sparse(self, grad, var, indices):
     train_op = (
-      self._optimizer._resource_apply_sparse(  # pylint: disable=protected-access
-        grad, var, indices
-      )
+        self._optimizer._resource_apply_sparse(  # pylint: disable=protected-access
+            grad, var, indices
+        )
     )
     with tf.control_dependencies([train_op]):
       look_ahead_op = self._look_ahead_op(var)
@@ -156,9 +140,9 @@ class Lookahead(KerasLegacyOptimizer):
 
   def get_config(self):
     config = {
-      "optimizer": tf.keras.optimizers.serialize(self._optimizer),
-      "sync_period": self._serialize_hyperparameter("sync_period"),
-      "slow_step_size": self._serialize_hyperparameter("slow_step_size"),
+        "optimizer": tf.keras.optimizers.serialize(self._optimizer),
+        "sync_period": self._serialize_hyperparameter("sync_period"),
+        "slow_step_size": self._serialize_hyperparameter("slow_step_size"),
     }
     base_config = super().get_config()
     return {**base_config, **config}
@@ -181,7 +165,5 @@ class Lookahead(KerasLegacyOptimizer):
 
   @classmethod
   def from_config(cls, config, custom_objects=None):
-    optimizer = tf.keras.optimizers.deserialize(
-      config.pop("optimizer"), custom_objects=custom_objects
-    )
+    optimizer = tf.keras.optimizers.deserialize(config.pop("optimizer"), custom_objects=custom_objects)
     return cls(optimizer, **config)

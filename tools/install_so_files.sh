@@ -10,3 +10,6 @@ cp ./bazel-bin/deepray/custom_ops/layers/_*_ops.so ./deepray/custom_ops/layers/
 cp ./bazel-bin/deepray/custom_ops/seq2seq/_*_ops.so ./deepray/custom_ops/seq2seq/
 cp ./bazel-bin/deepray/custom_ops/text/_*_ops.so ./deepray/custom_ops/text/
 cp ./bazel-bin/deepray/custom_ops/text/_parse_time_op.so ./deepray/custom_ops/text/
+cp ./bazel-bin/deepray/custom_ops/text/_parse_time_op.so ./deepray/custom_ops/text/
+cp ./bazel-bin/deepray/custom_ops/parquet_dataset/_parquet_pybind.so ./deepray/custom_ops/parquet_dataset/
+cp ./bazel-bin/deepray/custom_ops/parquet_dataset/_parquet_dataset_ops.so ./deepray/custom_ops/parquet_dataset/

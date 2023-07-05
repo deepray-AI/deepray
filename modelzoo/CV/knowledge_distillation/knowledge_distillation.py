@@ -6,7 +6,6 @@ Last modified: 2020/09/01
 Description: Implementation of classical Knowledge Distillation.
 Accelerator: GPU
 """
-
 """
 ## Introduction to Knowledge Distillation
 
@@ -24,7 +23,6 @@ inter-class relationships learned by the teacher.
 
 - [Hinton et al. (2015)](https://arxiv.org/abs/1503.02531)
 """
-
 """
 ## Setup
 """
@@ -33,8 +31,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
-
-
 """
 ## Construct `Distiller()` class
 
@@ -59,21 +55,22 @@ In the `test_step` method, we evaluate the student model on the provided dataset
 
 
 class Distiller(keras.Model):
-    def __init__(self, student, teacher):
-        super().__init__()
-        self.teacher = teacher
-        self.student = student
 
-    def compile(
-        self,
-        optimizer,
-        metrics,
-        student_loss_fn,
-        distillation_loss_fn,
-        alpha=0.1,
-        temperature=3,
-    ):
-        """Configure the distiller.
+  def __init__(self, student, teacher):
+    super().__init__()
+    self.teacher = teacher
+    self.student = student
+
+  def compile(
+      self,
+      optimizer,
+      metrics,
+      student_loss_fn,
+      distillation_loss_fn,
+      alpha=0.1,
+      temperature=3,
+  ):
+    """Configure the distiller.
 
         Args:
             optimizer: Keras optimizer for the student weights
@@ -86,73 +83,70 @@ class Distiller(keras.Model):
             temperature: Temperature for softening probability distributions.
                 Larger temperature gives softer distributions.
         """
-        super().compile(optimizer=optimizer, metrics=metrics)
-        self.student_loss_fn = student_loss_fn
-        self.distillation_loss_fn = distillation_loss_fn
-        self.alpha = alpha
-        self.temperature = temperature
+    super().compile(optimizer=optimizer, metrics=metrics)
+    self.student_loss_fn = student_loss_fn
+    self.distillation_loss_fn = distillation_loss_fn
+    self.alpha = alpha
+    self.temperature = temperature
 
-    def train_step(self, data):
-        # Unpack data
-        x, y = data
+  def train_step(self, data):
+    # Unpack data
+    x, y = data
 
-        # Forward pass of teacher
-        teacher_predictions = self.teacher(x, training=False)
+    # Forward pass of teacher
+    teacher_predictions = self.teacher(x, training=False)
 
-        with tf.GradientTape() as tape:
-            # Forward pass of student
-            student_predictions = self.student(x, training=True)
+    with tf.GradientTape() as tape:
+      # Forward pass of student
+      student_predictions = self.student(x, training=True)
 
-            # Compute losses
-            student_loss = self.student_loss_fn(y, student_predictions)
+      # Compute losses
+      student_loss = self.student_loss_fn(y, student_predictions)
 
-            # Compute scaled distillation loss from https://arxiv.org/abs/1503.02531
-            # The magnitudes of the gradients produced by the soft targets scale
-            # as 1/T^2, multiply them by T^2 when using both hard and soft targets.
-            distillation_loss = (
-                self.distillation_loss_fn(
-                    tf.nn.softmax(teacher_predictions / self.temperature, axis=1),
-                    tf.nn.softmax(student_predictions / self.temperature, axis=1),
-                )
-                * self.temperature**2
-            )
+      # Compute scaled distillation loss from https://arxiv.org/abs/1503.02531
+      # The magnitudes of the gradients produced by the soft targets scale
+      # as 1/T^2, multiply them by T^2 when using both hard and soft targets.
+      distillation_loss = (
+          self.distillation_loss_fn(
+              tf.nn.softmax(teacher_predictions / self.temperature, axis=1),
+              tf.nn.softmax(student_predictions / self.temperature, axis=1),
+          ) * self.temperature**2
+      )
 
-            loss = self.alpha * student_loss + (1 - self.alpha) * distillation_loss
+      loss = self.alpha * student_loss + (1 - self.alpha) * distillation_loss
 
-        # Compute gradients
-        trainable_vars = self.student.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
+    # Compute gradients
+    trainable_vars = self.student.trainable_variables
+    gradients = tape.gradient(loss, trainable_vars)
 
-        # Update weights
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+    # Update weights
+    self.optimizer.apply_gradients(zip(gradients, trainable_vars))
 
-        # Update the metrics configured in `compile()`.
-        self.compiled_metrics.update_state(y, student_predictions)
+    # Update the metrics configured in `compile()`.
+    self.compiled_metrics.update_state(y, student_predictions)
 
-        # Return a dict of performance
-        results = {m.name: m.result() for m in self.metrics}
-        results.update(
-            {"student_loss": student_loss, "distillation_loss": distillation_loss}
-        )
-        return results
+    # Return a dict of performance
+    results = {m.name: m.result() for m in self.metrics}
+    results.update({"student_loss": student_loss, "distillation_loss": distillation_loss})
+    return results
 
-    def test_step(self, data):
-        # Unpack the data
-        x, y = data
+  def test_step(self, data):
+    # Unpack the data
+    x, y = data
 
-        # Compute predictions
-        y_prediction = self.student(x, training=False)
+    # Compute predictions
+    y_prediction = self.student(x, training=False)
 
-        # Calculate the loss
-        student_loss = self.student_loss_fn(y, y_prediction)
+    # Calculate the loss
+    student_loss = self.student_loss_fn(y, y_prediction)
 
-        # Update the metrics.
-        self.compiled_metrics.update_state(y, y_prediction)
+    # Update the metrics.
+    self.compiled_metrics.update_state(y, y_prediction)
 
-        # Return a dict of performance
-        results = {m.name: m.result() for m in self.metrics}
-        results.update({"student_loss": student_loss})
-        return results
+    # Return a dict of performance
+    results = {m.name: m.result() for m in self.metrics}
+    results.update({"student_loss": student_loss})
+    return results
 
 
 """
@@ -193,7 +187,6 @@ student = keras.Sequential(
 
 # Clone student for later comparison
 student_scratch = keras.models.clone_model(student)
-
 """
 ## Prepare the dataset
 
@@ -214,8 +207,6 @@ x_train = np.reshape(x_train, (-1, 28, 28, 1))
 
 x_test = x_test.astype("float32") / 255.0
 x_test = np.reshape(x_test, (-1, 28, 28, 1))
-
-
 """
 ## Train the teacher
 
@@ -233,7 +224,6 @@ teacher.compile(
 # Train and evaluate teacher on data.
 teacher.fit(x_train, y_train, epochs=5)
 teacher.evaluate(x_test, y_test)
-
 """
 ## Distill teacher to student
 
@@ -258,7 +248,6 @@ distiller.fit(x_train, y_train, epochs=3)
 
 # Evaluate student on test dataset
 distiller.evaluate(x_test, y_test)
-
 """
 ## Train student from scratch for comparison
 
@@ -276,7 +265,6 @@ student_scratch.compile(
 # Train and evaluate student trained from scratch.
 student_scratch.fit(x_train, y_train, epochs=3)
 student_scratch.evaluate(x_test, y_test)
-
 """
 If the teacher is trained for 5 full epochs and the student is distilled on this teacher
 for 3 full epochs, you should in this example experience a performance boost compared to

@@ -18,12 +18,14 @@ from typing import Dict
 import numpy as np
 import yaml
 
-from .defaults import (CARDINALITY_SELECTOR, DIMENSIONS_SELECTOR, DTYPE_SELECTOR, LABEL_CHANNEL,
-                       NEGATIVE_HISTORY_CHANNEL, POSITIVE_HISTORY_CHANNEL, TARGET_ITEM_FEATURES_CHANNEL,
-                       TEST_MAPPING, TRAIN_MAPPING, USER_FEATURES_CHANNEL)
+from .defaults import (
+    CARDINALITY_SELECTOR, DIMENSIONS_SELECTOR, DTYPE_SELECTOR, LABEL_CHANNEL, NEGATIVE_HISTORY_CHANNEL,
+    POSITIVE_HISTORY_CHANNEL, TARGET_ITEM_FEATURES_CHANNEL, TEST_MAPPING, TRAIN_MAPPING, USER_FEATURES_CHANNEL
+)
 
 
 class FeatureSpec:
+
   def __init__(self, feature_spec=None, source_spec=None, channel_spec=None, metadata=None, base_directory=None):
     self.feature_spec: Dict = feature_spec if feature_spec is not None else {}
     self.source_spec: Dict = source_spec if source_spec is not None else {}
@@ -65,9 +67,11 @@ class FeatureSpec:
 
     user_features_names = [user_feature_fstring.format(i) for i in range(number_of_user_features)]
 
-    item_features_names = [item_feature_fstring.format(i, channel_suffix)
-                           for channel_suffix in item_channels_feature_name_suffixes
-                           for i in range(number_of_item_features)]
+    item_features_names = [
+        item_feature_fstring.format(i, channel_suffix)
+        for channel_suffix in item_channels_feature_name_suffixes
+        for i in range(number_of_item_features)
+    ]
 
     return [label_feature_name] + user_features_names + item_features_names
 
@@ -80,11 +84,11 @@ class FeatureSpec:
     all_features_names = FeatureSpec.get_default_features_names(number_of_user_features, number_of_item_features)
 
     user_features = {
-      f_name: {
-        DTYPE_SELECTOR: str(np.dtype(np.int64)),
-        CARDINALITY_SELECTOR: int(cardinality)
-      } for i, (f_name, cardinality)
-      in enumerate(zip(all_features_names[1:1 + number_of_user_features], user_features_cardinalities))
+        f_name: {
+            DTYPE_SELECTOR: str(np.dtype(np.int64)),
+            CARDINALITY_SELECTOR: int(cardinality)
+        } for i, (f_name, cardinality
+                 ) in enumerate(zip(all_features_names[1:1 + number_of_user_features], user_features_cardinalities))
     }
 
     item_channels = [TARGET_ITEM_FEATURES_CHANNEL, POSITIVE_HISTORY_CHANNEL, NEGATIVE_HISTORY_CHANNEL]
@@ -97,38 +101,32 @@ class FeatureSpec:
 
         feature_name = all_features_names[1 + number_of_user_features + i + j * number_of_item_features]
 
-        dictionary[feature_name] = {
-          DTYPE_SELECTOR: str(np.dtype(np.int64)),
-          CARDINALITY_SELECTOR: int(cardinality)
-        }
+        dictionary[feature_name] = {DTYPE_SELECTOR: str(np.dtype(np.int64)), CARDINALITY_SELECTOR: int(cardinality)}
 
         if channel != TARGET_ITEM_FEATURES_CHANNEL:
           dictionary[feature_name][DIMENSIONS_SELECTOR] = [max_seq_len]
 
     feature_spec = {
-      feat_name: feat_spec
-      for dictionary in [user_features] + item_channels_feature_dicts
-      for feat_name, feat_spec in dictionary.items()
+        feat_name: feat_spec for dictionary in [user_features] + item_channels_feature_dicts
+        for feat_name, feat_spec in dictionary.items()
     }
 
     feature_spec[all_features_names[0]] = {DTYPE_SELECTOR: str(np.dtype(np.bool))}
 
     channel_spec = {
-      USER_FEATURES_CHANNEL: list(user_features),
-      TARGET_ITEM_FEATURES_CHANNEL: list(item_channels_feature_dicts[0]),
-      POSITIVE_HISTORY_CHANNEL: list(item_channels_feature_dicts[1]),
-      NEGATIVE_HISTORY_CHANNEL: list(item_channels_feature_dicts[2]),
-      LABEL_CHANNEL: all_features_names[:1]
+        USER_FEATURES_CHANNEL: list(user_features),
+        TARGET_ITEM_FEATURES_CHANNEL: list(item_channels_feature_dicts[0]),
+        POSITIVE_HISTORY_CHANNEL: list(item_channels_feature_dicts[1]),
+        NEGATIVE_HISTORY_CHANNEL: list(item_channels_feature_dicts[2]),
+        LABEL_CHANNEL: all_features_names[:1]
     }
 
     source_spec = {
-      split: [
-        {
-          'type': 'tfrecord',
-          'features': all_features_names,
-          'files': []
-        }
-      ] for split in [TRAIN_MAPPING, TEST_MAPPING]
+        split: [{
+            'type': 'tfrecord',
+            'features': all_features_names,
+            'files': []
+        }] for split in [TRAIN_MAPPING, TEST_MAPPING]
     }
 
     return FeatureSpec(feature_spec=feature_spec, channel_spec=channel_spec, source_spec=source_spec)

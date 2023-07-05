@@ -1,0 +1,2 @@
+# Flag to enable remote config
+common --experimental_repo_remote_exec

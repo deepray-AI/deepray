@@ -42,11 +42,9 @@ section of
 This example requires TensorFlow 2.5 or higher, as well as TensorFlow Docs, which can be
 installed using the following command:
 """
-
 """shell
 pip install -q git+https://github.com/tensorflow/docs
 """
-
 """
 ## Imports
 """
@@ -59,7 +57,6 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 import imageio
-
 """
 ## Constants and hyperparameters
 """
@@ -69,7 +66,6 @@ num_channels = 1
 num_classes = 10
 image_size = 28
 latent_dim = 128
-
 """
 ## Loading the MNIST dataset and preprocessing it
 """
@@ -92,7 +88,6 @@ dataset = dataset.shuffle(buffer_size=1024).batch(batch_size)
 
 print(f"Shape of training images: {all_digits.shape}")
 print(f"Shape of training labels: {all_labels.shape}")
-
 """
 ## Calculating the number of input channel for the generator and discriminator
 
@@ -106,7 +101,6 @@ the input channels of the generator (noise input) as well as the discriminator
 generator_in_channels = latent_dim + num_classes
 discriminator_in_channels = num_channels + num_classes
 print(generator_in_channels, discriminator_in_channels)
-
 """
 ## Creating the discriminator and generator
 
@@ -145,113 +139,97 @@ generator = keras.Sequential(
     ],
     name="generator",
 )
-
 """
 ## Creating a `ConditionalGAN` model
 """
 
 
 class ConditionalGAN(keras.Model):
-    def __init__(self, discriminator, generator, latent_dim):
-        super().__init__()
-        self.discriminator = discriminator
-        self.generator = generator
-        self.latent_dim = latent_dim
-        self.gen_loss_tracker = keras.metrics.Mean(name="generator_loss")
-        self.disc_loss_tracker = keras.metrics.Mean(name="discriminator_loss")
 
-    @property
-    def metrics(self):
-        return [self.gen_loss_tracker, self.disc_loss_tracker]
+  def __init__(self, discriminator, generator, latent_dim):
+    super().__init__()
+    self.discriminator = discriminator
+    self.generator = generator
+    self.latent_dim = latent_dim
+    self.gen_loss_tracker = keras.metrics.Mean(name="generator_loss")
+    self.disc_loss_tracker = keras.metrics.Mean(name="discriminator_loss")
 
-    def compile(self, d_optimizer, g_optimizer, loss_fn):
-        super().compile()
-        self.d_optimizer = d_optimizer
-        self.g_optimizer = g_optimizer
-        self.loss_fn = loss_fn
+  @property
+  def metrics(self):
+    return [self.gen_loss_tracker, self.disc_loss_tracker]
 
-    def train_step(self, data):
-        # Unpack the data.
-        real_images, one_hot_labels = data
+  def compile(self, d_optimizer, g_optimizer, loss_fn):
+    super().compile()
+    self.d_optimizer = d_optimizer
+    self.g_optimizer = g_optimizer
+    self.loss_fn = loss_fn
 
-        # Add dummy dimensions to the labels so that they can be concatenated with
-        # the images. This is for the discriminator.
-        image_one_hot_labels = one_hot_labels[:, :, None, None]
-        image_one_hot_labels = tf.repeat(
-            image_one_hot_labels, repeats=[image_size * image_size]
-        )
-        image_one_hot_labels = tf.reshape(
-            image_one_hot_labels, (-1, image_size, image_size, num_classes)
-        )
+  def train_step(self, data):
+    # Unpack the data.
+    real_images, one_hot_labels = data
 
-        # Sample random points in the latent space and concatenate the labels.
-        # This is for the generator.
-        batch_size = tf.shape(real_images)[0]
-        random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
-        random_vector_labels = tf.concat(
-            [random_latent_vectors, one_hot_labels], axis=1
-        )
+    # Add dummy dimensions to the labels so that they can be concatenated with
+    # the images. This is for the discriminator.
+    image_one_hot_labels = one_hot_labels[:, :, None, None]
+    image_one_hot_labels = tf.repeat(image_one_hot_labels, repeats=[image_size * image_size])
+    image_one_hot_labels = tf.reshape(image_one_hot_labels, (-1, image_size, image_size, num_classes))
 
-        # Decode the noise (guided by labels) to fake images.
-        generated_images = self.generator(random_vector_labels)
+    # Sample random points in the latent space and concatenate the labels.
+    # This is for the generator.
+    batch_size = tf.shape(real_images)[0]
+    random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
+    random_vector_labels = tf.concat([random_latent_vectors, one_hot_labels], axis=1)
 
-        # Combine them with real images. Note that we are concatenating the labels
-        # with these images here.
-        fake_image_and_labels = tf.concat([generated_images, image_one_hot_labels], -1)
-        real_image_and_labels = tf.concat([real_images, image_one_hot_labels], -1)
-        combined_images = tf.concat(
-            [fake_image_and_labels, real_image_and_labels], axis=0
-        )
+    # Decode the noise (guided by labels) to fake images.
+    generated_images = self.generator(random_vector_labels)
 
-        # Assemble labels discriminating real from fake images.
-        labels = tf.concat(
-            [tf.ones((batch_size, 1)), tf.zeros((batch_size, 1))], axis=0
-        )
+    # Combine them with real images. Note that we are concatenating the labels
+    # with these images here.
+    fake_image_and_labels = tf.concat([generated_images, image_one_hot_labels], -1)
+    real_image_and_labels = tf.concat([real_images, image_one_hot_labels], -1)
+    combined_images = tf.concat([fake_image_and_labels, real_image_and_labels], axis=0)
 
-        # Train the discriminator.
-        with tf.GradientTape() as tape:
-            predictions = self.discriminator(combined_images)
-            d_loss = self.loss_fn(labels, predictions)
-        grads = tape.gradient(d_loss, self.discriminator.trainable_weights)
-        self.d_optimizer.apply_gradients(
-            zip(grads, self.discriminator.trainable_weights)
-        )
+    # Assemble labels discriminating real from fake images.
+    labels = tf.concat([tf.ones((batch_size, 1)), tf.zeros((batch_size, 1))], axis=0)
 
-        # Sample random points in the latent space.
-        random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
-        random_vector_labels = tf.concat(
-            [random_latent_vectors, one_hot_labels], axis=1
-        )
+    # Train the discriminator.
+    with tf.GradientTape() as tape:
+      predictions = self.discriminator(combined_images)
+      d_loss = self.loss_fn(labels, predictions)
+    grads = tape.gradient(d_loss, self.discriminator.trainable_weights)
+    self.d_optimizer.apply_gradients(zip(grads, self.discriminator.trainable_weights))
 
-        # Assemble labels that say "all real images".
-        misleading_labels = tf.zeros((batch_size, 1))
+    # Sample random points in the latent space.
+    random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
+    random_vector_labels = tf.concat([random_latent_vectors, one_hot_labels], axis=1)
 
-        # Train the generator (note that we should *not* update the weights
-        # of the discriminator)!
-        with tf.GradientTape() as tape:
-            fake_images = self.generator(random_vector_labels)
-            fake_image_and_labels = tf.concat([fake_images, image_one_hot_labels], -1)
-            predictions = self.discriminator(fake_image_and_labels)
-            g_loss = self.loss_fn(misleading_labels, predictions)
-        grads = tape.gradient(g_loss, self.generator.trainable_weights)
-        self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
+    # Assemble labels that say "all real images".
+    misleading_labels = tf.zeros((batch_size, 1))
 
-        # Monitor loss.
-        self.gen_loss_tracker.update_state(g_loss)
-        self.disc_loss_tracker.update_state(d_loss)
-        return {
-            "g_loss": self.gen_loss_tracker.result(),
-            "d_loss": self.disc_loss_tracker.result(),
-        }
+    # Train the generator (note that we should *not* update the weights
+    # of the discriminator)!
+    with tf.GradientTape() as tape:
+      fake_images = self.generator(random_vector_labels)
+      fake_image_and_labels = tf.concat([fake_images, image_one_hot_labels], -1)
+      predictions = self.discriminator(fake_image_and_labels)
+      g_loss = self.loss_fn(misleading_labels, predictions)
+    grads = tape.gradient(g_loss, self.generator.trainable_weights)
+    self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
+
+    # Monitor loss.
+    self.gen_loss_tracker.update_state(g_loss)
+    self.disc_loss_tracker.update_state(d_loss)
+    return {
+        "g_loss": self.gen_loss_tracker.result(),
+        "d_loss": self.disc_loss_tracker.result(),
+    }
 
 
 """
 ## Training the Conditional GAN
 """
 
-cond_gan = ConditionalGAN(
-    discriminator=discriminator, generator=generator, latent_dim=latent_dim
-)
+cond_gan = ConditionalGAN(discriminator=discriminator, generator=generator, latent_dim=latent_dim)
 cond_gan.compile(
     d_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
     g_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
@@ -259,7 +237,6 @@ cond_gan.compile(
 )
 
 cond_gan.fit(dataset, epochs=20)
-
 """
 ## Interpolating between classes with the trained generator
 """
@@ -278,30 +255,27 @@ interpolation_noise = tf.reshape(interpolation_noise, (num_interpolation, latent
 
 
 def interpolate_class(first_number, second_number):
-    # Convert the start and end labels to one-hot encoded vectors.
-    first_label = keras.utils.to_categorical([first_number], num_classes)
-    second_label = keras.utils.to_categorical([second_number], num_classes)
-    first_label = tf.cast(first_label, tf.float32)
-    second_label = tf.cast(second_label, tf.float32)
+  # Convert the start and end labels to one-hot encoded vectors.
+  first_label = keras.utils.to_categorical([first_number], num_classes)
+  second_label = keras.utils.to_categorical([second_number], num_classes)
+  first_label = tf.cast(first_label, tf.float32)
+  second_label = tf.cast(second_label, tf.float32)
 
-    # Calculate the interpolation vector between the two labels.
-    percent_second_label = tf.linspace(0, 1, num_interpolation)[:, None]
-    percent_second_label = tf.cast(percent_second_label, tf.float32)
-    interpolation_labels = (
-        first_label * (1 - percent_second_label) + second_label * percent_second_label
-    )
+  # Calculate the interpolation vector between the two labels.
+  percent_second_label = tf.linspace(0, 1, num_interpolation)[:, None]
+  percent_second_label = tf.cast(percent_second_label, tf.float32)
+  interpolation_labels = (first_label * (1 - percent_second_label) + second_label * percent_second_label)
 
-    # Combine the noise and the labels and run inference with the generator.
-    noise_and_labels = tf.concat([interpolation_noise, interpolation_labels], 1)
-    fake = trained_gen.predict(noise_and_labels)
-    return fake
+  # Combine the noise and the labels and run inference with the generator.
+  noise_and_labels = tf.concat([interpolation_noise, interpolation_labels], 1)
+  fake = trained_gen.predict(noise_and_labels)
+  return fake
 
 
 start_class = 1  # @param {type:"slider", min:0, max:9, step:1}
 end_class = 5  # @param {type:"slider", min:0, max:9, step:1}
 
 fake_images = interpolate_class(start_class, end_class)
-
 """
 Here, we first sample noise from a normal distribution and then we repeat that for
 `num_interpolation` times and reshape the result accordingly.
@@ -314,7 +288,6 @@ converted_images = fake_images.astype(np.uint8)
 converted_images = tf.image.resize(converted_images, (96, 96)).numpy().astype(np.uint8)
 imageio.mimsave("animation.gif", converted_images, fps=1)
 embed.embed_file("animation.gif")
-
 """
 We can further improve the performance of this model with recipes like
 [WGAN-GP](https://keras.io/examples/generative/wgan_gp).

@@ -18,8 +18,7 @@ hvd.init()
 # Horovod: pin GPU to be used to process local rank (one GPU per process)
 physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.set_visible_devices(physical_devices[hvd.local_rank()], 'GPU')
-tf.config.experimental.set_memory_growth(physical_devices[hvd.local_rank()],
-                                         True)
+tf.config.experimental.set_memory_growth(physical_devices[hvd.local_rank()], True)
 
 
 # 示例一下自定义callback,可选。
@@ -58,9 +57,9 @@ class DeepLayer(Layer):
   def get_config(self):
     config = super().get_config()
     config.update({
-      "hidden_dim": self.hidden_dim,
-      "layer_num": self.layer_num,
-      "out_dim": self.out_dim,
+        "hidden_dim": self.hidden_dim,
+        "layer_num": self.layer_num,
+        "out_dim": self.out_dim,
     })
     return config
 
@@ -78,52 +77,30 @@ def build_keras_model(is_training, mpi_size, mpi_rank):
   cpu_device = ["CPU:0"]
 
   dense_embedding_layer = de.keras.layers.HvdAllToAllEmbedding(
-    mpi_size=mpi_size,
-    embedding_size=embedding_size,
-    key_dtype=tf.int32,
-    value_dtype=tf.float32,
-    initializer=initializer,
-    devices=gpu_device,
-    name='DenseUnifiedEmbeddingLayer',
-    kv_creator=de.CuckooHashTableCreator(
-      saver=de.FileSystemSaver(proc_size=mpi_size,
-                               proc_rank=mpi_rank)
-    ))
+      mpi_size=mpi_size,
+      embedding_size=embedding_size,
+      key_dtype=tf.int32,
+      value_dtype=tf.float32,
+      initializer=initializer,
+      devices=gpu_device,
+      name='DenseUnifiedEmbeddingLayer',
+      kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank))
+  )
 
   sparse_embedding_layer = de.keras.layers.HvdAllToAllEmbedding(
-    mpi_size=mpi_size,
-    embedding_size=embedding_size,
-    key_dtype=tf.int64,
-    value_dtype=tf.float32,
-    initializer=initializer,
-    devices=cpu_device,
-    name='SparseUnifiedEmbeddingLayer',
-    kv_creator=de.CuckooHashTableCreator(
-      saver=de.FileSystemSaver(proc_size=mpi_size,
-                               proc_rank=mpi_rank)
-    ))
+      mpi_size=mpi_size,
+      embedding_size=embedding_size,
+      key_dtype=tf.int64,
+      value_dtype=tf.float32,
+      initializer=initializer,
+      devices=cpu_device,
+      name='SparseUnifiedEmbeddingLayer',
+      kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank))
+  )
 
   # 输入层
-  dense_input_dict = {
-    "movie_genres": {
-      'code': 1111,
-      'dim': 1
-    },
-    "user_gender": {
-      'code': 2222,
-      'dim': 1
-    }
-  }
-  sparse_input_dict = {
-    "movie_id": {
-      'code': 3333,
-      'dim': 1
-    },
-    "user_id": {
-      'code': 4444,
-      'dim': 1
-    }
-  }
+  dense_input_dict = {"movie_genres": {'code': 1111, 'dim': 1}, "user_gender": {'code': 2222, 'dim': 1}}
+  sparse_input_dict = {"movie_id": {'code': 3333, 'dim': 1}, "user_id": {'code': 4444, 'dim': 1}}
 
   inputs = dict()
   embedding_outs = []
@@ -205,8 +182,7 @@ def build_keras_model(is_training, mpi_size, mpi_rank):
     sparse_input_is_sequence_feature.append(False)
 
   sparse_input_tensors_concat = Concatenate(axis=1)(sparse_input_tensors)
-  sparse_embedding_out_concat = sparse_embedding_layer(
-    sparse_input_tensors_concat)
+  sparse_embedding_out_concat = sparse_embedding_layer(sparse_input_tensors_concat)
   ###################################################
   # cpu embedding部分结束
 
@@ -215,21 +191,19 @@ def build_keras_model(is_training, mpi_size, mpi_rank):
   ###################################################
   embedding_out = list()
   embedding_out.extend(
-    tf.split(dense_embedding_out_concat, dense_input_split_dims_final,
-             axis=1))  # (feature_combin_num, (batch, dim, emb_size))
+      tf.split(dense_embedding_out_concat, dense_input_split_dims_final, axis=1)
+  )  # (feature_combin_num, (batch, dim, emb_size))
   embedding_out.extend(
-    tf.split(sparse_embedding_out_concat,
-             sparse_input_split_dims_final,
-             axis=1))  # (feature_combin_num, (batch, dim, emb_size))
-  assert ((len(dense_input_is_sequence_feature) +
-           len(sparse_input_is_sequence_feature)) == len(embedding_out))
+      tf.split(sparse_embedding_out_concat, sparse_input_split_dims_final, axis=1)
+  )  # (feature_combin_num, (batch, dim, emb_size))
+  assert ((len(dense_input_is_sequence_feature) + len(sparse_input_is_sequence_feature)) == len(embedding_out))
   is_sequence_feature = dense_input_is_sequence_feature + sparse_input_is_sequence_feature
   for i, embedding in enumerate(embedding_out):
     if is_sequence_feature[i] == True:
       # 处理向量特征获得的embedding
       embedding_vec = tf.math.reduce_mean(
-        embedding, axis=1,
-        keepdims=True)  # (feature_combin_num, (batch, x, emb_size))
+          embedding, axis=1, keepdims=True
+      )  # (feature_combin_num, (batch, x, emb_size))
     else:
       embedding_vec = embedding
     embedding_outs.append(embedding_vec)
@@ -248,17 +222,17 @@ def build_keras_model(is_training, mpi_size, mpi_rank):
 
   model = tf.keras.Model(inputs=inputs, outputs=outs)
 
-  optimizer = tf.keras.optimizers.Adam(learning_rate=1E-4 * mpi_size,
-                                       amsgrad=False)
+  optimizer = tf.keras.optimizers.Adam(learning_rate=1E-4 * mpi_size, amsgrad=False)
   optimizer = de.DynamicEmbeddingOptimizer(optimizer, hvd_synchronous=True)
 
   # Horovod: Specify `experimental_run_tf_function=False` to ensure TensorFlow
   # uses hvd.DistributedOptimizer() to compute gradients.
-  model.compile(optimizer=optimizer,
-                loss="binary_crossentropy",
-                metrics=tf.keras.metrics.AUC(num_thresholds=1000,
-                                             summation_method='minoring'),
-                experimental_run_tf_function=False)
+  model.compile(
+      optimizer=optimizer,
+      loss="binary_crossentropy",
+      metrics=tf.keras.metrics.AUC(num_thresholds=1000, summation_method='minoring'),
+      experimental_run_tf_function=False
+  )
 
   return model
 
@@ -272,10 +246,8 @@ def train(model, model_dir, savedmodel_dir):
   options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
   # ModelCheckpoint需要特殊修改才能保存hvd其他rank的kv
   ckpt_callback = de.keras.callbacks.DEHvdModelCheckpoint(
-    savedmodel_dir + "/weights_epoch{epoch:03d}_loss{loss:.4f}",
-    save_freq=2,
-    verbose=1,
-    options=options)
+      savedmodel_dir + "/weights_epoch{epoch:03d}_loss{loss:.4f}", save_freq=2, verbose=1, options=options
+  )
   # hvd callback用于广播rank0的初始化器产生的值
   hvd_opt_init_callback = de.keras.callbacks.DEHvdBroadcastGlobalVariablesCallback(root_rank=0)
   callbacks_list = [hvd_opt_init_callback, ckpt_callback]
@@ -284,19 +256,22 @@ def train(model, model_dir, savedmodel_dir):
     callbacks_list.extend([log_callback(), tensorboard_callback])
 
   dataset = data_pipe("movielens/100k-ratings", 4096, is_training=True)
-  model.fit(dataset,
-            callbacks=callbacks_list,
-            steps_per_epoch=10 // hvd.size(),
-            epochs=100,
-            verbose=1 if hvd.rank() == 0 else 0)
+  model.fit(
+      dataset,
+      callbacks=callbacks_list,
+      steps_per_epoch=10 // hvd.size(),
+      epochs=100,
+      verbose=1 if hvd.rank() == 0 else 0
+  )
   model.evaluate(dataset)
 
 
 def find_latest_savedmodel(dir):
   '''查找目录下最新的文件'''
   file_lists = os.listdir(dir)
-  file_lists.sort(key=lambda fn: os.path.getmtime(dir + "/" + fn)
-  if os.path.exists(dir + "/" + fn + "/variables") else 0)
+  file_lists.sort(
+      key=lambda fn: os.path.getmtime(dir + "/" + fn) if os.path.exists(dir + "/" + fn + "/variables") else 0
+  )
   file = ''
   if len(file_lists) > 0:
     print('最新的模型文件为： ' + file_lists[-1])
@@ -313,12 +288,9 @@ def export_to_savedmodel(model, savedmodel_dir):
 
   # 都存一起会导致文件冲突
   if hvd.rank() == 0:
-    tf.keras.models.save_model(model,
-                               savedmodel_dir,
-                               overwrite=True,
-                               include_optimizer=True,
-                               save_traces=True,
-                               options=options)
+    tf.keras.models.save_model(
+        model, savedmodel_dir, overwrite=True, include_optimizer=True, save_traces=True, options=options
+    )
   else:
     de_dir = os.path.join(savedmodel_dir, "variables", "TFRADynamicEmbedding")
     for layer in model.layers:
@@ -326,8 +298,8 @@ def export_to_savedmodel(model, savedmodel_dir):
         # 保存embedding参数
         layer.params.save_to_file_system(dirpath=de_dir)
         # 保存优化器参数
-        opt_de_vars = layer.optimizer_vars.as_list() if hasattr(
-          layer.optimizer_vars, "as_list") else layer.optimizer_vars
+        opt_de_vars = layer.optimizer_vars.as_list(
+        ) if hasattr(layer.optimizer_vars, "as_list") else layer.optimizer_vars
         for opt_de_var in opt_de_vars:
           opt_de_var.save_to_file_system(dirpath=de_dir)
 
@@ -359,23 +331,18 @@ def export_for_serving(model, export_dir):
 
   if hvd.rank() == 0:
     tf.keras.models.save_model(
-      model,
-      export_dir,
-      overwrite=True,
-      include_optimizer=False,
-      options=options,
-      signatures={
-        'serving_default':
-          serve.get_concrete_function(*arg_specs, **kwarg_specs)
-      },
+        model,
+        export_dir,
+        overwrite=True,
+        include_optimizer=False,
+        options=options,
+        signatures={'serving_default': serve.get_concrete_function(*arg_specs, **kwarg_specs)},
     )
   else:
     de_dir = os.path.join(export_dir, "variables", "TFRADynamicEmbedding")
     for layer in model.layers:
       if hasattr(layer, "params"):
-        layer.params.save_to_file_system(dirpath=de_dir,
-                                         mpi_size=hvd.size(),
-                                         mpi_rank=hvd.rank())
+        layer.params.save_to_file_system(dirpath=de_dir, mpi_size=hvd.size(), mpi_rank=hvd.rank())
 
   if hvd.rank() == 0:
     # 修改计算图变成单机版
@@ -383,10 +350,9 @@ def export_for_serving(model, export_dir):
     K.clear_session()
     de.enable_inference_mode()
     export_model = build_keras_model(is_training=False, mpi_size=1, mpi_rank=0)
-    tf_save.save_and_return_nodes(obj=export_model,
-                                  export_dir=export_dir,
-                                  options=options,
-                                  experimental_skip_checkpoint=True)
+    tf_save.save_and_return_nodes(
+        obj=export_model, export_dir=export_dir, options=options, experimental_skip_checkpoint=True
+    )
 
 
 def export_for_arsenal_serving(export_model, export_dir):
@@ -415,24 +381,19 @@ def export_for_arsenal_serving(export_model, export_dir):
 
   if hvd.rank() == 0:
     tf.keras.models.save_model(
-      export_model,
-      export_dir,
-      overwrite=True,
-      include_optimizer=False,
-      save_traces=False,
-      options=options,
-      signatures={
-        'serving_default':
-          serve.get_concrete_function(*arg_specs, **kwarg_specs)
-      },
+        export_model,
+        export_dir,
+        overwrite=True,
+        include_optimizer=False,
+        save_traces=False,
+        options=options,
+        signatures={'serving_default': serve.get_concrete_function(*arg_specs, **kwarg_specs)},
     )
   else:
     de_dir = os.path.join(export_dir, "variables", "TFRADynamicEmbedding")
     for layer in export_model.layers:
       if hasattr(layer, "params"):
-        layer.params.save_to_file_system(dirpath=de_dir,
-                                         mpi_size=hvd.size(),
-                                         mpi_rank=hvd.rank())
+        layer.params.save_to_file_system(dirpath=de_dir, mpi_size=hvd.size(), mpi_rank=hvd.rank())
 
 
 def main():
@@ -441,9 +402,7 @@ def main():
   ckpt_dir = model_dir + "/tf1_ckpt"
   export_dir = "./export_dir"
 
-  model = build_keras_model(is_training=True,
-                            mpi_size=hvd.size(),
-                            mpi_rank=hvd.rank())
+  model = build_keras_model(is_training=True, mpi_size=hvd.size(), mpi_rank=hvd.rank())
 
   if os.path.exists(savedmodel_dir):
     savedmodel_file = find_latest_savedmodel(savedmodel_dir)
