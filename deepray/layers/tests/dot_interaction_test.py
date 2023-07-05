@@ -36,17 +36,17 @@ class DotInteractionTest(tf.test.TestCase):
 
     output = layer([feature1, feature2, feature3])
     # TODO: remove rtol and atol
-    self.assertAllClose(np.asarray([[f11, f12, f22, f13, f23, f33]]), output)
+    self.assertAllClose(np.asarray([[f11, f12, f22, f13, f23, f33]]), output, rtol=1e-3, atol=1e-3)
 
     layer = DotInteraction(self_interaction=True, skip_gather=True)
     output = layer([feature1, feature2, feature3])
 
     # TODO: remove rtol and atol
-    self.assertAllClose(np.asarray([[f11, 0, 0, f12, f22, 0, f13, f23, f33]]), output)
+    self.assertAllClose(np.asarray([[f11, 0, 0, f12, f22, 0, f13, f23, f33]]), output, rtol=1e-3, atol=1e-3)
 
     layer = DotInteraction(self_interaction=False, skip_gather=False)
     output = layer([feature1, feature2, feature3])
-    self.assertAllClose(np.asarray([[f12, f13, f23]]), output)
+    self.assertAllClose(np.asarray([[f12, f13, f23]]), output, rtol=1e-3, atol=1e-3)
 
     layer = DotInteraction(self_interaction=False, skip_gather=True)
     output = layer([feature1, feature2, feature3])

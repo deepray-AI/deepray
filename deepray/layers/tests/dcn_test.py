@@ -30,7 +30,6 @@ class CrossTest(tf.test.TestCase):
     x = np.asarray([[0.4, 0.5, 0.6]]).astype(np.float32)
     layer = Cross(projection_dim=None, kernel_initializer="ones")
     output = layer(x0, x)
-    self.evaluate(tf.compat.v1.global_variables_initializer())
     self.assertAllClose(np.asarray([[0.55, 0.8, 1.05]]), output)
 
   def test_low_rank_matrix(self):
@@ -38,14 +37,12 @@ class CrossTest(tf.test.TestCase):
     x = np.asarray([[0.4, 0.5, 0.6]]).astype(np.float32)
     layer = Cross(projection_dim=1, kernel_initializer="ones")
     output = layer(x0, x)
-    self.evaluate(tf.compat.v1.global_variables_initializer())
     self.assertAllClose(np.asarray([[0.55, 0.8, 1.05]]), output)
 
   def test_one_input(self):
     x0 = np.asarray([[0.1, 0.2, 0.3]]).astype(np.float32)
     layer = Cross(projection_dim=None, kernel_initializer="ones")
     output = layer(x0)
-    self.evaluate(tf.compat.v1.global_variables_initializer())
     self.assertAllClose(np.asarray([[0.16, 0.32, 0.48]]), output)
 
   def test_unsupported_input_dim(self):
@@ -67,7 +64,6 @@ class CrossTest(tf.test.TestCase):
     x = np.asarray([[0.4, 0.5, 0.6]]).astype(np.float32)
     layer = Cross(projection_dim=None, kernel_initializer="ones", bias_initializer="ones")
     output = layer(x0, x)
-    self.evaluate(tf.compat.v1.global_variables_initializer())
     self.assertAllClose(np.asarray([[0.65, 1., 1.35]]), output)
 
   def test_serialization(self):
@@ -81,7 +77,6 @@ class CrossTest(tf.test.TestCase):
     x = np.asarray([[0.4, 0.5, 0.6]]).astype(np.float32)
     layer = Cross(projection_dim=None, diag_scale=1., kernel_initializer="ones")
     output = layer(x0, x)
-    self.evaluate(tf.compat.v1.global_variables_initializer())
     self.assertAllClose(np.asarray([[0.59, 0.9, 1.23]]), output)
 
   def test_preactivation(self):
@@ -89,7 +84,6 @@ class CrossTest(tf.test.TestCase):
     x = np.asarray([[0.4, 0.5, 0.6]]).astype(np.float32)
     layer = Cross(projection_dim=None, preactivation=tf.zeros_like)
     output = layer(x0, x)
-    self.evaluate(tf.compat.v1.global_variables_initializer())
     self.assertAllClose(x, output)
 
   def test_save_model(self):
