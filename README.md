@@ -7,6 +7,12 @@
 [![Gitter chat](https://img.shields.io/badge/chat-on%20gitter-46bc99.svg)](https://gitter.im/tensorflow/sig-deepray)
 [![Code style: yapf](https://img.shields.io/badge/code%20style-yapf-blue)](https://github.com/google/yapf)
 
+### Continuous Build Status
+
+| Build      | Status |
+| ---             | ---    |
+| **Ubuntu**   | [![Status](https://github.com/deepray-AI/deepray/workflows/deepray-release/badge.svg)](https://github.com/deepray-AI/deepray/actions?query=workflow%3deepray-release) |
+
 
 **Deepray** is a repository of contributions that conform to
 well-established API patterns, but implement new functionality
@@ -25,23 +31,18 @@ owners for all submodules.
 
 ## Installation
 #### Stable Builds
-Deepray is available on PyPI for Linux, macOS, and Windows. To install the latest version, 
-run the following:
+Deepray is available on PyPI for Linux. To install the latest version, run the following:
 ```
 pip install deepray
 ```
 
-To ensure you have a version of TensorFlow that is compatible with Deepray, 
-you can specify the `tensorflow` extra requirement during install:
+To ensure you have a version of TensorFlow that is compatible with Deepray, you can specify the `tensorflow` extra requirement during install:
 
 ```
 pip install deepray[tensorflow]
 ```
 
-Similar extras exist for the `tensorflow-gpu` and `tensorflow-cpu` packages.
- 
-
-To use Deepray:
+Similar extras exist for the `tensorflow-gpu` and `tensorflow-cpu` packages. To use Deepray:
 
 ```python
 import tensorflow as tf
@@ -58,7 +59,7 @@ what it was tested against.
 #### Python Op Compatibility Matrix
 | Deepray        | TensorFlow     | Python              |
 | :------------- | :------------- | :------------------ |
-| deepray-0.18.0 | 2.8, 2.9, 2.10 | 3.7, 3.8, 3.9, 3.10 |
+| deepray-0.18.0 | 2.12.0 | 3.8, 3.9, 3.10, 3.11 |
 
 
 ### C++ Custom Op Compatibility
@@ -79,7 +80,7 @@ is compiled differently. A typical example of this would be `conda`-installed Te
 #### C++ Custom Op Compatibility Matrix
 | Deepray        | TensorFlow | Compiler  | cuDNN | CUDA |
 | :------------- | :--------- | :-------- | :---- | :--- |
-| deepray-0.18.0 | 2.10       | GCC 9.3.1 | 8.1   | 11.2 |
+| deepray-0.18.0 | 2.12       | GCC 9.3.1 | 8.1   | 11.8 |
 
 
 
@@ -169,39 +170,6 @@ dp.options.disable_custom_kernel()
 
 This variable defaults to `True` on Windows and macOS, and `False` on Linux.
 
-#### Periodic Evaluation of Subpackages
-Given the nature of this repository, submodules may become less 
-and less useful to the community as time goes on. In order to keep the 
-repository sustainable, we'll be performing bi-annual reviews of our code to 
-ensure everything still belongs within the repo. Contributing factors to this 
-review will be:
-
-1. Number of active maintainers
-2. Amount of OSS use
-3. Amount of issues or bugs attributed to the code
-4. If a better solution is now available
-
-Functionality within Deepray can be categorized into three groups:
-
-* **Suggested**: well-maintained API; use is encouraged.
-* **Discouraged**: a better alternative is available; the API is kept for 
-historic reasons; or the API requires maintenance and is the waiting period 
-to be deprecated.
-* **Deprecated**: use at your own risk; subject to be deleted.
-
-The status change between these three groups is: 
-Suggested <-> Discouraged -> Deprecated.
-
-The period between an API being marked as deprecated and being deleted will be 
-90 days. The rationale being:
-
-1. In the event that Deepray releases monthly, there will be 2-3 
-releases before an API is deleted. The release notes could give user enough 
-warning.
-
-2. 90 days gives maintainers ample time to fix their code.
-
-
 ## Contributing
 Deepray is a community-led open source project (only a few maintainers work for Google!). 
 As such, the project depends on public contributions, bug fixes, and documentation. 
@@ -246,8 +214,7 @@ improve the guide!).
 
 ## Community
 * [Public Mailing List](https://groups.google.com/a/tensorflow.org/forum/#!forum/deepray)
-* [SIG Monthly Meeting Notes](https://docs.google.com/document/d/1kxg5xIHWLY7EMdOJCdSGgaPu27a9YKpupUz2VTXqTJg)
-    * Join our mailing list and receive calendar invites to the meeting
+
 
 ## License
 [Apache License 2.0](LICENSE)
