@@ -252,7 +252,7 @@ class RaggedTensorBuilder : public ::arrow::ArrayVisitor {
 #define CASE_ARROW_ENUM_SET_DTYPE(PTR, ENUM)                       \
   case ENUM: {                                                     \
     *PTR = DataTypeToEnum<ArrowEnumToDataType<ENUM>::Type>::value; \
-    return Status::OK();                                           \
+    return OkStatus();                                             \
   }
 
 Status MakeDataTypeAndRaggedRankFromArrowDataType(
@@ -280,7 +280,7 @@ Status MakeDataTypeAndRaggedRankFromArrowDataType(
       return errors::Unimplemented("Arrow data type ", arrow_dtype->ToString(),
                                    " not supported.");
   }
-  return Status::OK();
+  return OkStatus();
 }
 
 Status MakeTensorsFromArrowArray(
@@ -297,7 +297,7 @@ Status MakeTensorsFromArrowArray(
 
   RaggedTensorBuilder builder(dtype, ragged_rank);
   TF_RETURN_IF_ARROW_ERROR(builder.Build(arrow_array, output_tensors));
-  return Status::OK();
+  return OkStatus();
 }
 
 int UpdateArrowCpuThreadPoolCapacityFromEnv() {
