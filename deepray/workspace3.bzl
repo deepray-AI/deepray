@@ -16,7 +16,7 @@ def workspace():
         # branch = "main",
         remote = "https://github.com/fuhailin/rules_compressor.git",
         commit = "a98ee1d04dc8175aa87a9640caef25725a78ef03",
-        # shallow_since = "1644497009 +0800",
+        shallow_since = "1681204047 +0800",
     )
 
 # Alias so it can be loaded without assigning to a different symbol to prevent

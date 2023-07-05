@@ -113,6 +113,7 @@ def _tf_repositories():
         url = "https://github.com/nelhage/rules_boost/archive/96e9b631f104b43a53c21c87b01ac538ad6f3b48.tar.gz",
         strip_prefix = "rules_boost-96e9b631f104b43a53c21c87b01ac538ad6f3b48",
         # When you first run this tool, it'll recommend a sha256 hash to put here with a message like: "DEBUG: Rule 'com_github_nelhage_rules_boost' indicated that a canonical reproducible form can be obtained by modifying arguments sha256 = ..."
+        sha256 = "5ea00abc70cdf396a23fb53201db19ebce2837d28887a08544429d27783309ed",
     )
 
     http_archive(
