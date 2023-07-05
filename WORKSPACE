@@ -8,10 +8,10 @@ tf_configure(
 
 http_archive(
     name = "org_tensorflow",
-    sha256 = "59d09bd00eef6f07477eea2f50778582edd4b7b2850a396f1fd0c646b357a573",
-    strip_prefix = "tensorflow-2.9.3",
+    sha256 = "c030cb1905bff1d2446615992aad8d8d85cbe90c4fb625cee458c63bf466bc8e",
+    strip_prefix = "tensorflow-2.12.0",
     urls = [
-        "https://github.com/tensorflow/tensorflow/archive/refs/tags/v2.9.3.tar.gz",
+        "https://github.com/tensorflow/tensorflow/archive/refs/tags/v2.12.0.tar.gz",
     ],
 )
 
