@@ -35,6 +35,7 @@ def _tf_repositories():
         ],
         strip_prefix = "eigen-{}".format("3.4.0"),
         build_file = Label("//third_party:eigen3.BUILD"),
+        sha256 = "8586084f71f9bde545ee7fa6d00288b264a2b7ac3607b974e54d13e7162c1c72",
     )
 
     OPENBLAS_VERSION = "0.3.23"
@@ -45,8 +46,8 @@ def _tf_repositories():
         ],
         type = "tar.gz",
         strip_prefix = "OpenBLAS-{}".format(OPENBLAS_VERSION),
-        # sha256 = "947f51bfe50c2a0749304fbe373e00e7637600b0a47b78a51382aeb30ca08562",
         build_file = Label("//third_party:openblas.BUILD"),
+        sha256 = "5d9491d07168a5d00116cdc068a40022c3455bf9293c7cb86a65b1054d7e5114",
     )
 
     ARROW_VERSION = "7.0.0"
@@ -79,6 +80,7 @@ def _tf_repositories():
         ],
         strip_prefix = "xsimd-" + XSMID_VERSION,
         build_file = Label("//third_party:xsimd.BUILD"),
+        sha256 = "50c31c319c8b36c8946eb954c7cca2e2ece86bf8a66a7ebf321b24cd273e7c47",
     )
 
     http_archive(
