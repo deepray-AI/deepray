@@ -19,31 +19,6 @@ env:
   MAX_PY_VERSION: "3.11"
 
 jobs:
-  free-disk-space:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: false
-
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
-
-      - name: Check disk space
-        run: df -h
-
-      - name: Check working space directory
-        run: du ${GITHUB_WORKSPACE} -h -d 1
-
   test-with-bazel:
     name: Test with bazel
     runs-on: ubuntu-20.04
@@ -84,6 +59,22 @@ jobs:
         #     py-version: '3.10'
       fail-fast: false
     steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - uses: actions/github-script@0.3.0
         id: author-date
         with:
