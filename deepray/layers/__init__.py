@@ -43,3 +43,8 @@ from deepray.layers.esn import ESN
 from deepray.layers.stochastic_depth import StochasticDepth
 from deepray.layers.noisy_dense import NoisyDense
 from deepray.layers.crf import CRF
+
+from deepray.layers.on_device_embedding import OnDeviceEmbedding
+from deepray.layers.position_embedding import PositionEmbedding
+from deepray.layers.self_attention_mask import SelfAttentionMask
+from deepray.layers.transformer import Transformer
