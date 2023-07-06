@@ -15,8 +15,8 @@ on:
       - r*
 
 env:
-  MIN_PY_VERSION: '3.8'
-  MAX_PY_VERSION: '3.11'
+  MIN_PY_VERSION: "3.8"
+  MAX_PY_VERSION: "3.11"
 
 jobs:
   test-with-bazel:
@@ -27,10 +27,27 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ env.MIN_PY_VERSION }}
+
+      - name: Bazel cache
+        id: bazel-cache
+        uses: actions/cache@v2
+        env:
+          version: 4.2.1
+        with:
+          path: |
+            ~/.cache/bazel
+          key: ${{ runner.os }}-{{ env.version }}-bazel-cache
+
+      - name: Install bazelisk
+        run: |
+          curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.1.0/bazelisk-linux-amd64"
+          mkdir -p "${GITHUB_WORKSPACE}/bin/"
+          mv bazelisk-linux-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
+          chmod +x "${GITHUB_WORKSPACE}/bin/bazel"
+
       - name: Build wheels
         run: |
           pip install --default-timeout=1000 -r tools/install_deps/pytest.txt -r tools/install_deps/tensorflow-cpu.txt -r requirements.txt
-          bash tools/install_deps/install_bazelisk.sh ./
           python configure.py
           bazel test -k --test_timeout 300,450,1200,3600 --test_output=errors //deepray/...
   release-wheel:
@@ -40,10 +57,10 @@ jobs:
       matrix:
         # To switch on windows-2022/latest, please verify the bazel version:
         # https://github.com/bazelbuild/bazel/issues/14232#issuecomment-1011247429
-        os: ['ubuntu-20.04']
-        py-version: ['3.8', '3.9', '3.10', '3.11']
-        tf-version: ['2.12.0']
-        cpu: ['x86']
+        os: ["ubuntu-20.04"]
+        py-version: ["3.8", "3.9", "3.10", "3.11"]
+        tf-version: ["2.12.0"]
+        cpu: ["x86"]
         # include:
         #   - os: 'macos-12'
         #     cpu: 'arm64'
@@ -59,6 +76,22 @@ jobs:
         #     py-version: '3.10'
       fail-fast: false
     steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - uses: actions/github-script@0.3.0
         id: author-date
         with:
@@ -101,10 +134,10 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        os: ['Linux']
-        py-version: ['3.8', '3.9', '3.10', '3.11']
-        tf-version: ['2.12.0']
-        cpu: ['x86']
+        os: ["Linux"]
+        py-version: ["3.8", "3.9", "3.10", "3.11"]
+        tf-version: ["2.12.0"]
+        cpu: ["x86"]
         # include:
         #   - os: 'macOS'
         #     cpu: 'arm64'
@@ -138,7 +171,7 @@ jobs:
     needs: [release-wheel, test-with-bazel]
     runs-on: ubuntu-20.04
     env:
-      PY_VERSION: '3.9'
+      PY_VERSION: "3.9"
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
     steps:
       - uses: actions/checkout@v2
