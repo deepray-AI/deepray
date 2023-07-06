@@ -2,8 +2,6 @@ set -e -x
 
 df -h
 docker info
-# to get more disk space
-rm -rf /usr/share/dotnet &
 
 # Tests are ran as part of make_wheel target
 DOCKER_BUILDKIT=1 docker build \

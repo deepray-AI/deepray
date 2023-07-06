@@ -16,6 +16,7 @@
 
 import tensorflow as tf
 from typeguard import typechecked
+
 from deepray.utils.resource_loader import LazySO
 
 _correlation_cost_so = LazySO("custom_ops/correlation_cost/_correlation_cost_ops.so")
