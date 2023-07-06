@@ -25,10 +25,6 @@ COPY ./ /deepray
 WORKDIR /deepray
 
 # -------------------------------------------------------------------
-FROM base_install as dp_gpu_tests
-CMD ["bash", "tools/testing/build_and_run_tests.sh"]
-
-# -------------------------------------------------------------------
 FROM base_install as make_wheel
 ARG NIGHTLY_FLAG
 ARG NIGHTLY_TIME
@@ -37,7 +33,7 @@ ARG SKIP_CUSTOM_OP_TESTS
 RUN python configure.py
 
 # Test Before Building
-RUN bash tools/testing/build_and_run_tests.sh $SKIP_CUSTOM_OP_TESTS
+RUN bazel test --test_timeout 300,450,1200,3600 --test_output=errors //deepray/...
 
 # Build
 RUN bazel build \

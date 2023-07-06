@@ -20,7 +20,7 @@ RUN pip install -r /install_deps/yapf.txt \
 RUN bash /install_deps/buildifier.sh
 RUN bash /install_deps/clang-format.sh
 
-ENV ADDONS_DEV_CONTAINER="1"
+ENV DEEPRAY_DEV_CONTAINER="1"
 
 # Clean up
 RUN apt-get autoremove -y \

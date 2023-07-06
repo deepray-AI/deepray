@@ -18,17 +18,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import numpy as np
-import pandas as pd
 import os
-from six.moves import xrange  # pylint: disable=redefined-builtin
 import tempfile
 
+import numpy as np
+import pandas as pd
 import tensorflow as tf
-from deepray.custom_ops.parquet_dataset.python import parquet_dataset_ops
 from tensorflow.python.data.kernel_tests import test_base
 from tensorflow.python.platform import test
-from tensorflow.python.data.ops.dataset_ops import AUTOTUNE
+
+from deepray.custom_ops.parquet_dataset import parquet_dataset_ops
 
 
 class ParquetDatasetTest(test_base.DatasetTestBase):
