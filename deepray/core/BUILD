@@ -4,8 +4,10 @@ package(default_visibility = ["//visibility:public"])
 
 py_library(
     name = "core",
-    srcs = glob(["*.py",
-                 "**/*.py"]),
+    srcs = glob([
+        "*.py",
+        "**/*.py",
+    ]),
     deps = [
         "//deepray/testing",
         "//deepray/utils",

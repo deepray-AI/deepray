@@ -113,7 +113,7 @@ class Module():
           )
         else:
           logging.info(
-              'Step: %d Lr %g Loss scale %g' %(self.current_step, self.optimizer.lr, self.optimizer.loss_scale)
+              'Step: %d Lr %g Loss scale %g' % (self.current_step, self.optimizer.lr, self.optimizer.loss_scale)
           )
 
       logging.info(training_status)
