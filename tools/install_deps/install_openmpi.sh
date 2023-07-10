@@ -14,19 +14,15 @@
 # limitations under the License.
 # ==============================================================================
 
-# Downloads bazelisk to ${output_dir} as `bazel`.
-date
+# Install Open MPI
+wget --progress=dot:mega -O /tmp/openmpi-4.1.4-bin.tar.gz https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.4.tar.gz &&
+    cd /tmp && tar -zxf /tmp/openmpi-4.1.4-bin.tar.gz &&
+    mkdir openmpi-4.1.4/build && cd openmpi-4.1.4/build && ../configure --prefix=/usr/local &&
+    make -j all && make install && ldconfig &&
+    mpirun --version
 
-output_dir=${1:-"/usr/local/bin"}
-
-mkdir -p "${output_dir}"
-wget -O ${output_dir}/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
-
-chmod u+x "${output_dir}/bazel"
-
-if [[ ! ":$PATH:" =~ :${output_dir}/?: ]]; then
-    PATH="${output_dir}:$PATH"
-fi
-
-which bazel
-date
+# Allow OpenSSH to talk to containers without asking for confirmation
+mkdir -p /var/run/sshd
+cat /etc/ssh/ssh_config | grep -v StrictHostKeyChecking >/etc/ssh/ssh_config.new &&
+    echo "    StrictHostKeyChecking no" >>/etc/ssh/ssh_config.new &&
+    mv /etc/ssh/ssh_config.new /etc/ssh/ssh_config

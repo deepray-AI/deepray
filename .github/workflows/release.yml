@@ -170,8 +170,11 @@ jobs:
     name: Upload dev container to DockerHub
     needs: [release-wheel, test-with-bazel]
     runs-on: ubuntu-20.04
-    env:
-      PY_VERSION: "3.9"
+    strategy:
+      matrix:
+        py-version: ["3.8", "3.9", "3.10", "3.11"]
+      fail-fast: false
+    
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
     steps:
       - uses: actions/checkout@v2
@@ -181,8 +184,11 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      
+        env:
+          PY_VERSION: ${{ matrix.py-version }}
 
       - run: |
           set -e -x
           bash .github/workflows/github_build_dev_container.sh
-          docker push hailinfufu/deepray:latest-gpu
+          docker push hailinfufu/deepray:latest-${PY_VERSION}-cu118-ubuntu20.04

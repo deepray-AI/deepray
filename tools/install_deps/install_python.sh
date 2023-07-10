@@ -14,19 +14,16 @@
 # limitations under the License.
 # ==============================================================================
 
-# Downloads bazelisk to ${output_dir} as `bazel`.
-date
+PY_VERSION=${1:-"3.8"}
 
-output_dir=${1:-"/usr/local/bin"}
+apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
+    python${PY_VERSION} \
+    python${PY_VERSION}-dev \
+    python${PY_VERSION}-distutils &&
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-mkdir -p "${output_dir}"
-wget -O ${output_dir}/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
+ln -s /usr/bin/python${PY_VERSION} /usr/bin/python
 
-chmod u+x "${output_dir}/bazel"
-
-if [[ ! ":$PATH:" =~ :${output_dir}/?: ]]; then
-    PATH="${output_dir}:$PATH"
-fi
-
-which bazel
-date
+curl -O https://bootstrap.pypa.io/get-pip.py &&
+    python get-pip.py &&
+    rm get-pip.py

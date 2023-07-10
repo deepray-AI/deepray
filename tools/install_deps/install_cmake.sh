@@ -14,19 +14,12 @@
 # limitations under the License.
 # ==============================================================================
 
-# Downloads bazelisk to ${output_dir} as `bazel`.
-date
+CMAKE_VERSION=${1:-"3.22.5"}
 
-output_dir=${1:-"/usr/local/bin"}
-
-mkdir -p "${output_dir}"
-wget -O ${output_dir}/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
-
-chmod u+x "${output_dir}/bazel"
-
-if [[ ! ":$PATH:" =~ :${output_dir}/?: ]]; then
-    PATH="${output_dir}:$PATH"
-fi
-
-which bazel
-date
+wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.sh \
+    -q -O /tmp/cmake-install.sh &&
+    chmod u+x /tmp/cmake-install.sh &&
+    mkdir /usr/bin/cmake &&
+    /tmp/cmake-install.sh --skip-license --prefix=/usr &&
+    rm /tmp/cmake-install.sh &&
+    cmake --version

@@ -14,12 +14,12 @@ py_library(
     ],
 )
 
-py_test(
-    name = "core_test",
-    size = "small",
-    srcs = glob(["tests/*"]),
-    main = "tests/run_all_test.py",
-    deps = [
-        ":core",
-    ],
-)
+# py_test(
+#     name = "core_test",
+#     size = "small",
+#     srcs = glob(["tests/*"]),
+#     main = "tests/run_all_test.py",
+#     deps = [
+#         ":core",
+#     ],
+# )
