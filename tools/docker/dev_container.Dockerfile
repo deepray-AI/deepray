@@ -20,6 +20,8 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
     git \
     curl \
     vim \
+    rsync \
+    s3fs \
     ca-certificates \
     librdmacm1 \
     libibverbs1 \
