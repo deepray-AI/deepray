@@ -34,6 +34,7 @@ from keras.utils import tf_utils
 from tensorflow_recommenders_addons import dynamic_embedding as de
 from tensorflow_recommenders_addons.dynamic_embedding.python.ops import dynamic_embedding_variable as devar
 
+import deepray as dp
 from deepray.layers.bucketize import NumericaBucketIdLayer, Hash
 
 FLAGS = flags.FLAGS
@@ -107,7 +108,7 @@ class Embedding(Layer):
       2D tensor with shape: `(batch_size, input_length)`.
 
     Output shape:
-      3D tensor with shape: `(batch_size, input_length, embedding_dim)`.
+      3D tensor with shape: `(batch_size, input_length, output_dim)`.
 
     **Note on variable placement:**
     By default, if a GPU is available, the embedding matrix will be placed on
@@ -135,8 +136,8 @@ class Embedding(Layer):
   @utils.allow_initializer_layout
   def __init__(
       self,
+      vocabulary_size,
       embedding_dim,
-      vocabulary_size=None,
       embeddings_initializer="uniform",
       embeddings_regularizer=None,
       activity_regularizer=None,
@@ -169,8 +170,8 @@ class Embedding(Layer):
     use_one_hot_matmul = kwargs.pop("use_one_hot_matmul", False)
     super().__init__(**kwargs)
 
-    self.vocabulary_size = vocabulary_size
-    self.embedding_dim = embedding_dim
+    self.input_dim = vocabulary_size
+    self.output_dim = embedding_dim
     self.embeddings_initializer = initializers.get(embeddings_initializer)
     self.embeddings_regularizer = regularizers.get(embeddings_regularizer)
     self.activity_regularizer = regularizers.get(activity_regularizer)
@@ -192,7 +193,7 @@ class Embedding(Layer):
   @tf_utils.shape_type_conversion
   def build(self, input_shape=None):
     self.embeddings = self.add_weight(
-        shape=(self.vocabulary_size, self.embedding_dim),
+        shape=(self.input_dim, self.output_dim),
         initializer=self.embeddings_initializer,
         name="embeddings",
         regularizer=self.embeddings_regularizer,
@@ -209,7 +210,7 @@ class Embedding(Layer):
   @tf_utils.shape_type_conversion
   def compute_output_shape(self, input_shape):
     if self.input_length is None:
-      return input_shape + (self.embedding_dim,)
+      return input_shape + (self.output_dim,)
     else:
       # input_length can be tuple if input is 3D or higher
       if isinstance(self.input_length, (list, tuple)):
@@ -226,7 +227,7 @@ class Embedding(Layer):
                              f"received input has shape {input_shape}")
           elif s1 is None:
             in_lens[i] = s2
-      return (input_shape[0],) + tuple(in_lens) + (self.embedding_dim,)
+      return (input_shape[0],) + tuple(in_lens) + (self.output_dim,)
 
   def call(self, inputs):
     dtype = backend.dtype(inputs)
@@ -238,14 +239,14 @@ class Embedding(Layer):
         embedding_values = tf.nn.embedding_lookup(params=self.embeddings, ids=inputs.values)
         embedding_values = tf.reshape(embedding_values, [-1])
         # get sparse embedding indices
-        indices_values_embed_axis = tf.range(self.embedding_dim)
+        indices_values_embed_axis = tf.range(self.output_dim)
         repeat_times = [inputs.indices.shape[0]]
         indices_values_embed_axis = tf.expand_dims(tf.tile(indices_values_embed_axis, repeat_times), -1)
         indices_values_embed_axis = tf.cast(indices_values_embed_axis, dtype=tf.int64)
-        current_indices = tf.repeat(inputs.indices, [self.embedding_dim], axis=0)
+        current_indices = tf.repeat(inputs.indices, [self.output_dim], axis=0)
         new_indices = tf.concat([current_indices, indices_values_embed_axis], 1)
         new_shape = tf.concat(
-            [tf.cast(inputs.shape, dtype=tf.int64), [self.embedding_dim]],
+            [tf.cast(inputs.shape, dtype=tf.int64), [self.output_dim]],
             axis=-1,
         )
         out = tf.SparseTensor(
@@ -265,7 +266,7 @@ class Embedding(Layer):
       # weight tensor, since the input data are usually ints, and weights
       # are floats. The nn.embedding_lookup support ids as ints, but
       # the one_hot matmul need both inputs and weights to be same dtype.
-      one_hot_data = tf.one_hot(inputs, depth=self.vocabulary_size, dtype=self.dtype)
+      one_hot_data = tf.one_hot(inputs, depth=self.input_dim, dtype=self.dtype)
       out = tf.matmul(one_hot_data, self.embeddings)
     else:
       out = tf.nn.embedding_lookup(self.embeddings, inputs)
@@ -281,8 +282,8 @@ class Embedding(Layer):
 
   def get_config(self):
     config = {
-        "vocabulary_size": self.vocabulary_size,
-        "embedding_dim": self.embedding_dim,
+        "vocabulary_size": self.input_dim,
+        "embedding_dim": self.output_dim,
         "embeddings_initializer": initializers.serialize(self.embeddings_initializer),
         "embeddings_regularizer": regularizers.serialize(self.embeddings_regularizer),
         "activity_regularizer": regularizers.serialize(self.activity_regularizer),
@@ -1042,12 +1043,13 @@ class DiamondEmbedding(tf.keras.layers.Layer):
     """
     return isinstance(x, (int, str)) and bool(x)
 
-  def call(self, inputs, *args, **kwargs):
+  def call(self, inputs, *args, **kwargs) -> Dict[str, List[tf.Tensor]]:
     result = defaultdict(list)
     id_tensors = defaultdict(list)
     for code, name, hash_size, bucket_boundaries in self.feature_map[
         ~(self.feature_map['ftype'].isin(["Label", "Weight"]))][["code", "name", "hash_size",
                                                                  "bucket_boundaries"]].values:
+
       input_tensor = inputs[name]
       id_tensor_prefix_code = code << 47
 

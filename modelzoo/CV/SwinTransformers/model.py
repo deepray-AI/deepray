@@ -1,8 +1,9 @@
 import tensorflow as tf
+from deepray.layers.swin_transformer import SwinTransformer
 from tensorflow import keras
 from tensorflow.keras import layers
 
-from deepray.layers.swin_transformer import SwinTransformer
+import deepray as dp
 """
 ### Build the model
 
@@ -45,7 +46,7 @@ class PatchEmbedding(layers.Layer):
     super().__init__(**kwargs)
     self.num_patch = num_patch
     self.proj = layers.Dense(embed_dim)
-    self.pos_embed = layers.Embedding(input_dim=num_patch, output_dim=embed_dim)
+    self.pos_embed = dp.layers.Embedding(vocabulary_size=num_patch, embedding_dim=embed_dim)
 
   def call(self, patch):
     pos = tf.range(start=0, limit=self.num_patch, delta=1)

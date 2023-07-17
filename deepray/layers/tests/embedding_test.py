@@ -28,7 +28,7 @@ class EmbeddingTest(test_combinations.TestCase):
 
   @test_combinations.run_all_keras_modes
   def test_embedding_correctness(self):
-    layer = Embedding(output_dim=2, input_dim=2)
+    layer = Embedding(embedding_dim=2, vocabulary_size=2)
     model = keras.models.Sequential([layer])
 
     layer.set_weights([np.array([[1, 1], [2, 2]])])
@@ -38,14 +38,14 @@ class EmbeddingTest(test_combinations.TestCase):
 
   def test_embedding_incorrect_dimension(self):
     with self.assertRaises(ValueError):
-      Embedding(input_dim=0, output_dim=1)
+      Embedding(vocabulary_size=0, embedding_dim=1)
 
     with self.assertRaises(ValueError):
-      Embedding(input_dim=1, output_dim=0)
+      Embedding(vocabulary_size=1, embedding_dim=0)
 
   @test_combinations.generate(test_combinations.combine(mode=["graph", "eager"]))
   def test_eager_gpu_cpu(self):
-    l = Embedding(output_dim=2, input_dim=2)
+    l = Embedding(embedding_dim=2, vocabulary_size=2)
     l.build((None, 2))
     inputs = keras.backend.constant([[0, 1, 0]], dtype="int32")
     with tf.GradientTape() as tape:
@@ -58,8 +58,8 @@ class EmbeddingTest(test_combinations.TestCase):
   @test_combinations.run_all_keras_modes
   def test_embedding_with_ragged_input(self):
     layer = Embedding(
-        input_dim=3,
-        output_dim=2,
+        vocabulary_size=3,
+        embedding_dim=2,
         weights=[np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]])],
     )
     inputs = keras.layers.Input(shape=(None,), dtype=tf.float32, ragged=True)
@@ -87,7 +87,7 @@ class EmbeddingTest(test_combinations.TestCase):
   def test_mixed_precision_embedding(self):
     try:
       policy.set_global_policy("mixed_float16")
-      layer = Embedding(input_dim=5, output_dim=2)
+      layer = Embedding(vocabulary_size=5, embedding_dim=2)
       self.assertEqual(layer._dtype_policy.name, "mixed_float16")
       outputs = layer(np.array([0, 1, 2]))
       self.assertEqual(outputs.dtype, "float16")
@@ -97,8 +97,8 @@ class EmbeddingTest(test_combinations.TestCase):
   @test_combinations.run_all_keras_modes
   def test_embedding_with_sparse_input_sparse_output(self):
     layer = Embedding(
-        input_dim=3,
-        output_dim=2,
+        vocabulary_size=3,
+        embedding_dim=2,
         weights=[np.array([[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]])],
         sparse=True,
     )
@@ -116,8 +116,8 @@ class EmbeddingTest(test_combinations.TestCase):
   @test_combinations.run_all_keras_modes
   def test_embedding_with_sparse_input_dense_output(self):
     layer = Embedding(
-        input_dim=3,
-        output_dim=2,
+        vocabulary_size=3,
+        embedding_dim=2,
         weights=[np.array([[0.1, 0.1], [1.0, 1.0], [2.0, 2.0]])],
         sparse=False,
     )
@@ -135,8 +135,8 @@ class EmbeddingTest(test_combinations.TestCase):
   @test_combinations.run_all_keras_modes
   def test_embedding_with_dense_input_sprase_output(self):
     layer = Embedding(
-        input_dim=3,
-        output_dim=2,
+        vocabulary_size=3,
+        embedding_dim=2,
         weights=[np.array([[0, 0], [1.0, 1.0], [2.0, 2.0]])],
         sparse=True,
         mask_zero=False,
@@ -156,7 +156,7 @@ class EmbeddingTest(test_combinations.TestCase):
   def test_use_one_hot(self):
     batch = 8
     input_length = 10
-    layer = Embedding(input_dim=100, output_dim=16)
+    layer = Embedding(vocabulary_size=100, embedding_dim=16)
     self.assertFalse(layer._use_one_hot_matmul)
 
     inputs = tf.random.uniform(shape=[batch, input_length], minval=0, maxval=9, dtype=tf.int64)
@@ -170,7 +170,7 @@ class EmbeddingTest(test_combinations.TestCase):
 
     # Make sure the layer can be created with hidden kwargs, and not
     # serialize it into config (for now).
-    layer = Embedding(input_dim=100, output_dim=16, use_one_hot_matmul=True)
+    layer = Embedding(vocabulary_size=100, embedding_dim=16, use_one_hot_matmul=True)
     self.assertTrue(layer._use_one_hot_matmul)
 
     self.assertNotIn("use_one_hot_matmul", layer.get_config())

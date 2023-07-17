@@ -23,6 +23,7 @@ from deepray.layers.adaptive_pooling import (
     AdaptiveMaxPooling3D,
 )
 
+from deepray.layers.embedding import Embedding
 from deepray.layers.embedding_bag import EmbeddingBag
 from deepray.layers.max_unpooling_2d import MaxUnpooling2D
 from deepray.layers.max_unpooling_2d_v2 import MaxUnpooling2DV2
