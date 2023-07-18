@@ -15,14 +15,11 @@
 """Helpers for preparing pre-training data and supplying them to the model."""
 
 import sys
-import multiprocessing
-from tensorflow.python.data.ops import dataset_ops
 
 import tensorflow as tf
 from absl import flags
-import horovod.tensorflow as hvd
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.tfrecord_pipeline import TFRecordPipeline
 
 FLAGS = flags.FLAGS
 FLAGS([
@@ -31,44 +28,24 @@ FLAGS([
 ])
 
 
-class Wikicorpus_en(DataPipeLine):
+class Wikicorpus_en(TFRecordPipeline):
 
   def __init__(self, max_seq_length, **kwargs):
     super().__init__(**kwargs)
     self._max_seq_length = max_seq_length
+    self.name_to_features = self.features
 
-    self.name_to_features = {
+  @property
+  def features(self):
+    return {
         "input_ids": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
         "input_mask": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
         "segment_ids": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
     }
 
-  def build_dataset(self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, *args, **kwargs):
-    """Creates an `input_fn` closure to be passed to TPUEstimator."""
-
-    input_files = tf.io.gfile.glob(input_file_pattern)
-
-    dataset = tf.data.Dataset.from_tensor_slices(tf.constant(input_files))
-    if self.use_horovod:
-      dataset = dataset.shard(num_shards=hvd.size(), index=hvd.rank())
-    dataset = dataset.repeat(FLAGS.epochs)
-    dataset = dataset.shuffle(buffer_size=len(input_files), seed=FLAGS.random_seed, reshuffle_each_iteration=False)
-
-    cycle_length = min(multiprocessing.cpu_count(), len(input_files))
-    dataset = dataset.interleave(tf.data.TFRecordDataset, cycle_length=cycle_length, deterministic=True).shuffle(
-        buffer_size=100, seed=FLAGS.random_seed, reshuffle_each_iteration=False
-    ).map(
-        map_func=self.parser,
-        num_parallel_calls=FLAGS.parallel_parse if FLAGS.parallel_parse else dataset_ops.AUTOTUNE,
-    )
-    dataset = dataset.batch(batch_size)
-
-    return dataset
-
   def parser(self, record):
     """Decodes a record to a TensorFlow example."""
-
-    example = tf.io.parse_single_example(record, self.name_to_features)
+    example = tf.io.parse_example(record, self.name_to_features)
 
     # tf.Example only supports tf.int64, but the TPU only supports tf.int32.
     # So cast all int64 to int32.

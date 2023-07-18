@@ -17,7 +17,7 @@ import sys
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.tfrecord_pipeline import TFRecordDataset
+from deepray.datasets.tfrecord_pipeline import TFRecordPipeline
 
 FLAGS = flags.FLAGS
 FLAGS([
@@ -32,7 +32,7 @@ TARGET_ITEM_FEATURES = ["item_feat_0_trgt", "item_feat_1_trgt"]
 USER_FEATURES = ["user_feat_0"]
 
 
-class AmazonBooks2014(TFRecordDataset):
+class AmazonBooks2014(TFRecordPipeline):
 
   def __init__(self, max_seq_length, **kwargs):
     super().__init__(**kwargs)

@@ -1,1 +1,1 @@
-from .tfrecord_pipeline import TFRecordDataset
+from .tfrecord_pipeline import TFRecordPipeline

@@ -64,7 +64,7 @@ printf "Saving checkpoints to %s\n" "$RESULTS_DIR"
 printf "Logs written to %s\n" "$LOGFILE"
 
 set -x
-$mpi_command python -m examples.Recommendation.TFRA.demo_tfra \
+$mpi_command python -m modelzoo.Recommendation.TFRA.demo_tfra \
   --train_data=movielens/1m-ratings \
   --num_gpus=$num_gpu \
   --batch_size=$batch_size \

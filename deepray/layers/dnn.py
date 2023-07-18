@@ -7,7 +7,7 @@ class DNN(tf.keras.layers.Layer):
   def __init__(
       self,
       hidden_units: List[int],
-      activations: List[Union[str, callable]] = ['relu'],
+      activations: List[Union[str, callable]] = None,
       use_bn: bool = False,
       use_ln: bool = False,
       dropout_rate: float = 0,
@@ -15,7 +15,7 @@ class DNN(tf.keras.layers.Layer):
       **kwargs
   ):
     super().__init__(**kwargs)
-    if len(activations) == 1 and len(hidden_units) != len(activations):
+    if activations is not None and len(activations) == 1 and len(hidden_units) != len(activations):
       self.activations = activations * len(hidden_units)
     else:
       self.activations = activations
@@ -31,7 +31,8 @@ class DNN(tf.keras.layers.Layer):
         tf.keras.layers.Dense(units=num_hidden_units, name=f"dense_{self.prefix}{layer_id}")
         for layer_id, num_hidden_units in enumerate(self.hidden)
     ]
-    self.activation_layers = [tf.keras.layers.Activation(activation=activation) for activation in self.activations]
+    if self.activations:
+      self.activation_layers = [tf.keras.layers.Activation(activation=activation) for activation in self.activations]
     if self.use_bn:
       self.bn_layers = [tf.keras.layers.BatchNormalization(name='bn_' + str(i)) for i in range(len(self.hidden))]
     if self.use_ln:
@@ -53,7 +54,7 @@ class DNN(tf.keras.layers.Layer):
     if self.use_bn:
       x = self.bn_layers[layer_id](x, training=training)
 
-    if self.activation_layers[layer_id]:
+    if self.activations:
       x = self.activation_layers[layer_id](x)
 
     if self.use_ln:

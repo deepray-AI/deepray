@@ -1,27 +1,36 @@
-import tensorflow as tf
-from deepray.datasets.datapipeline import DataPipeLine
-from tensorflow.python.data.ops import dataset_ops
+import multiprocessing
 
+import horovod.tensorflow as hvd
+import tensorflow as tf
 from absl import flags
+from tensorflow.python.data.ops import dataset_ops
+from deepray.datasets.datapipeline import DataPipeLine
 
 FLAGS = flags.FLAGS
 
 
-class TFRecordDataset(DataPipeLine):
+class TFRecordPipeline(DataPipeLine):
+  """
+  Build a pipeline fetching, shuffling, and preprocessing the tfrecord files.
+  """
 
   def __init__(self, compression_type=None, **kwargs):
     super().__init__(**kwargs)
     self.compression_type = compression_type
 
-    self.context_features, self.sequence_features = {}, {}
+  @property
+  def features(self):
+    context_features, sequence_features = {}, {}
     # for key, dtype in self.feature_map.loc[self.feature_map["length"] == 1][["name", "dtype"]].values:
     #   context_features[key] = tf.io.FixedLenFeature([FLAGS.prebatch], dtype)
     # for key, dtype in self.feature_map.loc[self.feature_map["length"] > 1][["name", "dtype"]].values:
     #   sequence_features[key] = tf.io.VarLenFeature(dtype)
     for key, dtype, length in self.feature_map[["name", "dtype", "length"]].values:
-      self.context_features[key] = tf.io.FixedLenFeature([length], dtype)
+      context_features[key] = tf.io.FixedLenFeature([length], dtype)
+    return context_features, sequence_features
 
   def parser(self, record):
+    self.context_features, self.sequence_features = self.features
     tensor, sparse_tensor, ragged_tensor = tf.io.parse_sequence_example(
         serialized=record, context_features=self.context_features, sequence_features=self.sequence_features
     )
@@ -32,33 +41,57 @@ class TFRecordDataset(DataPipeLine):
       label_map[label] = tensor.pop(label)
     return tensor, label_map
 
+  def _dataset_options(self, input_files):
+    options = tf.data.Options()
+
+    # When `input_files` is a path to a single file or a list
+    # containing a single path, disable auto sharding so that
+    # same input file is sent to all workers.
+    if isinstance(input_files, str) or len(input_files) == 1:
+      options.experimental_distribute.auto_shard_policy = (tf.data.experimental.AutoShardPolicy.OFF)
+    else:
+      """ Constructs tf.data.Options for this dataset. """
+      options.experimental_optimization.parallel_batch = True
+      options.experimental_slack = True
+      options.experimental_threading.max_intra_op_parallelism = 1
+      options.experimental_optimization.map_parallelization = True
+
+    return options
+
   def build_dataset(
       self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
   ):
-    file_list = self.read_list_from_file(input_file_pattern)
-    # Read from TFRecords. For optimal performance, reading from multiple files at once and
-    # disregarding data order. Order does not matter since we will be shuffling the data anyway.
-    dataset = (
-        tf.data.TFRecordDataset(
-            file_list,
-            compression_type=self.compression_type,
-            num_parallel_reads=FLAGS.parallel_reads_per_file if FLAGS.parallel_reads_per_file else dataset_ops.AUTOTUNE,
-            # automatically interleaves reads from multiple files
-        ).batch(
-            batch_size,
-            # here will waste a little data, sparse_feature need to be reshaped with precise batch_size,
-            # so drop remainder
-            drop_remainder=True,
-        ).map(
-            map_func=self.parser,
-            num_parallel_calls=FLAGS.parallel_parse if FLAGS.parallel_parse else dataset_ops.AUTOTUNE,
-        )
+    input_files = tf.io.gfile.glob(input_file_pattern)
+
+    dataset = tf.data.Dataset.from_tensor_slices(tf.constant(input_files))
+
+    if self.use_horovod:
+      # For multi-host training, we want each hosts to always process the same
+      # subset of files.  Each host only sees a subset of the entire dataset,
+      # allowing us to cache larger datasets in memory.
+      dataset = dataset.shard(num_shards=hvd.size(), index=hvd.rank())
+
+    dataset = dataset.repeat(FLAGS.epochs)
+    dataset = dataset.shuffle(buffer_size=len(input_files), seed=FLAGS.random_seed, reshuffle_each_iteration=False)
+
+    # In parallel, create tf record dataset for each train files.
+    # cycle_length = 8 means that up to 8 files will be read and deserialized in
+    # parallel. You may want to increase this number if you have a large number of
+    # CPU cores.
+    cycle_length = min(multiprocessing.cpu_count(), len(input_files))
+    dataset = dataset.interleave(
+        lambda x: tf.data.TFRecordDataset(x, compression_type=self.compression_type),
+        cycle_length=cycle_length,
+        deterministic=True
+    ).shuffle(buffer_size=100, seed=FLAGS.random_seed, reshuffle_each_iteration=False).batch(
+        batch_size,
+        drop_remainder=True,
+    ).map(
+        map_func=self.parser,
+        num_parallel_calls=dataset_ops.AUTOTUNE,
     )
-    # if flags.epochs > 1:
-    #     dataset = dataset.cache()
-    if FLAGS.shuffle_buffer:
-      dataset = dataset.shuffle(buffer_size=FLAGS.shuffle_buffer)
-    dataset = dataset.prefetch(buffer_size=FLAGS.prefetch_buffer)
-    if not disable_cache:
-      dataset = dataset.cache()
+
+    # Prefetch overlaps in-feed with training
+    dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
+    dataset = dataset.with_options(self._dataset_options(input_files))
     return dataset

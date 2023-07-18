@@ -2,4 +2,6 @@ typeguard>=2.7,<3.0.0
 packaging
 pandas
 pynvml
-git+https://github.com/NVIDIA/dllogger@v1.0.0#egg=dllogger
+dllogger@git+https://github.com/NVIDIA/dllogger#egg=dllogger
+pudb
+tabulate

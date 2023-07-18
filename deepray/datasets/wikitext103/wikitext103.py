@@ -1,10 +1,10 @@
 from abc import ABC
 import tensorflow as tf
 
-from ..tfrecord_pipeline import TFRecordDataset
+from ..tfrecord_pipeline import TFRecordPipeline
 
 
-class Wikitext103(TFRecordDataset, ABC):
+class Wikitext103(TFRecordPipeline, ABC):
 
   def __init__(self, bin_sizes, tgt_len, **kwargs):
     super().__init__(**kwargs)
