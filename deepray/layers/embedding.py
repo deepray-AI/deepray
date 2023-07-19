@@ -737,7 +737,12 @@ class EmbeddingLayerRedis(DynamicEmbedding):
       return embeddings
 
 
-class MultiHashEmbedding(tf.keras.layers.Layer):
+class CompositionalEmbedding(tf.keras.layers.Layer):
+  """
+  Compositional Embedding is designed for reducing Large-scale Sparse Embedding Weights.
+  See [Compositional Embeddings Using Complementary Partitions for Memory-Efficient Recommendation Systems]
+  (https://arxiv.org/abs/1909.02107)
+  """
 
   def __init__(
       self,
@@ -922,7 +927,7 @@ class DiamondEmbedding(tf.keras.layers.Layer):
             self.feature_map['name'] == self.fold_columns[name]
         ]['storage_type'].values[0] if self.fold_columns[name] in self.feature_map['name'].values else storage_type
         if self.is_valid_value(multihash_factor):
-          self.embedding_layers[self.fold_columns[name]] = MultiHashEmbedding(
+          self.embedding_layers[self.fold_columns[name]] = CompositionalEmbedding(
               embedding_dim=dim,
               key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
               multihash_factor=multihash_factor,
