@@ -44,7 +44,7 @@ class ParquetBatchReader::Impl {
 
   Status Open() {
     if (TF_PREDICT_TRUE(batch_reader_)) {
-      return OkStatus();
+      return Status::OK();
     }
     if (TF_PREDICT_FALSE(partition_index_ >= partition_count_)) {
       return errors::InvalidArgument("Partition index ", partition_index_,
@@ -101,7 +101,7 @@ class ParquetBatchReader::Impl {
 
     TF_RETURN_IF_ARROW_ERROR(reader_->GetRecordBatchReader(
         row_group_indices_, column_indices_, &batch_reader_));
-    return OkStatus();
+    return Status::OK();
   }
 
   Status Read(std::vector<Tensor>* output_tensors) {
@@ -123,7 +123,7 @@ class ParquetBatchReader::Impl {
           field_dtypes_[i], field_ragged_ranks_[i], arrays[i], output_tensors));
     }
 
-    return OkStatus();
+    return Status::OK();
   }
 
  private:
