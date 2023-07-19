@@ -62,3 +62,8 @@ RUN ldconfig /usr/local/cuda/targets/x86_64-linux/lib/stubs && \
 RUN apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
+
+RUN echo -e "\
+# Set breakpoint() in Python to call pudb \n\
+export PYTHONBREAKPOINT="pudb.set_trace" \n\
+    " > /root/.bashrc
