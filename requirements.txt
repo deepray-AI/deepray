@@ -5,3 +5,4 @@ pynvml
 dllogger@git+https://github.com/NVIDIA/dllogger#egg=dllogger
 pudb
 tabulate
+tensorflow_recommenders_addons@https://dl.dropboxusercontent.com/s/ieivkte14h62cqq/tensorflow_recommenders_addons_gpu-0.5.0.dev0-cp38-cp38-linux_x86_64.whl
