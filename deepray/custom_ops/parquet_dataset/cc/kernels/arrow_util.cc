@@ -252,7 +252,7 @@ class RaggedTensorBuilder : public ::arrow::ArrayVisitor {
 #define CASE_ARROW_ENUM_SET_DTYPE(PTR, ENUM)                       \
   case ENUM: {                                                     \
     *PTR = DataTypeToEnum<ArrowEnumToDataType<ENUM>::Type>::value; \
-    return Status::OK();                                             \
+    return Status::OK();                                           \
   }
 
 Status MakeDataTypeAndRaggedRankFromArrowDataType(
