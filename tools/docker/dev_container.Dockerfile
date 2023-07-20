@@ -6,7 +6,7 @@ ARG IMAGE_TYPE
 ARG CUDA_DOCKER_VERSION=11.8.0-cudnn8-devel-ubuntu20.04
 FROM nvidia/cuda:${CUDA_DOCKER_VERSION} as dev_container
 ARG TF_PACKAGE
-ARG TF_VERSION=2.12.0
+ARG TF_VERSION=2.9.3
 ARG PY_VERSION=3.8
 
 # to avoid interaction with apt-get

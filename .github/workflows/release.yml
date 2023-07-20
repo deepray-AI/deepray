@@ -59,20 +59,20 @@ jobs:
         # https://github.com/bazelbuild/bazel/issues/14232#issuecomment-1011247429
         os: ["ubuntu-20.04"]
         py-version: ["3.8", "3.9", "3.10", "3.11"]
-        tf-version: ["2.12.0"]
+        tf-version: ["2.9.3"]
         cpu: ["x86"]
         # include:
         #   - os: 'macos-12'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.8'
         #   - os: 'macos-12'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.9'
         #   - os: 'macos-12'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.10'
       fail-fast: false
     steps:
@@ -99,7 +99,7 @@ jobs:
           script: |
             const commit_details = await github.git.getCommit({owner: context.repo.owner, repo: context.repo.repo, commit_sha: context.sha});
             return commit_details.data.author.date
-      - if: matrix.tf-version != '2.12.0'
+      - if: matrix.tf-version != '2.9.3'
         shell: bash
         run: echo "SKIP_CUSTOM_OP_TESTS=--skip-custom-ops" >> $GITHUB_ENV
       - if: github.event_name == 'push'
@@ -113,7 +113,7 @@ jobs:
         name: Setup Bazel
         # Ubuntu bazel is run inside of the docker image
         run: bash tools/install_deps/install_bazelisk.sh ./
-      - if: matrix.py-version != '3.11' || matrix.tf-version == '2.12.0'
+      - if: matrix.py-version != '3.11' || matrix.tf-version == '2.9.3'
         name: Build wheels
         env:
           OS: ${{ runner.os }}
@@ -123,7 +123,7 @@ jobs:
           CPU: ${{ matrix.cpu }}
         shell: bash
         run: bash .github/workflows/make_wheel_${OS}_${CPU}.sh
-      - if: matrix.py-version != '3.11' || matrix.tf-version == '2.12.0'
+      - if: matrix.py-version != '3.11' || matrix.tf-version == '2.9.3'
         uses: actions/upload-artifact@v1
         with:
           name: ${{ runner.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
@@ -136,20 +136,20 @@ jobs:
       matrix:
         os: ["Linux"]
         py-version: ["3.8", "3.9", "3.10", "3.11"]
-        tf-version: ["2.12.0"]
+        tf-version: ["2.9.3"]
         cpu: ["x86"]
         # include:
         #   - os: 'macOS'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.8'
         #   - os: 'macOS'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.9'
         #   - os: 'macOS'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.10'
       fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'release'
@@ -173,6 +173,7 @@ jobs:
     strategy:
       matrix:
         py-version: ["3.8", "3.9", "3.10", "3.11"]
+        tf-version: ["2.9.3"]
       fail-fast: false
     
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
@@ -187,8 +188,9 @@ jobs:
       
         env:
           PY_VERSION: ${{ matrix.py-version }}
+          TF_VERSION: ${{ matrix.tf-version }}
 
       - run: |
           set -e -x
           bash .github/workflows/github_build_dev_container.sh
-          docker push hailinfufu/deepray:latest-${PY_VERSION}-cu118-ubuntu20.04
+          docker push hailinfufu/deepray:latest-py${PY_VERSION}-tf${TF_VERSION}-cu118-ubuntu20.04

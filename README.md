@@ -59,7 +59,7 @@ what it was tested against.
 #### Python Op Compatibility Matrix
 | Deepray        | TensorFlow     | Python              |
 | :------------- | :------------- | :------------------ |
-| deepray-0.18.0 | 2.12.0 | 3.8, 3.9, 3.10, 3.11 |
+| deepray-0.18.0 | 2.9.3 | 3.8, 3.9, 3.10, 3.11 |
 
 
 ### C++ Custom Op Compatibility
