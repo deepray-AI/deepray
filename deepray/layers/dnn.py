@@ -63,3 +63,15 @@ class DNN(tf.keras.layers.Layer):
     if self.dropout_rate:
       x = self.dropout_layers[layer_id](x, training=training)
     return x
+
+  def get_config(self,):
+    config = {
+        'hidden_units': self.hidden,
+        'activations': self.activations,
+        'use_bn': self.use_bn,
+        'use_ln': self.use_ln,
+        'dropout_rate': self.dropout_rate,
+        'name': self.prefix
+    }
+    base_config = super(DNN, self).get_config()
+    return dict(list(base_config.items()) + list(config.items()))

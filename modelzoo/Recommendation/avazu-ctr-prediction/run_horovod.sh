@@ -66,10 +66,10 @@ set -x
 
 ls examples/Recommendation/avazu-ctr-prediction
 
-$mpi_command python -m examples.Recommendation.avazu-ctr-prediction.train \
+$mpi_command python train.py \
     --train_data=/workspaces/dataset/avazu/output/train.parquet \
     --valid_data=/workspaces/dataset/avazu/output/valid.parquet \
-    --feature_map=/workspaces/Deepray2/examples/Recommendation/avazu-ctr-prediction/feature_map.csv \
+    --feature_map=feature_map.csv \
     --benchmark \
     --use_dynamic_embedding=True \
     --steps_per_summary=20 \

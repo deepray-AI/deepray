@@ -15,46 +15,40 @@
 # limitations under the License.
 # ==============================================================================
 
-echo "Container nvidia build = " $NVIDIA_BUILD_ID
-
-num_gpu=${1:-"4"}
+num_gpu=${1:-"2"}
 batch_size=${2:-"1024"}
 learning_rate=${3:-"5e-6"}
 precision=${4:-"fp32"}
 use_xla=${5:-"true"}
 model=${6:-"demo"}
 epochs=${7:-"1"}
+profile=${8:-"true"}
 
-if [ $num_gpu -gt 1 ] ; then
-    mpi_command="mpirun -np $num_gpu \
-    --allow-run-as-root -bind-to none -map-by slot \
-    -x NCCL_DEBUG=INFO \
-    -x LD_LIBRARY_PATH \
-    -x PATH -mca pml ob1 -mca btl ^openib"
+if [ $num_gpu -gt 1 ]; then
+    hvd_command="horovodrun -np $num_gpu "
     use_hvd="--use_horovod"
 else
-    mpi_command=""
-    use_hvd=""
+    hvd_command=""
+    use_hvd="--distribution_strategy=off"
 fi
 
-if [ "$precision" = "fp16" ] ; then
+if [ "$precision" = "fp16" ]; then
     echo "fp16 activated!"
     use_fp16="--dtype=fp16"
 else
     use_fp16=""
 fi
 
-if [ "$use_xla" = "true" ] ; then
+if [ "$use_xla" = "true" ]; then
     use_xla_tag="--enable_xla"
     echo "XLA activated"
 else
     use_xla_tag=""
 fi
 
-
 export GBS=$(expr $batch_size \* $num_gpu)
 printf -v TAG "tf_tfra_training_movielens_%s_%s_gbs%d" "$model" "$precision" $GBS
-DATESTAMP=`date +'%y%m%d%H%M%S'`
+DATESTAMP=$(date +'%y%m%d%H%M%S')
 
 #Edit to save logs & checkpoints in a different directory
 RESULTS_DIR=/results/${TAG}_${DATESTAMP}
@@ -63,15 +57,23 @@ mkdir -m 777 -p $RESULTS_DIR
 printf "Saving checkpoints to %s\n" "$RESULTS_DIR"
 printf "Logs written to %s\n" "$LOGFILE"
 
+
+if [ "$profile" = "true" ]; then
+    nsys_command="--timeline-filename $RESULTS_DIR/timeline.json --timeline-mark-cycles"
+    echo "profile activated"
+else
+    nsys_command=""
+fi
+
 set -x
-$mpi_command python -m modelzoo.Recommendation.TFRA.demo_tfra \
-  --train_data=movielens/1m-ratings \
-  --num_gpus=$num_gpu \
-  --batch_size=$batch_size \
-  --learning_rate=$learning_rate \
-  --epochs=$epochs \
-  --model_dir=${RESULTS_DIR} \
-  --model_export_path=${RESULTS_DIR} \
-  $use_hvd $use_fp16 $use_xla_tag |& tee $LOGFILE
+$hvd_command $nsys_command python demo_tfra.py \
+    --train_data=movielens/1m-ratings \
+    --num_gpus=$num_gpu \
+    --batch_size=$batch_size \
+    --learning_rate=$learning_rate \
+    --epochs=$epochs \
+    --model_dir=${RESULTS_DIR} \
+    --model_export_path=${RESULTS_DIR} \
+    $use_hvd $use_fp16 $use_xla_tag
 
 set +x

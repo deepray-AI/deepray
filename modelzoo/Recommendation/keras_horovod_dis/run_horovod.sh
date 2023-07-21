@@ -66,7 +66,7 @@ printf "Saving checkpoints to %s\n" "$RESULTS_DIR"
 printf "Logs written to %s\n" "$LOGFILE"
 
 set -x
-$mpi_command python -m modelzoo.Recommendation.keras_horovod_dis.demo_tfra \
+$mpi_command python demo_tfra.py \
   --train_data=movielens/1m-ratings \
   --keras_use_ctl=$keras_use_ctl \
   --use_dynamic_embedding \
