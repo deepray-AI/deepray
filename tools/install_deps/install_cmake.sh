@@ -13,11 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+set -x -e
 
-CMAKE_VERSION=${1:-"3.22.5"}
+CMAKE_VERSION=${1:-"3.23.2"}
 
 wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.sh \
-    -q -O /tmp/cmake-install.sh &&
+    --progress=dot:mega -O /tmp/cmake-install.sh &&
     chmod u+x /tmp/cmake-install.sh &&
     mkdir /usr/bin/cmake &&
     /tmp/cmake-install.sh --skip-license --prefix=/usr &&

@@ -25,9 +25,7 @@ FLAGS = flags.FLAGS
 FLAGS(sys.argv)
 
 from deepray.utils.ensure_tf_install import _check_tf_version
-from deepray.utils.dp_eol_msg import _print_eol_warning
 
-_print_eol_warning()
 _check_tf_version()
 
 # Local project imports

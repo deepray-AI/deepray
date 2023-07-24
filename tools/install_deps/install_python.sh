@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+set -x -e
 
 PY_VERSION=${1:-"3.8"}
 
@@ -27,3 +28,5 @@ ln -s /usr/bin/python${PY_VERSION} /usr/bin/python
 curl -O https://bootstrap.pypa.io/get-pip.py &&
     python get-pip.py &&
     rm get-pip.py
+
+pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple

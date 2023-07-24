@@ -9,4 +9,4 @@ docker build \
     --build-arg PY_VERSION=$PY_VERSION \
     --no-cache \
     --target dev_container \
-    -t hailinfufu/deepray:latest-${PY_VERSION}-cu118-ubuntu20.04 ./
+    -t hailinfufu/deepray:latest-py${PY_VERSION}-tf${TF_VERSION}-cu118-ubuntu20.04 ./

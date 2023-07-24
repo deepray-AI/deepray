@@ -12,6 +12,9 @@ ARG PY_VERSION=3.8
 # to avoid interaction with apt-get
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Comment it if you are not in China
+RUN sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
+RUN sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 
 RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
     wget \
@@ -63,7 +66,11 @@ RUN apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
 
-RUN echo -e "\
-# Set breakpoint() in Python to call pudb \n\
+RUN echo "# Set breakpoint() in Python to call pudb \n\
 export PYTHONBREAKPOINT="pudb.set_trace" \n\
+\n\
+export CUDA_HOME="/usr/local/cuda-11.8"\n\
+export PATH="$CUDA_HOME/bin:$PATH"\n\
+export LD_LIBRARY_PATH="$CUDA_HOME/lib64:$LD_LIBRARY_PATH"\n\
+\n\
     " > /root/.bashrc

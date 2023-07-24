@@ -53,7 +53,7 @@ class TFRecordPipeline(DataPipeLine):
       """ Constructs tf.data.Options for this dataset. """
       options.experimental_optimization.parallel_batch = True
       options.experimental_slack = True
-      options.experimental_threading.max_intra_op_parallelism = 1
+      options.threading.max_intra_op_parallelism = 1
       options.experimental_optimization.map_parallelization = True
 
     return options
@@ -99,4 +99,6 @@ class TFRecordPipeline(DataPipeLine):
     # Prefetch overlaps in-feed with training
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
     dataset = dataset.with_options(self._dataset_options(input_files))
+    # Using `ignore_errors()` will drop the element that causes an error.
+    dataset = dataset.apply(tf.data.experimental.ignore_errors())
     return dataset

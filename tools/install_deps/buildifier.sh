@@ -14,5 +14,5 @@
 # limitations under the License.
 # ==============================================================================
 
-wget -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/0.29.0/buildifier
+wget --progress=dot:mega -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/0.29.0/buildifier
 chmod +x /usr/local/bin/buildifier

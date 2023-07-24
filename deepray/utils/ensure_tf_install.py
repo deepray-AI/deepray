@@ -59,8 +59,8 @@ def _check_tf_version():
       "If you were to encounter a bug, do not file an issue.\n"
       "If you want to make sure you're using a tested and supported configuration, "
       "either change the TensorFlow version or the Deepray's version. \n"
-      "You can find the compatibility matrix in TensorFlow Addon's readme:\n"
-      "https://github.com/tensorflow/deepray".format(
+      "You can find the compatibility matrix in TensorFlow Deepray's readme:\n"
+      "https://github.com/deepray-AI/deepray".format(
           INCLUSIVE_MIN_TF_VERSION, EXCLUSIVE_MAX_TF_VERSION, tf.__version__
       ),
       UserWarning,

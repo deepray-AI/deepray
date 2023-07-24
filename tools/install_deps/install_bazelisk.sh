@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+set -x -e
 
 # Downloads bazelisk to ${output_dir} as `bazel`.
 date
@@ -20,7 +21,7 @@ date
 output_dir=${1:-"/usr/local/bin"}
 
 mkdir -p "${output_dir}"
-wget -O ${output_dir}/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
+wget --progress=dot:mega -O ${output_dir}/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
 
 chmod u+x "${output_dir}/bazel"
 
