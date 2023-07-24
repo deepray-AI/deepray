@@ -61,16 +61,16 @@ RUN ldconfig /usr/local/cuda/targets/x86_64-linux/lib/stubs && \
     horovodrun --check-build && \
     ldconfig
 
+COPY ./ /deepray
+WORKDIR /deepray
+
+RUN bazel version
+
+COPY tools/docker/bashrc.bash /tmp/
+RUN cat /tmp/bashrc.bash >> /root/.bashrc \
+    && rm /tmp/bashrc.bash
+
 # Clean up
 RUN apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
-
-RUN echo "# Set breakpoint() in Python to call pudb \n\
-export PYTHONBREAKPOINT="pudb.set_trace" \n\
-\n\
-export CUDA_HOME="/usr/local/cuda-11.8"\n\
-export PATH="$CUDA_HOME/bin:$PATH"\n\
-export LD_LIBRARY_PATH="$CUDA_HOME/lib64:$LD_LIBRARY_PATH"\n\
-\n\
-    " > /root/.bashrc
