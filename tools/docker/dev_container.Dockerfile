@@ -3,7 +3,7 @@ ARG IMAGE_TYPE
 
 # Currenly all of our dev images are GPU capable but at a cost of being quite large.
 # See https://github.com/tensorflow/build/pull/47
-ARG CUDA_DOCKER_VERSION=11.8.0-cudnn8-devel-ubuntu20.04
+ARG CUDA_DOCKER_VERSION=11.6.2-cudnn8-devel-ubuntu20.04
 FROM nvidia/cuda:${CUDA_DOCKER_VERSION} as dev_container
 ARG TF_PACKAGE
 ARG TF_VERSION=2.9.3
@@ -61,7 +61,7 @@ RUN ldconfig /usr/local/cuda/targets/x86_64-linux/lib/stubs && \
     horovodrun --check-build && \
     ldconfig
 
-COPY ./ /deepray
+RUN git clone --depth 1 https://github.com/deepray-AI/deepray.git /deepray
 WORKDIR /deepray
 
 RUN bazel version
