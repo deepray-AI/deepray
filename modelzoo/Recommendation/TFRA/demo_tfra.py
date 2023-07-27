@@ -29,8 +29,6 @@ from tensorflow.keras.layers import Dense
 from deepray.layers.embedding import Embedding
 from deepray.utils.data.feature_map import FeatureMap
 
-
-
 FLAGS = flags.FLAGS
 FLAGS(
     [
@@ -59,7 +57,7 @@ class Demo(tf.keras.Model):
         "name", "dtype", "dim", "length"
     ]].values:
       self.features_dict[key] = Embedding(
-        vocabulary_size=100,
+          vocabulary_size=100,
           embedding_dim=emb_size,
           # key_dtype=dtype,
           # value_dtype=tf.float32,
@@ -107,7 +105,6 @@ class Demo(tf.keras.Model):
     # predictions = {"out": out}
 
 
-
 def main(_):
   _strategy = distribution_utils.get_distribution_strategy()
   data_pipe = Movielens100kRating()
@@ -115,7 +112,6 @@ def main(_):
     model = Demo(embedding_size=32)
 
   optimizer = tf.keras.optimizers.Adam(learning_rate=FLAGS.learning_rate, amsgrad=True)
-
 
   trainer = Trainer(
       optimizer=optimizer,
