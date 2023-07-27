@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+set -x -e
 
-wget --progress=dot:mega -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/0.29.0/buildifier
+wget -O /usr/local/bin/buildifier https://github.com/bazelbuild/buildtools/releases/download/v6.1.2/buildifier-linux-amd64
 chmod +x /usr/local/bin/buildifier
