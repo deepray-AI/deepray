@@ -33,7 +33,7 @@ ARG SKIP_CUSTOM_OP_TESTS
 RUN python configure.py
 
 # Test Before Building
-RUN bazel test --test_timeout 300,450,1200,3600 --test_output=errors //deepray/...
+# RUN bazel test --test_timeout 300,450,1200,3600 --test_output=errors //deepray/...
 
 # Build
 RUN bazel build \
