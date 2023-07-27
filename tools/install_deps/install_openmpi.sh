@@ -16,14 +16,27 @@
 set -x -e
 
 # Install Open MPI
-wget --progress=dot:mega -O /tmp/openmpi-4.1.4-bin.tar.gz https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.4.tar.gz &&
-    cd /tmp && tar -zxf /tmp/openmpi-4.1.4-bin.tar.gz &&
-    mkdir openmpi-4.1.4/build && cd openmpi-4.1.4/build && ../configure --prefix=/usr/local &&
-    make -j all && make install && ldconfig &&
-    mpirun --version
+RUN mkdir /tmp/openmpi &&
+    cd /tmp/openmpi &&
+    wget --progress=dot:mega -O https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.gz &&
+    tar zxf openmpi-4.1.5.tar.gz &&
+    cd openmpi-4.1.5 &&
+    ./configure --enable-orterun-prefix-by-default &&
+    make -j $(nproc) all &&
+    make install &&
+    ldconfig &&
+    mpirun --version &&
+    rm -rf /tmp/openmpi
+
+# Install OpenSSH for MPI to communicate between containers
+RUN apt-get install -y --no-install-recommends openssh-client openssh-server &&
+    mkdir -p /var/run/sshd
 
 # Allow OpenSSH to talk to containers without asking for confirmation
-mkdir -p /var/run/sshd
-cat /etc/ssh/ssh_config | grep -v StrictHostKeyChecking >/etc/ssh/ssh_config.new &&
-    echo "    StrictHostKeyChecking no" >>/etc/ssh/ssh_config.new &&
-    mv /etc/ssh/ssh_config.new /etc/ssh/ssh_config
+# by disabling StrictHostKeyChecking.
+# mpi-operator mounts the .ssh folder from a Secret. For that to work, we need
+# to disable UserKnownHostsFile to avoid write permissions.
+# Disabling StrictModes avoids directory and files read permission checks.
+RUN sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config &&
+    echo "    UserKnownHostsFile /dev/null" >>/etc/ssh/ssh_config &&
+    sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config
