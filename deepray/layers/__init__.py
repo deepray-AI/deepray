@@ -23,6 +23,7 @@ from deepray.layers.adaptive_pooling import (
     AdaptiveMaxPooling3D,
 )
 
+from deepray.layers.embedding import Embedding
 from deepray.layers.embedding_bag import EmbeddingBag
 from deepray.layers.max_unpooling_2d import MaxUnpooling2D
 from deepray.layers.max_unpooling_2d_v2 import MaxUnpooling2DV2
@@ -43,3 +44,8 @@ from deepray.layers.esn import ESN
 from deepray.layers.stochastic_depth import StochasticDepth
 from deepray.layers.noisy_dense import NoisyDense
 from deepray.layers.crf import CRF
+
+from deepray.layers.on_device_embedding import OnDeviceEmbedding
+from deepray.layers.position_embedding import PositionEmbedding
+from deepray.layers.self_attention_mask import SelfAttentionMask
+from deepray.layers.transformer import Transformer

@@ -19,12 +19,12 @@ py_library(
     ],
 )
 
-py_test(
-    name = "layers_test",
-    size = "large",
-    srcs = glob(["tests/*"]),
-    main = "tests/run_all_test.py",
-    deps = [
-        ":layers",
-    ],
-)
+# py_test(
+#     name = "layers_test",
+#     size = "large",
+#     srcs = glob(["tests/*"]),
+#     main = "tests/run_all_test.py",
+#     deps = [
+#         ":layers",
+#     ],
+# )

@@ -41,7 +41,7 @@ class PolynomialCrossing(tf.keras.layers.Layer):
     Example:
 
     >>> input = np.random.randint(10, size=(10, 5))
-    >>> x0 = tf.keras.layers.Embedding(input_dim=10, output_dim=3)(input)
+    >>> x0 = dp.layers.Embedding(vocabulary_size=10, embedding_dim=3)(input)
     >>> x1 = PolynomialCrossing(projection_dim=None)((x0, x0))
     >>> x2 = PolynomialCrossing(projection_dim=None)((x0, x1))
     >>> logits = tf.keras.layers.Dense(units=10)(x2)

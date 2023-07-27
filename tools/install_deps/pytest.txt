@@ -5,4 +5,3 @@ scikit-learn~=1.2.2
 scikit-image~=0.20.0
 Pillow~=9.4.0
 tqdm>=4.36.1
-pyarrow

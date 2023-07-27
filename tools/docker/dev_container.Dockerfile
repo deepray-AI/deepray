@@ -1,26 +1,36 @@
 #syntax=docker/dockerfile:1.1.5-experimental
-ARG PY_VERSION
 ARG IMAGE_TYPE
+ARG TF_VERSION=2.9.3
+ARG PY_VERSION=3.8
 
 # Currenly all of our dev images are GPU capable but at a cost of being quite large.
 # See https://github.com/tensorflow/build/pull/47
-FROM tensorflow/build:latest-python$PY_VERSION as dev_container
-ARG TF_PACKAGE
-ARG TF_VERSION
+ARG CUDA_DOCKER_VERSION=latest-py${PY_VERSION}-tf${TF_VERSION}-cu116-ubuntu20.04
+FROM hailinfufu/deepray-release:${CUDA_DOCKER_VERSION} as dev_container
 
-RUN pip install --default-timeout=1000 $TF_PACKAGE==$TF_VERSION
 
 COPY tools/install_deps /install_deps
-COPY requirements.txt /tmp/requirements.txt
-RUN pip install -r /install_deps/yapf.txt \
-    -r /install_deps/pytest.txt \
-    -r /install_deps/typedapi.txt \
-    -r /tmp/requirements.txt
 
 RUN bash /install_deps/buildifier.sh
 RUN bash /install_deps/clang-format.sh
+RUN bash /install_deps/install_bazelisk.sh
 
-ENV DEEPRAY_DEV_CONTAINER="1"
+RUN git clone --depth 1 https://github.com/deepray-AI/deepray.git /deepray
+WORKDIR /deepray
+
+RUN python configure.py
+# Build
+RUN bazel build \
+    --noshow_progress \
+    --noshow_loading_progress \
+    --verbose_failures \
+    --test_output=errors \
+    build_pip_pkg && \
+    # Package Whl
+    bazel-bin/build_pip_pkg artifacts && \
+    # Install Whl
+    pip install artifacts/deepray-*.whl
+
 
 # Clean up
 RUN apt-get autoremove -y \

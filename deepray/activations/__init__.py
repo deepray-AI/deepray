@@ -22,3 +22,6 @@ from deepray.activations.rrelu import rrelu
 from deepray.activations.snake import snake
 from deepray.activations.sparsemax import sparsemax
 from deepray.activations.tanhshrink import tanhshrink
+from deepray.activations.swish import simple_swish
+from deepray.activations.swish import hard_swish
+from deepray.activations.swish import identity

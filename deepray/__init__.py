@@ -13,10 +13,19 @@
 # limitations under the License.
 # ==============================================================================
 """Useful extra functionality for TensorFlow maintained by SIG-deepray."""
-from deepray.utils.ensure_tf_install import _check_tf_version
-from deepray.utils.dp_eol_msg import _print_eol_warning
+import sys
 
-_print_eol_warning()
+from absl import flags
+
+from deepray.utils.flags import common_flags
+
+common_flags.define_common_flags()
+
+FLAGS = flags.FLAGS
+FLAGS(sys.argv)
+
+from deepray.utils.ensure_tf_install import _check_tf_version
+
 _check_tf_version()
 
 # Local project imports

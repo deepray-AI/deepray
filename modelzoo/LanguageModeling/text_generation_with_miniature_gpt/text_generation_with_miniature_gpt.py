@@ -30,14 +30,17 @@ with TensorFlow 2.3 or higher.
 """
 ## Setup
 """
+import os
+import random
+import string
+
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.layers import TextVectorization
-import numpy as np
-import os
-import string
-import random
+
+import deepray as dp
 """
 ## Implement a Transformer block as a layer
 """
@@ -97,8 +100,8 @@ class TokenAndPositionEmbedding(layers.Layer):
 
   def __init__(self, maxlen, vocab_size, embed_dim):
     super().__init__()
-    self.token_emb = layers.Embedding(input_dim=vocab_size, output_dim=embed_dim)
-    self.pos_emb = layers.Embedding(input_dim=maxlen, output_dim=embed_dim)
+    self.token_emb = dp.layers.Embedding(vocabulary_size=vocab_size, embedding_dim=embed_dim)
+    self.pos_emb = dp.layers.Embedding(vocabulary_size=maxlen, embedding_dim=embed_dim)
 
   def call(self, x):
     maxlen = tf.shape(x)[-1]

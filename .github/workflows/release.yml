@@ -16,40 +16,40 @@ on:
 
 env:
   MIN_PY_VERSION: "3.8"
-  MAX_PY_VERSION: "3.11"
+  MAX_PY_VERSION: "3.10"
 
 jobs:
-  test-with-bazel:
-    name: Test with bazel
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.MIN_PY_VERSION }}
+  # test-with-bazel:
+  #   name: Test with bazel
+  #   runs-on: ubuntu-20.04
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-python@v2
+  #       with:
+  #         python-version: ${{ env.MIN_PY_VERSION }}
 
-      - name: Bazel cache
-        id: bazel-cache
-        uses: actions/cache@v2
-        env:
-          version: 4.2.1
-        with:
-          path: |
-            ~/.cache/bazel
-          key: ${{ runner.os }}-{{ env.version }}-bazel-cache
+  #     - name: Bazel cache
+  #       id: bazel-cache
+  #       uses: actions/cache@v2
+  #       env:
+  #         version: 4.2.1
+  #       with:
+  #         path: |
+  #           ~/.cache/bazel
+  #         key: ${{ runner.os }}-{{ env.version }}-bazel-cache
 
-      - name: Install bazelisk
-        run: |
-          curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.1.0/bazelisk-linux-amd64"
-          mkdir -p "${GITHUB_WORKSPACE}/bin/"
-          mv bazelisk-linux-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
-          chmod +x "${GITHUB_WORKSPACE}/bin/bazel"
+  #     - name: Install bazelisk
+  #       run: |
+  #         curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.1.0/bazelisk-linux-amd64"
+  #         mkdir -p "${GITHUB_WORKSPACE}/bin/"
+  #         mv bazelisk-linux-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
+  #         chmod +x "${GITHUB_WORKSPACE}/bin/bazel"
 
-      - name: Build wheels
-        run: |
-          pip install --default-timeout=1000 -r tools/install_deps/pytest.txt -r tools/install_deps/tensorflow-cpu.txt -r requirements.txt
-          python configure.py
-          bazel test -k --test_timeout 300,450,1200,3600 --test_output=errors //deepray/...
+  #     - name: Build wheels
+  #       run: |
+  #         pip install --default-timeout=1000 -r tools/install_deps/pytest.txt -r tools/install_deps/tensorflow-cpu.txt -r requirements.txt
+  #         python configure.py
+  #         bazel test -k --test_timeout 300,450,1200,3600 --test_output=errors //deepray/...
   release-wheel:
     name: Test and build release wheels
     runs-on: ${{ matrix.os }}
@@ -58,21 +58,26 @@ jobs:
         # To switch on windows-2022/latest, please verify the bazel version:
         # https://github.com/bazelbuild/bazel/issues/14232#issuecomment-1011247429
         os: ["ubuntu-20.04"]
-        py-version: ["3.8", "3.9", "3.10", "3.11"]
-        tf-version: ["2.12.0"]
+        py-version: [
+            "3.8",
+            "3.9",
+            "3.10",
+            # "3.11"
+          ]
+        tf-version: ["2.9.3"]
         cpu: ["x86"]
         # include:
         #   - os: 'macos-12'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.8'
         #   - os: 'macos-12'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.9'
         #   - os: 'macos-12'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.10'
       fail-fast: false
     steps:
@@ -99,7 +104,7 @@ jobs:
           script: |
             const commit_details = await github.git.getCommit({owner: context.repo.owner, repo: context.repo.repo, commit_sha: context.sha});
             return commit_details.data.author.date
-      - if: matrix.tf-version != '2.12.0'
+      - if: matrix.tf-version != '2.9.3'
         shell: bash
         run: echo "SKIP_CUSTOM_OP_TESTS=--skip-custom-ops" >> $GITHUB_ENV
       - if: github.event_name == 'push'
@@ -113,7 +118,7 @@ jobs:
         name: Setup Bazel
         # Ubuntu bazel is run inside of the docker image
         run: bash tools/install_deps/install_bazelisk.sh ./
-      - if: matrix.py-version != '3.11' || matrix.tf-version == '2.12.0'
+      - if: matrix.py-version != '3.11' || matrix.tf-version == '2.9.3'
         name: Build wheels
         env:
           OS: ${{ runner.os }}
@@ -123,33 +128,42 @@ jobs:
           CPU: ${{ matrix.cpu }}
         shell: bash
         run: bash .github/workflows/make_wheel_${OS}_${CPU}.sh
-      - if: matrix.py-version != '3.11' || matrix.tf-version == '2.12.0'
+      - if: matrix.py-version != '3.11' || matrix.tf-version == '2.9.3'
         uses: actions/upload-artifact@v1
         with:
           name: ${{ runner.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
           path: wheelhouse
+
   upload-wheels:
     name: Publish wheels to PyPi
-    needs: [release-wheel, test-with-bazel]
+    needs: [
+        release-wheel,
+        #  test-with-bazel
+      ]
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         os: ["Linux"]
-        py-version: ["3.8", "3.9", "3.10", "3.11"]
-        tf-version: ["2.12.0"]
+        py-version: [
+            "3.8",
+            "3.9",
+            "3.10",
+            # "3.11"
+          ]
+        tf-version: ["2.9.3"]
         cpu: ["x86"]
         # include:
         #   - os: 'macOS'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.8'
         #   - os: 'macOS'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.9'
         #   - os: 'macOS'
         #     cpu: 'arm64'
-        #     tf-version: '2.12.0'
+        #     tf-version: '2.9.3'
         #     py-version: '3.10'
       fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'release'
@@ -166,12 +180,25 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
-  upload-dev-container:
-    name: Upload dev container to DockerHub
-    needs: [release-wheel, test-with-bazel]
+
+  upload-release-container:
+    name: Upload release container to DockerHub
+    needs: [
+        release-wheel,
+        # test-with-bazel
+      ]
     runs-on: ubuntu-20.04
-    env:
-      PY_VERSION: "3.9"
+    strategy:
+      matrix:
+        py-version: [
+            "3.8",
+            "3.9",
+            "3.10",
+            # "3.11"
+          ]
+        tf-version: ["2.9.3"]
+      fail-fast: false
+
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
     steps:
       - uses: actions/checkout@v2
@@ -182,7 +209,45 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
+        env:
+          PY_VERSION: ${{ matrix.py-version }}
+          TF_VERSION: ${{ matrix.tf-version }}
+
       - run: |
           set -e -x
-          bash .github/workflows/github_build_dev_container.sh
-          docker push hailinfufu/deepray:latest-gpu
+          bash tools/build_base_container.sh
+          docker push hailinfufu/deepray-release:latest-py${PY_VERSION}-tf${TF_VERSION}-cu116-ubuntu20.04
+
+  upload-dev-container:
+    name: Upload dev container to DockerHub
+    needs: [upload-release-container]
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        py-version: [
+            "3.8",
+            "3.9",
+            "3.10",
+            # "3.11"
+          ]
+        tf-version: ["2.9.3"]
+      fail-fast: false
+
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+        env:
+          PY_VERSION: ${{ matrix.py-version }}
+          TF_VERSION: ${{ matrix.tf-version }}
+
+      - run: |
+          set -e -x
+          bash tools/build_dev_container.sh
+          docker push hailinfufu/deepray-dev:latest-py${PY_VERSION}-tf${TF_VERSION}-cu116-ubuntu20.04

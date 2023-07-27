@@ -117,7 +117,9 @@ py_library(
     deps = [
         "//deepray/activations",
         "//deepray/callbacks",
+        "//deepray/core",
         "//deepray/custom_ops",
+        "//deepray/datasets",
         "//deepray/image",
         "//deepray/layers",
         "//deepray/losses",
