@@ -15,14 +15,14 @@
 # limitations under the License.
 # ==============================================================================
 
-num_gpu=${1:-"2"}
+num_gpu=${1:-"1"}
 batch_size=${2:-"1024"}
 learning_rate=${3:-"5e-6"}
 precision=${4:-"fp32"}
 use_xla=${5:-"true"}
 model=${6:-"demo"}
-epochs=${7:-"1"}
-profile=${8:-"true"}
+epochs=${7:-"100"}
+profile=${8:-"false"}
 
 if [ $num_gpu -gt 1 ]; then
     hvd_command="horovodrun -np $num_gpu "
@@ -68,8 +68,10 @@ fi
 set -x
 $hvd_command $nsys_command python demo_tfra.py \
     --train_data=movielens/1m-ratings \
+    --feature_map=/workspaces/deepray/deepray/datasets/movielens/movielens.csv \
     --num_gpus=$num_gpu \
     --batch_size=$batch_size \
+    --use_dynamic_embedding=True \
     --learning_rate=$learning_rate \
     --epochs=$epochs \
     --model_dir=${RESULTS_DIR} \

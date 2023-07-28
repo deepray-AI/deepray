@@ -11,6 +11,12 @@ from deepray.core.common import distribution_utils
 
 FLAGS = flags.FLAGS
 
+if FLAGS.use_horovod:
+  if FLAGS.keras_use_ctl:
+    import horovod.tensorflow as hvd
+  else:
+    import horovod.tensorflow.keras as hvd
+
 
 class Module():
 
@@ -32,15 +38,16 @@ class Module():
     else:
       return steps_per_loop, FLAGS.num_accumulation_steps
 
-  def _save_checkpoint(self, manager, checkpoint_number=None):
-    """Saves model to with provided checkpoint prefix."""
-    latest_checkpoint_file = tf.train.latest_checkpoint(os.path.join(FLAGS.model_dir, 'ckpt'))
-    match = re.search(r"(?<=ckpt-)\d+", latest_checkpoint_file) if latest_checkpoint_file else None
-    latest_step_ckpt = int(match.group()) if match else -1
+  def _save_checkpoint(self, checkpoint_number=None):
+    if not self.use_horovod or hvd.rank() == 0:
+      """Saves model to with provided checkpoint prefix."""
+      latest_checkpoint_file = tf.train.latest_checkpoint(os.path.join(FLAGS.model_dir, 'ckpt'))
+      match = re.search(r"(?<=ckpt-)\d+", latest_checkpoint_file) if latest_checkpoint_file else None
+      latest_step_ckpt = int(match.group()) if match else -1
 
-    if latest_step_ckpt != checkpoint_number:
-      save_path = manager.save(checkpoint_number)
-      logging.info('Saved checkpoint to {}'.format(save_path))
+      if latest_step_ckpt != self.current_step:
+        save_path = self.manager.save(self.current_step)
+        logging.info('Saved checkpoint to {}'.format(save_path))
 
   def _float_metric_value(self, metric):
     """Gets the value of a float-value keras metric."""
@@ -248,16 +255,17 @@ class Module():
     logging.info(f"save pb model done at: {model_save_dir}. spend {after - before:.3f}s")
 
   def save_model_to_pb(self, epoch=None):
-    before = time.time()
-    model_save_dir = os.path.join(FLAGS.model_dir, 'pb') + "/model%s/" % ("" if epoch is None else "_%d" % epoch)
-    os.makedirs(model_save_dir, exist_ok=True)
-    logging.info(f"save pb model to:{model_save_dir}")
-    options = None
-    if FLAGS.use_dynamic_embedding:
-      options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
-    tf.saved_model.save(self.model, export_dir=model_save_dir, options=options)
-    after = time.time()
-    logging.info(f"save pb model done at: {model_save_dir}. spend {after - before:.3f}s")
+    if not self.use_horovod or hvd.rank() == 0:
+      before = time.time()
+      model_save_dir = os.path.join(FLAGS.model_dir, 'pb') + "/model%s/" % ("" if epoch is None else "_%d" % epoch)
+      os.makedirs(model_save_dir, exist_ok=True)
+      logging.info(f"save pb model to:{model_save_dir}")
+      options = None
+      if FLAGS.use_dynamic_embedding:
+        options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
+      tf.saved_model.save(self.model, export_dir=model_save_dir, options=options)
+      after = time.time()
+      logging.info(f"save pb model done at: {model_save_dir}. spend {after - before:.3f}s")
 
   def save_model_to_serving(self):  # 4 zero init
     export_model_path = os.path.join(FLAGS.model_dir, 'export_tfra')
