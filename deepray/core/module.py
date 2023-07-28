@@ -38,15 +38,15 @@ class Module():
     else:
       return steps_per_loop, FLAGS.num_accumulation_steps
 
-  def _save_checkpoint(self, checkpoint_number=None):
+  def _save_checkpoint(self, manager, checkpoint_number=None):
     if not self.use_horovod or hvd.rank() == 0:
       """Saves model to with provided checkpoint prefix."""
       latest_checkpoint_file = tf.train.latest_checkpoint(os.path.join(FLAGS.model_dir, 'ckpt'))
       match = re.search(r"(?<=ckpt-)\d+", latest_checkpoint_file) if latest_checkpoint_file else None
       latest_step_ckpt = int(match.group()) if match else -1
 
-      if latest_step_ckpt != self.current_step:
-        save_path = self.manager.save(self.current_step)
+      if latest_step_ckpt != checkpoint_number:
+        save_path = manager.save(checkpoint_number)
         logging.info('Saved checkpoint to {}'.format(save_path))
 
   def _float_metric_value(self, metric):
