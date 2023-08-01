@@ -1,12 +1,12 @@
 import tensorflow as tf
 from absl import flags
 from tensorflow.keras.layers import Dense
+from tensorflow_recommenders_addons import dynamic_embedding as de
 from deepray.utils.data.feature_map import FeatureMap
 
-from deepray.layers.embedding1 import EmbeddingLayer
+from deepray.layers.embedding import EmbeddingLayerGPU
 
 FLAGS = flags.FLAGS
-flags.DEFINE_integer("ps_num", -1, "ps_num for redis")
 
 
 class Demo(tf.keras.Model):
@@ -15,25 +15,22 @@ class Demo(tf.keras.Model):
     super().__init__(*args, **kwargs)
     if is_training:
       initializer = tf.keras.initializers.VarianceScaling()
-      device = "/job:localhost/replica:0/task:0/CPU:0"
     else:
       initializer = tf.keras.initializers.Zeros()
-      device = "/job:localhost/replica:0/task:0/CPU:0"
     self.feature_map = FeatureMap(feature_map=FLAGS.feature_map, black_list=FLAGS.black_list).feature_map
     self.features_dict = {}
     for key, dtype, emb_size, length in self.feature_map.loc[self.feature_map["ftype"] == "Categorical"][[
         "name", "dtype", "dim", "length"
     ]].values:
-      self.features_dict[key] = EmbeddingLayer(
+      self.features_dict[key] = EmbeddingLayerGPU(
           embedding_size=emb_size,
           key_dtype=dtype,
           value_dtype=tf.float32,
           initializer=initializer,
-          devices=device,
+          devices = ['/GPU:0'],
           name=key + '_DynamicEmbeddingLayer',
-          kv_creator=None,
+          kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver())
       )
-
     self.d0 = Dense(
         256,
         activation='relu',
@@ -52,7 +49,6 @@ class Demo(tf.keras.Model):
         bias_initializer=tf.keras.initializers.RandomNormal(0.0, 0.1)
     )
 
-  # @tf.function
   def call(self, features, *args, **kwargs):
 
     movie_id = features["movie_id"]

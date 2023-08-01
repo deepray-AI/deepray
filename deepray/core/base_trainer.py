@@ -727,11 +727,10 @@ class Trainer(Module):
       logging.info(f"self._performance_calculator.completed: {self._performance_calculator.completed}")
       results_perf = self._performance_calculator.get_current_benchmark_results()
 
+    # self._save_checkpoint(self.manager, self.current_step)
+    # self.save_model_to_export()
+    # self.save_model_to_pb()
     if not self.use_horovod or hvd.rank() == 0:
-      self._save_checkpoint(self.manager, self.current_step)
-      # self.save_model_to_export()
-      self.save_model_to_pb()
-
       # if FLAGS.use_dynamic_embedding:
       #   self.save_model_to_serving()
 
