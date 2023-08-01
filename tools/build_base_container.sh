@@ -2,6 +2,9 @@
 
 set -x -e
 
+PY_VERSION=${1:-"3.8"}
+TF_VERSION=${2:-"2.9.3"}
+
 docker build \
     -f tools/docker/base_container.Dockerfile \
     --build-arg TF_VERSION=2.9.3 \

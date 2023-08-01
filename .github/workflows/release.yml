@@ -215,7 +215,7 @@ jobs:
 
       - run: |
           set -e -x
-          bash tools/build_base_container.sh
+          bash tools/build_base_container.sh ${PY_VERSION} ${TF_VERSION}
           docker push hailinfufu/deepray-release:latest-py${PY_VERSION}-tf${TF_VERSION}-cu116-ubuntu20.04
 
   upload-dev-container:
@@ -249,5 +249,5 @@ jobs:
 
       - run: |
           set -e -x
-          bash tools/build_dev_container.sh
+          bash tools/build_dev_container.sh ${PY_VERSION} ${TF_VERSION}
           docker push hailinfufu/deepray-dev:latest-py${PY_VERSION}-tf${TF_VERSION}-cu116-ubuntu20.04
