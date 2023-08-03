@@ -99,3 +99,20 @@ class DataPipeLine:
       print(statinfo.st_size)
       raise Exception("Failed to verify " + self.url + ". Can you get to it with a browser?")
     return filename
+
+  def _dataset_options(self, input_files):
+    options = tf.data.Options()
+
+    # When `input_files` is a path to a single file or a list
+    # containing a single path, disable auto sharding so that
+    # same input file is sent to all workers.
+    if isinstance(input_files, str) or len(input_files) == 1:
+      options.experimental_distribute.auto_shard_policy = (tf.data.experimental.AutoShardPolicy.OFF)
+    else:
+      """ Constructs tf.data.Options for this dataset. """
+      options.experimental_optimization.parallel_batch = True
+      options.experimental_slack = True
+      options.threading.max_intra_op_parallelism = 1
+      options.experimental_optimization.map_parallelization = True
+
+    return options
