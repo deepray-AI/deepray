@@ -18,8 +18,8 @@ set -x -e
 # Install Open MPI
 mkdir /tmp/openmpi &&
     cd /tmp/openmpi &&
-    wget --progress=dot:mega -O https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.gz &&
-    tar zxf openmpi-4.1.5.tar.gz &&
+    wget --progress=dot:mega -O openmpi-4.1.5.tar.gz https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.gz &&
+    tar -zxf openmpi-4.1.5.tar.gz &&
     cd openmpi-4.1.5 &&
     ./configure --enable-orterun-prefix-by-default &&
     make -j $(nproc) all &&
@@ -29,7 +29,8 @@ mkdir /tmp/openmpi &&
     rm -rf /tmp/openmpi
 
 # Install OpenSSH for MPI to communicate between containers
-apt-get install -y --no-install-recommends openssh-client openssh-server &&
+apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
+    openssh-client openssh-server &&
     mkdir -p /var/run/sshd
 
 # Allow OpenSSH to talk to containers without asking for confirmation
