@@ -31,8 +31,16 @@ from keras.dtensor import utils
 from keras.engine import base_layer_utils
 from keras.engine.base_layer import Layer
 from keras.utils import tf_utils
+from tensorflow.python.distribute import distribution_strategy_context as distribute_ctx
+from tensorflow.python.distribute import values_util
+from tensorflow.python.eager import context
+from tensorflow.python.framework import ops
+from tensorflow.python.keras.utils import tf_utils
+from tensorflow.python.ops.variables import VariableAggregation
+from tensorflow.python.training.tracking import data_structures
 from tensorflow_recommenders_addons import dynamic_embedding as de
 from tensorflow_recommenders_addons.dynamic_embedding.python.ops import dynamic_embedding_variable as devar
+from tensorflow_recommenders_addons.dynamic_embedding.python.ops.dynamic_embedding_ops import DistributedVariableWrapper, TrainableWrapperDistributedPolicy
 
 import deepray as dp
 from deepray.layers.bucketize import NumericaBucketIdLayer, Hash
@@ -568,7 +576,7 @@ class DynamicEmbedding(tf.keras.layers.Layer):
       **kwargs
   ):
     """
-    Creates a Embedding layer.
+    Creates an Embedding layer.
 
     Args:
       embedding_size: An object convertible to int. Length of embedding vector
@@ -640,16 +648,49 @@ class DynamicEmbedding(tf.keras.layers.Layer):
 
       self.distribute_strategy = kwargs.get('distribute_strategy', None)
       shadow_name = name + '-shadow' if name else 'ShadowVariable'
-      self.shadow = de.shadow_ops.ShadowVariable(
-          self.params,
-          name=shadow_name,
-          max_norm=self.max_norm,
-          trainable=trainable,
-          distribute_strategy=self.distribute_strategy
+      if distribute_ctx.has_strategy():
+        self.distribute_strategy = distribute_ctx.get_strategy()
+      if self.distribute_strategy:
+        strategy_devices = self.distribute_strategy.extended.worker_devices
+        self.shadow_impl = tf_utils.ListWrapper([])
+        for i, strategy_device in enumerate(strategy_devices):
+          with ops.device(strategy_device):
+            shadow_name_replica = shadow_name
+            if i > 0:
+              shadow_name_replica = "%s/replica_%d" % (shadow_name, i)
+            with context.device_policy(context.DEVICE_PLACEMENT_SILENT):
+              self.shadow_impl.as_list().append(
+                  de.shadow_ops.ShadowVariable(
+                      self.params,
+                      name=shadow_name_replica,
+                      max_norm=self.max_norm,
+                      trainable=trainable,
+                      distribute_strategy=self.distribute_strategy
+                  )
+              )
+      else:
+        self.shadow_impl = tf_utils.ListWrapper(
+            [de.shadow_ops.ShadowVariable(self.params, name=shadow_name, max_norm=self.max_norm, trainable=trainable)]
+        )
+    if len(self.shadow_impl.as_list()) > 1:
+      self._current_ids = data_structures.NoDependency([shadow_i.ids for shadow_i in self.shadow_impl.as_list()])
+      self._current_exists = data_structures.NoDependency([shadow_i.exists for shadow_i in self.shadow_impl.as_list()])
+      self.optimizer_vars = data_structures.NoDependency(
+          [shadow_i._optimizer_vars for shadow_i in self.shadow_impl.as_list()]
       )
-    self._current_ids = self.shadow.ids
-    self._current_exists = self.shadow.exists
-    self.optimizer_vars = self.shadow._optimizer_vars
+    else:
+      self._current_ids = data_structures.NoDependency(self.shadow_impl.as_list()[0].ids)
+      self._current_exists = data_structures.NoDependency(self.shadow_impl.as_list()[0].exists)
+      self.optimizer_vars = self.shadow_impl.as_list()[0]._optimizer_vars
+    if distribute_ctx.has_strategy() and self.distribute_strategy and 'OneDeviceStrategy' not in str(
+        self.distribute_strategy
+    ) and not values_util.is_saving_non_distributed() and values_util.get_current_replica_id_as_int() is not None:
+      self.shadow = DistributedVariableWrapper(
+          self.distribute_strategy, self.shadow_impl.as_list(), VariableAggregation.NONE,
+          TrainableWrapperDistributedPolicy(VariableAggregation.NONE)
+      )
+    else:
+      self.shadow = self.shadow_impl.as_list()[0]
     super(DynamicEmbedding, self).__init__(name=name, trainable=trainable, dtype=value_dtype)
 
   def call(self, ids):
@@ -706,22 +747,8 @@ class DynamicEmbedding(tf.keras.layers.Layer):
         'partitioner': self.params.partition_fn,
         'kv_creator': self.params.kv_creator if self.keep_distribution else None,
         'max_norm': _max_norm,
-        'distribute_strategy': self.distribute_strategy,
     }
     return config
-
-
-class EmbeddingLayerGPU(DynamicEmbedding):
-
-  def call(self, ids):
-    with tf.name_scope(self.name + "/EmbeddingLookupUnique"):
-      ids_flat = tf.reshape(ids, [-1])
-      unique_ids, idx = tf.unique(ids_flat)
-      unique_embeddings = tfra.dynamic_embedding.shadow_ops.embedding_lookup(self.shadow, unique_ids)
-      embeddings_flat = tf.gather(unique_embeddings, idx)
-      embeddings_shape = tf.concat([tf.shape(ids), tf.constant(self.embedding_size, shape=(1,))], 0)
-      embeddings = tf.reshape(embeddings_flat, embeddings_shape)
-      return embeddings
 
 
 class EmbeddingLayerRedis(DynamicEmbedding):
@@ -789,7 +816,7 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
 
   def build(self, input_shape=None):
     if not FLAGS.use_horovod:
-      self.multihash_emb = EmbeddingLayerGPU(
+      self.multihash_emb = DynamicEmbedding(
           embedding_size=self.embedding_dim,
           key_dtype=self.key_dtype,
           value_dtype=tf.float32,
@@ -949,7 +976,7 @@ class DiamondEmbedding(tf.keras.layers.Layer):
           elif storage_type == "DRAM":
             devices = ['/CPU:0']
             if not FLAGS.use_horovod:
-              self.embedding_layers[self.fold_columns[name]] = EmbeddingLayerGPU(
+              self.embedding_layers[self.fold_columns[name]] = DynamicEmbedding(
                   embedding_size=dim,
                   key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
                   value_dtype=tf.float32,
@@ -981,7 +1008,7 @@ class DiamondEmbedding(tf.keras.layers.Layer):
           else:
             devices = ['/GPU:0']
             if not FLAGS.use_horovod:
-              self.embedding_layers[self.fold_columns[name]] = EmbeddingLayerGPU(
+              self.embedding_layers[self.fold_columns[name]] = DynamicEmbedding(
                   embedding_size=dim,
                   key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
                   value_dtype=tf.float32,

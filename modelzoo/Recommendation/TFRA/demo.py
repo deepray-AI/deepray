@@ -4,7 +4,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow_recommenders_addons import dynamic_embedding as de
 from deepray.utils.data.feature_map import FeatureMap
 
-from deepray.layers.embedding import EmbeddingLayerGPU
+from deepray.layers.embedding import DynamicEmbedding
 
 FLAGS = flags.FLAGS
 
@@ -22,7 +22,7 @@ class Demo(tf.keras.Model):
     for key, dtype, emb_size, length in self.feature_map.loc[self.feature_map["ftype"] == "Categorical"][[
         "name", "dtype", "dim", "length"
     ]].values:
-      self.features_dict[key] = EmbeddingLayerGPU(
+      self.features_dict[key] = DynamicEmbedding(
           embedding_size=emb_size,
           key_dtype=dtype,
           value_dtype=tf.float32,
