@@ -751,12 +751,26 @@ class DynamicEmbedding(tf.keras.layers.Layer):
     return config
 
 
-class EmbeddingLayerRedis(DynamicEmbedding):
+class EmbeddingLayerGPU(DynamicEmbedding):
 
   def call(self, ids):
     with tf.name_scope(self.name + "/EmbeddingLookupUnique"):
       ids_flat = tf.reshape(ids, [-1])
       unique_ids, idx = tf.unique(ids_flat)
+      unique_embeddings = tfra.dynamic_embedding.shadow_ops.embedding_lookup(self.shadow, unique_ids)
+      embeddings_flat = tf.gather(unique_embeddings, idx)
+      embeddings_shape = tf.concat([tf.shape(ids), tf.constant(self.embedding_size, shape=(1,))], 0)
+      embeddings = tf.reshape(embeddings_flat, embeddings_shape)
+      return embeddings
+
+
+class EmbeddingLayerRedis(DynamicEmbedding):
+
+  def call(self, ids):
+    with tf.name_scope(self.name + "/EmbeddingLookupUnique"):
+      ids_flat = tf.reshape(ids, [-1])
+      with tf.device("/CPU:0"):
+        unique_ids, idx = tf.unique(ids_flat)
       unique_embeddings = tfra.dynamic_embedding.shadow_ops.embedding_lookup(self.shadow, unique_ids)
       embeddings_flat = tf.gather(unique_embeddings, idx)
       embeddings_shape = tf.concat([tf.shape(ids), tf.constant(self.embedding_size, shape=(1,))], 0)
