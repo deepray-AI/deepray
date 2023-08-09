@@ -41,6 +41,9 @@ from tensorflow.python.training.tracking import data_structures
 from tensorflow_recommenders_addons import dynamic_embedding as de
 from tensorflow_recommenders_addons.dynamic_embedding.python.ops import dynamic_embedding_variable as devar
 from tensorflow_recommenders_addons.dynamic_embedding.python.ops.dynamic_embedding_ops import DistributedVariableWrapper, TrainableWrapperDistributedPolicy
+from tensorflow.keras.layers import StringLookup
+from tensorflow.keras import layers
+from tensorflow import keras
 
 import deepray as dp
 from deepray.layers.bucketize import NumericaBucketIdLayer, Hash
@@ -1119,3 +1122,138 @@ class DiamondEmbedding(tf.keras.layers.Layer):
         result[fold_name].append(embedding)
 
     return result
+
+
+class QREmbedding(tf.keras.layers.Layer):
+  """
+  [Quotient-remainder](https://arxiv.org/abs/1909.02107) trick, by Hao-Jun Michael Shi et al., which reduces the number of embedding vectors to store, yet produces unique embedding vector for each item without explicit definition.
+
+  The Quotient-Remainder technique works as follows. For a set of vocabulary and  embedding size
+  `embedding_dim`, instead of creating a `vocabulary_size X embedding_dim` embedding table,
+  we create *two* `num_buckets X embedding_dim` embedding tables, where `num_buckets`
+  is much smaller than `vocabulary_size`.
+  An embedding for a given item `index` is generated via the following steps:
+
+  1. Compute the `quotient_index` as `index // num_buckets`.
+  2. Compute the `remainder_index` as `index % num_buckets`.
+  3. Lookup `quotient_embedding` from the first embedding table using `quotient_index`.
+  4. Lookup `remainder_embedding` from the second embedding table using `remainder_index`.
+  5. Return `quotient_embedding` * `remainder_embedding`.
+
+  This technique not only reduces the number of embedding vectors needs to be stored and trained,
+  but also generates a *unique* embedding vector for each item of size `embedding_dim`.
+  Note that `q_embedding` and `r_embedding` can be combined using other operations,
+  like `Add` and `Concatenate`.
+  """
+
+  def __init__(self, vocabulary, embedding_dim, num_buckets, name=None):
+    super().__init__(name=name)
+    self.num_buckets = num_buckets
+
+    self.index_lookup = StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=0)
+    self.q_embeddings = layers.Embedding(
+        num_buckets,
+        embedding_dim,
+    )
+    self.r_embeddings = layers.Embedding(
+        num_buckets,
+        embedding_dim,
+    )
+
+  def call(self, inputs):
+    # Get the item index.
+    embedding_index = self.index_lookup(inputs)
+    # Get the quotient index.
+    quotient_index = tf.math.floordiv(embedding_index, self.num_buckets)
+    # Get the reminder index.
+    remainder_index = tf.math.floormod(embedding_index, self.num_buckets)
+    # Lookup the quotient_embedding using the quotient_index.
+    quotient_embedding = self.q_embeddings(quotient_index)
+    # Lookup the remainder_embedding using the remainder_index.
+    remainder_embedding = self.r_embeddings(remainder_index)
+    # Use multiplication as a combiner operation
+    return quotient_embedding * remainder_embedding
+
+
+class MDEmbedding(keras.layers.Layer):
+  """
+  [Mixed Dimension embeddings](https://arxiv.org/abs/1909.11810), by Antonio Ginart et al., which stores embedding vectors with mixed dimensions, where less popular items have reduced dimension embeddings.
+
+  In the mixed dimension embedding technique, we train embedding vectors with full dimensions
+  for the frequently queried items, while train embedding vectors with *reduced dimensions*
+  for less frequent items, plus a *projection weights matrix* to bring low dimension embeddings
+  to the full dimensions.
+
+  More precisely, we define *blocks* of items of similar frequencies. For each block,
+  a `block_vocab_size X block_embedding_dim` embedding table and `block_embedding_dim X full_embedding_dim`
+  projection weights matrix are created. Note that, if `block_embedding_dim` equals `full_embedding_dim`,
+  the projection weights matrix becomes an *identity* matrix. Embeddings for a given batch of item
+  `indices` are generated via the following steps:
+
+  1. For each block, lookup the `block_embedding_dim` embedding vectors using `indices`, and
+  project them to the `full_embedding_dim`.
+  2. If an item index does not belong to a given block, an out-of-vocabulary embedding is returned.
+  Each block will return a `batch_size X full_embedding_dim` tensor.
+  3. A mask is applied to the embeddings returned from each block in order to convert the
+  out-of-vocabulary embeddings to vector of zeros. That is, for each item in the batch,
+  a single non-zero embedding vector is returned from the all block embeddings.
+  4. Embeddings retrieved from the blocks are combined using *sum* to produce the final
+  `batch_size X full_embedding_dim` tensor.
+  """
+
+  def __init__(self, blocks_vocabulary, blocks_embedding_dims, base_embedding_dim, name=None):
+    super().__init__(name=name)
+    self.num_blocks = len(blocks_vocabulary)
+
+    # Create vocab to block lookup.
+    keys = []
+    values = []
+    for block_idx, block_vocab in enumerate(blocks_vocabulary):
+      keys.extend(block_vocab)
+      values.extend([block_idx] * len(block_vocab))
+    self.vocab_to_block = tf.lookup.StaticHashTable(tf.lookup.KeyValueTensorInitializer(keys, values), default_value=-1)
+
+    self.block_embedding_encoders = []
+    self.block_embedding_projectors = []
+
+    # Create block embedding encoders and projectors.
+    for idx in range(self.num_blocks):
+      vocabulary = blocks_vocabulary[idx]
+      embedding_dim = blocks_embedding_dims[idx]
+      block_embedding_encoder = self.embedding_encoder(vocabulary, embedding_dim, num_oov_indices=1)
+      self.block_embedding_encoders.append(block_embedding_encoder)
+      if embedding_dim == base_embedding_dim:
+        self.block_embedding_projectors.append(layers.Lambda(lambda x: x))
+      else:
+        self.block_embedding_projectors.append(layers.Dense(units=base_embedding_dim))
+
+    self.base_embedding_dim = 64
+
+  def embedding_encoder(self, vocabulary, embedding_dim, num_oov_indices=0, name=None):
+    return keras.Sequential(
+        [
+            StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=num_oov_indices),
+            layers.Embedding(input_dim=len(vocabulary) + num_oov_indices, output_dim=embedding_dim),
+        ],
+        name=f"{name}_embedding" if name else None,
+    )
+
+  def call(self, inputs):
+    # Get block index for each input item.
+    block_indicies = self.vocab_to_block.lookup(inputs)
+    # Initialize output embeddings to zeros.
+    embeddings = tf.zeros(shape=(tf.shape(inputs)[0], self.base_embedding_dim))
+    # Generate embeddings from blocks.
+    for idx in range(self.num_blocks):
+      # Lookup embeddings from the current block.
+      block_embeddings = self.block_embedding_encoders[idx](inputs)
+      # Project embeddings to base_embedding_dim.
+      block_embeddings = self.block_embedding_projectors[idx](block_embeddings)
+      # Create a mask to filter out embeddings of items that do not belong to the current block.
+      mask = tf.expand_dims(tf.cast(block_indicies == idx, tf.dtypes.float32), 1)
+      # Set the embeddings for the items not belonging to the current block to zeros.
+      block_embeddings = block_embeddings * mask
+      # Add the block embeddings to the final embeddings.
+      embeddings += block_embeddings
+
+    return embeddings

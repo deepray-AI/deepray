@@ -890,7 +890,7 @@ class Trainer(Module):
 
     Args:
       iterator: the distributed iterator of training datasets.
-      steps: an tf.int32 integer tensor to specify number of steps to run
+      steps: a tf.int32 integer tensor to specify number of steps to run
         inside host training loop.
 
     Raises:
