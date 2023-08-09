@@ -31,6 +31,7 @@ DIMENSIONS_SELECTOR = 'dimensions'
 
 from absl import flags
 
+
 def define_din_flags():
   """Add flags for running ncf_main."""
   # Add common flags

@@ -27,7 +27,7 @@ class Demo(tf.keras.Model):
           key_dtype=dtype,
           value_dtype=tf.float32,
           initializer=initializer,
-          devices = ['/GPU:0'],
+          devices=['/GPU:0'],
           name=key + '_DynamicEmbeddingLayer',
           kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver())
       )
