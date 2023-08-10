@@ -219,40 +219,41 @@ class Module():
       return [arg_specs], kwarg_specs
 
   def save_model_to_export(self, epoch=None):
-    before = time.time()
-    model_save_dir = os.path.join(FLAGS.model_dir, 'export')
-    os.makedirs(model_save_dir, exist_ok=True)
+    if not self.use_horovod or hvd.rank() == 0:
+      before = time.time()
+      model_save_dir = os.path.join(FLAGS.model_dir, 'export')
+      os.makedirs(model_save_dir, exist_ok=True)
 
-    logging.info(f"save pb model to:{model_save_dir}, without optimizer & traces")
+      logging.info(f"save pb model to:{model_save_dir}, without optimizer & traces")
 
-    @tf.function
-    def serve(*args, **kwargs):
-      return self.model(*args, **kwargs)
+      @tf.function
+      def serve(*args, **kwargs):
+        return self.model(*args, **kwargs)
 
-    arg_specs, kwarg_specs = self.save_spec()
-    if FLAGS.use_dynamic_embedding:
-      options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
-      tf.keras.models.save_model(
-          self.model,
-          model_save_dir,
-          overwrite=True,
-          include_optimizer=False,
-          save_traces=False,
-          options=options,
-          signatures={'serving_default': serve.get_concrete_function(*arg_specs, **kwarg_specs)}
-      )
-    else:
-      tf.keras.models.save_model(
-          self.model,
-          model_save_dir,
-          overwrite=True,
-          include_optimizer=False,
-          save_traces=False,
-          signatures={'serving_default': serve.get_concrete_function(*arg_specs, **kwarg_specs)}
-      )
+      arg_specs, kwarg_specs = self.save_spec()
+      if FLAGS.use_dynamic_embedding:
+        options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
+        tf.keras.models.save_model(
+            self.model,
+            model_save_dir,
+            overwrite=True,
+            include_optimizer=False,
+            save_traces=False,
+            options=options,
+            signatures={'serving_default': serve.get_concrete_function(*arg_specs, **kwarg_specs)}
+        )
+      else:
+        tf.keras.models.save_model(
+            self.model,
+            model_save_dir,
+            overwrite=True,
+            include_optimizer=False,
+            save_traces=False,
+            signatures={'serving_default': serve.get_concrete_function(*arg_specs, **kwarg_specs)}
+        )
 
-    after = time.time()
-    logging.info(f"save pb model done at: {model_save_dir}. spend {after - before:.3f}s")
+      after = time.time()
+      logging.info(f"save pb model done at: {model_save_dir}. spend {after - before:.3f}s")
 
   def save_model_to_pb(self, epoch=None):
     if not self.use_horovod or hvd.rank() == 0:
@@ -263,7 +264,12 @@ class Module():
       options = None
       if FLAGS.use_dynamic_embedding:
         options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
-      tf.saved_model.save(self.model, export_dir=model_save_dir, options=options)
+        tf.keras.models.save_model(
+            self.model, filepath=model_save_dir, overwrite=True, include_optimizer=True, options=options
+        )
+        # tf.saved_model.save(self.model, export_dir=model_save_dir, options=options)
+      else:
+        tf.keras.models.save_model(self.model, filepath=model_save_dir, overwrite=True, include_optimizer=True)
       after = time.time()
       logging.info(f"save pb model done at: {model_save_dir}. spend {after - before:.3f}s")
 

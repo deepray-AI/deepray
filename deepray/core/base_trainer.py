@@ -241,8 +241,11 @@ class Trainer(Module):
 
     self.steps_per_epoch = int(num_train_examples / self.global_batch_size)
 
-    if FLAGS.benchmark:
-      self.steps_per_epoch = 1000
+    if FLAGS.benchmark or FLAGS.stop_steps:
+      if FLAGS.stop_steps:
+        self.steps_per_epoch = FLAGS.stop_steps
+      else:
+        self.steps_per_epoch = 1000
       self.epochs = 1
 
     warmup_steps = int(self.epochs * num_train_examples * 0.1 / self.global_batch_size)
@@ -727,7 +730,7 @@ class Trainer(Module):
       logging.info(f"self._performance_calculator.completed: {self._performance_calculator.completed}")
       results_perf = self._performance_calculator.get_current_benchmark_results()
 
-    # self._save_checkpoint(self.manager, self.current_step)
+    self._save_checkpoint(self.manager, self.current_step)
     # self.save_model_to_export()
     # self.save_model_to_pb()
     if not self.use_horovod or hvd.rank() == 0:

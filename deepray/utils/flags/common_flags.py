@@ -69,6 +69,7 @@ def define_common_flags():
       'happens inside the loop. Callbacks will not be called '
       'inside.'
   )
+  flags.DEFINE_integer("stop_steps", None, "steps when training stops")
   flags.DEFINE_boolean(
       'scale_loss', False, 'Whether to divide the loss by number of replica inside the per-replica '
       'loss function.'

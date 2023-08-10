@@ -55,7 +55,6 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow_docs.vis import embed
-
 """
 ## Constants and hyperparameters
 """
