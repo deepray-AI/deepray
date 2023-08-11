@@ -78,12 +78,12 @@ class Module():
       callback.on_train_batch_begin(batch)
 
   def on_batch_end(self, logs, steps, t0):
-    """Runs custom callbacks at the end of every step."""
-    for callback in self.callbacks:
-      callback.on_train_batch_end(self.current_step, logs)
-
+    """Runs custom callbacks at the end of every N(steps) step."""
     self._step_epoch += steps
     self.current_step += steps
+
+    for callback in self.callbacks:
+      callback.on_train_batch_end(self.current_step, logs)
 
     elapse_time = time.time() - t0
     # Updates training logging.

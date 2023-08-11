@@ -64,12 +64,14 @@ printf "Saving checkpoints to %s\n" "$RESULTS_DIR"
 printf "Logs written to %s\n" "$LOGFILE"
 
 set -x
-$mpi_command python -m examples.CV.mnist.train \
+$mpi_command python train.py \
     --train_data=mnist \
     --keras_use_ctl=$keras_use_ctl \
     --num_gpus=$num_gpu \
     --batch_size=$batch_size \
     --learning_rate=$learning_rate \
+    --steps_per_summary=1 \
+    --stop_steps=20 \
     --epochs=$epochs \
     --model_dir=${RESULTS_DIR} \
     --model_export_path=${RESULTS_DIR} \
