@@ -790,15 +790,17 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
 
   def __init__(
       self,
-      embedding_dim,
-      key_dtype,
-      multihash_factor="16,16",
-      complementary_strategy="Q-R",
-      operation="add",
+      embedding_dim: int,
+      key_dtype: str,
+      multihash_factor: str = "",
+      complementary_strategy: str = "Q-R",
+      operation: str = "add",
       name: str = '',
+      devices=None,
       **kwargs
   ):
     super().__init__(**kwargs)
+    self.devices = devices if devices else ['/GPU:0']
     strategy_list = ["Q-R"]
     op_list = ["add", "mul", "concat"]
 
@@ -812,7 +814,9 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
 
     self.embedding_dim = embedding_dim
     self.key_dtype = key_dtype
-    self.multihash_factor = self.factor2decimal(multihash_factor)
+    self.multihash_factor = self.factor2decimal(multihash_factor) if multihash_factor else self.factor2decimal(
+        "16,16"
+    ) if self.key_dtype == "int32" else self.factor2decimal("32,32")
     self.complementary_strategy = complementary_strategy
     self.operation = operation
     self.suffix = name
@@ -824,12 +828,30 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
     print(binary_to_decimal("15,17"))  # 4294836224, 131071
     print(binary_to_decimal("14,18"))  # 4294705152, 262143
     print(binary_to_decimal("13,19"))  # 4294443008, 524287
+
+    print(binary_to_decimal("32,32"))  # 18446744069414584320, 4294967295
+    print(binary_to_decimal("33,31"))  # 18446744071562067968, 2147483647
+    print(binary_to_decimal("31,33"))  # 18446744065119617024, 8589934591
+    print(binary_to_decimal("30,34"))  # 18446744056529682432, 17179869183
+    print(binary_to_decimal("29,35"))  # 18446744039349813248, 34359738367
     """
     if self.key_dtype == "int32":
       Q, R = map(int, multihash_factor.split(','))
       Q = (1 << Q) - 1 << (32 - Q)
       R = (1 << R) - 1
       return Q, R
+    elif self.key_dtype == "int64":
+      """
+  sign bit
+      1   111111111111111111111 111111111111111111111 111111111111111111111     -9223372036854776000
+      1   000000000000000000000 111111111111111111111 111111111111111111111     -9223367638808264705
+      1   111111111111111111111 000000000000000000000 111111111111111111111     -4398044413953
+      1   111111111111111111111 111111111111111111111 000000000000000000000     -2097151
+      """
+      Q, R, P = -9223367638808264705, -4398044413953, -2097152
+      return tf.constant(Q, dtype=tf.int64), tf.constant(R, dtype=tf.int64), tf.constant(P, dtype=tf.int64)
+    else:
+      raise ValueError(f"{self.key_dtype} type not support yet.")
 
   def build(self, input_shape=None):
     if not FLAGS.use_horovod:
@@ -838,15 +860,13 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
           key_dtype=self.key_dtype,
           value_dtype=tf.float32,
           initializer=tf.keras.initializers.GlorotUniform(),
-          name=f"embeddings_{self.suffix}/multihash",
+          name=f"embeddings_{self.suffix}/Compositional",
           init_capacity=800000,
+          devices=self.devices,
           kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver())
       )
-
     else:
       import horovod.tensorflow as hvd
-
-      gpu_device = ["GPU:0"]
       mpi_size = hvd.size()
       mpi_rank = hvd.rank()
       self.multihash_emb = de.keras.layers.HvdAllToAllEmbedding(
@@ -854,14 +874,14 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
           key_dtype=self.key_dtype,
           value_dtype=tf.float32,
           initializer=tf.keras.initializers.GlorotUniform(),
-          devices=gpu_device,
+          devices=self.devices,
           init_capacity=800000,
           name=f"embeddings_{self.suffix}/multihash",
           kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank))
       )
 
   def call(self, inputs, *args, **kwargs):
-    if self.complementary_strategy == "Q-R":
+    if self.key_dtype == "int32":
       ids_Q = tf.bitwise.bitwise_and(inputs, self.multihash_factor[0])
       ids_R = tf.bitwise.bitwise_and(inputs, self.multihash_factor[1])
       result_Q, result_R = tf.split(self.multihash_emb([ids_Q, ids_R]), num_or_size_splits=2, axis=0)
@@ -876,6 +896,25 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
       if self.operation == "concat":
         ret = tf.concat([result_Q, result_R], 1)
         return ret
+    elif self.key_dtype == "int64":
+      ids_Q = tf.bitwise.bitwise_and(inputs, self.multihash_factor[0])
+      ids_R = tf.bitwise.bitwise_and(inputs, self.multihash_factor[1])
+      ids_P = tf.bitwise.bitwise_and(inputs, self.multihash_factor[2])
+      result_Q, result_R, result_P = tf.split(self.multihash_emb([ids_Q, ids_R, ids_P]), num_or_size_splits=3, axis=0)
+      result_Q = tf.squeeze(result_Q, axis=0)
+      result_R = tf.squeeze(result_R, axis=0)
+      result_P = tf.squeeze(result_P, axis=0)
+      if self.operation == "add":
+        ret = tf.add_n([result_Q, result_R, result_P])
+        return ret
+      if self.operation == "mul":
+        ret = tf.multiply(result_Q, result_R, result_P)
+        return ret
+      if self.operation == "concat":
+        ret = tf.concat([result_Q, result_R, result_P], 1)
+        return ret
+    else:
+      raise ValueError(f"{self.key_dtype} type not support yet.")
 
 
 class MaskedEmbeddingMean(tf.keras.layers.Layer):
