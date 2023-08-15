@@ -31,8 +31,19 @@ from keras.dtensor import utils
 from keras.engine import base_layer_utils
 from keras.engine.base_layer import Layer
 from keras.utils import tf_utils
+from tensorflow.python.distribute import distribution_strategy_context as distribute_ctx
+from tensorflow.python.distribute import values_util
+from tensorflow.python.eager import context
+from tensorflow.python.framework import ops
+from tensorflow.python.keras.utils import tf_utils
+from tensorflow.python.ops.variables import VariableAggregation
+from tensorflow.python.training.tracking import data_structures
 from tensorflow_recommenders_addons import dynamic_embedding as de
 from tensorflow_recommenders_addons.dynamic_embedding.python.ops import dynamic_embedding_variable as devar
+from tensorflow_recommenders_addons.dynamic_embedding.python.ops.dynamic_embedding_ops import DistributedVariableWrapper, TrainableWrapperDistributedPolicy
+from tensorflow.keras.layers import StringLookup
+from tensorflow.keras import layers
+from tensorflow import keras
 
 import deepray as dp
 from deepray.layers.bucketize import NumericaBucketIdLayer, Hash
@@ -568,7 +579,7 @@ class DynamicEmbedding(tf.keras.layers.Layer):
       **kwargs
   ):
     """
-    Creates a Embedding layer.
+    Creates an Embedding layer.
 
     Args:
       embedding_size: An object convertible to int. Length of embedding vector
@@ -640,16 +651,49 @@ class DynamicEmbedding(tf.keras.layers.Layer):
 
       self.distribute_strategy = kwargs.get('distribute_strategy', None)
       shadow_name = name + '-shadow' if name else 'ShadowVariable'
-      self.shadow = de.shadow_ops.ShadowVariable(
-          self.params,
-          name=shadow_name,
-          max_norm=self.max_norm,
-          trainable=trainable,
-          distribute_strategy=self.distribute_strategy
+      if distribute_ctx.has_strategy():
+        self.distribute_strategy = distribute_ctx.get_strategy()
+      if self.distribute_strategy:
+        strategy_devices = self.distribute_strategy.extended.worker_devices
+        self.shadow_impl = tf_utils.ListWrapper([])
+        for i, strategy_device in enumerate(strategy_devices):
+          with ops.device(strategy_device):
+            shadow_name_replica = shadow_name
+            if i > 0:
+              shadow_name_replica = "%s/replica_%d" % (shadow_name, i)
+            with context.device_policy(context.DEVICE_PLACEMENT_SILENT):
+              self.shadow_impl.as_list().append(
+                  de.shadow_ops.ShadowVariable(
+                      self.params,
+                      name=shadow_name_replica,
+                      max_norm=self.max_norm,
+                      trainable=trainable,
+                      distribute_strategy=self.distribute_strategy
+                  )
+              )
+      else:
+        self.shadow_impl = tf_utils.ListWrapper(
+            [de.shadow_ops.ShadowVariable(self.params, name=shadow_name, max_norm=self.max_norm, trainable=trainable)]
+        )
+    if len(self.shadow_impl.as_list()) > 1:
+      self._current_ids = data_structures.NoDependency([shadow_i.ids for shadow_i in self.shadow_impl.as_list()])
+      self._current_exists = data_structures.NoDependency([shadow_i.exists for shadow_i in self.shadow_impl.as_list()])
+      self.optimizer_vars = data_structures.NoDependency(
+          [shadow_i._optimizer_vars for shadow_i in self.shadow_impl.as_list()]
       )
-    self._current_ids = self.shadow.ids
-    self._current_exists = self.shadow.exists
-    self.optimizer_vars = self.shadow._optimizer_vars
+    else:
+      self._current_ids = data_structures.NoDependency(self.shadow_impl.as_list()[0].ids)
+      self._current_exists = data_structures.NoDependency(self.shadow_impl.as_list()[0].exists)
+      self.optimizer_vars = self.shadow_impl.as_list()[0]._optimizer_vars
+    if distribute_ctx.has_strategy() and self.distribute_strategy and 'OneDeviceStrategy' not in str(
+        self.distribute_strategy
+    ) and not values_util.is_saving_non_distributed() and values_util.get_current_replica_id_as_int() is not None:
+      self.shadow = DistributedVariableWrapper(
+          self.distribute_strategy, self.shadow_impl.as_list(), VariableAggregation.NONE,
+          TrainableWrapperDistributedPolicy(VariableAggregation.NONE)
+      )
+    else:
+      self.shadow = self.shadow_impl.as_list()[0]
     super(DynamicEmbedding, self).__init__(name=name, trainable=trainable, dtype=value_dtype)
 
   def call(self, ids):
@@ -706,7 +750,6 @@ class DynamicEmbedding(tf.keras.layers.Layer):
         'partitioner': self.params.partition_fn,
         'kv_creator': self.params.kv_creator if self.keep_distribution else None,
         'max_norm': _max_norm,
-        'distribute_strategy': self.distribute_strategy,
     }
     return config
 
@@ -729,7 +772,8 @@ class EmbeddingLayerRedis(DynamicEmbedding):
   def call(self, ids):
     with tf.name_scope(self.name + "/EmbeddingLookupUnique"):
       ids_flat = tf.reshape(ids, [-1])
-      unique_ids, idx = tf.unique(ids_flat)
+      with tf.device("/CPU:0"):
+        unique_ids, idx = tf.unique(ids_flat)
       unique_embeddings = tfra.dynamic_embedding.shadow_ops.embedding_lookup(self.shadow, unique_ids)
       embeddings_flat = tf.gather(unique_embeddings, idx)
       embeddings_shape = tf.concat([tf.shape(ids), tf.constant(self.embedding_size, shape=(1,))], 0)
@@ -746,15 +790,17 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
 
   def __init__(
       self,
-      embedding_dim,
-      key_dtype,
-      multihash_factor="16,16",
-      complementary_strategy="Q-R",
-      operation="add",
+      embedding_dim: int,
+      key_dtype: str,
+      multihash_factor: str = "",
+      complementary_strategy: str = "Q-R",
+      operation: str = "add",
       name: str = '',
+      devices=None,
       **kwargs
   ):
     super().__init__(**kwargs)
+    self.devices = devices if devices else ['/GPU:0']
     strategy_list = ["Q-R"]
     op_list = ["add", "mul", "concat"]
 
@@ -768,7 +814,9 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
 
     self.embedding_dim = embedding_dim
     self.key_dtype = key_dtype
-    self.multihash_factor = self.factor2decimal(multihash_factor)
+    self.multihash_factor = self.factor2decimal(multihash_factor) if multihash_factor else self.factor2decimal(
+        "16,16"
+    ) if self.key_dtype == "int32" else self.factor2decimal("32,32")
     self.complementary_strategy = complementary_strategy
     self.operation = operation
     self.suffix = name
@@ -780,29 +828,45 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
     print(binary_to_decimal("15,17"))  # 4294836224, 131071
     print(binary_to_decimal("14,18"))  # 4294705152, 262143
     print(binary_to_decimal("13,19"))  # 4294443008, 524287
+
+    print(binary_to_decimal("32,32"))  # 18446744069414584320, 4294967295
+    print(binary_to_decimal("33,31"))  # 18446744071562067968, 2147483647
+    print(binary_to_decimal("31,33"))  # 18446744065119617024, 8589934591
+    print(binary_to_decimal("30,34"))  # 18446744056529682432, 17179869183
+    print(binary_to_decimal("29,35"))  # 18446744039349813248, 34359738367
     """
     if self.key_dtype == "int32":
       Q, R = map(int, multihash_factor.split(','))
       Q = (1 << Q) - 1 << (32 - Q)
       R = (1 << R) - 1
       return Q, R
+    elif self.key_dtype == "int64":
+      """
+  sign bit
+      1   111111111111111111111 111111111111111111111 111111111111111111111     -9223372036854776000
+      1   000000000000000000000 111111111111111111111 111111111111111111111     -9223367638808264705
+      1   111111111111111111111 000000000000000000000 111111111111111111111     -4398044413953
+      1   111111111111111111111 111111111111111111111 000000000000000000000     -2097151
+      """
+      Q, R, P = -9223367638808264705, -4398044413953, -2097152
+      return tf.constant(Q, dtype=tf.int64), tf.constant(R, dtype=tf.int64), tf.constant(P, dtype=tf.int64)
+    else:
+      raise ValueError(f"{self.key_dtype} type not support yet.")
 
   def build(self, input_shape=None):
     if not FLAGS.use_horovod:
-      self.multihash_emb = EmbeddingLayerGPU(
+      self.multihash_emb = DynamicEmbedding(
           embedding_size=self.embedding_dim,
           key_dtype=self.key_dtype,
           value_dtype=tf.float32,
           initializer=tf.keras.initializers.GlorotUniform(),
-          name=f"embeddings_{self.suffix}/multihash",
+          name=f"embeddings_{self.suffix}/Compositional",
           init_capacity=800000,
+          devices=self.devices,
           kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver())
       )
-
     else:
       import horovod.tensorflow as hvd
-
-      gpu_device = ["GPU:0"]
       mpi_size = hvd.size()
       mpi_rank = hvd.rank()
       self.multihash_emb = de.keras.layers.HvdAllToAllEmbedding(
@@ -810,14 +874,14 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
           key_dtype=self.key_dtype,
           value_dtype=tf.float32,
           initializer=tf.keras.initializers.GlorotUniform(),
-          devices=gpu_device,
+          devices=self.devices,
           init_capacity=800000,
           name=f"embeddings_{self.suffix}/multihash",
           kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank))
       )
 
   def call(self, inputs, *args, **kwargs):
-    if self.complementary_strategy == "Q-R":
+    if self.key_dtype == "int32":
       ids_Q = tf.bitwise.bitwise_and(inputs, self.multihash_factor[0])
       ids_R = tf.bitwise.bitwise_and(inputs, self.multihash_factor[1])
       result_Q, result_R = tf.split(self.multihash_emb([ids_Q, ids_R]), num_or_size_splits=2, axis=0)
@@ -832,6 +896,25 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
       if self.operation == "concat":
         ret = tf.concat([result_Q, result_R], 1)
         return ret
+    elif self.key_dtype == "int64":
+      ids_Q = tf.bitwise.bitwise_and(inputs, self.multihash_factor[0])
+      ids_R = tf.bitwise.bitwise_and(inputs, self.multihash_factor[1])
+      ids_P = tf.bitwise.bitwise_and(inputs, self.multihash_factor[2])
+      result_Q, result_R, result_P = tf.split(self.multihash_emb([ids_Q, ids_R, ids_P]), num_or_size_splits=3, axis=0)
+      result_Q = tf.squeeze(result_Q, axis=0)
+      result_R = tf.squeeze(result_R, axis=0)
+      result_P = tf.squeeze(result_P, axis=0)
+      if self.operation == "add":
+        ret = tf.add_n([result_Q, result_R, result_P])
+        return ret
+      if self.operation == "mul":
+        ret = tf.multiply(result_Q, result_R, result_P)
+        return ret
+      if self.operation == "concat":
+        ret = tf.concat([result_Q, result_R, result_P], 1)
+        return ret
+    else:
+      raise ValueError(f"{self.key_dtype} type not support yet.")
 
 
 class MaskedEmbeddingMean(tf.keras.layers.Layer):
@@ -949,7 +1032,7 @@ class DiamondEmbedding(tf.keras.layers.Layer):
           elif storage_type == "DRAM":
             devices = ['/CPU:0']
             if not FLAGS.use_horovod:
-              self.embedding_layers[self.fold_columns[name]] = EmbeddingLayerGPU(
+              self.embedding_layers[self.fold_columns[name]] = DynamicEmbedding(
                   embedding_size=dim,
                   key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
                   value_dtype=tf.float32,
@@ -981,7 +1064,7 @@ class DiamondEmbedding(tf.keras.layers.Layer):
           else:
             devices = ['/GPU:0']
             if not FLAGS.use_horovod:
-              self.embedding_layers[self.fold_columns[name]] = EmbeddingLayerGPU(
+              self.embedding_layers[self.fold_columns[name]] = DynamicEmbedding(
                   embedding_size=dim,
                   key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
                   value_dtype=tf.float32,
@@ -1078,3 +1161,138 @@ class DiamondEmbedding(tf.keras.layers.Layer):
         result[fold_name].append(embedding)
 
     return result
+
+
+class QREmbedding(tf.keras.layers.Layer):
+  """
+  [Quotient-remainder](https://arxiv.org/abs/1909.02107) trick, by Hao-Jun Michael Shi et al., which reduces the number of embedding vectors to store, yet produces unique embedding vector for each item without explicit definition.
+
+  The Quotient-Remainder technique works as follows. For a set of vocabulary and  embedding size
+  `embedding_dim`, instead of creating a `vocabulary_size X embedding_dim` embedding table,
+  we create *two* `num_buckets X embedding_dim` embedding tables, where `num_buckets`
+  is much smaller than `vocabulary_size`.
+  An embedding for a given item `index` is generated via the following steps:
+
+  1. Compute the `quotient_index` as `index // num_buckets`.
+  2. Compute the `remainder_index` as `index % num_buckets`.
+  3. Lookup `quotient_embedding` from the first embedding table using `quotient_index`.
+  4. Lookup `remainder_embedding` from the second embedding table using `remainder_index`.
+  5. Return `quotient_embedding` * `remainder_embedding`.
+
+  This technique not only reduces the number of embedding vectors needs to be stored and trained,
+  but also generates a *unique* embedding vector for each item of size `embedding_dim`.
+  Note that `q_embedding` and `r_embedding` can be combined using other operations,
+  like `Add` and `Concatenate`.
+  """
+
+  def __init__(self, vocabulary, embedding_dim, num_buckets, name=None):
+    super().__init__(name=name)
+    self.num_buckets = num_buckets
+
+    self.index_lookup = StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=0)
+    self.q_embeddings = layers.Embedding(
+        num_buckets,
+        embedding_dim,
+    )
+    self.r_embeddings = layers.Embedding(
+        num_buckets,
+        embedding_dim,
+    )
+
+  def call(self, inputs):
+    # Get the item index.
+    embedding_index = self.index_lookup(inputs)
+    # Get the quotient index.
+    quotient_index = tf.math.floordiv(embedding_index, self.num_buckets)
+    # Get the reminder index.
+    remainder_index = tf.math.floormod(embedding_index, self.num_buckets)
+    # Lookup the quotient_embedding using the quotient_index.
+    quotient_embedding = self.q_embeddings(quotient_index)
+    # Lookup the remainder_embedding using the remainder_index.
+    remainder_embedding = self.r_embeddings(remainder_index)
+    # Use multiplication as a combiner operation
+    return quotient_embedding * remainder_embedding
+
+
+class MDEmbedding(keras.layers.Layer):
+  """
+  [Mixed Dimension embeddings](https://arxiv.org/abs/1909.11810), by Antonio Ginart et al., which stores embedding vectors with mixed dimensions, where less popular items have reduced dimension embeddings.
+
+  In the mixed dimension embedding technique, we train embedding vectors with full dimensions
+  for the frequently queried items, while train embedding vectors with *reduced dimensions*
+  for less frequent items, plus a *projection weights matrix* to bring low dimension embeddings
+  to the full dimensions.
+
+  More precisely, we define *blocks* of items of similar frequencies. For each block,
+  a `block_vocab_size X block_embedding_dim` embedding table and `block_embedding_dim X full_embedding_dim`
+  projection weights matrix are created. Note that, if `block_embedding_dim` equals `full_embedding_dim`,
+  the projection weights matrix becomes an *identity* matrix. Embeddings for a given batch of item
+  `indices` are generated via the following steps:
+
+  1. For each block, lookup the `block_embedding_dim` embedding vectors using `indices`, and
+  project them to the `full_embedding_dim`.
+  2. If an item index does not belong to a given block, an out-of-vocabulary embedding is returned.
+  Each block will return a `batch_size X full_embedding_dim` tensor.
+  3. A mask is applied to the embeddings returned from each block in order to convert the
+  out-of-vocabulary embeddings to vector of zeros. That is, for each item in the batch,
+  a single non-zero embedding vector is returned from the all block embeddings.
+  4. Embeddings retrieved from the blocks are combined using *sum* to produce the final
+  `batch_size X full_embedding_dim` tensor.
+  """
+
+  def __init__(self, blocks_vocabulary, blocks_embedding_dims, base_embedding_dim, name=None):
+    super().__init__(name=name)
+    self.num_blocks = len(blocks_vocabulary)
+
+    # Create vocab to block lookup.
+    keys = []
+    values = []
+    for block_idx, block_vocab in enumerate(blocks_vocabulary):
+      keys.extend(block_vocab)
+      values.extend([block_idx] * len(block_vocab))
+    self.vocab_to_block = tf.lookup.StaticHashTable(tf.lookup.KeyValueTensorInitializer(keys, values), default_value=-1)
+
+    self.block_embedding_encoders = []
+    self.block_embedding_projectors = []
+
+    # Create block embedding encoders and projectors.
+    for idx in range(self.num_blocks):
+      vocabulary = blocks_vocabulary[idx]
+      embedding_dim = blocks_embedding_dims[idx]
+      block_embedding_encoder = self.embedding_encoder(vocabulary, embedding_dim, num_oov_indices=1)
+      self.block_embedding_encoders.append(block_embedding_encoder)
+      if embedding_dim == base_embedding_dim:
+        self.block_embedding_projectors.append(layers.Lambda(lambda x: x))
+      else:
+        self.block_embedding_projectors.append(layers.Dense(units=base_embedding_dim))
+
+    self.base_embedding_dim = 64
+
+  def embedding_encoder(self, vocabulary, embedding_dim, num_oov_indices=0, name=None):
+    return keras.Sequential(
+        [
+            StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=num_oov_indices),
+            layers.Embedding(input_dim=len(vocabulary) + num_oov_indices, output_dim=embedding_dim),
+        ],
+        name=f"{name}_embedding" if name else None,
+    )
+
+  def call(self, inputs):
+    # Get block index for each input item.
+    block_indicies = self.vocab_to_block.lookup(inputs)
+    # Initialize output embeddings to zeros.
+    embeddings = tf.zeros(shape=(tf.shape(inputs)[0], self.base_embedding_dim))
+    # Generate embeddings from blocks.
+    for idx in range(self.num_blocks):
+      # Lookup embeddings from the current block.
+      block_embeddings = self.block_embedding_encoders[idx](inputs)
+      # Project embeddings to base_embedding_dim.
+      block_embeddings = self.block_embedding_projectors[idx](block_embeddings)
+      # Create a mask to filter out embeddings of items that do not belong to the current block.
+      mask = tf.expand_dims(tf.cast(block_indicies == idx, tf.dtypes.float32), 1)
+      # Set the embeddings for the items not belonging to the current block to zeros.
+      block_embeddings = block_embeddings * mask
+      # Add the block embeddings to the final embeddings.
+      embeddings += block_embeddings
+
+    return embeddings

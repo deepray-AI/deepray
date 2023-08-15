@@ -13,7 +13,10 @@
 # limitations under the License.
 """Flags which will be nearly universal across models."""
 import datetime
+import sys
+
 from absl import flags
+
 from deepray.utils.flags import core as flags_core
 from deepray.utils.flags._conventions import help_wrap
 
@@ -92,7 +95,10 @@ def define_base(
     key_flags.append("init_weights")
 
   if save_checkpoint_steps:
-    flags.DEFINE_integer('save_checkpoint_steps', 1000, 'save checkpoint for every n steps')
+    flags.DEFINE_integer(
+        'save_checkpoint_steps', sys.maxsize,
+        'save checkpoint for every n steps. Default value will not save checkpoint during training.'
+    )
     key_flags.append("save_checkpoint_steps")
   if dllog_path:
     flags.DEFINE_string('dllog_path', 'deepray_dllogger.json', 'filename where dllogger writes to')

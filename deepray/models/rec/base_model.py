@@ -13,7 +13,7 @@ from tensorflow.keras.regularizers import l2
 from tensorflow.python.keras import backend as K
 
 from deepray.layers.bucketize import Bucketize
-from deepray.layers.embedding import EmbeddingLayerRedis, EmbeddingLayerGPU
+from deepray.layers.embedding import DynamicEmbedding
 from deepray.layers.seq import Pooling
 from deepray.utils.data.feature_map import FeatureMap
 from deepray.utils.data.input_meta import InputMeta
@@ -357,7 +357,7 @@ class BaseModel():
           initializer = tf.keras.initializers.Zeros()
 
         if feature.emb_dynamic:  # 现在所有的特征都走de，我们仍使用这个字段标识是否是id特征
-          emb = EmbeddingLayerRedis(
+          emb = DynamicEmbedding(
               embedding_size=feature.emb_dim,
               mini_batch_regularizer=l2(feature.emb_reg_l2),
               mask_value=feature.default_value,
@@ -368,7 +368,7 @@ class BaseModel():
           )
         else:
           if not FLAGS.use_horovod:
-            emb = EmbeddingLayerGPU(
+            emb = DynamicEmbedding(
                 embedding_size=feature.emb_dim,
                 mini_batch_regularizer=l2(feature.emb_reg_l2),
                 mask_value=feature.default_value,

@@ -69,6 +69,7 @@ def define_common_flags():
       'happens inside the loop. Callbacks will not be called '
       'inside.'
   )
+  flags.DEFINE_integer("stop_steps", None, "steps when training stops")
   flags.DEFINE_boolean(
       'scale_loss', False, 'Whether to divide the loss by number of replica inside the per-replica '
       'loss function.'
@@ -149,20 +150,6 @@ def define_common_flags():
   flags.DEFINE_string(name="end_date", default=None, help="")
   flags.DEFINE_string(name="fine_tune", default=None, help="")
   flags.DEFINE_string(name="warmup_path", default=None, help="")
-  flags.DEFINE_list(
-      "stage_one_mlp_dims",
-      default="200",
-      help="MLP hidden dimensions for stage one (excluding classification output)."
-  )
-  flags.DEFINE_list(
-      "stage_two_mlp_dims",
-      default="200,80",
-      help="MLP hidden dimensions for stage two (excluding classification output)."
-  )
-  flags.DEFINE_list(
-      "aux_mlp_dims", default="100,50", help="MLP hidden dimensions for aux loss (excluding classification output)."
-  )
-  flags.DEFINE_integer("embedding_dim", default=16, help="Embedding dimension.")
   flags.DEFINE_float(
       "dropout_rate",
       default=-1,

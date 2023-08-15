@@ -3,6 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import sys
+import os
 
 import tensorflow as tf
 from absl import app, flags
@@ -52,9 +53,9 @@ def main(_):
       metrics=["accuracy"]
   )
 
-  logs = "logs/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-
-  tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs, histogram_freq=1, profile_batch='10,100')
+  tboard_callback = tf.keras.callbacks.TensorBoard(
+      log_dir=os.path.join(FLAGS.model_dir, 'tensorboard'), histogram_freq=1, profile_batch='10,20'
+  )
 
   train_input = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
   trainer.fit(train_input=train_input, callbacks=[tboard_callback])

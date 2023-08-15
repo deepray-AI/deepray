@@ -9,7 +9,7 @@ from tensorflow.keras.layers import Layer
 from tensorflow_recommenders_addons import dynamic_embedding as de
 
 from deepray.layers.bucketize import Hash
-from deepray.layers.embedding import EmbeddingLayerGPU
+from deepray.layers.embedding import DynamicEmbedding
 from deepray.utils.data.feature_map import FeatureMap
 
 FLAGS = flags.FLAGS
@@ -67,7 +67,7 @@ class CCPM(keras.Model):
         voc_size = int(hash_size)
 
       if not FLAGS.use_horovod:
-        self.embedding_layers[name] = EmbeddingLayerGPU(
+        self.embedding_layers[name] = DynamicEmbedding(
             embedding_size=dim,
             # mini_batch_regularizer=l2(feature.emb_reg_l2),
             # mask_value=feature.default_value,

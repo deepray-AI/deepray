@@ -35,14 +35,13 @@ def main(_):
   with distribution_utils.get_strategy_scope(_strategy):
     model = Demo(embedding_size=32)
 
-
   trainer = Trainer(
-    model_or_fn=model,
-    loss=tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.SUM),
+      model_or_fn=model,
+      loss=tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.SUM),
   )
 
   train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
-  trainer.fit(train_input=train_input_fn, )
+  trainer.fit(train_input=train_input_fn,)
 
   # trainer.export_tfra()
 

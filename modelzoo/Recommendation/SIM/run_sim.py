@@ -26,6 +26,7 @@ from deepray.core.common import distribution_utils
 from deepray.datasets.amazon_books_2014 import AmazonBooks2014
 from deepray.models.rec.sim_model import SIMModel
 from .feature_spec import FeatureSpec
+from defaults import define_din_flags
 
 FLAGS = flags.FLAGS
 
@@ -92,4 +93,5 @@ def main(_):
 
 
 if __name__ == "__main__":
+  define_din_flags()
   app.run(main)
