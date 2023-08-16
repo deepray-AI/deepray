@@ -792,6 +792,7 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
       self,
       embedding_dim: int,
       key_dtype: str,
+      value_dtype: str,
       multihash_factor: str = "",
       complementary_strategy: str = "Q-R",
       operation: str = "add",
@@ -814,6 +815,7 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
 
     self.embedding_dim = embedding_dim
     self.key_dtype = key_dtype
+    self.value_dtype = value_dtype
     self.multihash_factor = self.factor2decimal(multihash_factor) if multihash_factor else self.factor2decimal(
         "16,16"
     ) if self.key_dtype == "int32" else self.factor2decimal("32,32")
@@ -858,7 +860,7 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
       self.multihash_emb = DynamicEmbedding(
           embedding_size=self.embedding_dim,
           key_dtype=self.key_dtype,
-          value_dtype=tf.float32,
+          value_dtype=self.value_dtype,
           initializer=tf.keras.initializers.GlorotUniform(),
           name=f"embeddings_{self.suffix}/Compositional",
           init_capacity=800000,
@@ -872,7 +874,7 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
       self.multihash_emb = de.keras.layers.HvdAllToAllEmbedding(
           embedding_size=self.embedding_dim,
           key_dtype=self.key_dtype,
-          value_dtype=tf.float32,
+          value_dtype=self.value_dtype,
           initializer=tf.keras.initializers.GlorotUniform(),
           devices=self.devices,
           init_capacity=800000,

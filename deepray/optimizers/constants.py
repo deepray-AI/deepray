@@ -18,7 +18,7 @@ if (
     hasattr(tf.keras.optimizers, "experimental") and
     tf.keras.optimizers.Optimizer.__module__ == tf.keras.optimizers.experimental.Optimizer.__module__
 ):
-  # If the default optimizer points to new Keras optimizer, addon optimizers
+  # If the default optimizer points to new Keras optimizer, deepray optimizers
   # should use the legacy path.
   KerasLegacyOptimizer = tf.keras.optimizers.legacy.Optimizer
 else:
