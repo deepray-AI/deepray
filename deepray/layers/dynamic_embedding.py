@@ -102,6 +102,8 @@ class DistributedDynamicEmbedding():
           initializer=initializer,
           name=name
       )
+      logging.info(f"Create EmbeddingLayerRedis for {name} on {device} with {embedding_dim} dim")
+      return
     elif device == "HBM":
       self.devices = ['/GPU:0']
     elif device == "DRAM":
@@ -120,7 +122,7 @@ class DistributedDynamicEmbedding():
           init_capacity=1000000 * 8,  # 如果提示hash冲突，调整该参数
           kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver())
       )
-      logging.info(f"Create EmbeddingLayerGPU for UnifiedDynamicEmbedding on {self.devices} with {embedding_dim} dim")
+      logging.info(f"Create EmbeddingLayerGPU for {name} on {device} with {embedding_dim} dim")
     else:
       import horovod.tensorflow as hvd
 
@@ -137,9 +139,7 @@ class DistributedDynamicEmbedding():
           devices=self.devices,
           kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank))
       )
-      logging.info(
-          f"Create HvdAllToAllEmbedding for UnifiedDynamicEmbedding on {self.devices} with {embedding_dim} dim"
-      )
+      logging.info(f"Create HvdAllToAllEmbedding for {name} on {device} with {embedding_dim} dim")
 
   def __call__(self, ids, *args, **kwargs):
     return self.emb(ids)
@@ -317,7 +317,7 @@ class DiamondEmbedding(tf.keras.layers.Layer):
     self.hash_long_kernel = {}
     self.numerical_bucket_kernel = {}
     self.split_dims = defaultdict(list)
-    for name, length, dim, voc_size, dtype, hash_size, multihash_factor, storage_type, bucket_boundaries in self.feature_map[
+    for name, length, dim, voc_size, dtype, hash_size, composition_factor, storage_type, bucket_boundaries in self.feature_map[
         ~(self.feature_map['ftype'].isin(["Label", "Weight"]))][[
             "name", "length", "dim", "voc_size", "dtype", "hash_size", "composition_factor", "storage_type",
             "bucket_boundaries"
@@ -332,17 +332,17 @@ class DiamondEmbedding(tf.keras.layers.Layer):
         voc_size = int(hash_size)
 
       if self.fold_columns[name] not in self.embedding_layers:
-        multihash_factor = self.feature_map.loc[self.feature_map['name'] == self.fold_columns[name]
-                                               ]['composition_factor'].values[0] if self.fold_columns[
-                                                   name] in self.feature_map['name'].values else multihash_factor
+        composition_factor = self.feature_map.loc[self.feature_map['name'] == self.fold_columns[name]
+                                                 ]['composition_factor'].values[0] if self.fold_columns[
+                                                     name] in self.feature_map['name'].values else composition_factor
         storage_type = self.feature_map.loc[
             self.feature_map['name'] == self.fold_columns[name]
         ]['storage_type'].values[0] if self.fold_columns[name] in self.feature_map['name'].values else storage_type
-        if self.is_valid_value(multihash_factor):
+        if self.is_valid_value(composition_factor):
           self.embedding_layers[self.fold_columns[name]] = CompositionalEmbedding(
               embedding_dim=dim,
               key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
-              composition_factor=multihash_factor,
+              composition_factor=composition_factor,
               operation="add",
               name=self.fold_columns[name]
           )

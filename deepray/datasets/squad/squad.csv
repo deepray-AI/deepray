@@ -1,4 +1,4 @@
-name,dtype,ftype,dim,length,voc_size,lr,optimizer,storage_type,multihash_factor,ev_filter
+name,dtype,ftype,dim,length,voc_size,lr,optimizer,storage_type,composition_factor,ev_filter
 unique_ids,int64,Label,1,1
 input_ids,int64,Categorical,32,1
 input_mask,int64,Categorical,32,1

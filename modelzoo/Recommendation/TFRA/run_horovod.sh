@@ -14,6 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+set -eu
+set -o pipefail
+
+pip install tensorflow_datasets
 
 num_gpu=${1:-"1"}
 batch_size=${2:-"1024"}
@@ -57,7 +61,6 @@ mkdir -m 777 -p $RESULTS_DIR
 printf "Saving checkpoints to %s\n" "$RESULTS_DIR"
 printf "Logs written to %s\n" "$LOGFILE"
 
-
 if [ "$profile" = "true" ]; then
     nsys_command="--timeline-filename $RESULTS_DIR/timeline.json --timeline-mark-cycles"
     echo "profile activated"
@@ -70,6 +73,7 @@ $hvd_command $nsys_command python demo_tfra.py \
     --train_data=movielens/1m-ratings \
     --feature_map=/workspaces/deepray/deepray/datasets/movielens/movielens.csv \
     --num_gpus=$num_gpu \
+    --stop_steps=5000 \
     --batch_size=$batch_size \
     --use_dynamic_embedding=True \
     --learning_rate=$learning_rate \
