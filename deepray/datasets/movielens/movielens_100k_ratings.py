@@ -32,17 +32,10 @@ class Movielens100kRating(DataPipeLine):
     }, record["user_rating"]
 
   def build_dataset(
-      self,
-      input_file_pattern,
-      batch_size,
-      is_training=True,
-      context: tf.distribute.InputContext = None,
-      use_horovod=False,
-      *args,
-      **kwargs
+      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
   ):
     import tensorflow_datasets as tfds
-    ratings = tfds.load("movielens/100k-ratings", split="train")
+    ratings = tfds.load("movielens/100k-ratings", split="train", data_dir="/dataset/", download=True)
     ratings = ratings.map(
         self.parser
         # lambda x: {

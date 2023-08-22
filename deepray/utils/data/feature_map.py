@@ -54,7 +54,7 @@ class FeatureMap(metaclass=SingletonType):
                 "lr": "float32",
                 "optimizer": "string",
                 "storage_type": "string",
-                "multihash_factor": "string",
+                "composition_factor": "string",
                 "ev_filter": "string",
             },
         ).fillna(
@@ -65,7 +65,7 @@ class FeatureMap(metaclass=SingletonType):
                 "lr": 0.0,
                 "optimizer": "",
                 "storage_type": "",
-                "multihash_factor": "",
+                "composition_factor": "",
                 "ev_filter": "",
             }
         )
@@ -136,7 +136,7 @@ class FeatureMap(metaclass=SingletonType):
     for column in [
         'length',
         'voc_size',
-        # 'multihash_factor'
+        # 'composition_factor'
     ]:
       if column in feature_map.columns:
         feature_map[column] = feature_map[column].astype(int)
