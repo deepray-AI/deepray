@@ -139,7 +139,7 @@ def define_common_flags():
       data_dir=True,
       download_if_missing=True,
   )
-  flags_core.define_device(tpu=False)
+  flags_core.define_device(tpu=False, redis=True)
   flags_core.define_benchmark(benchmark=True,)
 
   flags.DEFINE_string(

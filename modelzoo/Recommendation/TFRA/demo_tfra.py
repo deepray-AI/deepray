@@ -39,7 +39,6 @@ def main(_):
       model_or_fn=model,
       loss=tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.SUM),
   )
-
   train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
   trainer.fit(train_input=train_input_fn,)
 

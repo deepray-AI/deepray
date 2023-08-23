@@ -27,19 +27,10 @@ class EmbeddingLayerRedis(DynamicEmbedding):
     self.mini_batch_regularizer = regularizers.get(mini_batch_regularizer)
     self.mask_value = mask_value
 
-    try:
-      from arsenal_magic.arsenal_sdk.tfra.helper import getMetas
-
-      is_in_aflow, env_name = getMetas()
-      print(f"[EMBEDDING] is_in_aflow {is_in_aflow}, env_name {env_name}")
-    except:
-      is_in_aflow = False
-      env_name = None
-
-    if is_in_aflow:
-      redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir_env=env_name)
-    else:  # 如果该任务不在 arsenal 的运行图中，则读取我们公共的redis，无法上线！！！仅能用于测试。
-      redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir=FLAGS.config_file)
+    if FLAGS.redis_config_env:
+      redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir_env=FLAGS.redis_config_env)
+    else:
+      redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir=FLAGS.redis_config_dir)
 
     super(EmbeddingLayerRedis,
           self).__init__(devices=devices, kv_creator=tfra.dynamic_embedding.RedisTableCreator(redis_config), **kwargs)
