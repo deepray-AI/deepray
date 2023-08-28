@@ -83,7 +83,7 @@ class DataPipeLine:
         input_file_pattern=input_file_pattern,
         batch_size=self.context.get_per_replica_batch_size(batch_size) if self.context else batch_size,
         is_training=is_training,
-        epochs=FLAGS.epochs,
+        epochs=1,
         *args,
         **kwargs
     )

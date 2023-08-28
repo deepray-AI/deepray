@@ -65,8 +65,10 @@ def define_base(
   if train_data:
     flags.DEFINE_list('train_data', None, 'File paths or regular expression to match train files.')
     flags.DEFINE_list('valid_data', None, 'File paths or regular expression to match validation files.')
+    flags.DEFINE_list('test_data', None, 'File paths or regular expression to match test files.')
     key_flags.append("train_data")
     key_flags.append("valid_data")
+    key_flags.append("test_data")
   if num_train_examples:
     flags.DEFINE_integer("num_train_examples", -1, "number of training examples.")
     flags.DEFINE_integer("num_valid_examples", -1, "number of validation examples.")

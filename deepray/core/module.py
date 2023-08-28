@@ -130,7 +130,7 @@ class Module():
       self._perf_wo += step_throughput
       self._perf_wo_n += 1
 
-  def on_epoch_end(self, epoch, current_step, eval_input):
+  def on_epoch_end(self, epoch, current_step, eval_input, epoch_logs=None):
     # Saves model checkpoints and run validation steps at every epoch end.
     # To avoid repeated model saving, we do not save after the last step of training.
     if FLAGS.use_horovod:
@@ -139,16 +139,20 @@ class Module():
       self._save_checkpoint(self.manager, current_step)
       if self.sub_model:
         self._save_checkpoint(self.sub_manager)
-    if eval_input and (epoch < self.epochs - 1) and (not self.use_horovod or hvd.rank() == 0):
+    if eval_input and (not self.use_horovod or hvd.rank() == 0):
       logging.info('Running evaluation after step: %s.', current_step)
-      self.run_evaluation(eval_input, current_step)
       # Re-initialize evaluation metric.
+      self.loss_container.reset_state()
       if self.metric_container:
         self.metric_container.reset_state()
+
+      val_logs = self.run_evaluation(eval_input, current_step)
+      val_logs = {'val_' + name: val for name, val in val_logs.items()}
+      epoch_logs.update(val_logs)
     """Calls the `on_epoch_end` methods of its callbacks.
     """
     for callback in self.callbacks:
-      callback.on_epoch_end(epoch)
+      callback.on_epoch_end(epoch, epoch_logs)
 
   def on_train_end(self):
     """Calls the `on_train_begin` methods of its callbacks.
@@ -175,6 +179,8 @@ class Module():
             tf.summary.scalar(metric.name, metric_value, step=current_training_step)
           self.eval_summary_writer.flush()
         break
+
+    return self.get_metrics_result()
 
   @property
   def metrics(self):

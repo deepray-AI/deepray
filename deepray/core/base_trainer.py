@@ -321,13 +321,11 @@ class Trainer(Module):
       if isinstance(loss, compile_utils.LossesContainer):
         self.loss_container = loss
       else:
-        self.loss_container = compile_utils.LossesContainer(loss, loss_weights
-                                                            # , output_names=self.output_names
-                                                           )
+        self.loss_container = compile_utils.LossesContainer(loss, loss_weights, output_names=self.model.output_names)
       self.metric_container = compile_utils.MetricsContainer(
           metrics,
           weighted_metrics,
-          # output_names=self.output_names,
+          output_names=self.model.output_names,
           # from_serialized=from_serialized,
       ) if metrics or weighted_metrics else None
 
@@ -663,14 +661,10 @@ class Trainer(Module):
       train_input=None,
       eval_input=None,
   ):
-    if self.epochs > 1 and FLAGS.num_train_examples == -1:
-      raise ValueError('When the num_train_examples is INFINITE or UNKNOWN, we just can run one epoch.')
+    # if self.epochs > 1 and FLAGS.num_train_examples == -1:
+    #   raise ValueError('When the num_train_examples is INFINITE or UNKNOWN, we just can run one epoch.')
 
     self._performance_calculator.init()
-
-    # To reduce unnecessary send/receive input pipeline operation, we place input
-    # pipeline ops in worker task.
-    train_iterator = distribution_utils.make_distributed_iterator(self.strategy, train_input)
 
     # Training loop starts here.
     self.current_step = self._first_steps = self.optimizer.iterations.numpy()
@@ -689,7 +683,9 @@ class Trainer(Module):
     self._perf_wo_n = 0
 
     self.on_train_begin()
+    training_logs = None
     for epoch in range(self.epochs):
+      train_iterator = distribution_utils.make_distributed_iterator(self.strategy, train_input)
       self.on_epoch_begin(epoch)
       while self.steps_per_epoch <= 0 or self._step_epoch < self.steps_per_epoch:
         t0 = time.time()
@@ -701,10 +697,10 @@ class Trainer(Module):
           if steps == 1:
             # TODO(zongweiz): merge with train_steps once tf.while_loop
             # GPU performance bugs are fixed.
-            tmp_logs = self._train_step(next(train_iterator), num_accumulation_steps)
+            training_logs = self._train_step(next(train_iterator), num_accumulation_steps)
           else:
             # Converts steps to a Tensor to avoid tf.function retracing.
-            tmp_logs = self._train_steps(
+            training_logs = self._train_steps(
                 train_iterator, tf.convert_to_tensor(steps, dtype=tf.int32), num_accumulation_steps
             )
         except (tf.errors.OutOfRangeError, StopIteration):
@@ -714,14 +710,14 @@ class Trainer(Module):
             return None
           elif steps > 1 and self.optimizer.iterations.numpy() > self.current_step:
             steps = self.optimizer.iterations.numpy() - self.current_step
-            tmp_logs = self.get_metrics_result()
+            training_logs = self.get_metrics_result()
             self.first_batch = False
-            self.on_batch_end(tmp_logs, steps, t0)
+            self.on_batch_end(training_logs, steps, t0)
           break
 
         self.first_batch = False
-        self.on_batch_end(tmp_logs, steps, t0)
-      self.on_epoch_end(epoch, self.current_step, eval_input)
+        self.on_batch_end(training_logs, steps, t0)
+      self.on_epoch_end(epoch, self.current_step, eval_input, epoch_logs=training_logs)
     self.on_train_end()
 
     total_time = time.time() - start_time
@@ -740,9 +736,6 @@ class Trainer(Module):
       if self.sub_model:
         self._save_checkpoint(self.sub_manager)
 
-      if eval_input:
-        logging.info('Running final evaluation after training is complete.')
-        self.run_evaluation(eval_input, self.current_step)
       training_summary = {
           'total_training_steps': self.current_step,
           'train_loss': self._float_metric_value(self.loss_container.metrics[0]),

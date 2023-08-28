@@ -22,7 +22,7 @@ from deepray.utils.flags import common_flags
 common_flags.define_common_flags()
 
 FLAGS = flags.FLAGS
-FLAGS(sys.argv)
+FLAGS(sys.argv, known_only=True)
 
 from deepray.utils.ensure_tf_install import _check_tf_version
 
