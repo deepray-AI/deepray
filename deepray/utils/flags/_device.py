@@ -42,11 +42,12 @@ def require_cloud_storage(flag_names):
     return valid_flags
 
 
-def define_device(tpu=False):
+def define_device(tpu=False, redis=False):
   """Register device specific flags.
 
   Args:
     tpu: Create flags to specify TPU operation.
+    redis: Remote cache for TFRA.
 
   Returns:
     A list of flags for core.py to marks as key flags.
@@ -88,5 +89,9 @@ def define_device(tpu=False):
     )
 
     flags.DEFINE_integer(name="num_tpu_shards", default=8, help=help_wrap("Number of shards (TPU chips)."))
+
+  if redis:
+    flags.DEFINE_string(name="redis_config_dir", default=None, help=help_wrap("redis_config_abs_dir."))
+    flags.DEFINE_string(name="redis_config_env", default=None, help=help_wrap("redis_config_abs_dir_env."))
 
   return key_flags

@@ -27,19 +27,10 @@ class EmbeddingLayerRedis(DynamicEmbedding):
     self.mini_batch_regularizer = regularizers.get(mini_batch_regularizer)
     self.mask_value = mask_value
 
-    try:
-      from arsenal_magic.arsenal_sdk.tfra.helper import getMetas
-
-      is_in_aflow, env_name = getMetas()
-      print(f"[EMBEDDING] is_in_aflow {is_in_aflow}, env_name {env_name}")
-    except:
-      is_in_aflow = False
-      env_name = None
-
-    if is_in_aflow:
-      redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir_env=env_name)
-    else:  # 如果该任务不在 arsenal 的运行图中，则读取我们公共的redis，无法上线！！！仅能用于测试。
-      redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir=FLAGS.config_file)
+    if FLAGS.redis_config_env:
+      redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir_env=FLAGS.redis_config_env)
+    else:
+      redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir=FLAGS.redis_config_dir)
 
     super(EmbeddingLayerRedis,
           self).__init__(devices=devices, kv_creator=tfra.dynamic_embedding.RedisTableCreator(redis_config), **kwargs)
@@ -83,7 +74,7 @@ class EmbeddingLayerGPU(DynamicEmbedding):
       return embeddings
 
 
-class DistributedDynamicEmbedding():
+class DistributedDynamicEmbedding(tf.keras.layers.Layer):
 
   def __init__(
       self,
@@ -93,7 +84,9 @@ class DistributedDynamicEmbedding():
       initializer=None,
       name: str = '',
       device: Optional[Literal["HBM", "DRAM", "Redis"]] = None,
+      **kwargs
   ):
+    super().__init__(**kwargs)
     if device == "Redis":
       self.emb = EmbeddingLayerRedis(
           embedding_size=embedding_dim,
@@ -105,16 +98,16 @@ class DistributedDynamicEmbedding():
       logging.info(f"Create EmbeddingLayerRedis for {name} on {device} with {embedding_dim} dim")
       return
     elif device == "HBM":
-      self.devices = ['/GPU:0']
+      _devices = ['/GPU:0']
     elif device == "DRAM":
-      self.devices = ['/CPU:0']
+      _devices = ['/CPU:0']
     else:
-      self.devices = ['/GPU:0']
+      _devices = ['/GPU:0']
 
     if not FLAGS.use_horovod:
       self.emb = EmbeddingLayerGPU(
           embedding_size=embedding_dim,
-          devices=self.devices,
+          devices=_devices,
           key_dtype=key_dtype,
           value_dtype=value_dtype,
           initializer=initializer,
@@ -136,12 +129,12 @@ class DistributedDynamicEmbedding():
           initializer=initializer,
           init_capacity=800000,
           name=name,
-          devices=self.devices,
+          devices=_devices,
           kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank))
       )
       logging.info(f"Create HvdAllToAllEmbedding for {name} on {device} with {embedding_dim} dim")
 
-  def __call__(self, ids, *args, **kwargs):
+  def call(self, ids, *args, **kwargs):
     return self.emb(ids)
 
 
@@ -157,7 +150,7 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
       embedding_dim: int,
       key_dtype: str,
       value_dtype: str,
-      composition_factor: str = "",
+      composition_size: int,
       complementary_strategy: str = "Q-R",
       operation: str = "add",
       name: str = '',
@@ -181,45 +174,43 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
     self.embedding_dim = embedding_dim
     self.key_dtype = key_dtype
     self.value_dtype = value_dtype
-    self.composition_factor = self.factor2decimal(composition_factor) if composition_factor else self.factor2decimal(
-        "16,16"
-    ) if self.key_dtype == "int32" else self.factor2decimal("32,32")
+    self.composition_factor = self.factor2decimal(composition_size)
     self.complementary_strategy = complementary_strategy
     self.operation = operation
     self.suffix = name
     self.initializer = initializer
 
-  def factor2decimal(self, composition_factor: str):
-    """
-    print(binary_to_decimal("16,16"))  # 4294901760, 65535
-    print(binary_to_decimal("17,15"))  # 4294934528, 32767
-    print(binary_to_decimal("15,17"))  # 4294836224, 131071
-    print(binary_to_decimal("14,18"))  # 4294705152, 262143
-    print(binary_to_decimal("13,19"))  # 4294443008, 524287
-
-    print(binary_to_decimal("32,32"))  # 18446744069414584320, 4294967295
-    print(binary_to_decimal("33,31"))  # 18446744071562067968, 2147483647
-    print(binary_to_decimal("31,33"))  # 18446744065119617024, 8589934591
-    print(binary_to_decimal("30,34"))  # 18446744056529682432, 17179869183
-    print(binary_to_decimal("29,35"))  # 18446744039349813248, 34359738367
-    """
+  def factor2decimal(self, composition_part: int):
     if self.key_dtype == "int32":
-      Q, R = map(int, composition_factor.split(','))
-      Q = (1 << Q) - 1 << (32 - Q)
-      R = (1 << R) - 1
-      return Q, R
+      base = 32
     elif self.key_dtype == "int64":
-      """
-  sign bit
-      1   111111111111111111111 111111111111111111111 111111111111111111111     -9223372036854776000
-      1   000000000000000000000 111111111111111111111 111111111111111111111     -9223367638808264705
-      1   111111111111111111111 000000000000000000000 111111111111111111111     -4398044413953
-      1   111111111111111111111 111111111111111111111 000000000000000000000     -2097151
-      """
-      Q, R, P = -9223367638808264705, -4398044413953, -2097152
-      return tf.constant(Q, dtype=tf.int64), tf.constant(R, dtype=tf.int64), tf.constant(P, dtype=tf.int64)
+      base = 64
     else:
       raise ValueError(f"{self.key_dtype} type not support yet.")
+
+    # Calculate the quotient and remainder of A divided by composition_size.
+    quotient = base // composition_part
+    remainder = base % composition_part
+
+    # Create a list of length composition_size with each element equal to the quotient.
+    result = [quotient] * composition_part
+
+    # Distribute the remainder among the first few elements of the list.
+    for i in range(remainder):
+      result[i] += 1
+
+    # Sort the list in ascending order.
+    result.sort()
+
+    res = []
+    for i in range(len(result)):
+      binary_str = ''
+      for j in range(len(result)):
+        binary_str += result[j] * ('1' if i == j else '0')
+
+      int_num = int(binary_str, 2) - 2**base if int(binary_str[0]) else int(binary_str, 2)
+      res.append(int_num)
+    return res
 
   def build(self, input_shape=None):
     self.composition_emb = DistributedDynamicEmbedding(
@@ -232,40 +223,20 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
     )
 
   def call(self, inputs, *args, **kwargs):
-    if self.key_dtype == "int32":
-      ids_Q = tf.bitwise.bitwise_and(inputs, self.composition_factor[0])
-      ids_R = tf.bitwise.bitwise_and(inputs, self.composition_factor[1])
-      result_Q, result_R = tf.split(self.composition_emb([ids_Q, ids_R]), num_or_size_splits=2, axis=0)
-      result_Q = tf.squeeze(result_Q, axis=0)
-      result_R = tf.squeeze(result_R, axis=0)
-      if self.operation == "add":
-        ret = tf.add(result_Q, result_R)
-        return ret
-      if self.operation == "mul":
-        ret = tf.multiply(result_Q, result_R)
-        return ret
-      if self.operation == "concat":
-        ret = tf.concat([result_Q, result_R], 1)
-        return ret
-    elif self.key_dtype == "int64":
-      ids_Q = tf.bitwise.bitwise_and(inputs, self.composition_factor[0])
-      ids_R = tf.bitwise.bitwise_and(inputs, self.composition_factor[1])
-      ids_P = tf.bitwise.bitwise_and(inputs, self.composition_factor[2])
-      result_Q, result_R, result_P = tf.split(self.composition_emb([ids_Q, ids_R, ids_P]), num_or_size_splits=3, axis=0)
-      result_Q = tf.squeeze(result_Q, axis=0)
-      result_R = tf.squeeze(result_R, axis=0)
-      result_P = tf.squeeze(result_P, axis=0)
-      if self.operation == "add":
-        ret = tf.add_n([result_Q, result_R, result_P])
-        return ret
-      if self.operation == "mul":
-        ret = tf.multiply(result_Q, result_R, result_P)
-        return ret
-      if self.operation == "concat":
-        ret = tf.concat([result_Q, result_R, result_P], 1)
-        return ret
+    ids_QRP = [tf.bitwise.bitwise_and(inputs, x) for x in self.composition_factor]
+    results = tf.split(self.composition_emb(ids_QRP), num_or_size_splits=len(ids_QRP), axis=0)
+    new_result = [tf.squeeze(x, axis=0) for x in results]
+    if self.operation == "add":
+      ret = tf.add_n(new_result)
+      return ret
+    elif self.operation == "mul":
+      ret = tf.multiply(new_result)
+      return ret
+    elif self.operation == "concat":
+      ret = tf.concat(new_result, 1)
+      return ret
     else:
-      raise ValueError(f"{self.key_dtype} type not support yet.")
+      raise ValueError(f"{self.operation} operation not support yet.")
 
 
 class DiamondEmbedding(tf.keras.layers.Layer):
@@ -275,7 +246,7 @@ class DiamondEmbedding(tf.keras.layers.Layer):
 
   def __init__(self, feature_map: pd.DataFrame, fold_columns: Dict[str, List[str]], **kwargs):
     super().__init__(**kwargs)
-    columns = ["bucket_boundaries", "hash_size", "voc_size", "composition_factor", "storage_type"]
+    columns = ["bucket_boundaries", "hash_size", "voc_size", "composition_size", "storage_type"]
     for col in columns:
       if col not in feature_map.columns:
         feature_map[col] = None
@@ -319,7 +290,7 @@ class DiamondEmbedding(tf.keras.layers.Layer):
     self.split_dims = defaultdict(list)
     for name, length, dim, voc_size, dtype, hash_size, composition_factor, storage_type, bucket_boundaries in self.feature_map[
         ~(self.feature_map['ftype'].isin(["Label", "Weight"]))][[
-            "name", "length", "dim", "voc_size", "dtype", "hash_size", "composition_factor", "storage_type",
+            "name", "length", "dim", "voc_size", "dtype", "hash_size", "composition_size", "storage_type",
             "bucket_boundaries"
         ]].values:
 
@@ -333,7 +304,7 @@ class DiamondEmbedding(tf.keras.layers.Layer):
 
       if self.fold_columns[name] not in self.embedding_layers:
         composition_factor = self.feature_map.loc[self.feature_map['name'] == self.fold_columns[name]
-                                                 ]['composition_factor'].values[0] if self.fold_columns[
+                                                 ]['composition_size'].values[0] if self.fold_columns[
                                                      name] in self.feature_map['name'].values else composition_factor
         storage_type = self.feature_map.loc[
             self.feature_map['name'] == self.fold_columns[name]
@@ -342,7 +313,7 @@ class DiamondEmbedding(tf.keras.layers.Layer):
           self.embedding_layers[self.fold_columns[name]] = CompositionalEmbedding(
               embedding_dim=dim,
               key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
-              composition_factor=composition_factor,
+              composition_size=composition_factor,
               operation="add",
               name=self.fold_columns[name]
           )
