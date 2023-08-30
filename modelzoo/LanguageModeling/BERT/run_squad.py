@@ -25,7 +25,6 @@ import subprocess
 import sys
 import time
 
-import horovod.tensorflow as hvd
 import numpy as np
 import tensorflow as tf
 from absl import app, flags, logging
@@ -43,6 +42,7 @@ from deepray.datasets.squad import squad_lib_sp, squad_lib as squad_lib_wp
 from deepray.official.nlp import bert_modeling as modeling
 from deepray.official.nlp import bert_models
 from deepray.utils.flags import common_flags
+from deepray.utils.horovod_utils import is_main_process
 
 FLAGS = flags.FLAGS
 
@@ -466,8 +466,7 @@ def main(_):
 
   if FLAGS.mode in ('train', 'train_and_predict'):
     train_squad(input_meta_data)
-  if FLAGS.mode in ('predict', 'sm_predict', 'trt_predict',
-                    'train_and_predict') and (not FLAGS.use_horovod or hvd.rank() == 0):
+  if FLAGS.mode in ('predict', 'sm_predict', 'trt_predict', 'train_and_predict') and is_main_process():
     predict_squad(input_meta_data)
 
 

@@ -1,10 +1,10 @@
 import multiprocessing
 
-import horovod.tensorflow as hvd
 import tensorflow as tf
 from absl import flags
-from tensorflow.python.data.ops import dataset_ops
+
 from deepray.datasets.datapipeline import DataPipeLine
+from deepray.utils.horovod_utils import get_rank, get_world_size
 
 FLAGS = flags.FLAGS
 
@@ -55,14 +55,15 @@ class TFRecordPipeline(DataPipeLine):
         # For multi-host training, we want each hosts to always process the same
         # subset of files.  Each host only sees a subset of the entire dataset,
         # allowing us to cache larger datasets in memory.
-        dataset = dataset.shard(num_shards=hvd.size(), index=hvd.rank())
+        dataset = dataset.shard(num_shards=get_world_size(), index=get_rank())
+
     else:
       dataset = tf.data.Dataset.from_tensor_slices(tf.constant(input_files))
       if self.use_horovod:
         # For multi-host training, we want each hosts to always process the same
         # subset of files.  Each host only sees a subset of the entire dataset,
         # allowing us to cache larger datasets in memory.
-        dataset = dataset.shard(num_shards=hvd.size(), index=hvd.rank())
+        dataset = dataset.shard(num_shards=get_world_size(), index=get_rank())
 
       def mfunc(x):
         rst = tf.data.TFRecordDataset(x, compression_type=self.compression_type)

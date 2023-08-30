@@ -22,6 +22,7 @@ from absl import flags
 from keras.utils.data_utils import get_file
 
 from deepray.datasets.datapipeline import DataPipeLine
+from deepray.utils.horovod_utils import get_rank, get_world_size
 
 FLAGS = flags.FLAGS
 FLAGS([
@@ -89,14 +90,7 @@ class Mnist(DataPipeLine):
     )
 
   def build_dataset(
-      self,
-      input_file_pattern,
-      batch_size,
-      is_training=True,
-      context: tf.distribute.InputContext = None,
-      use_horovod=False,
-      *args,
-      **kwargs
+      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
   ):
     with np.load(self.path, allow_pickle=True) as f:
       if is_training:
@@ -107,5 +101,10 @@ class Mnist(DataPipeLine):
     dataset = tf.data.Dataset.from_tensor_slices(
         (tf.cast(x[..., tf.newaxis] / 255.0, tf.float32), tf.cast(y, tf.int64))
     )
-    dataset = dataset.repeat(FLAGS.epochs).shuffle(10000).batch(batch_size)
+    if self.use_horovod:
+      # For multi-host training, we want each hosts to always process the same
+      # subset of files.  Each host only sees a subset of the entire dataset,
+      # allowing us to cache larger datasets in memory.
+      dataset = dataset.shard(num_shards=get_world_size(), index=get_rank())
+    dataset = dataset.repeat(epochs).shuffle(10000).batch(batch_size)
     return dataset

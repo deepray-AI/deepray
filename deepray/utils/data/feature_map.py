@@ -4,12 +4,12 @@
 # @license : Copyright(C),  <hailin.fu@>
 import os
 
-import horovod.tensorflow as hvd
 import pandas as pd
 import tensorflow as tf
 from absl import logging, flags
 
 from deepray.design_patterns import SingletonType
+from deepray.utils.horovod_utils import is_main_process
 
 FLAGS = flags.FLAGS
 
@@ -27,7 +27,7 @@ class FeatureMap(metaclass=SingletonType):
     self._black_list = black_list
     self._white_list = white_list if white_list else FLAGS.white_list
     self.feature_map = self.get_summary()
-    if (not FLAGS.use_horovod or hvd.rank() == 0) and self.feature_map is not None:
+    if is_main_process() and self.feature_map is not None:
       logging.info(
           "\n" +
           self.feature_map.loc[:,

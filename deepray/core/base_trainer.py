@@ -34,6 +34,7 @@ if version.parse(tf.keras.__version__.replace("-tf", "+tf")) < version.parse("2.
   from tensorflow.keras import optimizers
 else:
   from tensorflow.keras.optimizers import legacy as optimizers
+from deepray.callbacks import HvdCallbackList
 from deepray.core.common import distribution_utils
 from deepray.optimizers import optimization
 from deepray.optimizers.optimization import GradientAccumulator
@@ -42,7 +43,8 @@ from deepray.utils import gpu_affinity
 from deepray.utils.flags import common_flags
 from deepray.utils.misc import keras_utils
 from deepray.utils.benchmark import PerformanceCalculator
-from keras import callbacks as callbacks_module
+from deepray.utils.horovod_utils import is_main_process
+
 from .module import Module
 
 _SUMMARY_TXT = 'training_summary.txt'
@@ -224,7 +226,7 @@ class Trainer(Module):
 
     self.epochs = FLAGS.epochs
 
-    if not self.use_horovod or hvd.rank() == 0:
+    if is_main_process():
       logging.info(" {} Initialize training".format(time.strftime("%Y%m%d %H:%M:%S")))
 
       logging.info("\ttf.app.flags.FLAGS:")
@@ -264,7 +266,7 @@ class Trainer(Module):
 
     self.steps_per_loop = FLAGS.steps_per_summary
     if 1 < self.steps_per_epoch < self.steps_per_loop:
-      if not self.use_horovod or hvd.rank() == 0:
+      if is_main_process():
         logging.error(
             'steps_per_summary: %d is specified to be greater than '
             ' steps_per_epoch: %d, we will use steps_per_epoch as'
@@ -301,7 +303,7 @@ class Trainer(Module):
       self._train_steps = _train_multi_steps
 
     # Create summary writers
-    if not self.use_horovod or hvd.rank() == 0:
+    if is_main_process():
       self.summary_dir = os.path.join(FLAGS.model_dir, 'summaries')
       self.eval_summary_writer = tf.summary.create_file_writer(os.path.join(self.summary_dir, 'eval'))
       if self.steps_per_loop >= _MIN_SUMMARY_STEPS:
@@ -602,9 +604,8 @@ class Trainer(Module):
       verbose = 0  # training_module._get_verbosity(verbose, self.strategy)
 
       # Container that configures and calls `tf.keras.Callback`s.
-      if not isinstance(callbacks, callbacks_module.CallbackList):
-        # self.callbacks = callbacks if callbacks else []
-        self.callbacks = callbacks_module.CallbackList(
+      if not isinstance(callbacks, HvdCallbackList):
+        self.callbacks = HvdCallbackList(
             callbacks,
             add_history=True,
             add_progbar=verbose != 0,
@@ -630,7 +631,7 @@ class Trainer(Module):
         callbacks.append(tf.keras.callbacks.TensorBoard(summary_dir, profile_batch=0))
 
         # Horovod: save checkpoints only on worker 0 to prevent other workers from corrupting them.
-        if not self.use_horovod or hvd.rank() == 0:
+        if is_main_process():
           checkpoint_path = os.path.join(FLAGS.model_dir, "checkpoint")
           callbacks.append(tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True))
       if FLAGS.use_horovod:
@@ -644,7 +645,7 @@ class Trainer(Module):
         ]
 
       # Horovod: write logs on worker 0.
-      verbose = 2 if not self.use_horovod or hvd.rank() == 0 else 0
+      verbose = 2 if is_main_process() else 0
       history = self.model.fit(
           train_input,
           epochs=self.epochs,
@@ -682,21 +683,19 @@ class Trainer(Module):
     self._perf_wo = 0
     self._perf_wo_n = 0
 
-    self.on_train_begin()
+    self.callbacks.on_train_begin()
     training_logs = None
     for epoch in range(self.epochs):
       train_iterator = distribution_utils.make_distributed_iterator(self.strategy, train_input)
       self.on_epoch_begin(epoch)
       while self.steps_per_epoch <= 0 or self._step_epoch < self.steps_per_epoch:
         t0 = time.time()
-        self.on_batch_begin(self.current_step)
+        self.callbacks.on_train_batch_begin(self.current_step)
         # Runs several steps in the host while loop.
         steps, num_accumulation_steps = self.steps_to_run(self.current_step, self.steps_per_epoch, self.steps_per_loop)
 
         try:
           if steps == 1:
-            # TODO(zongweiz): merge with train_steps once tf.while_loop
-            # GPU performance bugs are fixed.
             training_logs = self._train_step(next(train_iterator), num_accumulation_steps)
           else:
             # Converts steps to a Tensor to avoid tf.function retracing.
@@ -704,7 +703,8 @@ class Trainer(Module):
                 train_iterator, tf.convert_to_tensor(steps, dtype=tf.int32), num_accumulation_steps
             )
         except (tf.errors.OutOfRangeError, StopIteration):
-          logging.info(f"Done reading data for epoch {epoch}")
+          if is_main_process():
+            logging.info(f"Done reading data for epoch {epoch}")
           if self.optimizer.iterations.numpy() == self._first_steps:
             logging.warning("No data was processed.")
             return None
@@ -718,7 +718,12 @@ class Trainer(Module):
         self.first_batch = False
         self.on_batch_end(training_logs, steps, t0)
       self.on_epoch_end(epoch, self.current_step, eval_input, epoch_logs=training_logs)
-    self.on_train_end()
+      if self.model.stop_training:
+        logging.info(f"self.model.stop_training = {self.model.stop_training}")
+        if self.use_horovod:
+          hvd.broadcast_object(self.model.stop_training, root_rank=0)
+        break
+    self.callbacks.on_train_end(logs=training_logs)
 
     total_time = time.time() - start_time
     results_perf = self._performance_calculator.results
@@ -729,7 +734,7 @@ class Trainer(Module):
     self._save_checkpoint(self.manager, self.current_step)
     # self.save_model_to_export()
     # self.save_model_to_pb()
-    if not self.use_horovod or hvd.rank() == 0:
+    if is_main_process():
       # if FLAGS.use_dynamic_embedding:
       #   self.save_model_to_serving()
 
@@ -943,6 +948,6 @@ class Trainer(Module):
     return self.get_metrics_result()
 
   def export_tfra(self):
-    if not self.use_horovod or hvd.rank() == 0:
+    if is_main_process():
       save_options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
       tf.saved_model.save(self.model, "test_tfra", options=save_options)
