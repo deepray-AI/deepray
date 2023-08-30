@@ -1,5 +1,4 @@
-# Copyright 2019 The TensorFlow Authors. All Rights Reserved.
-#
+# Copyright (c) 2020 NVIDIA CORPORATION. All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,10 +10,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
-"""Additional callbacks that conform to Keras API."""
 
-from deepray.callbacks.average_model_checkpoint import AverageModelCheckpoint
-from deepray.callbacks.time_stopping import TimeStopping
-from deepray.callbacks.tqdm_progress_bar import TQDMProgressBar
-from deepray.callbacks.callbacks import HvdCallbackList
+import horovod.tensorflow.keras as hvd
+from absl import logging, flags
+
+FLAGS = flags.FLAGS
+
+
+def get_rank():
+  try:
+    return hvd.rank()
+  except:
+    return 0
+
+
+def get_world_size():
+  try:
+    return hvd.size()
+  except:
+    return 1
+
+
+def is_main_process():
+  return not FLAGS.use_horovod or get_rank() == 0

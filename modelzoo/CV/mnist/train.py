@@ -2,12 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
 import os
+import sys
 
 import tensorflow as tf
 from absl import app, flags
-from datetime import datetime
 
 from deepray.core.base_trainer import Trainer
 from deepray.core.common import distribution_utils
