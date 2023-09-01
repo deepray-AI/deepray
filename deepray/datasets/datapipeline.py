@@ -39,8 +39,8 @@ IS_TRAINING = Enum('is_training', ('Train', 'Valid', 'Test'))
 
 class DataPipeLine:
 
-  def __init__(self, use_horovod=False, context: tf.distribute.InputContext = None, **kwargs):
-    self.use_horovod = use_horovod
+  def __init__(self, context: tf.distribute.InputContext = None, **kwargs):
+    self.use_horovod = FLAGS.use_horovod
     self.context = context
     self.feature_map = FeatureMap(feature_map=FLAGS.feature_map, black_list=FLAGS.black_list).feature_map
     # self.conf = Foo(FLAGS.conf_file).conf
