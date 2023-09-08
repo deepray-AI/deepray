@@ -44,7 +44,6 @@ class PerformanceCalculator:
     with tf.device("/CPU:0"):
       self.samples = tf.Variable(0, trainable=False, dtype=tf.int64)
 
-  def init(self):
     self.samples.assign(0)
     self.step_latencies = []
     self._results = {}

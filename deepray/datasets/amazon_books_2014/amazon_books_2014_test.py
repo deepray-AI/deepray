@@ -41,7 +41,6 @@ def runner(argv=None):
   train_dataset = data_pipe(FLAGS.train_data, batch_size=FLAGS.batch_size, prebatch_size=prebatch_size)
 
   _performance_calculator = PerformanceCalculator(0, 1000)
-  _performance_calculator.init()
 
   # partitions = data_pipe.get_supported_partitions()
   # print(partitions)
