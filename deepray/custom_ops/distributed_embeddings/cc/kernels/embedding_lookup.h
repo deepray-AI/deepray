@@ -1,6 +1,6 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
+ * All rights reserved. SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,28 +30,32 @@ inline Combiner StringToEnum(std::string combiner) {
 
 template <typename Device, typename Tindices>
 struct RowToSplitFunctor {
-  void operator()(const Device& d, Tindices* split_ptr, const Tindices* row_ptr, Tindices num_ids,
-                  Tindices num_rows) const;
+  void operator()(const Device& d, Tindices* split_ptr, const Tindices* row_ptr,
+                  Tindices num_ids, Tindices num_rows) const;
 };
 
 template <typename Device, typename T, typename Tindices>
 struct EmbeddingLookupVariableHotnessFunctor {
-  void operator()(const Device& d, T* output_ptr, const T* param_ptr, const Tindices* ids_ptr,
-                  const Tindices* offsets_ptr, Tindices num_rows, Tindices embedding_width,
+  void operator()(const Device& d, T* output_ptr, const T* param_ptr,
+                  const Tindices* ids_ptr, const Tindices* offsets_ptr,
+                  Tindices num_rows, Tindices embedding_width,
                   Combiner combiner, Tindices ave_red_len) const;
 };
 
 template <typename Device, typename T, typename Tindices>
 struct EmbeddingLookupVariableHotnessGradFunctor {
-  void operator()(OpKernelContext* context, const Tindices* ids_ptr, const Tindices* row_ptr,
-                  const T* grad_ptr, int64_t num_ids, Tindices embedding_width, Tindices num_rows,
-                  int64_t dense_shape_dim0, int64_t max_red_len, Combiner combiner) const;
+  void operator()(OpKernelContext* context, const Tindices* ids_ptr,
+                  const Tindices* row_ptr, const T* grad_ptr, int64_t num_ids,
+                  Tindices embedding_width, Tindices num_rows,
+                  int64_t dense_shape_dim0, int64_t max_red_len,
+                  Combiner combiner) const;
 };
 
 template <typename Device, typename T, typename CountT>
 struct IntegerLookupFunctor {
-  void operator()(OpKernelContext* context, T* table_ptr, CountT* count_ptr, const T* keys_ptr,
-                  T* values_ptr, T num_ele, bool init, int64_t capacity) const;
+  void operator()(OpKernelContext* context, T* table_ptr, CountT* count_ptr,
+                  const T* keys_ptr, T* values_ptr, T num_ele, bool init,
+                  int64_t capacity) const;
 };
 
 }  // namespace tensorflow

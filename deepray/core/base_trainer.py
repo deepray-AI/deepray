@@ -43,7 +43,7 @@ from deepray.utils import gpu_affinity
 from deepray.utils.flags import common_flags
 from deepray.utils.misc import keras_utils
 from deepray.utils.benchmark import PerformanceCalculator
-from deepray.utils.horovod_utils import is_main_process
+from deepray.utils.horovod_utils import is_main_process, get_world_size
 
 from .module import Module
 
@@ -237,8 +237,8 @@ class Trainer(Module):
     learning_rate = FLAGS.learning_rate
 
     if self.use_horovod:
-      self.global_batch_size *= hvd.size()
-      learning_rate *= hvd.size()
+      self.global_batch_size *= get_world_size()
+      learning_rate *= get_world_size()
 
     if isinstance(optimizer, optimizers.Optimizer):
       self.optimizer = optimizer
@@ -749,7 +749,7 @@ class Trainer(Module):
       logging.info("  LR = %g", FLAGS.learning_rate)
       if self.use_horovod:
         logging.info("Multi-GPU training with TF Horovod")
-        logging.info("hvd.size() = %d", hvd.size())
+        logging.info("hvd.size() = %d", get_world_size())
       logging.info("Total Training Time = %0.2f for Examples = %d", total_time, total_sentences)
       logging.info("Throughput Average (examples/sec) with overhead = %0.2f", results_perf['throughput'])
       if self._perf_wo_n != 0:
