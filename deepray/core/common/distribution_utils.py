@@ -22,6 +22,8 @@ from typing import Optional, Callable, Iterator, Any
 import tensorflow as tf
 from absl import flags
 
+from deepray.utils.horovod_utils import is_main_process
+
 FLAGS = flags.FLAGS
 
 
@@ -129,7 +131,8 @@ def get_distribution_strategy(distribution_strategy=None, all_reduce_alg=None, n
 
   if FLAGS.use_horovod:
     distribution_strategy = "off"
-    logging.info("Run horovod and turn off distribution strategy.")
+    if is_main_process():
+      logging.info("Run horovod and turn off distribution strategy.")
   else:
     distribution_strategy = FLAGS.distribution_strategy
 
