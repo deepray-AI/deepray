@@ -37,9 +37,10 @@ flags.DEFINE_string("conf_file", os.getcwd() + "/conf/dp.yaml", "configuration i
 IS_TRAINING = Enum('is_training', ('Train', 'Valid', 'Test'))
 
 
-class DataPipeLine:
+class DataPipeLine(tf.keras.layers.Layer):
 
   def __init__(self, context: tf.distribute.InputContext = None, **kwargs):
+    super().__init__(**kwargs)
     self.use_horovod = FLAGS.use_horovod
     self.context = context
     self.feature_map = FeatureMap(feature_map=FLAGS.feature_map, black_list=FLAGS.black_list).feature_map
@@ -76,7 +77,7 @@ class DataPipeLine:
     """
     raise NotImplementedError("build_dataset: not implemented!")
 
-  def __call__(self, input_file_pattern=None, batch_size=None, is_training=None, prebatch_size=0, *args, **kwargs):
+  def call(self, input_file_pattern=None, batch_size=None, is_training=None, prebatch_size=0, *args, **kwargs):
     """Gets a closure to create a dataset."""
 
     return self.build_dataset(

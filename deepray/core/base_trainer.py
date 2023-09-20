@@ -708,8 +708,6 @@ class Trainer(Module):
       self.on_epoch_end(epoch, self.current_step, eval_input, epoch_logs=training_logs)
       if self.model.stop_training:
         logging.info(f"self.model.stop_training = {self.model.stop_training}")
-        if self.use_horovod:
-          hvd.broadcast_object(self.model.stop_training, root_rank=0)
         break
     self.callbacks.on_train_end(logs=training_logs)
 
