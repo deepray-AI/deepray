@@ -36,7 +36,8 @@ class FeatureMap(metaclass=SingletonType):
 
   def get_summary(self):
     if not tf.io.gfile.exists(self._feature_file):
-      logging.info(f"File not exists: {self._feature_file}")
+      if is_main_process():
+        logging.info(f"File not exists: {self._feature_file}")
       return None
     with tf.io.gfile.GFile(self._feature_file, mode="r") as f:
       file_name, file_extension = os.path.splitext(self._feature_file)

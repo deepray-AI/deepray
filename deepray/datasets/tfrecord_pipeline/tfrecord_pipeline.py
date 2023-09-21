@@ -49,8 +49,10 @@ class TFRecordPipeline(DataPipeLine):
     # When `input_file` is a path to a single file or a list
     # containing a single path, disable auto sharding so that
     # same input file is sent to all workers.
-    if isinstance(input_files, str) or len(input_files) == 1:
-      dataset = tf.data.TFRecordDataset(input_files, compression_type=self.compression_type)
+    if isinstance(input_files, str) or len(input_files) < get_world_size():
+      dataset = tf.data.TFRecordDataset(
+          input_files, compression_type=self.compression_type, num_parallel_reads=tf.data.AUTOTUNE
+      )
       if self.use_horovod:
         # For multi-host training, we want each hosts to always process the same
         # subset of files.  Each host only sees a subset of the entire dataset,

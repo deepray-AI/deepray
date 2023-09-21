@@ -37,7 +37,6 @@ def runner(argv=None):
   # create data pipline of train & test dataset
   train_dataset = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
   _performance_calculator = PerformanceCalculator(0, 1000)
-  _performance_calculator.init()
 
   # partitions = data_pipe.get_supported_partitions()
   # print(partitions)

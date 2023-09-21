@@ -43,7 +43,7 @@ from deepray.utils import gpu_affinity
 from deepray.utils.flags import common_flags
 from deepray.utils.misc import keras_utils
 from deepray.utils.benchmark import PerformanceCalculator
-from deepray.utils.horovod_utils import is_main_process
+from deepray.utils.horovod_utils import is_main_process, get_world_size
 
 from .module import Module
 
@@ -233,138 +233,20 @@ class Trainer(Module):
       for key, value in sorted(FLAGS.flag_values_dict().items()):
         logging.info(f"\t{key:25}= {value}")
 
-    num_train_examples = FLAGS.num_train_examples
     self.global_batch_size = FLAGS.batch_size * FLAGS.num_accumulation_steps
     learning_rate = FLAGS.learning_rate
 
     if self.use_horovod:
-      self.global_batch_size *= hvd.size()
-      learning_rate *= hvd.size()
-
-    self.steps_per_epoch = int(num_train_examples / self.global_batch_size)
-
-    if FLAGS.benchmark or FLAGS.stop_steps:
-      if FLAGS.stop_steps:
-        self.steps_per_epoch = FLAGS.stop_steps
-      else:
-        self.steps_per_epoch = 1000
-      self.epochs = 1
-
-    warmup_steps = int(self.epochs * num_train_examples * 0.1 / self.global_batch_size)
-
-    self._performance_calculator = PerformanceCalculator(warmup_steps, self.steps_per_epoch * self.epochs)
+      self.global_batch_size *= get_world_size()
+      learning_rate *= get_world_size()
 
     if isinstance(optimizer, optimizers.Optimizer):
       self.optimizer = optimizer
     else:
-      self.optimizer = optimization.create_optimizer(
-          learning_rate, self.steps_per_epoch * self.epochs, warmup_steps, FLAGS.optimizer_type
-      )
+      raise ValueError("Not support opt.")
     self.use_float16 = common_flags.use_float16()
     if self.use_float16:
       self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, dynamic=True)
-
-    self.steps_per_loop = FLAGS.steps_per_summary
-    if 1 < self.steps_per_epoch < self.steps_per_loop:
-      if is_main_process():
-        logging.error(
-            'steps_per_summary: %d is specified to be greater than '
-            ' steps_per_epoch: %d, we will use steps_per_epoch as'
-            ' steps_per_summary.', self.steps_per_loop, self.steps_per_epoch
-        )
-      self.steps_per_loop = self.steps_per_epoch
-    assert tf.executing_eagerly()
-
-    if self.run_eagerly:
-      # if self.steps_per_loop > 1:
-      #   raise ValueError(
-      #     'steps_per_loop is used for performance optimization. When you want '
-      #     'to run eagerly, you cannot leverage graph mode loop.')
-      if isinstance(self.strategy, tf.distribute.experimental.TPUStrategy):
-        raise ValueError(
-            'TPUStrategy should not run eagerly as it heavily replies on graph'
-            ' optimization for the distributed system.'
-        )
-
-    if not self.run_eagerly:
-      _train_single_step = tf.function(self.train_single_step)
-      _train_multi_steps = tf.function(self.train_steps)
-      self._test_step = tf.function(self.test_step)
-    else:
-      _train_single_step = self.train_single_step
-      _train_multi_steps = self.train_steps
-      self._test_step = self.test_step
-
-    if self.strategy:
-      self._train_step = self.train_single_step_strategy
-      self._train_steps = self.train_steps_strategy
-    else:
-      self._train_step = _train_single_step
-      self._train_steps = _train_multi_steps
-
-    # Create summary writers
-    if is_main_process():
-      self.summary_dir = os.path.join(FLAGS.model_dir, 'summaries')
-      self.eval_summary_writer = tf.summary.create_file_writer(os.path.join(self.summary_dir, 'eval'))
-      if self.steps_per_loop >= _MIN_SUMMARY_STEPS:
-        # Only writes summary when the stats are collected sufficiently over
-        # enough steps.
-        self.train_summary_writer = tf.summary.create_file_writer(os.path.join(self.summary_dir, 'train'))
-      else:
-        self.train_summary_writer = None
-    else:
-      self.eval_summary_writer = None
-      self.train_summary_writer = None
-      eval_input_fn = None
-
-    with distribution_utils.get_strategy_scope(self.strategy):
-      # To correctly place the model weights on accelerators,
-      # model should be created in scope.
-      if isinstance(loss, compile_utils.LossesContainer):
-        self.loss_container = loss
-      else:
-        self.loss_container = compile_utils.LossesContainer(loss, loss_weights, output_names=self.model.output_names)
-      self.metric_container = compile_utils.MetricsContainer(
-          metrics,
-          weighted_metrics,
-          output_names=self.model.output_names,
-          # from_serialized=from_serialized,
-      ) if metrics or weighted_metrics else None
-
-    if FLAGS.init_checkpoint:
-      logging.info(
-          'Checkpoint file %s found and restoring from '
-          'initial checkpoint for core model.', FLAGS.init_checkpoint
-      )
-      self.sub_model_checkpoint = tf.train.Checkpoint(model=self.sub_model) if self.sub_model else None
-      self.sub_model_checkpoint.restore(FLAGS.init_checkpoint).assert_existing_objects_matched()
-      logging.info('Loading from checkpoint file completed')
-
-    self.checkpoint = tf.train.Checkpoint(model=self.model, optimizer=self.optimizer)
-
-    if FLAGS.init_weights:
-      logging.info(
-          'variables file %s found and restoring from '
-          'initial variables for main model.', FLAGS.init_weights
-      )
-      self.model.load_weights(os.path.join(FLAGS.init_weights, "variables"))
-      logging.info('Loading from weights file completed')
-
-    latest_checkpoint_file = tf.train.latest_checkpoint(FLAGS.model_dir)
-    if latest_checkpoint_file:
-      logging.info('Checkpoint file %s found and restoring from '
-                   'checkpoint', latest_checkpoint_file)
-      self.checkpoint.restore(latest_checkpoint_file)
-      logging.info('Loading from checkpoint file completed')
-
-    self.checkpoint_name = 'ctl_step_{step}.ckpt'
-    self.manager = tf.train.CheckpointManager(self.checkpoint, os.path.join(FLAGS.model_dir, 'ckpt'), max_to_keep=3)
-    if FLAGS.init_checkpoint:
-      self.sub_manager = tf.train.CheckpointManager(
-          self.sub_model_checkpoint, os.path.join(FLAGS.model_dir, 'sub_ckpt'), max_to_keep=3
-      )
-    if FLAGS.num_accumulation_steps > 1:
-      self.accum_gradients = GradientAccumulator()
 
   def fit(
       self,
@@ -373,6 +255,7 @@ class Trainer(Module):
       eval_steps=None,
       verbose="auto",
       callbacks=[],
+      steps_per_epoch: int = None,
   ):
     """Trains the model for a fixed number of epochs (dataset iterations).
 
@@ -600,7 +483,107 @@ class Trainer(Module):
         ValueError: In case of mismatch between the provided input data
             and what the model expects or when the input data is empty.
     """
+    self.steps_per_epoch = steps_per_epoch if steps_per_epoch else 0
+    if FLAGS.benchmark or FLAGS.stop_steps:
+      if FLAGS.stop_steps:
+        self.steps_per_epoch = FLAGS.stop_steps
+      else:
+        self.steps_per_epoch = 1000
+      self.epochs = 1
+
     if FLAGS.keras_use_ctl:
+      self._performance_calculator = PerformanceCalculator(total_steps=self.steps_per_epoch * self.epochs)
+
+      self.steps_per_loop = FLAGS.steps_per_summary
+      if 1 < self.steps_per_epoch < self.steps_per_loop:
+        if is_main_process():
+          logging.error(
+              'steps_per_summary: %d is specified to be greater than '
+              ' steps_per_epoch: %d, we will use steps_per_epoch as'
+              ' steps_per_summary.', self.steps_per_loop, self.steps_per_epoch
+          )
+        self.steps_per_loop = self.steps_per_epoch
+      assert tf.executing_eagerly()
+
+      if self.run_eagerly:
+        # if self.steps_per_loop > 1:
+        #   raise ValueError(
+        #     'steps_per_loop is used for performance optimization. When you want '
+        #     'to run eagerly, you cannot leverage graph mode loop.')
+        if isinstance(self.strategy, tf.distribute.experimental.TPUStrategy):
+          raise ValueError(
+              'TPUStrategy should not run eagerly as it heavily replies on graph'
+              ' optimization for the distributed system.'
+          )
+
+      self.make_train_function()
+
+      # Create summary writers
+      if is_main_process():
+        self.summary_dir = os.path.join(FLAGS.model_dir, 'summaries')
+        self.eval_summary_writer = tf.summary.create_file_writer(os.path.join(self.summary_dir, 'eval'))
+        if self.steps_per_loop >= _MIN_SUMMARY_STEPS:
+          # Only writes summary when the stats are collected sufficiently over
+          # enough steps.
+          self.train_summary_writer = tf.summary.create_file_writer(os.path.join(self.summary_dir, 'train'))
+        else:
+          self.train_summary_writer = None
+      else:
+        self.eval_summary_writer = None
+        self.train_summary_writer = None
+        eval_input_fn = None
+
+      with distribution_utils.get_strategy_scope(self.strategy):
+        # To correctly place the model weights on accelerators,
+        # model should be created in scope.
+        if isinstance(self._loss, compile_utils.LossesContainer):
+          self.loss_container = self._loss
+        else:
+          self.loss_container = compile_utils.LossesContainer(
+              self._loss, self._loss_weights, output_names=self.model.output_names
+          )
+        self.metric_container = compile_utils.MetricsContainer(
+            self._metrics,
+            self._weighted_metrics,
+            output_names=self.model.output_names,
+            # from_serialized=from_serialized,
+        ) if self._metrics or self._weighted_metrics else None
+
+      if FLAGS.init_checkpoint:
+        logging.info(
+            'Checkpoint file %s found and restoring from '
+            'initial checkpoint for core model.', FLAGS.init_checkpoint
+        )
+        self.sub_model_checkpoint = tf.train.Checkpoint(model=self.sub_model) if self.sub_model else None
+        self.sub_model_checkpoint.restore(FLAGS.init_checkpoint).assert_existing_objects_matched()
+        logging.info('Loading from checkpoint file completed')
+
+      self.checkpoint = tf.train.Checkpoint(model=self.model, optimizer=self.optimizer)
+
+      if FLAGS.init_weights:
+        logging.info(
+            'variables file %s found and restoring from '
+            'initial variables for main model.', FLAGS.init_weights
+        )
+        self.model.load_weights(os.path.join(FLAGS.init_weights, "variables"))
+        logging.info('Loading from weights file completed')
+
+      latest_checkpoint_file = tf.train.latest_checkpoint(FLAGS.model_dir)
+      if latest_checkpoint_file:
+        logging.info('Checkpoint file %s found and restoring from '
+                     'checkpoint', latest_checkpoint_file)
+        self.checkpoint.restore(latest_checkpoint_file)
+        logging.info('Loading from checkpoint file completed')
+
+      self.checkpoint_name = 'ctl_step_{step}.ckpt'
+      self.manager = tf.train.CheckpointManager(self.checkpoint, os.path.join(FLAGS.model_dir, 'ckpt'), max_to_keep=3)
+      if FLAGS.init_checkpoint:
+        self.sub_manager = tf.train.CheckpointManager(
+            self.sub_model_checkpoint, os.path.join(FLAGS.model_dir, 'sub_ckpt'), max_to_keep=3
+        )
+      if FLAGS.num_accumulation_steps > 1:
+        self.accum_gradients = GradientAccumulator()
+
       verbose = 0  # training_module._get_verbosity(verbose, self.strategy)
 
       # Container that configures and calls `tf.keras.Callback`s.
@@ -616,8 +599,14 @@ class Trainer(Module):
         )
       return self.run_customized_training_loop(train_input, eval_input)
     else:
+      if FLAGS.use_horovod and not FLAGS.use_dynamic_embedding:
+        # Add Horovod Distributed Optimizer
+        opt = hvd.DistributedOptimizer(self.optimizer)
+      else:
+        opt = self.optimizer
+
       self.model.compile(
-          optimizer=self.optimizer,
+          optimizer=opt,
           loss=self._loss,
           loss_weights=self._loss_weights,
           metrics=self._metrics,
@@ -625,15 +614,16 @@ class Trainer(Module):
           run_eagerly=self.run_eagerly
       )
 
-      if not FLAGS.benchmark:
-        # Create Tensorboard summary and checkpoint callbacks.
-        summary_dir = os.path.join(FLAGS.model_dir, "summaries")
-        callbacks.append(tf.keras.callbacks.TensorBoard(summary_dir, profile_batch=0))
+      # if not FLAGS.benchmark:
+      #   # Create Tensorboard summary and checkpoint callbacks.
+      #   summary_dir = os.path.join(FLAGS.model_dir, "summaries")
+      #   callbacks.append(tf.keras.callbacks.TensorBoard(summary_dir, profile_batch=0))
 
-        # Horovod: save checkpoints only on worker 0 to prevent other workers from corrupting them.
-        if is_main_process():
-          checkpoint_path = os.path.join(FLAGS.model_dir, "checkpoint")
-          callbacks.append(tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True))
+      #   # Horovod: save checkpoints only on worker 0 to prevent other workers from corrupting them.
+      #   if is_main_process():
+      #     checkpoint_path = os.path.join(FLAGS.model_dir, "checkpoint")
+      #     callbacks.append(tf.keras.callbacks.ModelCheckpoint(checkpoint_path, save_weights_only=True))
+
       if FLAGS.use_horovod:
         callbacks += [
             # Horovod: broadcast initial variable states from rank 0 to all other processes.
@@ -649,7 +639,7 @@ class Trainer(Module):
       history = self.model.fit(
           train_input,
           epochs=self.epochs,
-          steps_per_epoch=self.steps_per_epoch,
+          steps_per_epoch=self.steps_per_epoch if self.steps_per_epoch else None,
           callbacks=callbacks,
           validation_data=eval_input,
           validation_steps=eval_steps,
@@ -664,8 +654,6 @@ class Trainer(Module):
   ):
     # if self.epochs > 1 and FLAGS.num_train_examples == -1:
     #   raise ValueError('When the num_train_examples is INFINITE or UNKNOWN, we just can run one epoch.')
-
-    self._performance_calculator.init()
 
     # Training loop starts here.
     self.current_step = self._first_steps = self.optimizer.iterations.numpy()
@@ -720,8 +708,6 @@ class Trainer(Module):
       self.on_epoch_end(epoch, self.current_step, eval_input, epoch_logs=training_logs)
       if self.model.stop_training:
         logging.info(f"self.model.stop_training = {self.model.stop_training}")
-        if self.use_horovod:
-          hvd.broadcast_object(self.model.stop_training, root_rank=0)
         break
     self.callbacks.on_train_end(logs=training_logs)
 
@@ -761,7 +747,7 @@ class Trainer(Module):
       logging.info("  LR = %g", FLAGS.learning_rate)
       if self.use_horovod:
         logging.info("Multi-GPU training with TF Horovod")
-        logging.info("hvd.size() = %d", hvd.size())
+        logging.info("hvd.size() = %d", get_world_size())
       logging.info("Total Training Time = %0.2f for Examples = %d", total_time, total_sentences)
       logging.info("Throughput Average (examples/sec) with overhead = %0.2f", results_perf['throughput'])
       if self._perf_wo_n != 0:
@@ -830,7 +816,6 @@ class Trainer(Module):
           var for var in self.optimizer.variables()
           if (not isinstance(var, TrainableWrapper)) and (not isinstance(var, DEResourceVariable))
       ]
-
       hvd.broadcast_variables(opt_broadcast_vars, root_rank=0)
 
     # For reporting, the metric takes the mean of losses.
@@ -951,3 +936,20 @@ class Trainer(Module):
     if is_main_process():
       save_options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
       tf.saved_model.save(self.model, "test_tfra", options=save_options)
+
+  def make_train_function(self):
+    if not self.run_eagerly:
+      _train_single_step = tf.function(self.train_single_step)
+      _train_multi_steps = tf.function(self.train_steps)
+      self._test_step = tf.function(self.test_step)
+    else:
+      _train_single_step = self.train_single_step
+      _train_multi_steps = self.train_steps
+      self._test_step = self.test_step
+
+    if self.strategy:
+      self._train_step = self.train_single_step_strategy
+      self._train_steps = self.train_steps_strategy
+    else:
+      self._train_step = _train_single_step
+      self._train_steps = _train_multi_steps

@@ -35,7 +35,6 @@ class PerformanceCalculator:
     self.warmup_steps = max(warmup_steps, 0)
     self.total_steps = max(total_steps, 0)
     self.step = 0
-    self.step_start_time = None
     self.benchmark_start_time = None
     self.benchmark_after_warmup_start_time = None
     self.step_latencies = []
@@ -44,7 +43,6 @@ class PerformanceCalculator:
     with tf.device("/CPU:0"):
       self.samples = tf.Variable(0, trainable=False, dtype=tf.int64)
 
-  def init(self):
     self.samples.assign(0)
     self.step_latencies = []
     self._results = {}

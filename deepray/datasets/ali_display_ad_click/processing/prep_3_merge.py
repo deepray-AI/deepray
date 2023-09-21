@@ -81,7 +81,7 @@ def main(args):
   for btag, fname in behavior_logs.items():
     logging.info('Reading %s logs from %s...', btag, fname)
     hist = pd.read_parquet(fname)
-    hist_cols = hist.columns.to_list()
+    hist_cols = hist.columns.tolist()
     hist_cols.remove('user')
     logging.info('Merging %s logs into click logs...', btag)
     click_log = _merge_to_clicks(click_log, hist, hist_cols)

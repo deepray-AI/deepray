@@ -1,6 +1,6 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
+ * All rights reserved. SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,8 @@ REGISTER_OP("ReadVariableNoCopy")
     .Attr("dtype: type")
     .SetShapeFn([](shape_inference::InferenceContext* c) {
       std::vector<shape_inference::ShapeAndType> shape_and_type;
-      TF_RETURN_IF_ERROR(shape_inference::ValidateVariableResourceHandle(c, &shape_and_type));
+      TF_RETURN_IF_ERROR(
+          shape_inference::ValidateVariableResourceHandle(c, &shape_and_type));
       c->set_output(0, shape_and_type[0].shape);
       return Status::OK();
     });
@@ -81,9 +82,10 @@ REGISTER_OP("EmbeddingLookupVariableHotnessGrad")
     .SetShapeFn([](shape_inference::InferenceContext* c) {
       shape_inference::ShapeHandle grad_shape;
       TF_RETURN_IF_ERROR(c->WithRank(c->input(2), 2, &grad_shape));
-      c->set_output(0, c->Vector(shape_inference::InferenceContext::kUnknownDim));
-      c->set_output(
-          1, c->Matrix(shape_inference::InferenceContext::kUnknownDim, c->Dim(grad_shape, 1)));
+      c->set_output(0,
+                    c->Vector(shape_inference::InferenceContext::kUnknownDim));
+      c->set_output(1, c->Matrix(shape_inference::InferenceContext::kUnknownDim,
+                                 c->Dim(grad_shape, 1)));
       return Status::OK();
     });
 

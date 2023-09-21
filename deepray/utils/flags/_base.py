@@ -119,7 +119,11 @@ def define_base(
     key_flags.append("clean")
 
   if epochs:
+    flags.DEFINE_integer(
+        name="steps_per_epoch", default=None, help=help_wrap("The number of steps in one epoch used to train.")
+    )
     flags.DEFINE_integer(name="epochs", default=1, help=help_wrap("The number of epochs used to train."))
+    key_flags.append("steps_per_epoch")
     key_flags.append("epochs")
 
   if epochs_between_evals:

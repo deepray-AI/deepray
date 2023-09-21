@@ -1,6 +1,6 @@
 /*
- * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-FileCopyrightText: Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES.
+ * All rights reserved. SPDX-License-Identifier: Apache-2.0
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,20 +23,24 @@ namespace tensorflow {
 
 // helper op for sparse read that don't respect copy_on_read_mode
 // Compare to sparse_read(resource_gather) method of resource variable,
-// as long as a custom sparse read op following this, only difference is earlier lock release
-// since copy_on_read_mode result in dense write copying anyway, early unlock won't affect it
+// as long as a custom sparse read op following this, only difference is earlier
+// lock release since copy_on_read_mode result in dense write copying anyway,
+// early unlock won't affect it
 class ReadVariableNoCopyOp : public OpKernel {
  public:
-  explicit ReadVariableNoCopyOp(OpKernelConstruction* context) : OpKernel(context) {
+  explicit ReadVariableNoCopyOp(OpKernelConstruction* context)
+      : OpKernel(context) {
     OP_REQUIRES_OK(context, context->GetAttr("dtype", &dtype_));
   }
   void Compute(OpKernelContext* context) override {
     core::RefCountPtr<Var> v;
-    OP_REQUIRES_OK(context, LookupResource(context, HandleFromInput(context, 0), &v));
+    OP_REQUIRES_OK(context,
+                   LookupResource(context, HandleFromInput(context, 0), &v));
     tf_shared_lock ml(*v->mu());
     const Tensor* t = v->tensor();
     OP_REQUIRES(context, dtype_ == t->dtype(),
-                errors::InvalidArgument("Trying to read variable(no copy) with wrong dtype."));
+                errors::InvalidArgument(
+                    "Trying to read variable(no copy) with wrong dtype."));
     context->set_output(0, *t);
   }
 
@@ -59,16 +63,17 @@ class RowToSplitOp : public OpKernel {
     Tensor* output = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, output_shape, &output));
 
-    RowToSplitFunctor<Device, Tindices>()(context->eigen_device<Device>(),
-                                          output->flat<Tindices>().data(),
-                                          row.flat<Tindices>().data(), num_ids, num_rows);
+    RowToSplitFunctor<Device, Tindices>()(
+        context->eigen_device<Device>(), output->flat<Tindices>().data(),
+        row.flat<Tindices>().data(), num_ids, num_rows);
   }
 };
 
 template <typename Device, typename T, typename Tindices>
 class EmbeddingLookupVariableHotnessOp : public OpKernel {
  public:
-  explicit EmbeddingLookupVariableHotnessOp(OpKernelConstruction* context) : OpKernel(context) {
+  explicit EmbeddingLookupVariableHotnessOp(OpKernelConstruction* context)
+      : OpKernel(context) {
     OP_REQUIRES_OK(context, context->GetAttr("combiner", &_combiner));
   }
 
@@ -88,8 +93,9 @@ class EmbeddingLookupVariableHotnessOp : public OpKernel {
     OP_REQUIRES_OK(context, context->allocate_output(0, output_shape, &output));
 
     EmbeddingLookupVariableHotnessFunctor<Device, T, Tindices>()(
-        context->eigen_device<Device>(), output->flat<T>().data(), params.flat<T>().data(),
-        ids.flat<Tindices>().data(), offsets.flat<Tindices>().data(), num_rows, embedding_width,
+        context->eigen_device<Device>(), output->flat<T>().data(),
+        params.flat<T>().data(), ids.flat<Tindices>().data(),
+        offsets.flat<Tindices>().data(), num_rows, embedding_width,
         StringToEnum(_combiner), ave_red_len);
   }
 
@@ -100,7 +106,8 @@ class EmbeddingLookupVariableHotnessOp : public OpKernel {
 template <typename Device, typename T, typename Tindices>
 class EmbeddingLookupVariableHotnessGradOp : public OpKernel {
  public:
-  explicit EmbeddingLookupVariableHotnessGradOp(OpKernelConstruction* context) : OpKernel(context) {
+  explicit EmbeddingLookupVariableHotnessGradOp(OpKernelConstruction* context)
+      : OpKernel(context) {
     OP_REQUIRES_OK(context, context->GetAttr("combiner", &_combiner));
   }
 
@@ -117,8 +124,8 @@ class EmbeddingLookupVariableHotnessGradOp : public OpKernel {
 
     EmbeddingLookupVariableHotnessGradFunctor<Device, T, Tindices>()(
         context, ids.flat<Tindices>().data(), offset_in.flat<Tindices>().data(),
-        grad.flat<T>().data(), num_ids, embedding_width, num_rows, dense_shape_dim0, max_red_len,
-        StringToEnum(_combiner));
+        grad.flat<T>().data(), num_ids, embedding_width, num_rows,
+        dense_shape_dim0, max_red_len, StringToEnum(_combiner));
   }
 
  private:
@@ -134,17 +141,20 @@ class IntegerLookupOp : public OpKernel {
 
   void Compute(OpKernelContext* context) override {
     core::RefCountPtr<Var> table;
-    OP_REQUIRES_OK(context, LookupResource(context, HandleFromInput(context, 0), &table));
+    OP_REQUIRES_OK(
+        context, LookupResource(context, HandleFromInput(context, 0), &table));
     core::RefCountPtr<Var> count;
-    OP_REQUIRES_OK(context, LookupResource(context, HandleFromInput(context, 1), &count));
+    OP_REQUIRES_OK(
+        context, LookupResource(context, HandleFromInput(context, 1), &count));
     const Tensor& keys = context->input(2);
 
     Tensor* values = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, keys.shape(), &values));
 
     IntegerLookupFunctor<Device, T, CountT>()(
-        context, table->tensor()->flat<T>().data(), count->tensor()->flat<CountT>().data(),
-        keys.flat<T>().data(), values->flat<T>().data(), keys.NumElements(), need_init_, capacity_);
+        context, table->tensor()->flat<T>().data(),
+        count->tensor()->flat<CountT>().data(), keys.flat<T>().data(),
+        values->flat<T>().data(), keys.NumElements(), need_init_, capacity_);
     need_init_ = false;
   }
 
@@ -154,11 +164,14 @@ class IntegerLookupOp : public OpKernel {
   int64_t capacity_;
 };
 
-REGISTER_KERNEL_BUILDER(Name("ReadVariableNoCopy").Device(DEVICE_CPU), ReadVariableNoCopyOp);
-REGISTER_KERNEL_BUILDER(Name("ReadVariableNoCopy").Device(DEVICE_DEFAULT).HostMemory("resource"),
+REGISTER_KERNEL_BUILDER(Name("ReadVariableNoCopy").Device(DEVICE_CPU),
                         ReadVariableNoCopyOp);
-REGISTER_KERNEL_BUILDER(Name("ReadVariableNoCopy").Device(DEVICE_GPU).HostMemory("resource"),
-                        ReadVariableNoCopyOp);
+REGISTER_KERNEL_BUILDER(
+    Name("ReadVariableNoCopy").Device(DEVICE_DEFAULT).HostMemory("resource"),
+    ReadVariableNoCopyOp);
+REGISTER_KERNEL_BUILDER(
+    Name("ReadVariableNoCopy").Device(DEVICE_GPU).HostMemory("resource"),
+    ReadVariableNoCopyOp);
 
 REGISTER_KERNEL_BUILDER(Name("IntegerLookup")
                             .Device(DEVICE_GPU)
@@ -166,22 +179,24 @@ REGISTER_KERNEL_BUILDER(Name("IntegerLookup")
                             .TypeConstraint<uint32_t>("count_dtype"),
                         IntegerLookupOp<Eigen::GpuDevice, int64_t, uint32_t>);
 
-#define REGISTER_GPU(T, Tindices)                                                           \
-  REGISTER_KERNEL_BUILDER(Name("RowToSplit")                                                \
-                              .Device(DEVICE_GPU)                                           \
-                              .TypeConstraint<Tindices>("Tindices")                         \
-                              .HostMemory("shape"),                                         \
-                          RowToSplitOp<Eigen::GpuDevice, Tindices>);                        \
-  REGISTER_KERNEL_BUILDER(Name("EmbeddingLookupVariableHotness")                            \
-                              .Device(DEVICE_GPU)                                           \
-                              .TypeConstraint<T>("T")                                       \
-                              .TypeConstraint<Tindices>("Tindices"),                        \
-                          EmbeddingLookupVariableHotnessOp<Eigen::GpuDevice, T, Tindices>); \
-  REGISTER_KERNEL_BUILDER(Name("EmbeddingLookupVariableHotnessGrad")                        \
-                              .Device(DEVICE_GPU)                                           \
-                              .TypeConstraint<T>("T")                                       \
-                              .TypeConstraint<Tindices>("Tindices"),                        \
-                          EmbeddingLookupVariableHotnessGradOp<Eigen::GpuDevice, T, Tindices>);
+#define REGISTER_GPU(T, Tindices)                                       \
+  REGISTER_KERNEL_BUILDER(Name("RowToSplit")                            \
+                              .Device(DEVICE_GPU)                       \
+                              .TypeConstraint<Tindices>("Tindices")     \
+                              .HostMemory("shape"),                     \
+                          RowToSplitOp<Eigen::GpuDevice, Tindices>);    \
+  REGISTER_KERNEL_BUILDER(                                              \
+      Name("EmbeddingLookupVariableHotness")                            \
+          .Device(DEVICE_GPU)                                           \
+          .TypeConstraint<T>("T")                                       \
+          .TypeConstraint<Tindices>("Tindices"),                        \
+      EmbeddingLookupVariableHotnessOp<Eigen::GpuDevice, T, Tindices>); \
+  REGISTER_KERNEL_BUILDER(                                              \
+      Name("EmbeddingLookupVariableHotnessGrad")                        \
+          .Device(DEVICE_GPU)                                           \
+          .TypeConstraint<T>("T")                                       \
+          .TypeConstraint<Tindices>("Tindices"),                        \
+      EmbeddingLookupVariableHotnessGradOp<Eigen::GpuDevice, T, Tindices>);
 
 REGISTER_GPU(float, int64_t)
 REGISTER_GPU(float, int32_t)
