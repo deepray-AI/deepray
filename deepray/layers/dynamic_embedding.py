@@ -299,7 +299,6 @@ class DiamondEmbedding(tf.keras.layers.Layer):
             "name", "length", "dim", "voc_size", "dtype", "hash_size", "composition_size", "storage_type",
             "bucket_boundaries"
         ]].values:
-
       if self.is_valid_value(bucket_boundaries):
         bucket_boundaries_list = sorted(set(map(float, bucket_boundaries.split(","))))
         self.numerical_bucket_kernel[name] = NumericaBucketIdLayer(bucket_boundaries_list)
@@ -319,42 +318,20 @@ class DiamondEmbedding(tf.keras.layers.Layer):
           self.embedding_layers[self.fold_columns[name]] = CompositionalEmbedding(
               embedding_dim=dim,
               key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
+              value_dtype=tf.float32,
               composition_size=composition_factor,
               operation="add",
               name=self.fold_columns[name]
           )
         else:
-          if storage_type == "Redis":
-            redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir=FLAGS.config_file)
-            self.embedding_layers[self.fold_columns[name]] = EmbeddingLayerRedis(
-                embedding_size=dim,
-                key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
-                value_dtype=tf.float32,
-                initializer=tf.keras.initializers.GlorotUniform(),
-                name='embedding_redis' + self.fold_columns[name],
-                devices="/job:localhost/replica:0/task:0/CPU:0",
-                kv_creator=de.RedisTableCreator(redis_config)
-            )
-          elif storage_type == "DRAM":
-            self.embedding_layers[self.fold_columns[name]] = DistributedDynamicEmbedding(
-                embedding_dim=dim,
-                key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
-                value_dtype=tf.float32,
-                initializer=tf.keras.initializers.GlorotUniform(),
-                name='embedding_' + self.fold_columns[name],
-                de_option=DynamicEmbeddingOption(device=storage_type)
-            )
-
-          else:
-
-            self.embedding_layers[self.fold_columns[name]] = DistributedDynamicEmbedding(
-                embedding_dim=dim,
-                key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
-                value_dtype=tf.float32,
-                initializer=tf.keras.initializers.GlorotUniform(),
-                name='embedding_' + self.fold_columns[name],
-                de_option=DynamicEmbeddingOption(device=storage_type)
-            )
+          self.embedding_layers[self.fold_columns[name]] = DistributedDynamicEmbedding(
+              embedding_dim=dim,
+              key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
+              value_dtype=tf.float32,
+              initializer=tf.keras.initializers.GlorotUniform(),
+              name='embedding_' + self.fold_columns[name],
+              de_option=DynamicEmbeddingOption(device=storage_type)
+          )
 
       self.split_dims[self.fold_columns[name]].append(length)
     # [1,1,1,10,1,1,30,1] -> [[3, 10, 2, 30, 1] and [False, True, False, True, False] for split sequence feature
