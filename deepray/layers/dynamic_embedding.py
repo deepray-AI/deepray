@@ -9,31 +9,60 @@ import pandas as pd
 import tensorflow as tf
 import tensorflow_recommenders_addons as tfra
 from absl import flags, logging
-from keras import initializers
-from keras import regularizers
-from tensorflow.python.keras import regularizers, initializers
 from tensorflow_recommenders_addons import dynamic_embedding as de
 from tensorflow_recommenders_addons.dynamic_embedding.python.keras.layers import BasicEmbedding as DynamicEmbedding
 from tensorflow_recommenders_addons.dynamic_embedding.python.keras.layers import HvdAllToAllEmbedding
 
 from deepray.layers.bucketize import NumericaBucketIdLayer, Hash
+from deepray.utils.horovod_utils import get_world_size, get_rank
 
 FLAGS = flags.FLAGS
 
 
-class EmbeddingLayerRedis(DynamicEmbedding):
+class DynamicEmbeddingOption(object):
 
-  def __init__(self, mini_batch_regularizer=None, devices=['/CPU:0'], mask_value=None, **kwargs):
-    self.mini_batch_regularizer = regularizers.get(mini_batch_regularizer)
-    self.mask_value = mask_value
+  def __init__(
+      self,
+      device: Optional[Literal["HBM", "DRAM", "Redis", "HKV"]] = None,
+      init_capacity=64 * 1024 * 1024,
+      max_capacity=128 * 1024 * 1024,
+      max_hbm_for_vectors=4 * 1024 * 1024 * 1024
+  ):
+    self.init_capacity = init_capacity
+    self.max_capacity = max_capacity
+    self.max_hbm_for_vectors = max_hbm_for_vectors
 
-    if FLAGS.redis_config_env:
-      redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir_env=FLAGS.redis_config_env)
+    if device == "Redis":
+      if FLAGS.redis_config_env:
+        redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir_env=FLAGS.redis_config_env)
+      else:
+        redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir=FLAGS.redis_config_dir)
+
+      self.devices = ['/CPU:0']
+      self.kv_creator = tfra.dynamic_embedding.RedisTableCreator(redis_config)
+    elif device == "HKV":
+      self.devices = ['/GPU:0']
+      hkv_config = tfra.dynamic_embedding.HkvHashTableConfig(
+          init_capacity=init_capacity,
+          max_capacity=max_capacity,
+          max_hbm_for_vectors=max_hbm_for_vectors,
+      )
+      self.kv_creator = tfra.dynamic_embedding.HkvHashTableCreator(hkv_config)
+    elif device == "HBM":
+      self.devices = ['/GPU:0']
+    elif device == "DRAM":
+      self.devices = ['/CPU:0']
     else:
-      redis_config = tfra.dynamic_embedding.RedisTableConfig(redis_config_abs_dir=FLAGS.redis_config_dir)
+      self.devices = ['/GPU:0']
+    if not FLAGS.use_horovod:
+      self.kv_creator = de.CuckooHashTableCreator(
+          saver=de.FileSystemSaver(proc_size=get_world_size(), proc_rank=get_rank())
+      )
+    else:
+      self.kv_creator = de.CuckooHashTableCreator(saver=de.FileSystemSaver())
 
-    super(EmbeddingLayerRedis,
-          self).__init__(devices=devices, kv_creator=tfra.dynamic_embedding.RedisTableCreator(redis_config), **kwargs)
+
+class EmbeddingLayerRedis(DynamicEmbedding):
 
   def call(self, ids):
     with tf.name_scope(self.name + "/EmbeddingLookupUnique"):
@@ -45,20 +74,6 @@ class EmbeddingLayerRedis(DynamicEmbedding):
       embeddings_shape = tf.concat([tf.shape(ids), tf.constant(self.embedding_size, shape=(1,))], 0)
       embeddings = tf.reshape(embeddings_flat, embeddings_shape)
       return embeddings
-
-  def get_config(self):
-    config = {
-        'mini_batch_regularizer': initializers.serialize(self.mini_batch_regularizer),
-        'mask_value': self.mask_value
-    }
-    base_config = super(EmbeddingLayerRedis, self).get_config()
-
-    return dict(list(base_config.items()) + list(config.items()))
-
-  def compute_mask(self, inputs, mask=None):
-    if not self.mask_value:
-      return None
-    return tf.not_equal(inputs, self.mask_value)
 
 
 class EmbeddingLayerGPU(DynamicEmbedding):
@@ -83,56 +98,47 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
       value_dtype: str,
       initializer=None,
       name: str = '',
-      device: Optional[Literal["HBM", "DRAM", "Redis"]] = None,
+      de_option: DynamicEmbeddingOption = DynamicEmbeddingOption(),
       **kwargs
   ):
     super().__init__(**kwargs)
-    if device == "Redis":
+    if de_option.devices == "Redis":
       self.emb = EmbeddingLayerRedis(
           embedding_size=embedding_dim,
           key_dtype=key_dtype,
           value_dtype=value_dtype,
           initializer=initializer,
-          name=name
+          name=name,
+          devices=de_option.devices,
+          kv_creator=de_option.kv_creator
       )
-      logging.info(f"Create EmbeddingLayerRedis for {name} on {device} with {embedding_dim} dim")
+      logging.info(f"Create EmbeddingLayerRedis for {name} on {de_option.devices} with {embedding_dim} dim")
       return
-    elif device == "HBM":
-      _devices = ['/GPU:0']
-    elif device == "DRAM":
-      _devices = ['/CPU:0']
-    else:
-      _devices = ['/GPU:0']
 
     if not FLAGS.use_horovod:
       self.emb = EmbeddingLayerGPU(
           embedding_size=embedding_dim,
-          devices=_devices,
           key_dtype=key_dtype,
           value_dtype=value_dtype,
           initializer=initializer,
           name=name,
-          init_capacity=1000000 * 8,  # 如果提示hash冲突，调整该参数
-          kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver())
+          devices=de_option.devices,
+          init_capacity=de_option.init_capacity,
+          kv_creator=de_option.kv_creator
       )
-      logging.info(f"Create EmbeddingLayerGPU for {name} on {device} with {embedding_dim} dim")
+      logging.info(f"Create EmbeddingLayerGPU for {name} on {de_option.devices} with {embedding_dim} dim")
     else:
-      import horovod.tensorflow as hvd
-
-      mpi_size = hvd.size()
-      mpi_rank = hvd.rank()
       self.emb = HvdAllToAllEmbedding(
-          # mpi_size=mpi_size,
           embedding_size=embedding_dim,
           key_dtype=tf.int64,
           value_dtype=tf.float32,
           initializer=initializer,
-          init_capacity=800000,
           name=name,
-          devices=_devices,
-          kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank))
+          devices=de_option.devices,
+          init_capacity=de_option.init_capacity,
+          kv_creator=de_option.kv_creator
       )
-      logging.info(f"Create HvdAllToAllEmbedding for {name} on {device} with {embedding_dim} dim")
+      logging.info(f"Create HvdAllToAllEmbedding for {name} on {de_option.devices} with {embedding_dim} dim")
 
   def call(self, ids, *args, **kwargs):
     return self.emb(ids)
@@ -154,7 +160,7 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
       complementary_strategy: str = "Q-R",
       operation: str = "add",
       name: str = '',
-      device: Optional[Literal["HBM", "DRAM", "Redis"]] = None,
+      device: Optional[Literal["HBM", "DRAM", "Redis", "HKV"]] = None,
       initializer=None,
       **kwargs
   ):
@@ -219,7 +225,7 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
         value_dtype=self.value_dtype,
         initializer=self.initializer,
         name=f"embeddings_{self.suffix}/Compositional",
-        device=self.device,
+        de_option=DynamicEmbeddingOption(device=self.device,)
     )
 
   def call(self, inputs, *args, **kwargs):
@@ -330,68 +336,25 @@ class DiamondEmbedding(tf.keras.layers.Layer):
                 kv_creator=de.RedisTableCreator(redis_config)
             )
           elif storage_type == "DRAM":
-            devices = ['/CPU:0']
-            if not FLAGS.use_horovod:
-              self.embedding_layers[self.fold_columns[name]] = DynamicEmbedding(
-                  embedding_size=dim,
-                  key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
-                  value_dtype=tf.float32,
-                  initializer=tf.keras.initializers.GlorotUniform(),
-                  name='embedding_' + self.fold_columns[name],
-                  init_capacity=800000,
-                  devices=devices,
-                  kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver())
-              )
-            else:
-              import horovod.tensorflow as hvd
-
-              mpi_size = hvd.size()
-              mpi_rank = hvd.rank()
-              self.embedding_layers[self.fold_columns[name]] = de.keras.layers.HvdAllToAllEmbedding(
-                  # mpi_size=mpi_size,
-                  embedding_size=dim,
-                  key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
-                  value_dtype=tf.float32,
-                  initializer=tf.keras.initializers.GlorotUniform(),
-                  init_capacity=800000,
-                  name='embedding_' + self.fold_columns[name],
-                  devices=devices,
-                  kv_creator=de.CuckooHashTableCreator(
-                      saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank)
-                  )
-              )
+            self.embedding_layers[self.fold_columns[name]] = DistributedDynamicEmbedding(
+                embedding_dim=dim,
+                key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
+                value_dtype=tf.float32,
+                initializer=tf.keras.initializers.GlorotUniform(),
+                name='embedding_' + self.fold_columns[name],
+                de_option=DynamicEmbeddingOption(device=storage_type)
+            )
 
           else:
-            devices = ['/GPU:0']
-            if not FLAGS.use_horovod:
-              self.embedding_layers[self.fold_columns[name]] = DynamicEmbedding(
-                  embedding_size=dim,
-                  key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
-                  value_dtype=tf.float32,
-                  initializer=tf.keras.initializers.GlorotUniform(),
-                  name='embedding_' + self.fold_columns[name],
-                  init_capacity=800000,
-                  devices=devices,
-                  kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver())
-              )
-            else:
-              import horovod.tensorflow as hvd
 
-              mpi_size = hvd.size()
-              mpi_rank = hvd.rank()
-              self.embedding_layers[self.fold_columns[name]] = de.keras.layers.HvdAllToAllEmbedding(
-                  # mpi_size=mpi_size,
-                  embedding_size=dim,
-                  key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
-                  value_dtype=tf.float32,
-                  initializer=tf.keras.initializers.GlorotUniform(),
-                  init_capacity=800000,
-                  name='embedding_' + self.fold_columns[name],
-                  devices=devices,
-                  kv_creator=de.CuckooHashTableCreator(
-                      saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank)
-                  )
-              )
+            self.embedding_layers[self.fold_columns[name]] = DistributedDynamicEmbedding(
+                embedding_dim=dim,
+                key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
+                value_dtype=tf.float32,
+                initializer=tf.keras.initializers.GlorotUniform(),
+                name='embedding_' + self.fold_columns[name],
+                de_option=DynamicEmbeddingOption(device=storage_type)
+            )
 
       self.split_dims[self.fold_columns[name]].append(length)
     # [1,1,1,10,1,1,30,1] -> [[3, 10, 2, 30, 1] and [False, True, False, True, False] for split sequence feature
