@@ -17,15 +17,13 @@
 set -eu
 set -o pipefail
 
-
-num_gpu=${1:-"1"}
-batch_size=${2:-"1024"}
+num_gpu=${1:-"4"}
+batch_size=${2:-"4096"}
 learning_rate=${3:-"5e-6"}
 precision=${4:-"fp32"}
 use_xla=${5:-"true"}
-model=${6:-"demo"}
-epochs=${7:-"100"}
-profile=${8:-"false"}
+epochs=${6:-"1"}
+profile=${7:-"false"}
 
 if [ $num_gpu -gt 1 ]; then
     hvd_command="horovodrun -np $num_gpu "
@@ -50,7 +48,7 @@ else
 fi
 
 export GBS=$(expr $batch_size \* $num_gpu)
-printf -v TAG "tf_tfra_training_movielens_%s_%s_gbs%d" "$model" "$precision" $GBS
+printf -v TAG "tf_tfra_training_criteo_%s_%s_gbs%d" "dcn" "$precision" $GBS
 DATESTAMP=$(date +'%y%m%d%H%M%S')
 
 #Edit to save logs & checkpoints in a different directory
@@ -71,9 +69,11 @@ set -x
 $hvd_command $nsys_command python train.py \
     --feature_map=/workspaces/deepray/deepray/datasets/criteo/feature_map_small.csv \
     --num_gpus=$num_gpu \
-    --stop_steps=5000 \
     --batch_size=$batch_size \
     --use_dynamic_embedding=True \
+    --steps_per_summary=10 \
+    --run_eagerly=true \
+    --steps_per_epoch=50 \
     --learning_rate=$learning_rate \
     --epochs=$epochs \
     --model_dir=${RESULTS_DIR} \

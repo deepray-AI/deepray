@@ -132,8 +132,8 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
     else:
       self.emb = HvdAllToAllEmbedding(
           embedding_size=embedding_dim,
-          key_dtype=tf.int64,
-          value_dtype=tf.float32,
+          key_dtype=key_dtype,
+          value_dtype=value_dtype,
           initializer=initializer,
           name=name,
           devices=de_option.devices,
