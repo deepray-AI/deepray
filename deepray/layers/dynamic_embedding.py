@@ -24,7 +24,7 @@ class DynamicEmbeddingOption(object):
   def __init__(
       self,
       device: Optional[Literal["HBM", "DRAM", "Redis", "HKV"]] = None,
-      init_capacity=64 * 1024 * 1024,
+      init_capacity=1 * 1024 * 1024,
       max_capacity=128 * 1024 * 1024,
       max_hbm_for_vectors=4 * 1024 * 1024 * 1024
   ):
@@ -101,7 +101,7 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
       de_option: DynamicEmbeddingOption = DynamicEmbeddingOption(),
       **kwargs
   ):
-    super().__init__(**kwargs)
+    super(DistributedDynamicEmbedding, self).__init__()
     if de_option.devices == "Redis":
       self.emb = EmbeddingLayerRedis(
           embedding_size=embedding_dim,
@@ -110,7 +110,8 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
           initializer=initializer,
           name=name,
           devices=de_option.devices,
-          kv_creator=de_option.kv_creator
+          kv_creator=de_option.kv_creator,
+          **kwargs
       )
       logging.info(f"Create EmbeddingLayerRedis for {name} on {de_option.devices} with {embedding_dim} dim")
       return
@@ -124,7 +125,8 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
           name=name,
           devices=de_option.devices,
           init_capacity=de_option.init_capacity,
-          kv_creator=de_option.kv_creator
+          kv_creator=de_option.kv_creator,
+          **kwargs
       )
       logging.info(f"Create EmbeddingLayerGPU for {name} on {de_option.devices} with {embedding_dim} dim")
     else:
@@ -136,7 +138,8 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
           name=name,
           devices=de_option.devices,
           init_capacity=de_option.init_capacity,
-          kv_creator=de_option.kv_creator
+          kv_creator=de_option.kv_creator,
+          **kwargs
       )
       logging.info(f"Create HvdAllToAllEmbedding for {name} on {de_option.devices} with {embedding_dim} dim")
 
@@ -164,7 +167,7 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
       initializer=None,
       **kwargs
   ):
-    super().__init__(**kwargs)
+    super(CompositionalEmbedding, self).__init__()
     self.device = device
     strategy_list = ["Q-R"]
     op_list = ["add", "mul", "concat"]
@@ -251,7 +254,7 @@ class DiamondEmbedding(tf.keras.layers.Layer):
   """
 
   def __init__(self, feature_map: pd.DataFrame, fold_columns: Dict[str, List[str]], **kwargs):
-    super().__init__(**kwargs)
+    super(DiamondEmbedding, self).__init__()
     columns = ["bucket_boundaries", "hash_size", "voc_size", "composition_size", "storage_type"]
     for col in columns:
       if col not in feature_map.columns:

@@ -128,10 +128,13 @@ class CriteoTsvReader(DataPipeLine):
     dense_tensor = tf.random.uniform(shape=(dataset_size, num_dense), maxval=1.0, dtype=tf.float32)
 
     sparse_tensors = []
-    for size in self._vocab_sizes:
-      sparse_tensors.append(tf.random.uniform(shape=(dataset_size,), maxval=int(size), dtype=tf.int32))
-
-    sparse_tensor_elements = {str(i): sparse_tensors[i] for i in range(len(sparse_tensors))}
+    sparse_tensor_elements = {}
+    for name, voc_size, dtype in self.feature_map[(self.feature_map['ftype'] == "Categorical")][[
+        "name", "voc_size", "dtype"
+    ]].values:
+      _tensor = tf.random.uniform(shape=(dataset_size,), maxval=int(voc_size), dtype=dtype)
+      sparse_tensors.append(_tensor)
+      sparse_tensor_elements[name] = _tensor
 
     # the mean is in [0, 1] interval.
     dense_tensor_mean = tf.math.reduce_mean(dense_tensor, axis=1)
@@ -146,7 +149,9 @@ class CriteoTsvReader(DataPipeLine):
     # Using the threshold 0.5 to convert to 0/1 labels.
     label_tensor = tf.cast(label_tensor + 0.5, tf.int32)
 
-    input_elem = {'dense_features': dense_tensor, 'sparse_features': sparse_tensor_elements}, label_tensor
+    sparse_tensor_elements.update({'dense_features': dense_tensor})
+
+    input_elem = sparse_tensor_elements, label_tensor
 
     dataset = tf.data.Dataset.from_tensor_slices(input_elem)
     dataset = dataset.cache()

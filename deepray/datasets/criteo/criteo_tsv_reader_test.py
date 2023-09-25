@@ -34,7 +34,7 @@ def runner(argv=None):
   _performance_calculator = PerformanceCalculator(0, 1000)
   num_examples = 0
   step = 0
-  for x in train_dataset.take(1000):
+  for x, y in train_dataset.take(1000):
     step += 1
     num_examples += FLAGS.batch_size
     step_throughput = _performance_calculator(1, FLAGS.batch_size)
