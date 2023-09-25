@@ -2,7 +2,7 @@ import tensorflow as tf
 from typing import List, Union
 
 
-class DNN(tf.keras.layers.Layer):
+class MLP(tf.keras.layers.Layer):
 
   def __init__(
       self,
@@ -73,5 +73,5 @@ class DNN(tf.keras.layers.Layer):
         'dropout_rate': self.dropout_rate,
         'name': self.prefix
     }
-    base_config = super(DNN, self).get_config()
+    base_config = super(MLP, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))

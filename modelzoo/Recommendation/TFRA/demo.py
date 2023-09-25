@@ -2,7 +2,7 @@ import tensorflow as tf
 from absl import flags
 from tensorflow.keras.layers import Dense
 
-from deepray.layers.dynamic_embedding import DistributedDynamicEmbedding
+from deepray.layers.dynamic_embedding import DistributedDynamicEmbedding, DynamicEmbeddingOption
 from deepray.utils.data.feature_map import FeatureMap
 
 FLAGS = flags.FLAGS
@@ -26,8 +26,8 @@ class Demo(tf.keras.Model):
           key_dtype=dtype,
           value_dtype=tf.float32,
           initializer=initializer,
-          device="HBM",
           name=key + '_DynamicEmbeddingLayer',
+          de_option=DynamicEmbeddingOption(device="HKV",)
       )
     self.d0 = Dense(
         256,
