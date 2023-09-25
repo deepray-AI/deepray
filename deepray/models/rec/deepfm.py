@@ -1,6 +1,6 @@
 from deepray.models.framework import FrameWork
 from deepray.layers.fm import FactorizationMachine
-from deepray.layers.dnn import DNN
+from deepray.layers.mlp import MLP
 
 
 class DeepFM(FrameWork):
@@ -25,8 +25,8 @@ class DeepFM(FrameWork):
       **kwargs
   ):
     super().__init__(*args, **kwargs)
-    self._deep_net = DNN(hidden_units=dnn_hidden_units)
-    self._final_deep_net = DNN(hidden_units=final_hidden_units)
+    self._deep_net = MLP(hidden_units=dnn_hidden_units)
+    self._final_deep_net = MLP(hidden_units=final_hidden_units)
     self._fm_net = FactorizationMachine()
     self._logit_layer = tf.keras.layers.Dense(1)
 

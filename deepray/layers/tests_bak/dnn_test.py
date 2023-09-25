@@ -1,11 +1,11 @@
 import tensorflow as tf
 from typing import List
-from ..dnn import DNN
+from ..mlp import MLP
 
 
 def test_DNN():
   # 测试DNN类的初始化
-  dnn = DNN(hidden_units=[8, 16], use_bn=True)
+  dnn = MLP(hidden_units=[8, 16], use_bn=True)
   assert len(dnn.kernel) == 2
   assert isinstance(dnn.bn, tf.keras.layers.BatchNormalization)
   assert dnn._fn == dnn.apply_kernel_bn
