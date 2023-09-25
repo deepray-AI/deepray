@@ -71,8 +71,8 @@ class Ranking(tf.keras.models.Model):
       key_dtype=dtype,
       value_dtype=tf.float32,
       initializer=None,
-      name=name+'_emb',
-      de_option=DynamicEmbeddingOption(device="HBM", init_capacity=1 * 1024 * 1024,),
+      name='emb'+name,
+      de_option=DynamicEmbeddingOption(device="DRAM", init_capacity=1 * 1024 * 1024,),
     )
     
 

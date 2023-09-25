@@ -25,12 +25,13 @@ from deepray.core.base_trainer import Trainer
 from deepray.datasets.criteo import CriteoTsvReader
 from dcn_v2 import Ranking
 from tensorflow_recommenders_addons import dynamic_embedding as de
+from deepray.utils.export.export import export_to_savedmodel
 
 FLAGS = flags.FLAGS
 
 
 def main(_):
-  model = Ranking(interaction="cross")
+  model = Ranking(interaction="dot")
   
   optimizer = tf.keras.optimizers.Adam(learning_rate=FLAGS.learning_rate, amsgrad=False)
   optimizer = de.DynamicEmbeddingOptimizer(optimizer, synchronous=FLAGS.use_horovod)
@@ -42,7 +43,9 @@ def main(_):
   )
   data_pipe = CriteoTsvReader(use_synthetic_data=True)
   train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
-  trainer.fit(train_input=train_input_fn, )
+  trainer.fit(train_input=train_input_fn, steps_per_epoch=FLAGS.steps_per_epoch)
+
+  export_to_savedmodel(trainer.model)
 
 
 if __name__ == "__main__":
