@@ -51,30 +51,30 @@ class Ranking(tf.keras.models.Model):
     self._top_stack = MLP(hidden_units=[512, 256, 1], activations=[None, None, "sigmoid"])
 
     if interaction == 'dot':
-      self._feature_interaction = DotInteraction(
-        skip_gather=True)
+      self._feature_interaction = DotInteraction(skip_gather=True)
     elif interaction == 'cross':
-      self._feature_interaction = tf.keras.Sequential([
-        tf.keras.layers.Concatenate(),
-        Cross()
-      ])
+      self._feature_interaction = tf.keras.Sequential([tf.keras.layers.Concatenate(), Cross()])
     else:
       raise ValueError(
-        f'params.task.model.interaction {self.task_config.model.interaction} '
-        f'is not supported it must be either \'dot\' or \'cross\'.')
+          f'params.task.model.interaction {self.task_config.model.interaction} '
+          f'is not supported it must be either \'dot\' or \'cross\'.'
+      )
 
   def build(self, input_shape):
     self._embedding_layer = {}
-    for name, dim, dtype in self.feature_map[(self.feature_map['ftype'] == "Categorical")][["name", "dim", "dtype"]].values:
+    for name, dim, dtype in self.feature_map[(self.feature_map['ftype'] == "Categorical")][["name", "dim",
+                                                                                            "dtype"]].values:
       self._embedding_layer[name] = DistributedDynamicEmbedding(
-      embedding_dim=dim,
-      key_dtype=dtype,
-      value_dtype=tf.float32,
-      initializer=None,
-      name='emb'+name,
-      de_option=DynamicEmbeddingOption(device="DRAM", init_capacity=1 * 1024 * 1024,),
-    )
-    
+          embedding_dim=dim,
+          key_dtype=dtype,
+          value_dtype=tf.float32,
+          initializer=None,
+          name='emb' + name,
+          de_option=DynamicEmbeddingOption(
+              device="DRAM",
+              init_capacity=1 * 1024 * 1024,
+          ),
+      )
 
   def call(self, inputs: Dict[str, tf.Tensor], training=None, mask=None) -> tf.Tensor:
     """Executes forward and backward pass, returns loss.
@@ -95,15 +95,12 @@ class Ranking(tf.keras.models.Model):
     # (batch_size, 1, emb) to (batch_size, emb).
     sparse_embeddings = tf.nest.flatten(sparse_embeddings)
 
-    sparse_embedding_vecs = [
-      tf.squeeze(sparse_embedding) for sparse_embedding in sparse_embeddings
-    ]
+    sparse_embedding_vecs = [tf.squeeze(sparse_embedding) for sparse_embedding in sparse_embeddings]
     dense_embedding_vec = self._bottom_stack(dense_features)
 
     interaction_args = sparse_embedding_vecs + [dense_embedding_vec]
     interaction_output = self._feature_interaction(interaction_args)
-    feature_interaction_output = tf.concat(
-      [dense_embedding_vec, interaction_output], axis=1)
+    feature_interaction_output = tf.concat([dense_embedding_vec, interaction_output], axis=1)
 
     prediction = self._top_stack(feature_interaction_output)
 
