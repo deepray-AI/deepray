@@ -49,11 +49,11 @@ class Ranking(tf.keras.models.Model):
 
     self._bottom_stack = MLP(hidden_units=[256, 64, 16], activations=[None, None, "relu"])
     self._top_stack = MLP(hidden_units=[512, 256, 1], activations=[None, None, "sigmoid"])
-
+    self._interaction = interaction
     if interaction == 'dot':
       self._feature_interaction = DotInteraction(skip_gather=True)
     elif interaction == 'cross':
-      self._feature_interaction = tf.keras.Sequential([tf.keras.layers.Concatenate(), Cross()])
+      self._feature_interaction = Cross()
     else:
       raise ValueError(
           f'params.task.model.interaction {self.task_config.model.interaction} '
@@ -99,6 +99,9 @@ class Ranking(tf.keras.models.Model):
     dense_embedding_vec = self._bottom_stack(dense_features)
 
     interaction_args = sparse_embedding_vecs + [dense_embedding_vec]
+    if self._interaction == "cross":
+      interaction_args = tf.concat(interaction_args, axis=-1)
+
     interaction_output = self._feature_interaction(interaction_args)
     feature_interaction_output = tf.concat([dense_embedding_vec, interaction_output], axis=1)
 

@@ -31,16 +31,14 @@ FLAGS = flags.FLAGS
 
 
 def main(_):
-  model = Ranking(interaction="dot")
+  model = Ranking(interaction="cross")
 
   optimizer = tf.keras.optimizers.Adam(learning_rate=FLAGS.learning_rate, amsgrad=False)
   optimizer = de.DynamicEmbeddingOptimizer(optimizer, synchronous=FLAGS.use_horovod)
 
-  trainer = Trainer(
-      model_or_fn=model,
-      optimizer=optimizer,
-      loss="binary_crossentropy",
-  )
+  trainer = Trainer(model_or_fn=model, optimizer=optimizer, loss="binary_crossentropy", metrics=[
+      'AUC',
+  ])
   data_pipe = CriteoTsvReader(use_synthetic_data=True)
   train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
   trainer.fit(train_input=train_input_fn, steps_per_epoch=FLAGS.steps_per_epoch)

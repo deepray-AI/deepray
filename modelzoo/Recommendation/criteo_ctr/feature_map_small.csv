@@ -1,0 +1,4 @@
+name,dtype,ftype,dim,length,voc_size
+feature_0,int32,Label,1,1,
+feature_1,float64,Numerical,1,1,
+feature_14,int32,Categorical,16,1,7912888

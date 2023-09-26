@@ -67,13 +67,13 @@ fi
 
 set -x
 $hvd_command $nsys_command python train.py \
-    --feature_map=/workspaces/deepray/deepray/datasets/criteo/feature_map_small.csv \
+    --feature_map=feature_map_small.csv \
     --num_gpus=$num_gpu \
     --batch_size=$batch_size \
     --use_dynamic_embedding=True \
     --steps_per_summary=10 \
-    --run_eagerly=true \
-    --steps_per_epoch=50 \
+    --run_eagerly=false \
+    --steps_per_epoch=500 \
     --learning_rate=$learning_rate \
     --epochs=$epochs \
     --model_dir=${RESULTS_DIR} \
