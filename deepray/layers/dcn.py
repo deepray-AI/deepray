@@ -18,7 +18,6 @@ from typing import Union, Text, Optional
 import tensorflow as tf
 
 
-@tf.keras.utils.register_keras_serializable()
 class Cross(tf.keras.layers.Layer):
   """Cross Layer in Deep & Cross Network to learn explicit feature interactions.
 

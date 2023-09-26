@@ -18,7 +18,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+
 import tensorflow as tf
+from absl import logging, flags
+
+from deepray.utils.horovod_utils import is_main_process, get_world_size, get_rank
+
+FLAGS = flags.FLAGS
 
 
 def build_tensor_serving_input_receiver_fn(shape, dtype=tf.float32, batch_size=1):
@@ -45,3 +52,32 @@ def build_tensor_serving_input_receiver_fn(shape, dtype=tf.float32, batch_size=1
     return tf.estimator.export.TensorServingInputReceiver(features=features, receiver_tensors=features)
 
   return serving_input_receiver_fn
+
+
+def export_to_savedmodel(model):
+  savedmodel_dir = os.path.join(FLAGS.model_dir, 'export')
+  os.makedirs(savedmodel_dir, exist_ok=True)
+  logging.info(f"save pb model to:{savedmodel_dir}, without optimizer & traces")
+
+  options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
+
+  if not os.path.exists(savedmodel_dir):
+    os.mkdir(savedmodel_dir)
+
+  if is_main_process():
+    tf.saved_model.save(model, savedmodel_dir, options=options)
+    # tf.keras.models.save_model(
+    #     model, savedmodel_dir, overwrite=True, include_optimizer=True, save_traces=True, options=options
+    # )
+  else:
+    de_dir = os.path.join(savedmodel_dir, "variables", "TFRADynamicEmbedding")
+    for layer in model.layers:
+      for var in layer.variables:
+        if hasattr(var, "params"):
+          # save other rank's embedding weights
+          var.params.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
+          # save opt weights
+          # opt_de_vars = var.params.optimizer_vars.as_list(
+          # ) if hasattr(var.params.optimizer_vars, "as_list") else var.params.optimizer_vars
+          # for opt_de_var in opt_de_vars:
+          #   opt_de_var.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
