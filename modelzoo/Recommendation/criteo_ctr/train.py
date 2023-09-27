@@ -47,8 +47,8 @@ def main(_):
   export_to_savedmodel(trainer.model)
   if FLAGS.use_horovod:
     FLAGS([
-      sys.argv[0],
-      "--use_horovod=False",
+        sys.argv[0],
+        "--use_horovod=False",
     ])
 
     K.clear_session()
@@ -56,11 +56,10 @@ def main(_):
 
     model = Ranking(interaction="cross")
     FLAGS([
-      sys.argv[0],
-      "--use_horovod=True",
+        sys.argv[0],
+        "--use_horovod=True",
     ])
     export_for_serving(trainer.model, export_model=model)
-
 
 
 if __name__ == "__main__":

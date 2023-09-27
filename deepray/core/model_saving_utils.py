@@ -113,8 +113,8 @@ class TFTRTModel:
 
     trt_prec = trt.TrtPrecisionMode.FP32 if prec == "fp32" else trt.TrtPrecisionMode.FP16
     converter = trt.TrtGraphConverterV2(
-      input_saved_model_dir=model_dir,
-      conversion_params=trt.TrtConversionParams(precision_mode=trt_prec),
+        input_saved_model_dir=model_dir,
+        conversion_params=trt.TrtConversionParams(precision_mode=trt_prec),
     )
     converter.convert()
     tf_trt_model_dir = tf_trt_model_dir or f'/tmp/tf-trt_model_{prec}'

@@ -23,7 +23,6 @@ import os
 import tensorflow as tf
 from absl import logging, flags
 
-
 from deepray.utils.horovod_utils import is_main_process, get_world_size, get_rank
 
 FLAGS = flags.FLAGS
