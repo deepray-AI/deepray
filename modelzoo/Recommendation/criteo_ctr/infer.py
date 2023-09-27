@@ -9,10 +9,7 @@ from absl import app, flags
 
 from deepray.datasets.criteo.criteo_tsv_reader import CriteoTsvReader
 from deepray.utils.benchmark import PerformanceCalculator
-import tensorflow as tf
-from tensorflow_recommenders_addons import dynamic_embedding as de
-
-de.enable_inference_mode()
+from deepray.utils.model_saving_utils import SavedModel
 
 FLAGS = flags.FLAGS
 
@@ -23,10 +20,11 @@ def runner(argv=None):
     argv = [
         sys.argv[0],
         "--batch_size=4096",
-        "-epochs=1",
+        "--epochs=1",
+        "--run_eagerly=True",
+        "--use_dynamic_embedding=True",
         f"--feature_map={dir_path}/feature_map_small.csv",
-        "--model_dir=/results/tf_tfra_training_criteo_dcn_fp32_gbs4096_230926071440/export/",
-        "--prefetch_buffer=64",
+        "--model_dir=/results/tf_tfra_training_criteo_dcn_fp32_gbs4096_230927090705/export/",
     ]
   if argv:
     FLAGS(argv, known_only=True)
@@ -34,18 +32,15 @@ def runner(argv=None):
   data_pipe = CriteoTsvReader(use_synthetic_data=True)
   # create data pipline of train & test dataset
   train_dataset = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
-  loaded = tf.saved_model.load(FLAGS.model_dir)
-
-  signature = loaded.signatures['serving_default']
-
+  model = SavedModel(FLAGS.model_dir, "amp" if FLAGS.dtype else "fp32")
+  signature = model.saved_model_loaded.signatures['serving_default']
   print(signature)
 
   _performance_calculator = PerformanceCalculator(0, 1000)
   num_examples = 0
   step = 0
-  for x, y in train_dataset.take(1000):
-    preds = loaded(x)
-
+  for x, y in train_dataset.take(300):
+    preds = model(x)
     step += 1
     num_examples += FLAGS.batch_size
     step_throughput = _performance_calculator(1, FLAGS.batch_size)

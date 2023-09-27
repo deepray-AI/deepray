@@ -23,9 +23,12 @@ import os
 import typing
 
 import tensorflow as tf
-from absl import logging
-from tensorflow.compat.v1.saved_model import tag_constants, signature_constants
+from absl import logging, flags
 from tensorflow.python.compiler.tensorrt import trt_convert as trt
+from tensorflow.python.saved_model import signature_constants
+from tensorflow.python.saved_model import tag_constants
+
+FLAGS = flags.FLAGS
 
 
 def export_bert_model(
@@ -83,14 +86,22 @@ def export_bert_model(
 class SavedModel:
 
   def __init__(self, model_dir, precision):
+    if FLAGS.use_dynamic_embedding:
+      from tensorflow_recommenders_addons import dynamic_embedding as de
+      de.enable_inference_mode()
+
     self.saved_model_loaded = tf.saved_model.load(model_dir, tags=[tag_constants.SERVING])
     self.graph_func = self.saved_model_loaded.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
     self.precision = tf.float16 if precision == "amp" else tf.float32
 
-  def __call__(self, x, **kwargs):
-    return self.infer_step(x)
+    if not FLAGS.run_eagerly:
+      self._infer_step = tf.function(self.infer_step)
+    else:
+      self._infer_step = self.infer_step
 
-  @tf.function
+  def __call__(self, x, **kwargs):
+    return self._infer_step(x)
+
   def infer_step(self, x):
     output = self.graph_func(**x)
     return output
@@ -101,7 +112,7 @@ class TFTRTModel:
   def export_model(self, model_dir, prec, tf_trt_model_dir=None):
     loaded_model = tf.saved_model.load(model_dir)
     signature = loaded_model.signatures['serving_default']
-    print(signature)
+    logging.info(signature)
     # input_shape = [1, 384]
     # dummy_input = tf.constant(tf.zeros(input_shape, dtype=tf.int32))
     # x = [
@@ -119,13 +130,13 @@ class TFTRTModel:
     converter.convert()
     tf_trt_model_dir = tf_trt_model_dir or f'/tmp/tf-trt_model_{prec}'
     converter.save(tf_trt_model_dir)
-    print(f"TF-TRT model saved at {tf_trt_model_dir}")
+    logging.info(f"TF-TRT model saved at {tf_trt_model_dir}")
 
   def __init__(self, model_dir, precision):
     temp_tftrt_dir = f"/tmp/tf-trt_model_{precision}"
     self.export_model(model_dir, precision, temp_tftrt_dir)
     saved_model_loaded = tf.saved_model.load(temp_tftrt_dir, tags=[tag_constants.SERVING])
-    print(f"TF-TRT model loaded from {temp_tftrt_dir}")
+    logging.info(f"TF-TRT model loaded from {temp_tftrt_dir}")
     self.graph_func = saved_model_loaded.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
     self.precision = tf.float16 if precision == "amp" else tf.float32
 
