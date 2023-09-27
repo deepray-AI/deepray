@@ -23,6 +23,7 @@ import os
 import tensorflow as tf
 from absl import logging, flags
 
+
 from deepray.utils.horovod_utils import is_main_process, get_world_size, get_rank
 
 FLAGS = flags.FLAGS
@@ -66,18 +67,66 @@ def export_to_savedmodel(model):
 
   if is_main_process():
     tf.saved_model.save(model, savedmodel_dir, options=options)
-    # tf.keras.models.save_model(
-    #     model, savedmodel_dir, overwrite=True, include_optimizer=True, save_traces=True, options=options
-    # )
   else:
     de_dir = os.path.join(savedmodel_dir, "variables", "TFRADynamicEmbedding")
-    for layer in model.layers:
-      for var in layer.variables:
-        if hasattr(var, "params"):
-          # save other rank's embedding weights
-          var.params.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
-          # save opt weights
-          # opt_de_vars = var.params.optimizer_vars.as_list(
-          # ) if hasattr(var.params.optimizer_vars, "as_list") else var.params.optimizer_vars
-          # for opt_de_var in opt_de_vars:
-          #   opt_de_var.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
+    for var in model.variables:
+      if hasattr(var, "params"):
+        # save other rank's embedding weights
+        var.params.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
+        # save opt weights
+        # opt_de_vars = var.params.optimizer_vars.as_list(
+        # ) if hasattr(var.params.optimizer_vars, "as_list") else var.params.optimizer_vars
+        # for opt_de_var in opt_de_vars:
+        #   opt_de_var.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
+
+
+def export_for_serving(model, export_model):
+  export_dir = os.path.join(FLAGS.model_dir, 'serving')
+  os.makedirs(export_dir, exist_ok=True)
+  logging.info(f"save pb model to:{export_dir}, without optimizer & traces")
+
+  options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
+
+  def save_spec():
+    # tf 2.6 以上版本
+    if hasattr(model, 'save_spec'):
+      return model.save_spec()
+    else:
+      arg_specs = list()
+      kwarg_specs = dict()
+      for i in model.inputs:
+        arg_specs.append(i.type_spec)
+      return [arg_specs], kwarg_specs
+
+  @tf.function
+  def serve(*args, **kwargs):
+    return model(*args, **kwargs)
+
+  arg_specs, kwarg_specs = save_spec()
+
+  if is_main_process():
+    tf.keras.models.save_model(
+        model,
+        export_dir,
+        overwrite=True,
+        include_optimizer=False,
+        options=options,
+        signatures={'serving_default': serve.get_concrete_function(*arg_specs, **kwarg_specs)},
+    )
+  else:
+    de_dir = os.path.join(export_dir, "variables", "TFRADynamicEmbedding")
+    for var in model.variables:
+      if hasattr(var, "params"):
+        var.params.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
+
+  if is_main_process():
+    # 修改计算图变成单机版
+    from tensorflow.python.saved_model import save as tf_save
+    # save_and_return_nodes函数用来覆盖save_model函数生成的saved_model.pb文件，重写计算图
+    tf_save.save_and_return_nodes(
+        obj=export_model,
+        export_dir=export_dir,
+        options=options,
+        signatures={'serving_default': serve.get_concrete_function(*arg_specs, **kwarg_specs)},
+        experimental_skip_checkpoint=True
+    )

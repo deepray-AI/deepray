@@ -31,7 +31,6 @@ from absl import app, flags, logging
 from dllogger import Verbosity
 
 from deepray.core import model_saving_utils
-from deepray.core import tf_trt
 from deepray.core.base_trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets import tokenization
@@ -77,10 +76,10 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
   predict_iterator = distribution_utils.make_distributed_iterator(strategy, predict_dataset)
 
   if FLAGS.mode == 'trt_predict':
-    squad_model = tf_trt.TFTRTModel(FLAGS.savedmodel_dir, "amp" if common_flags.use_float16() else "fp32")
+    squad_model = model_saving_utils.TFTRTModel(FLAGS.savedmodel_dir, "amp" if common_flags.use_float16() else "fp32")
 
   elif FLAGS.mode == 'sm_predict':
-    squad_model = tf_trt.SavedModel(FLAGS.savedmodel_dir, "amp" if common_flags.use_float16() else "fp32")
+    squad_model = model_saving_utils.SavedModel(FLAGS.savedmodel_dir, "amp" if common_flags.use_float16() else "fp32")
 
   else:
     with distribution_utils.get_strategy_scope(strategy):

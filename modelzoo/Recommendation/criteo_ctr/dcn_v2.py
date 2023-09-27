@@ -60,7 +60,6 @@ class Ranking(tf.keras.models.Model):
           f'is not supported it must be either \'dot\' or \'cross\'.'
       )
 
-  def build(self, input_shape):
     self._embedding_layer = {}
     for name, dim, dtype in self.feature_map[(self.feature_map['ftype'] == "Categorical")][["name", "dim",
                                                                                             "dtype"]].values:
@@ -75,6 +74,9 @@ class Ranking(tf.keras.models.Model):
               init_capacity=1 * 1024 * 1024,
           ),
       )
+
+  # def build(self, input_shape):
+  #
 
   def call(self, inputs: Dict[str, tf.Tensor], training=None, mask=None) -> tf.Tensor:
     """Executes forward and backward pass, returns loss.

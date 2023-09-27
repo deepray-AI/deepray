@@ -20,10 +20,12 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-
-from absl import logging
-import tensorflow as tf
 import typing
+
+import tensorflow as tf
+from absl import logging
+from tensorflow.compat.v1.saved_model import tag_constants, signature_constants
+from tensorflow.python.compiler.tensorrt import trt_convert as trt
 
 
 def export_bert_model(
@@ -32,7 +34,7 @@ def export_bert_model(
     checkpoint_dir: typing.Optional[typing.Text] = None,
     restore_model_using_load_weights: bool = False
 ) -> None:
-  """Export BERT model for serving which does not include the optimizer.
+  """Export keras model for serving which does not include the optimizer.
 
   Arguments:
       model_export_path: Path to which exported model will be saved.
@@ -78,23 +80,59 @@ def export_bert_model(
   model.save(model_export_path, include_optimizer=False, save_format='tf')
 
 
-class BertModelCheckpoint(tf.keras.callbacks.Callback):
-  """Keras callback that saves model at the end of every epoch."""
+class SavedModel:
 
-  def __init__(self, checkpoint_dir, checkpoint):
-    """Initializes BertModelCheckpoint.
+  def __init__(self, model_dir, precision):
+    self.saved_model_loaded = tf.saved_model.load(model_dir, tags=[tag_constants.SERVING])
+    self.graph_func = self.saved_model_loaded.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+    self.precision = tf.float16 if precision == "amp" else tf.float32
 
-    Arguments:
-      checkpoint_dir: Directory of the to be saved checkpoint file.
-      checkpoint: tf.train.Checkpoint object.
-    """
-    super(BertModelCheckpoint, self).__init__()
-    self.checkpoint_file_name = os.path.join(checkpoint_dir, 'bert_training_checkpoint_step_{global_step}.ckpt')
-    assert isinstance(checkpoint, tf.train.Checkpoint)
-    self.checkpoint = checkpoint
+  def __call__(self, x, **kwargs):
+    return self.infer_step(x)
 
-  def on_epoch_end(self, epoch, logs=None):
-    global_step = tf.keras.backend.get_value(self.model.optimizer.iterations)
-    formatted_file_name = self.checkpoint_file_name.format(global_step=global_step)
-    saved_path = self.checkpoint.save(formatted_file_name)
-    logging.info('Saving model TF checkpoint to : %s', saved_path)
+  @tf.function
+  def infer_step(self, x):
+    output = self.graph_func(**x)
+    return output
+
+
+class TFTRTModel:
+
+  def export_model(self, model_dir, prec, tf_trt_model_dir=None):
+    loaded_model = tf.saved_model.load(model_dir)
+    signature = loaded_model.signatures['serving_default']
+    print(signature)
+    # input_shape = [1, 384]
+    # dummy_input = tf.constant(tf.zeros(input_shape, dtype=tf.int32))
+    # x = [
+    #   tf.constant(dummy_input, name='input_word_ids'),
+    #   tf.constant(dummy_input, name='input_mask'),
+    #   tf.constant(dummy_input, name='input_type_ids'),
+    # ]
+    # _ = model(x)
+
+    trt_prec = trt.TrtPrecisionMode.FP32 if prec == "fp32" else trt.TrtPrecisionMode.FP16
+    converter = trt.TrtGraphConverterV2(
+      input_saved_model_dir=model_dir,
+      conversion_params=trt.TrtConversionParams(precision_mode=trt_prec),
+    )
+    converter.convert()
+    tf_trt_model_dir = tf_trt_model_dir or f'/tmp/tf-trt_model_{prec}'
+    converter.save(tf_trt_model_dir)
+    print(f"TF-TRT model saved at {tf_trt_model_dir}")
+
+  def __init__(self, model_dir, precision):
+    temp_tftrt_dir = f"/tmp/tf-trt_model_{precision}"
+    self.export_model(model_dir, precision, temp_tftrt_dir)
+    saved_model_loaded = tf.saved_model.load(temp_tftrt_dir, tags=[tag_constants.SERVING])
+    print(f"TF-TRT model loaded from {temp_tftrt_dir}")
+    self.graph_func = saved_model_loaded.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+    self.precision = tf.float16 if precision == "amp" else tf.float32
+
+  def __call__(self, x, **kwargs):
+    return self.infer_step(x)
+
+  @tf.function
+  def infer_step(self, x):
+    output = self.graph_func(**x)
+    return output
