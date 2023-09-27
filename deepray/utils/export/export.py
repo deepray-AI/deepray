@@ -1,4 +1,4 @@
-# Copyright 2018 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2023 The Deepray Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,9 +19,13 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import typing
 
 import tensorflow as tf
 from absl import logging, flags
+from tensorflow.python.compiler.tensorrt import trt_convert as trt
+from tensorflow.python.saved_model import signature_constants
+from tensorflow.python.saved_model import tag_constants
 
 from deepray.utils.horovod_utils import is_main_process, get_world_size, get_rank
 
@@ -54,15 +58,57 @@ def build_tensor_serving_input_receiver_fn(shape, dtype=tf.float32, batch_size=1
   return serving_input_receiver_fn
 
 
-def export_to_savedmodel(model):
-  savedmodel_dir = os.path.join(FLAGS.model_dir, 'export')
+def export_to_savedmodel(
+    model: tf.keras.Model,
+    savedmodel_dir: typing.Optional[typing.Text] = None,
+    checkpoint_dir: typing.Optional[typing.Text] = None,
+    restore_model_using_load_weights: bool = False
+) -> None:
+  """Export keras model for serving which does not include the optimizer.
+
+  Arguments:
+      model_export_path: Path to which exported model will be saved.
+      model: Keras model object to export.
+      checkpoint_dir: Path from which model weights will be loaded, if
+        specified.
+      restore_model_using_load_weights: Whether to use checkpoint.restore() API
+        for custom checkpoint or to use model.load_weights() API.
+        There are 2 different ways to save checkpoints. One is using
+        tf.train.Checkpoint and another is using Keras model.save_weights().
+        Custom training loop implementation uses tf.train.Checkpoint API
+        and Keras ModelCheckpoint callback internally uses model.save_weights()
+        API. Since these two API's cannot be used toghether, model loading logic
+        must be taken into account how model checkpoint was saved.
+
+  Raises:
+    ValueError when model is not specified.
+  """
+  if not isinstance(model, tf.keras.Model):
+    raise ValueError('model must be a tf.keras.Model object.')
+  if savedmodel_dir is None:
+    savedmodel_dir = os.path.join(FLAGS.model_dir, 'export')
   os.makedirs(savedmodel_dir, exist_ok=True)
-  logging.info(f"save pb model to:{savedmodel_dir}, without optimizer & traces")
 
-  options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
+  if checkpoint_dir:
+    # Keras compile/fit() was used to save checkpoint using
+    # model.save_weights().
+    if restore_model_using_load_weights:
+      model_weight_path = os.path.join(checkpoint_dir, 'checkpoint')
+      assert tf.io.gfile.exists(model_weight_path)
+      model.load_weights(model_weight_path)
 
-  if not os.path.exists(savedmodel_dir):
-    os.mkdir(savedmodel_dir)
+    # tf.train.Checkpoint API was used via custom training loop logic.
+    else:
+      checkpoint = tf.train.Checkpoint(model=model)
+
+      # Restores the model from latest checkpoint.
+      latest_checkpoint_file = tf.train.latest_checkpoint(checkpoint_dir)
+      assert latest_checkpoint_file
+      logging.info('Checkpoint file %s found and restoring from '
+                   'checkpoint', latest_checkpoint_file)
+      checkpoint.restore(latest_checkpoint_file).assert_existing_objects_matched()
+
+  options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA']) if FLAGS.use_dynamic_embedding else None
 
   if is_main_process():
     tf.saved_model.save(model, savedmodel_dir, options=options)
@@ -78,54 +124,70 @@ def export_to_savedmodel(model):
         # for opt_de_var in opt_de_vars:
         #   opt_de_var.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
 
+  logging.info(f"save pb model to:{savedmodel_dir}, without optimizer & traces")
 
-def export_for_serving(model, export_model):
-  export_dir = os.path.join(FLAGS.model_dir, 'serving')
-  os.makedirs(export_dir, exist_ok=True)
-  logging.info(f"save pb model to:{export_dir}, without optimizer & traces")
 
-  options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
+class SavedModel:
 
-  def save_spec():
-    # tf 2.6 以上版本
-    if hasattr(model, 'save_spec'):
-      return model.save_spec()
+  def __init__(self, model_dir, precision):
+    if FLAGS.use_dynamic_embedding:
+      from tensorflow_recommenders_addons import dynamic_embedding as de
+      de.enable_inference_mode()
+
+    self.saved_model_loaded = tf.saved_model.load(model_dir, tags=[tag_constants.SERVING])
+    self.graph_func = self.saved_model_loaded.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+    self.precision = tf.float16 if precision == "amp" else tf.float32
+
+    if not FLAGS.run_eagerly:
+      self._infer_step = tf.function(self.infer_step)
     else:
-      arg_specs = list()
-      kwarg_specs = dict()
-      for i in model.inputs:
-        arg_specs.append(i.type_spec)
-      return [arg_specs], kwarg_specs
+      self._infer_step = self.infer_step
+
+  def __call__(self, x, **kwargs):
+    return self._infer_step(x)
+
+  def infer_step(self, x):
+    output = self.graph_func(**x)
+    return output
+
+
+class TFTRTModel:
+
+  def export_model(self, model_dir, prec, tf_trt_model_dir=None):
+    loaded_model = tf.saved_model.load(model_dir)
+    signature = loaded_model.signatures['serving_default']
+    logging.info(signature)
+    # input_shape = [1, 384]
+    # dummy_input = tf.constant(tf.zeros(input_shape, dtype=tf.int32))
+    # x = [
+    #   tf.constant(dummy_input, name='input_word_ids'),
+    #   tf.constant(dummy_input, name='input_mask'),
+    #   tf.constant(dummy_input, name='input_type_ids'),
+    # ]
+    # _ = model(x)
+
+    trt_prec = trt.TrtPrecisionMode.FP32 if prec == "fp32" else trt.TrtPrecisionMode.FP16
+    converter = trt.TrtGraphConverterV2(
+        input_saved_model_dir=model_dir,
+        conversion_params=trt.TrtConversionParams(precision_mode=trt_prec),
+    )
+    converter.convert()
+    tf_trt_model_dir = tf_trt_model_dir or f'/tmp/tf-trt_model_{prec}'
+    converter.save(tf_trt_model_dir)
+    logging.info(f"TF-TRT model saved at {tf_trt_model_dir}")
+
+  def __init__(self, model_dir, precision):
+    temp_tftrt_dir = f"/tmp/tf-trt_model_{precision}"
+    self.export_model(model_dir, precision, temp_tftrt_dir)
+    saved_model_loaded = tf.saved_model.load(temp_tftrt_dir, tags=[tag_constants.SERVING])
+    logging.info(f"TF-TRT model loaded from {temp_tftrt_dir}")
+    self.graph_func = saved_model_loaded.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
+    self.precision = tf.float16 if precision == "amp" else tf.float32
+
+  def __call__(self, x, **kwargs):
+    return self.infer_step(x)
 
   @tf.function
-  def serve(*args, **kwargs):
-    return model(*args, **kwargs)
-
-  arg_specs, kwarg_specs = save_spec()
-
-  if is_main_process():
-    tf.keras.models.save_model(
-        model,
-        export_dir,
-        overwrite=True,
-        include_optimizer=False,
-        options=options,
-        signatures={'serving_default': serve.get_concrete_function(*arg_specs, **kwarg_specs)},
-    )
-  else:
-    de_dir = os.path.join(export_dir, "variables", "TFRADynamicEmbedding")
-    for var in model.variables:
-      if hasattr(var, "params"):
-        var.params.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
-
-  if is_main_process():
-    # 修改计算图变成单机版
-    from tensorflow.python.saved_model import save as tf_save
-    # save_and_return_nodes函数用来覆盖save_model函数生成的saved_model.pb文件，重写计算图
-    tf_save.save_and_return_nodes(
-        obj=export_model,
-        export_dir=export_dir,
-        options=options,
-        signatures={'serving_default': serve.get_concrete_function(*arg_specs, **kwarg_specs)},
-        experimental_skip_checkpoint=True
-    )
+  def infer_step(self, x):
+    output = self.graph_func(**x)
+    return output

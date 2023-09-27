@@ -43,3 +43,4 @@ pip-wheel-metadata
 htmlcov
 
 wheelhouse/
+.vscode/sftp.json

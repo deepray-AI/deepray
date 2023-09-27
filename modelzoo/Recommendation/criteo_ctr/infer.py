@@ -9,7 +9,7 @@ from absl import app, flags
 
 from deepray.datasets.criteo.criteo_tsv_reader import CriteoTsvReader
 from deepray.utils.benchmark import PerformanceCalculator
-from deepray.utils.model_saving_utils import SavedModel
+from deepray.utils.export import SavedModel
 
 FLAGS = flags.FLAGS
 
