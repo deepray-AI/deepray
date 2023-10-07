@@ -116,7 +116,9 @@ def define_common_flags():
       'verbose_logging', False, 'If true, all of the warnings related to data processing will be printed. '
       'A number of warnings are expected for a normal SQuAD evaluation.'
   )
-  flags.DEFINE_integer("random_seed", 12345, "Random seed for data generation.")
+  flags.DEFINE_integer(
+      "random_seed", 12345, help=flags_core.help_wrap("This value will be used to seed both NumPy and TensorFlow.")
+  )
   # Adds flags for mixed precision training.
   flags_core.define_performance(
       num_parallel_calls=False,

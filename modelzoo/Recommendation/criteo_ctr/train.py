@@ -36,7 +36,7 @@ def main(_):
   optimizer = tf.keras.optimizers.Adam(learning_rate=FLAGS.learning_rate, amsgrad=False)
   optimizer = de.DynamicEmbeddingOptimizer(optimizer, synchronous=FLAGS.use_horovod)
 
-  trainer = Trainer(model_or_fn=model, optimizer=optimizer, loss="binary_crossentropy", metrics=[
+  trainer = Trainer(model=model, optimizer=optimizer, loss="binary_crossentropy", metrics=[
       'AUC',
   ])
   data_pipe = CriteoTsvReader(use_synthetic_data=True)

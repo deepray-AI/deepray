@@ -20,7 +20,7 @@ import pytest
 import numpy as np
 import tensorflow as tf
 
-from deepray.optimizers.discriminative_layer_training import MultiOptimizer
+from deepray.optimizers.multi_optimizer import MultiOptimizer
 from deepray.utils import test_utils
 
 

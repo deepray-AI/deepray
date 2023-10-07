@@ -227,7 +227,7 @@ def train_squad(
       is_training=True,
   )
   trainer = Trainer(
-      model_or_fn=model,
+      model=model,
       sub_model_or_fn=sub_model,
       loss={
           "start_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),

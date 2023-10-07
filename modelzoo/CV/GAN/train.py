@@ -46,7 +46,7 @@ def main(_):
 
   trainer = Trainer(
       optimizer=tf.keras.optimizers.Adam(0.001),
-      model_or_fn=mnist_model,
+      model=mnist_model,
       loss=tf.losses.SparseCategoricalCrossentropy(),
       # loss='sparse_categorical_crossentropy',
       metrics=["accuracy"]

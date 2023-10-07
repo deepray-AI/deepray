@@ -39,7 +39,7 @@ def main(_):
     )(num_classes=100)
 
   trainer = Trainer(
-      model_or_fn=model,
+      model=model,
       loss=keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing),
       optimizer=dp.optimizers.AdamW(learning_rate=learning_rate, weight_decay=weight_decay),
       metrics=[

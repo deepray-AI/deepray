@@ -73,7 +73,7 @@ def main(_):
     )
 
   trainer = Trainer(
-      model_or_fn=model,
+      model=model,
       loss={
           "stage_one_logits": tf.keras.losses.BinaryCrossentropy(from_logits=True),
           "stage_two_logits": tf.keras.losses.BinaryCrossentropy(from_logits=True),

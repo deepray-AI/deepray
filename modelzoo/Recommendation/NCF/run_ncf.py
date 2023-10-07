@@ -248,7 +248,7 @@ def run_ncf(_):
     keras_model = NCFModel(params)
 
   trainer = Trainer(
-      model_or_fn=keras_model,
+      model=keras_model,
       loss=build_loss,
       metrics=[
           tf.keras.metrics.CategoricalAccuracy(name='accuracy', dtype=tf.float32),

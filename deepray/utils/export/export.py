@@ -19,7 +19,8 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import typing
+import re
+from typing import Union, Optional, Text
 
 import tensorflow as tf
 from absl import logging, flags
@@ -58,10 +59,28 @@ def build_tensor_serving_input_receiver_fn(shape, dtype=tf.float32, batch_size=1
   return serving_input_receiver_fn
 
 
+def export_to_checkpoint(saver: Union[tf.train.Checkpoint, tf.train.CheckpointManager], checkpoint_number=None):
+
+  def helper(name, _saver):
+    """Saves model to with provided checkpoint prefix."""
+    latest_checkpoint_file = tf.train.latest_checkpoint(os.path.join(FLAGS.model_dir, 'ckpt_' + name))
+    match = re.search(r"(?<=ckpt-)\d+", latest_checkpoint_file) if latest_checkpoint_file else None
+    latest_step_ckpt = int(match.group()) if match else -1
+
+    if latest_step_ckpt != checkpoint_number:
+      save_path = _saver.save(checkpoint_number)
+      logging.info('Saved checkpoint to {}'.format(save_path))
+
+  if is_main_process():
+    if isinstance(saver, dict):
+      for name, _saver in saver.items():
+        helper(name, _saver)
+
+
 def export_to_savedmodel(
     model: tf.keras.Model,
-    savedmodel_dir: typing.Optional[typing.Text] = None,
-    checkpoint_dir: typing.Optional[typing.Text] = None,
+    savedmodel_dir: Optional[Text] = None,
+    checkpoint_dir: Optional[Text] = None,
     restore_model_using_load_weights: bool = False
 ) -> None:
   """Export keras model for serving which does not include the optimizer.

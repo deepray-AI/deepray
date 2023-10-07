@@ -1,5 +1,3 @@
-import os
-import re
 import time
 from collections.abc import Iterator
 
@@ -8,7 +6,8 @@ from absl import logging, flags
 from packaging import version
 
 from deepray.core.common import distribution_utils
-from deepray.utils.horovod_utils import is_main_process, get_world_size, get_rank
+from deepray.utils import export
+from deepray.utils.horovod_utils import is_main_process
 
 FLAGS = flags.FLAGS
 
@@ -32,17 +31,6 @@ class Module():
       return min(steps_per_epoch - remainder_in_epoch, steps_per_loop), FLAGS.num_accumulation_steps
     else:
       return steps_per_loop, FLAGS.num_accumulation_steps
-
-  def _save_checkpoint(self, manager, checkpoint_number=None):
-    if is_main_process():
-      """Saves model to with provided checkpoint prefix."""
-      latest_checkpoint_file = tf.train.latest_checkpoint(os.path.join(FLAGS.model_dir, 'ckpt'))
-      match = re.search(r"(?<=ckpt-)\d+", latest_checkpoint_file) if latest_checkpoint_file else None
-      latest_step_ckpt = int(match.group()) if match else -1
-
-      if latest_step_ckpt != checkpoint_number:
-        save_path = manager.save(checkpoint_number)
-        logging.info('Saved checkpoint to {}'.format(save_path))
 
   def _float_metric_value(self, metric):
     """Gets the value of a float-value keras metric."""
@@ -79,7 +67,7 @@ class Module():
     self._steps_from_save += steps
 
     if is_main_process() and self._steps_from_save >= FLAGS.save_checkpoint_steps:
-      self._save_checkpoint(self.manager, self.current_step)
+      export.export_to_checkpoint(self.manager, self.current_step)
       self._steps_from_save = 0
 
     if self.train_summary_writer:
@@ -115,9 +103,7 @@ class Module():
     # Saves model checkpoints and run validation steps at every epoch end.
     # To avoid repeated model saving, we do not save after the last step of training.
     if (epoch < self.epochs - 1) and is_main_process():
-      self._save_checkpoint(self.manager, current_step)
-      if self.sub_model:
-        self._save_checkpoint(self.sub_manager)
+      export.export_to_checkpoint(self.manager, current_step)
     if eval_input:  # and is_main_process():
       if is_main_process():
         logging.info('Running evaluation after step: %s.', current_step)

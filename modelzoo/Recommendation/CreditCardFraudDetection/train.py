@@ -41,7 +41,7 @@ def main(_):
         ]
     )
 
-  trainer = Trainer(model_or_fn=model, loss=keras.losses.BinaryCrossentropy(), metrics=METRICS)
+  trainer = Trainer(model=model, loss=keras.losses.BinaryCrossentropy(), metrics=METRICS)
 
   trainer.fit(train_input=train_input,)
 

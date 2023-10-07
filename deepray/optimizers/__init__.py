@@ -27,7 +27,7 @@ from deepray.optimizers.cyclical_learning_rate import (
 from deepray.optimizers.cyclical_learning_rate import (
     ExponentialCyclicalLearningRate,
 )
-from deepray.optimizers.discriminative_layer_training import (
+from deepray.optimizers.multi_optimizer import (
     MultiOptimizer,
 )
 from deepray.optimizers.lamb import LAMB
