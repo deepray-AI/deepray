@@ -94,7 +94,7 @@ def main(_):
 
   trainer = Trainer(
       optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.1),
-      model_or_fn=model,
+      model=model,
       loss="mean_squared_error",
       metrics=["mean_absolute_error"],
   )

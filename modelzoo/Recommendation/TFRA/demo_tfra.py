@@ -36,7 +36,7 @@ def main(_):
     model = Demo(embedding_size=32)
 
   trainer = Trainer(
-      model_or_fn=model,
+      model=model,
       loss=tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.SUM),
   )
   train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)

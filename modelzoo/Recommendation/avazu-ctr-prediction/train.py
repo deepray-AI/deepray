@@ -69,7 +69,7 @@ def main(_):
   valid_g2b = data_pipe(FLAGS.valid_data, FLAGS.batch_size, is_training=False)
 
   trainer = Trainer(
-      model_or_fn=model,
+      model=model,
       loss=tf.keras.losses.BinaryCrossentropy(),
       # optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.03, initial_accumulator_value=1e-3),
       optimizer=optimizer,

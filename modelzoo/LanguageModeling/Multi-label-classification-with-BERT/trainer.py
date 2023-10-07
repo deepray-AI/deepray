@@ -41,7 +41,7 @@ def main(_):
       tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
   ]
   trainer = Trainer(
-      model_or_fn=model,
+      model=model,
       loss=tf.keras.losses.BinaryCrossentropy(from_logits=True),
       metrics=[tf.metrics.BinaryAccuracy(), tf.metrics.AUC(multi_label=True)],
   )

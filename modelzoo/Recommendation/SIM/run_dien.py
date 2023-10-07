@@ -63,7 +63,7 @@ def main(_):
     )
 
   trainer = Trainer(
-      model_or_fn=model,
+      model=model,
       loss={
           "logits": tf.keras.losses.BinaryCrossentropy(from_logits=True),
           "auxiliary_logits": custom_loss_fn

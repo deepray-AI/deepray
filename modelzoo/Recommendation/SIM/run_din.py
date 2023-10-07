@@ -56,7 +56,7 @@ def main(_):
     )
 
   trainer = Trainer(
-      model_or_fn=model,
+      model=model,
       loss={"logits": tf.keras.losses.BinaryCrossentropy(from_logits=True)},
       metrics=tf.keras.metrics.AUC(num_thresholds=8000, name="auc_accumulator", from_logits=True),
   )

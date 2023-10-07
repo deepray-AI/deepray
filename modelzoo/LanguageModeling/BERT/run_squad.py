@@ -30,7 +30,7 @@ import tensorflow as tf
 from absl import app, flags, logging
 from dllogger import Verbosity
 
-from deepray.core import model_saving_utils
+from deepray.utils import model_saving_utils
 from deepray.core.base_trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets import tokenization
@@ -227,7 +227,7 @@ def train_squad(
       is_training=True,
   )
   trainer = Trainer(
-      model_or_fn=model,
+      model=model,
       sub_model_or_fn=sub_model,
       loss={
           "start_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),

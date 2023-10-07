@@ -21,7 +21,7 @@ from __future__ import print_function
 import json
 import os
 import time
-from typing import Optional, Callable, Union
+from typing import Union, List, Dict, Text
 
 import tensorflow as tf
 from absl import logging, flags
@@ -36,7 +36,6 @@ else:
   from tensorflow.keras.optimizers import legacy as optimizers
 from deepray.callbacks import HvdCallbackList
 from deepray.core.common import distribution_utils
-from deepray.optimizers import optimization
 from deepray.optimizers.optimization import GradientAccumulator
 from deepray.utils import dllogger_class
 from deepray.utils import gpu_affinity
@@ -44,6 +43,7 @@ from deepray.utils.flags import common_flags
 from deepray.utils.misc import keras_utils
 from deepray.utils.benchmark import PerformanceCalculator
 from deepray.utils.horovod_utils import is_main_process, get_world_size
+from deepray.utils import export
 
 from .module import Module
 
@@ -193,8 +193,7 @@ class Trainer(Module):
 
   def __init__(
       self,
-      model_or_fn: [Callable[..., tf.keras.Model], tf.keras.Model],
-      sub_model_or_fn: Optional[Union[Callable[[], tf.keras.Model], tf.keras.Model]] = None,
+      model: Union[tf.keras.Model, List[tf.keras.Model], Dict[Text, tf.keras.Model]],
       optimizer="rmsprop",
       loss=None,
       metrics=None,
@@ -206,15 +205,26 @@ class Trainer(Module):
       **kwargs,
   ):
     self.strategy = distribution_utils.get_distribution_strategy()
-    if isinstance(model_or_fn, tf.keras.Model):
-      self.model = model_or_fn
-    elif callable(model_or_fn):
-      self.build_model = model_or_fn
-      self.model = model_or_fn()
-    else:
-      ValueError("Not a reachable model_or_fn.")
 
-    self.sub_model = sub_model_or_fn
+    self._model = {}
+    if isinstance(model, list):
+      if len(model) == 1:
+        self._model = {"main_model": model[0]}
+      elif len(model) == 2:
+        self._model = {"main_model": model[0], "sub_model": model[1]}
+      else:
+        for i in range(len(model)):
+          if i == 0:
+            self._model["main_model"] = model[i]
+          else:
+            self._model[f"sub_model{i}"] = model[i]
+    elif isinstance(model, dict):
+      self._model = model
+    elif isinstance(model, tf.keras.Model):
+      self._model = {"main_model": model}
+    else:
+      ValueError("Not a reachable model.")
+
     self._loss = loss
     self._metrics = metrics
     self._loss_weights = loss_weights
@@ -222,7 +232,6 @@ class Trainer(Module):
 
     self.use_horovod = use_horovod if use_horovod else FLAGS.use_horovod
     self.run_eagerly = run_eagerly if run_eagerly else FLAGS.run_eagerly
-    self.sub_model_export_name = "sub_model"
 
     self.epochs = FLAGS.epochs
 
@@ -247,6 +256,27 @@ class Trainer(Module):
     self.use_float16 = common_flags.use_float16()
     if self.use_float16:
       self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, dynamic=True)
+
+  @property
+  def model(self):
+    if len(self._model) == 1:
+      return self._model["main_model"]
+    else:
+      return self._model
+
+  @property
+  def checkpoint(self):
+    if len(self._checkpoints) == 1:
+      return self._checkpoints["main_model"]
+    else:
+      return self._checkpoints
+
+  @property
+  def manager(self):
+    if len(self._managers) == 1:
+      return self._managers["main_model"]
+    else:
+      return self._managers
 
   def fit(
       self,
@@ -549,38 +579,21 @@ class Trainer(Module):
             # from_serialized=from_serialized,
         ) if self._metrics or self._weighted_metrics else None
 
-      if FLAGS.init_checkpoint:
-        logging.info(
-            'Checkpoint file %s found and restoring from '
-            'initial checkpoint for core model.', FLAGS.init_checkpoint
-        )
-        self.sub_model_checkpoint = tf.train.Checkpoint(model=self.sub_model) if self.sub_model else None
-        self.sub_model_checkpoint.restore(FLAGS.init_checkpoint).assert_existing_objects_matched()
-        logging.info('Loading from checkpoint file completed')
+      self._checkpoints, self._managers = {}, {}
+      for name, model in self._model.items():
+        if name == "main_model":
+          _checkpoint = tf.train.Checkpoint(root=model, optimizer=self.optimizer)
+          self._checkpoints[name] = _checkpoint
+          self._managers[name] = tf.train.CheckpointManager(
+              _checkpoint, os.path.join(FLAGS.model_dir, f'ckpt_{name}'), max_to_keep=3
+          )
+        else:
+          _checkpoint = tf.train.Checkpoint(root=model)
+          self._checkpoints[name] = _checkpoint
+          self._managers[name] = tf.train.CheckpointManager(
+              _checkpoint, os.path.join(FLAGS.model_dir, f'ckpt_{name}'), max_to_keep=3
+          )
 
-      self.checkpoint = tf.train.Checkpoint(model=self.model, optimizer=self.optimizer)
-
-      if FLAGS.init_weights:
-        logging.info(
-            'variables file %s found and restoring from '
-            'initial variables for main model.', FLAGS.init_weights
-        )
-        self.model.load_weights(os.path.join(FLAGS.init_weights, "variables"))
-        logging.info('Loading from weights file completed')
-
-      latest_checkpoint_file = tf.train.latest_checkpoint(FLAGS.model_dir)
-      if latest_checkpoint_file:
-        logging.info('Checkpoint file %s found and restoring from '
-                     'checkpoint', latest_checkpoint_file)
-        self.checkpoint.restore(latest_checkpoint_file)
-        logging.info('Loading from checkpoint file completed')
-
-      self.checkpoint_name = 'ctl_step_{step}.ckpt'
-      self.manager = tf.train.CheckpointManager(self.checkpoint, os.path.join(FLAGS.model_dir, 'ckpt'), max_to_keep=3)
-      if FLAGS.init_checkpoint:
-        self.sub_manager = tf.train.CheckpointManager(
-            self.sub_model_checkpoint, os.path.join(FLAGS.model_dir, 'sub_ckpt'), max_to_keep=3
-        )
       if FLAGS.num_accumulation_steps > 1:
         self.accum_gradients = GradientAccumulator()
 
@@ -717,16 +730,8 @@ class Trainer(Module):
       logging.info(f"self._performance_calculator.completed: {self._performance_calculator.completed}")
       results_perf = self._performance_calculator.get_current_benchmark_results()
 
-    self._save_checkpoint(self.manager, self.current_step)
-    # self.save_model_to_export()
-    # self.save_model_to_pb()
+    export.export_to_checkpoint(self.manager, self.current_step)
     if is_main_process():
-      # if FLAGS.use_dynamic_embedding:
-      #   self.save_model_to_serving()
-
-      if self.sub_model:
-        self._save_checkpoint(self.sub_manager)
-
       training_summary = {
           'total_training_steps': self.current_step,
           'train_loss': self._float_metric_value(self.loss_container.metrics[0]),

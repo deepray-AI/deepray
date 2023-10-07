@@ -50,7 +50,7 @@ def main(_):
     model = build_keras_model(is_training=True, mpi_size=hvd.size(), mpi_rank=hvd.rank())
 
   trainer = Trainer(
-      model_or_fn=model,
+      model=model,
       loss="binary_crossentropy",
       metrics=tf.keras.metrics.AUC(num_thresholds=1000, summation_method='minoring'),
   )

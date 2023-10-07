@@ -25,7 +25,7 @@ def main(_):
     )
 
   trainer = Trainer(
-      model_or_fn=model,
+      model=model,
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       metrics=['accuracy'],
   )

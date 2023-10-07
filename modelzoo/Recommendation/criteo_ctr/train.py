@@ -16,17 +16,16 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import sys
+
 import tensorflow as tf
 from absl import app
 from absl import flags
-from tensorflow.keras import backend as K
 from tensorflow_recommenders_addons import dynamic_embedding as de
 
 from dcn_v2 import Ranking
 from deepray.core.base_trainer import Trainer
 from deepray.datasets.criteo import CriteoTsvReader
-from deepray.utils.export.export import export_to_savedmodel, export_for_serving
+from deepray.utils.export import export_to_savedmodel
 
 FLAGS = flags.FLAGS
 
@@ -37,7 +36,7 @@ def main(_):
   optimizer = tf.keras.optimizers.Adam(learning_rate=FLAGS.learning_rate, amsgrad=False)
   optimizer = de.DynamicEmbeddingOptimizer(optimizer, synchronous=FLAGS.use_horovod)
 
-  trainer = Trainer(model_or_fn=model, optimizer=optimizer, loss="binary_crossentropy", metrics=[
+  trainer = Trainer(model=model, optimizer=optimizer, loss="binary_crossentropy", metrics=[
       'AUC',
   ])
   data_pipe = CriteoTsvReader(use_synthetic_data=True)
@@ -45,22 +44,6 @@ def main(_):
   trainer.fit(train_input=train_input_fn, steps_per_epoch=FLAGS.steps_per_epoch)
 
   export_to_savedmodel(trainer.model)
-  if FLAGS.use_horovod:
-    FLAGS([
-      sys.argv[0],
-      "--use_horovod=False",
-    ])
-
-    K.clear_session()
-    de.enable_inference_mode()
-
-    model = Ranking(interaction="cross")
-    FLAGS([
-      sys.argv[0],
-      "--use_horovod=True",
-    ])
-    export_for_serving(trainer.model, export_model=model)
-
 
 
 if __name__ == "__main__":
