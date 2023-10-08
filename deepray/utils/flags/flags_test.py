@@ -44,7 +44,7 @@ class BaseTester(unittest.TestCase):
     defaults = dict(
         data_dir="dfgasf",
         model_dir="dfsdkjgbs",
-        train_epochs=534,
+        epochs=534,
         epochs_between_evals=15,
         batch_size=256,
         hooks=["LoggingTensorHook"],

@@ -31,7 +31,6 @@ def define_base(
     clean=False,
     num_accumulation_steps=False,
     epochs=False,
-    epochs_between_evals=False,
     stop_threshold=False,
     batch_size=False,
     num_gpus=False,
@@ -49,7 +48,6 @@ def define_base(
     model_dir: Create a flag for specifying the model file directory.
     clean: Create a flag for removing the model_dir.
     epochs: Create a flag to specify the number of training epochs.
-    epochs_between_evals: Create a flag to specify the frequency of testing.
     stop_threshold: Create a flag to specify a threshold accuracy or other eval
       metric which should trigger the end of training.
     batch_size: Create a flag to specify the batch size.
@@ -125,15 +123,6 @@ def define_base(
     flags.DEFINE_integer(name="epochs", default=1, help=help_wrap("The number of epochs used to train."))
     key_flags.append("steps_per_epoch")
     key_flags.append("epochs")
-
-  if epochs_between_evals:
-    flags.DEFINE_integer(
-        name="epochs_between_evals",
-        default=1,
-        help=help_wrap("The number of training epochs to run between "
-                       "evaluations.")
-    )
-    key_flags.append("epochs_between_evals")
 
   if stop_threshold:
     flags.DEFINE_float(

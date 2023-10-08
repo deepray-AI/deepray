@@ -39,7 +39,6 @@ def define_common_flags():
       model_dir=True,
       clean=True,
       epochs=True,
-      epochs_between_evals=False,
       stop_threshold=False,
       hooks=False,
       export_dir=False,
