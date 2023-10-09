@@ -145,7 +145,8 @@ def export_to_savedmodel(
           # for opt_de_var in opt_de_vars:
           #   opt_de_var.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
 
-    logging.info(f"save pb model to:{_savedmodel_dir}, without optimizer & traces")
+    if is_main_process():
+      logging.info(f"save pb model to: {_savedmodel_dir}, without optimizer & traces")
 
   if isinstance(model, dict):
     for name, _model in model.items():

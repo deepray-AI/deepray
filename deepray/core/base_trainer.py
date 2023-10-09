@@ -596,17 +596,31 @@ class Trainer(Module):
       self._checkpoints, self._managers = {}, {}
       for name, model in self._model.items():
         if "main" in name:
-          _checkpoint = tf.train.Checkpoint(root=model, optimizer=self.optimizer)
+          _checkpoint = tf.train.Checkpoint(model=model, optimizer=self.optimizer)
           self._checkpoints[name] = _checkpoint
           self._managers[name] = tf.train.CheckpointManager(
               _checkpoint, os.path.join(FLAGS.model_dir, f'ckpt_{name}'), max_to_keep=3
           )
         else:
-          _checkpoint = tf.train.Checkpoint(root=model)
+          _checkpoint = tf.train.Checkpoint(model=model)
           self._checkpoints[name] = _checkpoint
           self._managers[name] = tf.train.CheckpointManager(
               _checkpoint, os.path.join(FLAGS.model_dir, f'ckpt_{name}'), max_to_keep=3
           )
+
+      if FLAGS.init_checkpoint:
+        for (name, ckpt), init_ckpt in zip(self._checkpoints.items(), FLAGS.init_checkpoint):
+          if init_ckpt:
+            logging.info(f'Checkpoint file {init_ckpt} found and restoring from initial checkpoint for {name} model.')
+            ckpt.restore(init_ckpt).assert_existing_objects_matched()
+            logging.info('Loading from checkpoint file completed')
+
+      if FLAGS.init_weights:
+        for (name, _model), init_weight in zip(self._model.items(), FLAGS.init_weights):
+          if init_weight:
+            logging.info(f'variables file {init_weight} found and restoring from initial variables for {name} model.')
+            _model.load_weights(os.path.join(init_weight, "variables"))
+            logging.info('Loading from weights file completed')
 
       if FLAGS.num_accumulation_steps > 1:
         self.accum_gradients = GradientAccumulator()

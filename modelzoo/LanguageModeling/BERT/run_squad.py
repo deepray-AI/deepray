@@ -241,6 +241,7 @@ def train_squad(
       callbacks=custom_callbacks,
   )
   trainer.fit(train_input=train_input,)
+  export.export_to_savedmodel(model=trainer.models)
 
 
 def predict_squad(input_meta_data):
