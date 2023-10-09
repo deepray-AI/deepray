@@ -30,7 +30,7 @@ import tensorflow as tf
 from absl import app, flags, logging
 from dllogger import Verbosity
 
-from deepray.utils import model_saving_utils
+from deepray.utils import export
 from deepray.core.base_trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets import tokenization
@@ -38,8 +38,7 @@ from deepray.datasets.squad import Squad
 # word-piece tokenizer based squad_lib
 # sentence-piece tokenizer based squad_lib
 from deepray.datasets.squad import squad_lib_sp, squad_lib as squad_lib_wp
-from deepray.official.nlp import bert_modeling as modeling
-from deepray.official.nlp import bert_models
+from deepray.layers.nlp import bert_models, bert_modeling as modeling
 from deepray.utils.flags import common_flags
 from deepray.utils.horovod_utils import is_main_process
 
@@ -76,10 +75,10 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
   predict_iterator = distribution_utils.make_distributed_iterator(strategy, predict_dataset)
 
   if FLAGS.mode == 'trt_predict':
-    squad_model = model_saving_utils.TFTRTModel(FLAGS.savedmodel_dir, "amp" if common_flags.use_float16() else "fp32")
+    squad_model = export.TFTRTModel(FLAGS.savedmodel_dir, "amp" if common_flags.use_float16() else "fp32")
 
   elif FLAGS.mode == 'sm_predict':
-    squad_model = model_saving_utils.SavedModel(FLAGS.savedmodel_dir, "amp" if common_flags.use_float16() else "fp32")
+    squad_model = export.SavedModel(FLAGS.savedmodel_dir, "amp" if common_flags.use_float16() else "fp32")
 
   else:
     with distribution_utils.get_strategy_scope(strategy):
@@ -219,16 +218,18 @@ def train_squad(
   data_pipe = Squad(
       max_seq_length=max_seq_length,
       dataset_type="squad",
-      use_horovod=FLAGS.use_horovod,
   )
   train_input = data_pipe(
       FLAGS.train_data,
       FLAGS.batch_size,
       is_training=True,
   )
+
   trainer = Trainer(
-      model=model,
-      sub_model_or_fn=sub_model,
+      model={"main": model, "sub_model": sub_model},
+      # optimizer= create_optimizer(
+      #   learning_rate, steps_per_epoch * epochs, warmup_steps, FLAGS.optimizer_type),
+      optimizer=tf.keras.optimizers.Adam(learning_rate=FLAGS.learning_rate, amsgrad=False),
       loss={
           "start_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
           "end_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -347,7 +348,7 @@ def export_squad(model_export_path, input_meta_data):
     raise ValueError('Export path is not specified: %s' % model_export_path)
   bert_config = MODEL_CLASSES[FLAGS.model_type][0].from_json_file(FLAGS.config_file)
   squad_model, _ = bert_models.squad_model(bert_config, input_meta_data['max_seq_length'], float_type=tf.float32)
-  model_saving_utils.export_bert_model(
+  export.export_to_savedmodel(
       model_export_path + '/savedmodel', model=squad_model, checkpoint_dir=FLAGS.model_dir
   )
 

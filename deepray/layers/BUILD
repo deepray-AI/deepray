@@ -5,7 +5,10 @@ package(
 
 py_library(
     name = "layers",
-    srcs = glob(["*.py"]),
+    srcs = glob([
+        "*.py",
+        "**/*.py",
+    ]),
     data = [
         "//deepray/custom_ops/layers:_correlation_cost_ops.so",
         "//deepray/custom_ops/layers:_embedding_bag_ops.so",

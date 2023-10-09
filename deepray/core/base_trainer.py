@@ -259,6 +259,20 @@ class Trainer(Module):
 
   @property
   def model(self):
+    """
+    Returns:
+      The main model
+    """
+    if len(self._model) == 1:
+      return self._model["main_model"]
+    else:
+      for name, _model in self._model.items():
+        if "main" in name:
+          return _model
+      ValueError("Could not find the main model.")
+
+  @property
+  def models(self):
     if len(self._model) == 1:
       return self._model["main_model"]
     else:
@@ -581,7 +595,7 @@ class Trainer(Module):
 
       self._checkpoints, self._managers = {}, {}
       for name, model in self._model.items():
-        if name == "main_model":
+        if "main" in name:
           _checkpoint = tf.train.Checkpoint(root=model, optimizer=self.optimizer)
           self._checkpoints[name] = _checkpoint
           self._managers[name] = tf.train.CheckpointManager(

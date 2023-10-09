@@ -23,7 +23,7 @@ import tensorflow as tf
 
 from tensorflow.python.keras import keras_parameterized  # pylint: disable=g-direct-tensorflow-import
 from deepray import layers
-from deepray.networks import encoder_scaffold
+from deepray.layers.networks import encoder_scaffold
 
 
 # Test class that wraps a standard transformer layer. If this layer is called

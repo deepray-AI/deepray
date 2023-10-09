@@ -15,7 +15,7 @@
 
 import numbers
 
-import horovod.tensorflow as hvd
+from deepray.utils.horovod_utils import is_main_process, get_world_size
 import tensorflow as tf
 from absl import logging
 from tensorflow.python.util import nest
@@ -31,7 +31,7 @@ def csv_str_to_int_list(s):
 
 
 def dist_print(*args, force=False, **kwargs):
-  if hvd.rank() == 0 or force:
+  if is_main_process() or force:
     print(*args, **kwargs)
 
 

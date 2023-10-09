@@ -51,13 +51,13 @@ else
 fi
 
 if [ "$bert_model" = "large" ]; then
-    export BERT_BASE_DIR=/workspaces/bert_tf2/data/download/google_pretrained_weights/uncased_L-24_H-1024_A-16
+    export BERT_BASE_DIR=/workspaces/dataset/download/google_pretrained_weights/uncased_L-24_H-1024_A-16
 else
-    export BERT_BASE_DIR=/workspaces/bert_tf2/data/download/google_pretrained_weights/uncased_L-12_H-768_A-12
+    export BERT_BASE_DIR=/workspaces/dataset/download/google_pretrained_weights/uncased_L-12_H-768_A-12
 fi
 
 export SQUAD_VERSION=v$squad_version
-export SQUAD_DIR=/workspaces/bert_tf2/data/download/squad/$SQUAD_VERSION
+export SQUAD_DIR=/workspaces/dataset/download/squad/$SQUAD_VERSION
 printf -v TAG "squad_train_benchmark_%s_%s_gpu%d_bs%d" "$bert_model" "$precision" $num_gpu $batch_size
 DATESTAMP=$(date +'%y%m%d%H%M%S')
 LOGFILE=/results/$TAG.log
@@ -80,5 +80,3 @@ $mpi_command python run_squad.py \
     --run_eagerly=false \
     --benchmark \
     $use_hvd $use_fp16 $use_xla_tag |& tee $LOGFILE
-
-rm $MODEL_DIR -r

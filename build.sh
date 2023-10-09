@@ -9,7 +9,7 @@ python ./configure.py
 
 bazel build build_pip_pkg
 
-rm -r artifacts/
+rm -rf artifacts/
 
 bazel-bin/build_pip_pkg artifacts
 

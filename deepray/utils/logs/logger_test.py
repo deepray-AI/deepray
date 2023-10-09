@@ -240,7 +240,7 @@ class BenchmarkFileLoggerTest(tf.test.TestCase):
     run_parameters = {
         "batch_size": 32,
         "synthetic_data": True,
-        "train_epochs": 100.00,
+        "epochs": 100.00,
         "dtype": "fp16",
         "resnet_size": 50,
         "random_tensor": tf.constant(2.0)
@@ -266,7 +266,7 @@ class BenchmarkFileLoggerTest(tf.test.TestCase):
 
     self.assertEqual(run_info["run_parameters"][3], {"name": "resnet_size", "long_value": 50})
     self.assertEqual(run_info["run_parameters"][4], {"name": "synthetic_data", "bool_value": "True"})
-    self.assertEqual(run_info["run_parameters"][5], {"name": "train_epochs", "float_value": 100.00})
+    self.assertEqual(run_info["run_parameters"][5], {"name": "epochs", "float_value": 100.00})
 
   def test_collect_tensorflow_environment_variables(self):
     os.environ["TF_ENABLE_WINOGRAD_NONFUSED"] = "1"
