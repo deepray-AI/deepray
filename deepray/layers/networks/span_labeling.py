@@ -22,7 +22,6 @@ from __future__ import print_function
 import tensorflow as tf
 
 
-@tf.keras.utils.register_keras_serializable(package='Text')
 class SpanLabeling(tf.keras.Model):
   """Span labeling network head for BERT modeling.
 

@@ -23,8 +23,7 @@ import tensorflow as tf
 
 from tensorflow.python.keras import keras_parameterized  # pylint: disable=g-direct-tensorflow-import
 
-from deepray.networks import masked_lm
-from deepray.networks import transformer_encoder
+from deepray.layers.networks import transformer_encoder, masked_lm
 
 
 # This decorator runs the test in V1, V2-Eager, and V2-Functional mode. It

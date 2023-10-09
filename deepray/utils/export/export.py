@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import os
 import re
-from typing import Union, Optional, Text
+from typing import Optional, Union, Dict, Text
 
 import tensorflow as tf
 from absl import logging, flags
@@ -75,19 +75,21 @@ def export_to_checkpoint(saver: Union[tf.train.Checkpoint, tf.train.CheckpointMa
     if isinstance(saver, dict):
       for name, _saver in saver.items():
         helper(name, _saver)
+    else:
+      helper(name="main", _saver=saver)
 
 
 def export_to_savedmodel(
-    model: tf.keras.Model,
+    model: Union[tf.keras.Model, Dict[Text, tf.keras.Model]],
     savedmodel_dir: Optional[Text] = None,
-    checkpoint_dir: Optional[Text] = None,
+    checkpoint_dir: Optional[Union[Text, Dict[Text, Text]]] = None,
     restore_model_using_load_weights: bool = False
 ) -> None:
   """Export keras model for serving which does not include the optimizer.
 
   Arguments:
-      model_export_path: Path to which exported model will be saved.
       model: Keras model object to export.
+      savedmodel_dir: Path to which exported model will be saved.
       checkpoint_dir: Path from which model weights will be loaded, if
         specified.
       restore_model_using_load_weights: Whether to use checkpoint.restore() API
@@ -102,48 +104,54 @@ def export_to_savedmodel(
   Raises:
     ValueError when model is not specified.
   """
-  if not isinstance(model, tf.keras.Model):
-    raise ValueError('model must be a tf.keras.Model object.')
-  if savedmodel_dir is None:
-    savedmodel_dir = os.path.join(FLAGS.model_dir, 'export')
-  os.makedirs(savedmodel_dir, exist_ok=True)
 
-  if checkpoint_dir:
-    # Keras compile/fit() was used to save checkpoint using
-    # model.save_weights().
-    if restore_model_using_load_weights:
-      model_weight_path = os.path.join(checkpoint_dir, 'checkpoint')
-      assert tf.io.gfile.exists(model_weight_path)
-      model.load_weights(model_weight_path)
+  def helper(name, _model: tf.keras.Model, _checkpoint_dir):
+    _savedmodel_dir = os.path.join(FLAGS.model_dir, 'export') if savedmodel_dir is None else savedmodel_dir
+    _savedmodel_dir = f"{_savedmodel_dir}_{name}"
+    os.makedirs(_savedmodel_dir, exist_ok=True)
 
-    # tf.train.Checkpoint API was used via custom training loop logic.
+    if _checkpoint_dir:
+      # Keras compile/fit() was used to save checkpoint using
+      # model.save_weights().
+      if restore_model_using_load_weights:
+        model_weight_path = os.path.join(_checkpoint_dir, 'checkpoint')
+        assert tf.io.gfile.exists(model_weight_path)
+        _model.load_weights(model_weight_path)
+
+      # tf.train.Checkpoint API was used via custom training loop logic.
+      else:
+        checkpoint = tf.train.Checkpoint(model=_model)
+
+        # Restores the model from latest checkpoint.
+        latest_checkpoint_file = tf.train.latest_checkpoint(_checkpoint_dir)
+        assert latest_checkpoint_file
+        logging.info('Checkpoint file %s found and restoring from '
+                     'checkpoint', latest_checkpoint_file)
+        checkpoint.restore(latest_checkpoint_file).assert_existing_objects_matched()
+
+    options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA']) if FLAGS.use_dynamic_embedding else None
+
+    if is_main_process():
+      tf.saved_model.save(_model, _savedmodel_dir, options=options)
     else:
-      checkpoint = tf.train.Checkpoint(model=model)
+      de_dir = os.path.join(_savedmodel_dir, "variables", "TFRADynamicEmbedding")
+      for var in _model.variables:
+        if hasattr(var, "params"):
+          # save other rank's embedding weights
+          var.params.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
+          # save opt weights
+          # opt_de_vars = var.params.optimizer_vars.as_list(
+          # ) if hasattr(var.params.optimizer_vars, "as_list") else var.params.optimizer_vars
+          # for opt_de_var in opt_de_vars:
+          #   opt_de_var.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
 
-      # Restores the model from latest checkpoint.
-      latest_checkpoint_file = tf.train.latest_checkpoint(checkpoint_dir)
-      assert latest_checkpoint_file
-      logging.info('Checkpoint file %s found and restoring from '
-                   'checkpoint', latest_checkpoint_file)
-      checkpoint.restore(latest_checkpoint_file).assert_existing_objects_matched()
+    logging.info(f"save pb model to:{_savedmodel_dir}, without optimizer & traces")
 
-  options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA']) if FLAGS.use_dynamic_embedding else None
-
-  if is_main_process():
-    tf.saved_model.save(model, savedmodel_dir, options=options)
+  if isinstance(model, dict):
+    for name, _model in model.items():
+      helper(name, _model, _checkpoint_dir=checkpoint_dir[name] if checkpoint_dir else None)
   else:
-    de_dir = os.path.join(savedmodel_dir, "variables", "TFRADynamicEmbedding")
-    for var in model.variables:
-      if hasattr(var, "params"):
-        # save other rank's embedding weights
-        var.params.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
-        # save opt weights
-        # opt_de_vars = var.params.optimizer_vars.as_list(
-        # ) if hasattr(var.params.optimizer_vars, "as_list") else var.params.optimizer_vars
-        # for opt_de_var in opt_de_vars:
-        #   opt_de_var.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
-
-  logging.info(f"save pb model to:{savedmodel_dir}, without optimizer & traces")
+    helper(name="main", _model=model, _checkpoint_dir=checkpoint_dir)
 
 
 class SavedModel:

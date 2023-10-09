@@ -18,11 +18,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import horovod.tensorflow as hvd
 import tensorflow as tf
 from absl import flags
 
 from deepray.datasets.datapipeline import DataPipeLine
+from deepray.utils.horovod_utils import get_rank, get_world_size
 
 FLAGS = flags.FLAGS
 
@@ -35,14 +35,7 @@ class Squad(DataPipeLine):
     self.dataset_type = dataset_type
 
   def build_dataset(
-      self,
-      input_file_pattern,
-      batch_size,
-      is_training=True,
-      context: tf.distribute.InputContext = None,
-      use_horovod=False,
-      *args,
-      **kwargs
+      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
   ):
     if self.dataset_type == "squad":
       return self.create_squad_dataset(
@@ -50,8 +43,6 @@ class Squad(DataPipeLine):
           self._max_seq_length,
           batch_size,
           is_training=is_training,
-          input_pipeline_context=context,
-          use_horovod=use_horovod
       )
     elif self.dataset_type == "pretrain":
       return self.create_pretrain_dataset()
@@ -74,13 +65,13 @@ class Squad(DataPipeLine):
 
     return example
 
-  def single_file_dataset(self, input_file, name_to_features, use_horovod=False):
+  def single_file_dataset(self, input_file, name_to_features):
     """Creates a single-file dataset to be passed for BERT custom training."""
     # For training, we want a lot of parallel reading and shuffling.
     # For eval, we want no shuffling and parallel reading doesn't matter.
     d = tf.data.TFRecordDataset(input_file)
-    if use_horovod:
-      d = d.shard(hvd.size(), hvd.rank())
+    if self.use_horovod:
+      d = d.shard(num_shards=get_world_size(), index=get_rank())
     d = d.map(lambda record: self.decode_record(record, name_to_features))
 
     # When `input_file` is a path to a single file or a list
@@ -99,8 +90,6 @@ class Squad(DataPipeLine):
       max_predictions_per_seq,
       batch_size,
       is_training=True,
-      input_pipeline_context=None,
-      use_horovod=False
   ):
     """Creates input dataset from (tf)records files for pretraining."""
     name_to_features = {
@@ -114,11 +103,8 @@ class Squad(DataPipeLine):
     }
 
     dataset = tf.data.Dataset.list_files(input_patterns, shuffle=is_training)
-    if use_horovod:
-      dataset = dataset.shard(hvd.size(), hvd.rank())
-
-    if input_pipeline_context and input_pipeline_context.num_input_pipelines > 1:
-      dataset = dataset.shard(input_pipeline_context.num_input_pipelines, input_pipeline_context.input_pipeline_id)
+    if self.use_horovod:
+      dataset = dataset.shard(num_shards=get_world_size(), index=get_rank())
 
     dataset = dataset.repeat()
 
@@ -174,7 +160,7 @@ class Squad(DataPipeLine):
         'label_ids': tf.io.FixedLenFeature([], tf.int64),
         'is_real_example': tf.io.FixedLenFeature([], tf.int64),
     }
-    dataset = self.single_file_dataset(file_path, name_to_features, self.use_horovod)
+    dataset = self.single_file_dataset(file_path, name_to_features)
 
     # The dataset is always sharded by number of hosts.
     # num_input_pipelines is the number of hosts rather than number of cores.
@@ -200,9 +186,7 @@ class Squad(DataPipeLine):
     dataset = dataset.prefetch(1024)
     return dataset
 
-  def create_squad_dataset(
-      self, file_path, seq_length, batch_size, is_training=True, input_pipeline_context=None, use_horovod=False
-  ):
+  def create_squad_dataset(self, file_path, seq_length, batch_size, is_training=True):
     """Creates input dataset from (tf)records files for train/eval."""
     name_to_features = {
         'input_ids': tf.io.FixedLenFeature([seq_length], tf.int64),
@@ -215,12 +199,12 @@ class Squad(DataPipeLine):
     else:
       name_to_features['unique_ids'] = tf.io.FixedLenFeature([], tf.int64)
 
-    dataset = self.single_file_dataset(file_path, name_to_features, use_horovod)
+    dataset = self.single_file_dataset(file_path, name_to_features)
 
     # The dataset is always sharded by number of hosts.
     # num_input_pipelines is the number of hosts rather than number of cores.
-    if input_pipeline_context and input_pipeline_context.num_input_pipelines > 1:
-      dataset = dataset.shard(input_pipeline_context.num_input_pipelines, input_pipeline_context.input_pipeline_id)
+    if self.use_horovod:
+      dataset = dataset.shard(num_shards=get_world_size(), index=get_rank())
 
     def _select_data_from_record(record):
       """Dispatches record to features and labels."""

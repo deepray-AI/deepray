@@ -21,37 +21,41 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from deepray import networks
+from deepray.layers import networks
 
 
 @tf.keras.utils.register_keras_serializable(package='Text')
-class BertSpanLabeler(tf.keras.Model):
-  """Span labeler model based on a BERT-style transformer-based encoder.
+class BertClassifier(tf.keras.Model):
+  """Classifier model based on a BERT-style transformer-based encoder.
 
   This is an implementation of the network structure surrounding a transformer
   encoder as described in "BERT: Pre-training of Deep Bidirectional Transformers
   for Language Understanding" (https://arxiv.org/abs/1810.04805).
 
-  The BertSpanLabeler allows a user to pass in a transformer stack, and
-  instantiates a span labeling network based on a single dense layer.
+  The BertClassifier allows a user to pass in a transformer stack, and
+  instantiates a classification network based on the passed `num_classes`
+  argument.
 
   Attributes:
     network: A transformer network. This network should output a sequence output
       and a classification output. Furthermore, it should expose its embedding
       table via a "get_embedding_table" method.
-    initializer: The initializer (if any) to use in the span labeling network.
+    num_classes: Number of classes to predict from the classification network.
+    initializer: The initializer (if any) to use in the classification networks.
       Defaults to a Glorot uniform initializer.
     output: The output style for this network. Can be either 'logits' or
       'predictions'.
   """
 
-  def __init__(self, network, initializer='glorot_uniform', output='logits', **kwargs):
+  def __init__(self, network, num_classes, initializer='glorot_uniform', output='logits', dropout_rate=0.1, **kwargs):
     self._self_setattr_tracking = False
     self._config = {
         'network': network,
+        'num_classes': num_classes,
         'initializer': initializer,
         'output': output,
     }
+
     # We want to use the inputs of the passed network as the inputs to this
     # Model. To do this, we need to keep a handle to the network inputs for use
     # when we construct the Model object at the end of init.
@@ -59,24 +63,19 @@ class BertSpanLabeler(tf.keras.Model):
 
     # Because we have a copy of inputs to create this Model object, we can
     # invoke the Network object with its own input tensors to start the Model.
-    sequence_output, _ = network(inputs)
+    _, cls_output = network(inputs)
+    cls_output = tf.keras.layers.Dropout(rate=dropout_rate)(cls_output)
 
-    # This is an instance variable for ease of access to the underlying task
-    # network.
-    self.span_labeling = networks.SpanLabeling(
-        input_width=sequence_output.shape[-1], initializer=initializer, output=output, name='span_labeling'
+    self.classifier = networks.Classification(
+        input_width=cls_output.shape[-1],
+        num_classes=num_classes,
+        initializer=initializer,
+        output=output,
+        name='classification'
     )
-    start_logits, end_logits = self.span_labeling(sequence_output)
+    predictions = self.classifier(cls_output)
 
-    # Use identity layers wrapped in lambdas to explicitly name the output
-    # tensors. This allows us to use string-keyed dicts in Keras fit/predict/
-    # evaluate calls.
-    start_logits = tf.keras.layers.Lambda(tf.identity, name='start_positions')(start_logits)
-    end_logits = tf.keras.layers.Lambda(tf.identity, name='end_positions')(end_logits)
-
-    logits = {"start_positions": start_logits, "end_positions": end_logits}
-
-    super(BertSpanLabeler, self).__init__(inputs=inputs, outputs=logits, **kwargs)
+    super(BertClassifier, self).__init__(inputs=inputs, outputs=predictions, **kwargs)
 
   def get_config(self):
     return self._config

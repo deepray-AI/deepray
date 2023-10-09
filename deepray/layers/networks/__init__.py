@@ -13,9 +13,5 @@
 # limitations under the License.
 # ==============================================================================
 """Networks package definition."""
-from deepray.networks.albert_transformer_encoder import AlbertTransformerEncoder
-from deepray.networks.classification import Classification
-from deepray.networks.encoder_scaffold import EncoderScaffold
-from deepray.networks.masked_lm import MaskedLM
-from deepray.networks.span_labeling import SpanLabeling
-from deepray.networks.transformer_encoder import TransformerEncoder
+from deepray.layers.networks.transformer_encoder import TransformerEncoder
+from .span_labeling import SpanLabeling

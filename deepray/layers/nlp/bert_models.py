@@ -21,13 +21,10 @@ from __future__ import print_function
 import tensorflow as tf
 import tensorflow_hub as hub
 
-from deepray.layers import tf_utils
-from deepray.official.nlp import bert_modeling
+from deepray.layers import tf_utils, networks
+from deepray.layers.nlp import bert_modeling
 from deepray import losses
-from deepray import networks
-from deepray.networks import bert_classifier
-from deepray.networks import bert_pretrainer
-from deepray.networks import bert_span_labeler
+from deepray.layers.networks import bert_span_labeler, bert_classifier, bert_pretrainer
 
 
 def gather_indexes(sequence_tensor, positions):
