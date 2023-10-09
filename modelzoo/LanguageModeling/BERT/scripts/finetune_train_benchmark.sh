@@ -74,7 +74,7 @@ $mpi_command python run_squad.py \
     --train_data=${SQUAD_DIR}/squad_${SQUAD_VERSION}_train.tf_record \
     --vocab_file=${BERT_BASE_DIR}/vocab.txt \
     --config_file=$BERT_BASE_DIR/bert_config.json \
-    --init_checkpoint=$BERT_BASE_DIR/bert_model.ckpt \
+    --init_checkpoint=",$BERT_BASE_DIR/bert_model.ckpt" \
     --batch_size=$batch_size \
     --model_dir=${MODEL_DIR} \
     --run_eagerly=false \

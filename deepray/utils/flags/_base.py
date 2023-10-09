@@ -89,9 +89,9 @@ def define_base(
     key_flags.append("num_accumulation_steps")
 
   if init_checkpoint:
-    flags.DEFINE_string('init_checkpoint', '', 'Initial checkpoint (usually from a pre-trained BERT model).')
+    flags.DEFINE_list('init_checkpoint', '', 'Initial checkpoint (usually from a pre-trained BERT model).')
     key_flags.append("init_checkpoint")
-    flags.DEFINE_string("init_weights", '', "Initial weights for the main model.")
+    flags.DEFINE_list("init_weights", '', "Initial weights for the main model.")
     key_flags.append("init_weights")
 
   if save_checkpoint_steps:
