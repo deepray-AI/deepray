@@ -888,21 +888,27 @@ class Trainer(Module):
     self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
     self.accum_gradients.reset()
 
-  def test_step(self, iterator):
+  def predict_step(self, iterator):
     """Calculates evaluation metrics on distributed devices."""
 
     def _test_step_fn(inputs):
       """Replicated accuracy calculation."""
       inputs, labels, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
       model_outputs = self.model(inputs, training=False)
-      loss = self.loss_container(labels, model_outputs, sample_weight=sample_weight)
-      if self.metric_container:
+      if labels and self.metric_container:
         self.metric_container.update_state(labels, model_outputs, sample_weight=sample_weight)
+      return model_outputs
+
+    def tuple_fun(x):
+      return x,
 
     if self.strategy:
-      self.strategy.run(_test_step_fn, args=(next(iterator),))
+      outputs = self.strategy.run(_test_step_fn, args=(iterator,))
+      map_func = self.strategy.experimental_local_results
     else:
-      _test_step_fn(next(iterator))
+      outputs = _test_step_fn(iterator)
+      map_func = tuple_fun
+    return tf.nest.map_structure(map_func, outputs)
 
   def train_steps_strategy(self, iterator, steps, num_grad_accumulates):
     """Performs distributed training steps in a loop.
@@ -965,20 +971,13 @@ class Trainer(Module):
       self.strategy.run(self._replicated_step, args=(iterator,))
     return self.get_metrics_result()
 
-  def export_tfra(self):
-    if is_main_process():
-      save_options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
-      tf.saved_model.save(self.model, "test_tfra", options=save_options)
-
   def make_train_function(self):
     if not self.run_eagerly:
       _train_single_step = tf.function(self.train_single_step)
       _train_multi_steps = tf.function(self.train_steps)
-      self._test_step = tf.function(self.test_step)
     else:
       _train_single_step = self.train_single_step
       _train_multi_steps = self.train_steps
-      self._test_step = self.test_step
 
     if self.strategy:
       self._train_step = self.train_single_step_strategy

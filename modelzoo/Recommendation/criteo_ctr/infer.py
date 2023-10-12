@@ -4,7 +4,8 @@
 # @license : Copyright(C),  <hailin.fu@>
 import os
 import sys
-
+import tensorflow as tf
+import numpy as np
 from absl import app, flags
 
 from deepray.datasets.criteo.criteo_tsv_reader import CriteoTsvReader
@@ -24,7 +25,7 @@ def runner(argv=None):
         "--run_eagerly=True",
         "--use_dynamic_embedding=True",
         f"--feature_map={dir_path}/feature_map_small.csv",
-        "--model_dir=/results/tf_tfra_training_criteo_dcn_fp32_gbs4096_230927090705/export/",
+        "--model_dir=/results/tf_tfra_training_criteo_dcn_fp32_gbs16384_231012074411/export_main_optimized/",
     ]
   if argv:
     FLAGS(argv, known_only=True)
@@ -39,6 +40,34 @@ def runner(argv=None):
   _performance_calculator = PerformanceCalculator(0, 1000)
   num_examples = 0
   step = 0
+
+  # a = {
+  #     "feature_14":
+  #         tf.constant(np.array([6394203, 7535249, 3500077, 836339, 7401745, 375123]), dtype=tf.int32),
+  #     "feature_15":
+  #         tf.constant(np.array([6394203, 7535249, 3500077, 836339, 7401745, 375123]), dtype=tf.int32),
+  #     "dense_features":
+  #         tf.constant(
+  #             np.array(
+  #                 [
+  #                     [0.7361634, 0.7361634], [0.00337589, 0.00337589], [0.673707, 0.673707], [0.33169293, 0.33169293],
+  #                     [0.8020003, 0.8020003], [0.18556607, 0.18556607]
+  #                 ]
+  #             ),
+  #             dtype=tf.float32
+  #         )
+  # }
+
+  a = {
+      "feature_14": tf.constant(np.array([6394203]), dtype=tf.int32),
+      "feature_15": tf.constant(np.array([6394203]), dtype=tf.int32),
+      "dense_features": tf.constant(np.array([[0.7361634, 0.7361634]]), dtype=tf.float32)
+  }
+
+  test = model(a)
+  print(test)
+  exit(0)
+
   for x, y in train_dataset.take(300):
     preds = model(x)
     step += 1

@@ -42,7 +42,7 @@ class Ranking(tf.keras.models.Model):
   the `compute_loss` and `call` methods.
   """
 
-  def __init__(self, interaction, *args, **kwargs):
+  def __init__(self, interaction, training=False, *args, **kwargs):
     super().__init__(*args, **kwargs)
 
     self.feature_map = FeatureMap(feature_map=FLAGS.feature_map, black_list=FLAGS.black_list).feature_map
@@ -50,6 +50,7 @@ class Ranking(tf.keras.models.Model):
     self._bottom_stack = MLP(hidden_units=[256, 64, 16], activations=[None, None, "relu"])
     self._top_stack = MLP(hidden_units=[512, 256, 1], activations=[None, None, "sigmoid"])
     self._interaction = interaction
+    self.training = training
     if interaction == 'dot':
       self._feature_interaction = DotInteraction(skip_gather=True)
     elif interaction == 'cross':
@@ -60,6 +61,7 @@ class Ranking(tf.keras.models.Model):
           f'is not supported it must be either \'dot\' or \'cross\'.'
       )
 
+  def build(self, input_shape):
     self._embedding_layer = {}
     for name, dim, dtype in self.feature_map[(self.feature_map['ftype'] == "Categorical")][["name", "dim",
                                                                                             "dtype"]].values:
@@ -67,16 +69,13 @@ class Ranking(tf.keras.models.Model):
           embedding_dim=dim,
           key_dtype=dtype,
           value_dtype=tf.float32,
-          initializer=None,
+          initializer=None if self.training else tf.keras.initializers.Zeros(),
           name='emb' + name,
           de_option=DynamicEmbeddingOption(
               device="DRAM",
               init_capacity=1 * 1024 * 1024,
           ),
       )
-
-  # def build(self, input_shape):
-  #
 
   def call(self, inputs: Dict[str, tf.Tensor], training=None, mask=None) -> tf.Tensor:
     """Executes forward and backward pass, returns loss.
@@ -88,16 +87,12 @@ class Ranking(tf.keras.models.Model):
       loss: Scalar tensor.
     """
     dense_features = inputs["dense_features"]
-    sparse_embeddings = []
+    sparse_embedding_vecs = []
     for name, dim in self.feature_map[(self.feature_map['ftype'] == "Categorical")][["name", "dim"]].values:
       tensor = inputs[name]
-      sparse_embeddings.append(self._embedding_layer[name](tensor))
+      # (batch_size, emb).
+      sparse_embedding_vecs.append(self._embedding_layer[name](tensor))
 
-    # Combine a dictionary into a vector and squeeze dimension from
-    # (batch_size, 1, emb) to (batch_size, emb).
-    sparse_embeddings = tf.nest.flatten(sparse_embeddings)
-
-    sparse_embedding_vecs = [tf.squeeze(sparse_embedding) for sparse_embedding in sparse_embeddings]
     dense_embedding_vec = self._bottom_stack(dense_features)
 
     interaction_args = sparse_embedding_vecs + [dense_embedding_vec]

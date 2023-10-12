@@ -248,7 +248,7 @@ def _monkey_patch_dataset_method(strategy):
   """Monkey-patch `strategy`'s `make_dataset_iterator` method."""
 
   def make_dataset(self, dataset):
-    tf.compat.v1.logging.info('Using pure synthetic data.')
+    logging.info('Using pure synthetic data.')
     with self.scope():
       if self.extended._global_batch_size:  # pylint: disable=protected-access
         return SyntheticDataset(dataset, self.num_replicas_in_sync)

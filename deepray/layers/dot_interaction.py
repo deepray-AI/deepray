@@ -47,6 +47,11 @@ class DotInteraction(tf.keras.layers.Layer):
     self._skip_gather = skip_gather
     super().__init__(name=name, **kwargs)
 
+  def build(self, input_shape):
+    self.num_features = len(input_shape)
+    self.batch_size = input_shape[0][0]
+    self.feature_dim = input_shape[0][1]
+
   def call(self, inputs: List[tf.Tensor]) -> tf.Tensor:
     """Performs the interaction operation on the tensors in the list.
 
@@ -63,13 +68,10 @@ class DotInteraction(tf.keras.layers.Layer):
       `num_features * (num_features + 1) / 2` if self_interaction is True and
       `num_features * (num_features - 1) / 2` if self_interaction is False.
     """
-    num_features = len(inputs)
-    batch_size = tf.shape(inputs[0])[0]
-    feature_dim = tf.shape(inputs[0])[1]
     # concat_features shape: batch_size, num_features, feature_dim
     try:
       concat_features = tf.concat(inputs, axis=-1)
-      concat_features = tf.reshape(concat_features, [batch_size, -1, feature_dim])
+      concat_features = tf.reshape(concat_features, [self.batch_size, -1, self.feature_dim])
     except (ValueError, tf.errors.InvalidArgumentError) as e:
       raise ValueError(f"Input tensors` dimensions must be equal, original"
                        f"error message: {e}")
@@ -81,18 +83,18 @@ class DotInteraction(tf.keras.layers.Layer):
       # Selecting lower-triangular portion including the diagonal.
       lower_tri_mask = tf.linalg.band_part(ones, -1, 0)
       upper_tri_mask = ones - lower_tri_mask
-      out_dim = num_features * (num_features + 1) // 2
+      out_dim = self.num_features * (self.num_features + 1) // 2
     else:
       # Selecting lower-triangular portion not included the diagonal.
       upper_tri_mask = tf.linalg.band_part(ones, 0, -1)
       lower_tri_mask = ones - upper_tri_mask
-      out_dim = num_features * (num_features - 1) // 2
+      out_dim = self.num_features * (self.num_features - 1) // 2
 
     if self._skip_gather:
       # Setting upper tiangle part of the interaction matrix to zeros.
       activations = tf.where(condition=tf.cast(upper_tri_mask, tf.bool), x=tf.zeros_like(xactions), y=xactions)
-      out_dim = num_features * num_features
+      out_dim = self.num_features * self.num_features
     else:
       activations = tf.boolean_mask(xactions, lower_tri_mask)
-    activations = tf.reshape(activations, (batch_size, out_dim))
+    activations = tf.reshape(activations, (self.batch_size, out_dim))
     return activations

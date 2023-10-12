@@ -31,7 +31,7 @@ FLAGS = flags.FLAGS
 
 
 def main(_):
-  model = Ranking(interaction="dot")
+  model = Ranking(interaction="cross")
 
   optimizer = tf.keras.optimizers.Adam(learning_rate=FLAGS.learning_rate, amsgrad=False)
   optimizer = de.DynamicEmbeddingOptimizer(optimizer, synchronous=FLAGS.use_horovod)
@@ -44,6 +44,26 @@ def main(_):
   trainer.fit(train_input=train_input_fn, steps_per_epoch=FLAGS.steps_per_epoch)
 
   export_to_savedmodel(trainer.model)
+
+  import numpy as np
+  a = {
+      "feature_14":
+          tf.constant(np.array([6394203, 7535249, 3500077, 836339, 7401745, 375123]), dtype=tf.int32),
+      "feature_15":
+          tf.constant(np.array([6394203, 7535249, 3500077, 836339, 7401745, 375123]), dtype=tf.int32),
+      "dense_features":
+          tf.constant(
+              np.array(
+                  [
+                      [0.7361634, 0.7361634], [0.00337589, 0.00337589], [0.673707, 0.673707], [0.33169293, 0.33169293],
+                      [0.8020003, 0.8020003], [0.18556607, 0.18556607]
+                  ]
+              ),
+              dtype=tf.float32
+          )
+  }
+  test = trainer.model(a)
+  print(test)
 
 
 if __name__ == "__main__":
