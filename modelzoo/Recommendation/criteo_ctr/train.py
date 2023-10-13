@@ -43,8 +43,6 @@ def main(_):
   train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
   trainer.fit(train_input=train_input_fn, steps_per_epoch=FLAGS.steps_per_epoch)
 
-  export_to_savedmodel(trainer.model)
-
   import numpy as np
   a = {
       "feature_14":
@@ -62,8 +60,9 @@ def main(_):
               dtype=tf.float32
           )
   }
-  test = trainer.model(a)
-  print(test)
+  print(trainer.model(a))
+
+  export_to_savedmodel(trainer.model)
 
 
 if __name__ == "__main__":

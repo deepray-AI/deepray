@@ -8,6 +8,9 @@ ARG PY_VERSION=3.8
 ARG CUDA_DOCKER_VERSION=latest-py${PY_VERSION}-tf${TF_VERSION}-cu116-ubuntu20.04
 FROM hailinfufu/deepray-release:${CUDA_DOCKER_VERSION} as dev_container
 
+RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
+    iputils-ping \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY tools/install_deps /install_deps
 
