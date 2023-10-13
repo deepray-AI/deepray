@@ -87,14 +87,7 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
           bert_config, input_meta_data['max_seq_length'], float_type=DTYPE_MAP[FLAGS.dtype]
       )
 
-    if FLAGS.init_checkpoint:
-      checkpoint = tf.train.Checkpoint(model=squad_model)
-      checkpoint.restore(FLAGS.init_checkpoint).expect_partial()
-
-    checkpoint_path = tf.train.latest_checkpoint(FLAGS.model_dir)
-    logging.info('Restoring checkpoints from %s', checkpoint_path)
-    checkpoint = tf.train.Checkpoint(model=squad_model)
-    checkpoint.restore(checkpoint_path).expect_partial()
+  trainer = Trainer(model=squad_model,)
 
   @tf.function
   def predict_step(iterator):
@@ -129,7 +122,7 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
   elapsed_secs = 0
 
   for _ in range(num_steps):
-    predictions = predict_step(predict_iterator)
+    predictions = trainer.predict_step(next(predict_iterator))
     if FLAGS.benchmark:
       # transfer tensor to CPU for synchronization
       t0 = predictions['unique_ids'][0]
@@ -190,62 +183,8 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
   return all_results
 
 
-def train_squad(
-    input_meta_data,
-    custom_callbacks=None,
-):
-  """Run bert squad training."""
-
-  bert_config = MODEL_CLASSES[FLAGS.model_type][0].from_json_file(FLAGS.config_file)
-  max_seq_length = input_meta_data['max_seq_length']
-
-  # The original BERT model does not scale the loss by
-  # 1/num_replicas_in_sync. It could be an accident. So, in order to use
-  # the same hyper parameter, we do the same thing here by keeping each
-  # replica loss as it is.
-  strategy = distribution_utils.get_distribution_strategy()
-
-  with distribution_utils.get_strategy_scope(strategy):
-    """Get Squad model and optimizer."""
-    squad_model, core_model = bert_models.squad_model(
-        bert_config, max_seq_length, float_type=DTYPE_MAP[FLAGS.dtype], hub_module_url=FLAGS.hub_module_url
-    )
-
-  data_pipe = Squad(
-      max_seq_length=max_seq_length,
-      dataset_type="squad",
-  )
-  train_input = data_pipe(
-      FLAGS.train_data,
-      FLAGS.batch_size,
-      is_training=True,
-  )
-
-  trainer = Trainer(
-      model={
-          "main": squad_model,
-          "sub_model": core_model
-      },
-      # optimizer= create_optimizer(
-      #   learning_rate, steps_per_epoch * epochs, warmup_steps, FLAGS.optimizer_type),
-      optimizer=tf.keras.optimizers.Adam(learning_rate=FLAGS.learning_rate, amsgrad=False),
-      loss={
-          "start_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-          "end_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-      },
-      loss_weights={
-          "start_positions": 0.5,
-          "end_positions": 0.5
-      },
-      callbacks=custom_callbacks,
-  )
-  trainer.fit(train_input=train_input,)
-  export.export_to_savedmodel(model=trainer.models)
-
-
 def predict_squad(input_meta_data):
   """Makes predictions for a squad dataset."""
-
   config_cls, squad_lib, tokenizer_cls = MODEL_CLASSES[FLAGS.model_type]
   bert_config = config_cls.from_json_file(FLAGS.config_file)
   if tokenizer_cls == tokenization.FullTokenizer:
@@ -332,136 +271,12 @@ def predict_squad(input_meta_data):
     print(str(eval_out))
 
 
-def export_squad(model_export_path, input_meta_data):
-  """Exports a trained model as a `SavedModel` for inference.
-
-  Args:
-    model_export_path: a string specifying the path to the SavedModel directory.
-    input_meta_data: dictionary containing meta data about input and model.
-
-  Raises:
-    Export path is not specified, got an empty string or None.
-  """
-  if not model_export_path:
-    raise ValueError('Export path is not specified: %s' % model_export_path)
-  bert_config = MODEL_CLASSES[FLAGS.model_type][0].from_json_file(FLAGS.config_file)
-  squad_model, _ = bert_models.squad_model(bert_config, input_meta_data['max_seq_length'], float_type=tf.float32)
-  export.export_to_savedmodel(model_export_path + '/savedmodel', model=squad_model, checkpoint_dir=FLAGS.model_dir)
-
-  model_name = FLAGS.triton_model_name
-
-  model_folder = model_export_path + "/triton_models/" + model_name
-  version_folder = model_folder + "/" + str(FLAGS.triton_model_version)
-  final_model_folder = version_folder + "/model.savedmodel"
-
-  if not os.path.exists(version_folder):
-    os.makedirs(version_folder)
-  if not os.path.exists(final_model_folder):
-    os.rename(model_export_path + '/savedmodel', final_model_folder)
-    print("Model saved to dir", final_model_folder)
-  else:
-    if FLAGS.triton_model_overwrite:
-      shutil.rmtree(final_model_folder)
-      os.rename(model_export_path + '/savedmodel', final_model_folder)
-      print("WARNING: Existing model was overwritten. Model dir: {}".format(final_model_folder))
-    else:
-      print(
-          "ERROR: Could not save Triton model. Folder already exists. Use '--triton_model_overwrite=True' if you would like to overwrite an existing model. Model dir: {}"
-          .format(final_model_folder)
-      )
-      return
-
-  config_filename = os.path.join(model_folder, "config.pbtxt")
-  if os.path.exists(config_filename) and not FLAGS.triton_model_overwrite:
-    print(
-        "ERROR: Could not save Triton model config. Config file already exists. Use '--triton_model_overwrite=True' if you would like to overwrite an existing model config. Model config: {}"
-        .format(config_filename)
-    )
-    return
-
-  config_template = r"""
-name: "{model_name}"
-platform: "tensorflow_savedmodel"
-max_batch_size: {max_batch_size}
-input [
-    {{
-        name: "input_mask"
-        data_type: TYPE_INT32
-        dims: {seq_length}
-    }},
-    {{
-        name: "input_type_ids"
-        data_type: TYPE_INT32
-        dims: {seq_length}
-    }},
-    {{
-        name: "input_word_ids"
-        data_type: TYPE_INT32
-        dims: {seq_length}
-    }}
-    ]
-    output [
-    {{
-        name: "end_positions"
-        data_type: TYPE_FP32
-        dims: {seq_length}
-    }},
-    {{
-        name: "start_positions"
-        data_type: TYPE_FP32
-        dims: {seq_length}
-    }}
-]
-{dynamic_batching}
-instance_group [
-    {{
-        count: {engine_count}
-        kind: KIND_GPU
-        gpus: [{gpu_list}]
-    }}
-]"""
-
-  batching_str = ""
-  max_batch_size = FLAGS.triton_max_batch_size
-
-  if FLAGS.triton_dyn_batching_delay > 0:
-    # Use only full and half full batches
-    pref_batch_size = [int(max_batch_size / 2.0), max_batch_size]
-
-    batching_str = r"""
-dynamic_batching {{
-    preferred_batch_size: [{0}]
-    max_queue_delay_microseconds: {1}
-}}""".format(", ".join([str(x) for x in pref_batch_size]), int(FLAGS.triton_dyn_batching_delay * 1000.0))
-
-  config_values = {
-      "model_name": model_name,
-      "max_batch_size": max_batch_size,
-      "seq_length": input_meta_data['max_seq_length'],
-      "dynamic_batching": batching_str,
-      "gpu_list": ", ".join([x.name.split(":")[-1] for x in tf.config.list_physical_devices('GPU')]),
-      "engine_count": FLAGS.triton_engine_count
-  }
-
-  with open(model_folder + "/config.pbtxt", "w") as file:
-    final_config_str = config_template.format_map(config_values)
-    file.write(final_config_str)
-
-
 def main(_):
   with tf.io.gfile.GFile(FLAGS.input_meta_data_path, 'rb') as reader:
     input_meta_data = json.loads(reader.read().decode('utf-8'))
   #  Get the value of 'train_data_size' from input_meta_data and set FLAGS.num_train_examples
   FLAGS([sys.argv[0], f"--num_train_examples={input_meta_data['train_data_size']}"])
 
-  if FLAGS.mode == 'export_only':
-    export_squad(FLAGS.model_export_path, input_meta_data)
-    return
-
-  os.makedirs(FLAGS.model_dir, exist_ok=True)
-
-  if FLAGS.mode in ('train', 'train_and_predict'):
-    train_squad(input_meta_data)
   if FLAGS.mode in ('predict', 'sm_predict', 'trt_predict', 'train_and_predict') and is_main_process():
     predict_squad(input_meta_data)
 

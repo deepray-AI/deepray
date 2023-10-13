@@ -33,8 +33,6 @@ def main(_):
   train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
   trainer.fit(train_input=train_input_fn,)
 
-  trainer.export_tfra()
-
 
 if __name__ == "__main__":
   flags.mark_flag_as_required("model_dir")

@@ -26,6 +26,7 @@ import uuid
 
 import numpy as np
 import tensorflow as tf
+from absl import logging
 
 
 class _GarbageCollector(object):
@@ -48,9 +49,9 @@ class _GarbageCollector(object):
       for i in self.temp_buffers:
         if tf.io.gfile.exists(i):
           tf.io.gfile.remove(i)
-          tf.compat.v1.logging.info("Buffer file {} removed".format(i))
+          logging.info("Buffer file {} removed".format(i))
     except Exception as e:
-      tf.compat.v1.logging.error("Failed to cleanup buffer files: {}".format(e))
+      logging.error("Failed to cleanup buffer files: {}".format(e))
 
 
 _GARBAGE_COLLECTOR = _GarbageCollector()
@@ -169,7 +170,7 @@ def write_to_buffer(dataframe, buffer_path, columns, expected_size=None):
     actual_size = tf.io.gfile.stat(buffer_path).length
     if expected_size == actual_size:
       return buffer_path
-    tf.compat.v1.logging.warning(
+    logging.warning(
         "Existing buffer {} has size {}. Expected size {}. Deleting and "
         "rebuilding buffer.".format(buffer_path, actual_size, expected_size)
     )
@@ -180,7 +181,7 @@ def write_to_buffer(dataframe, buffer_path, columns, expected_size=None):
 
   tf.io.gfile.makedirs(os.path.split(buffer_path)[0])
 
-  tf.compat.v1.logging.info("Constructing TFRecordDataset buffer: {}".format(buffer_path))
+  logging.info("Constructing TFRecordDataset buffer: {}".format(buffer_path))
 
   count = 0
   pool = multiprocessing.Pool(multiprocessing.cpu_count())
@@ -189,9 +190,29 @@ def write_to_buffer(dataframe, buffer_path, columns, expected_size=None):
       for df_shards in iter_shard_dataframe(df=dataframe, rows_per_core=_ROWS_PER_CORE):
         _serialize_shards(df_shards, columns, pool, writer)
         count += sum([len(s) for s in df_shards])
-        tf.compat.v1.logging.info("{}/{} examples written.".format(str(count).ljust(8), len(dataframe)))
+        logging.info("{}/{} examples written.".format(str(count).ljust(8), len(dataframe)))
   finally:
     pool.terminate()
 
-  tf.compat.v1.logging.info("Buffer write complete.")
+  logging.info("Buffer write complete.")
   return buffer_path
+
+
+def recursive_copy(src_dir, dest_dir):
+  """Copy the contents of src_dir into the folder dest_dir.
+    Args:
+      src_dir: hdfs or local path.
+      dest_dir: hdfs or local path.
+    """
+  for file_name in tf.io.gfile.listdir(src_dir):
+    old_path = os.path.join(src_dir, file_name)
+    new_path = os.path.join(dest_dir, file_name)
+
+    if tf.io.gfile.isdir(old_path):
+      recursive_copy(old_path, new_path)
+    elif not tf.io.gfile.exists(new_path):
+      path_par = os.path.dirname(new_path)
+      if not tf.io.gfile.exists(path_par):
+        tf.io.gfile.makedirs(path_par)
+      print(f"copy {old_path} to {new_path}")
+      tf.io.gfile.copy(old_path, new_path, overwrite=True)
