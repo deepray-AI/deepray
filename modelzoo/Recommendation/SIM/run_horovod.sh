@@ -85,7 +85,6 @@ $mpi_command python -m examples.Recommendation.SIM.run_$model \
   --learning_rate=$learning_rate \
   --epochs=$epochs \
   --model_dir=${RESULTS_DIR} \
-  --model_export_path=${RESULTS_DIR} \
   $use_hvd $use_fp16 $use_xla_tag $use_din_tag |& tee $LOGFILE
 
 set +x

@@ -70,7 +70,15 @@ class DataPipeLine(tf.keras.layers.Layer):
 
   @abc.abstractmethod
   def build_dataset(
-      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
+      self,
+      input_file_pattern,
+      batch_size,
+      is_training=True,
+      prebatch_size=0,
+      epochs=1,
+      shuffle=False,
+      *args,
+      **kwargs
   ):
     """
     must be defined in subclass

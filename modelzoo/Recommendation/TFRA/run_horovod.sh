@@ -79,7 +79,6 @@ $hvd_command $nsys_command python demo_tfra.py \
     --learning_rate=$learning_rate \
     --epochs=$epochs \
     --model_dir=${RESULTS_DIR} \
-    --model_export_path=${RESULTS_DIR} \
     $use_hvd $use_fp16 $use_xla_tag
 
 set +x

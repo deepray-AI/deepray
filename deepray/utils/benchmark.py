@@ -37,14 +37,12 @@ class PerformanceCalculator:
     self.step = 0
     self.benchmark_start_time = None
     self.benchmark_after_warmup_start_time = None
-    self.step_latencies = []
     self.latency_percentiles = (90, 95, 99)
-    self._results = {}
     with tf.device("/CPU:0"):
       self.samples = tf.Variable(0, trainable=False, dtype=tf.int64)
 
     self.samples.assign(0)
-    self.step_latencies = []
+    self.step_latencies = [0]
     self._results = {}
     # used to represent duration of entire training
     self.benchmark_start_time = perf_counter()

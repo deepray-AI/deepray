@@ -61,14 +61,12 @@ def define_common_flags():
       "do_lower_case", True, "Whether to lower case the input text. Should be True for uncased "
       "models and False for cased models."
   )
-  flags.DEFINE_string('model_export_path', None, 'Path to the directory, where trainined model will be '
-                      'exported.')
   flags.DEFINE_integer(
       'steps_per_summary', 200, 'Number of steps per graph-mode loop. Only training step '
       'happens inside the loop. Callbacks will not be called '
       'inside.'
   )
-  flags.DEFINE_integer("stop_steps", None, "steps when training stops")
+  flags.DEFINE_integer("stop_steps", -1, "steps when training stops")
   flags.DEFINE_boolean(
       'scale_loss', False, 'Whether to divide the loss by number of replica inside the per-replica '
       'loss function.'

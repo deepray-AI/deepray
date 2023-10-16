@@ -54,7 +54,7 @@ class DynamicEmbeddingOption(object):
       self.devices = ['/CPU:0']
     else:
       self.devices = ['/GPU:0']
-    if not FLAGS.use_horovod:
+    if FLAGS.use_horovod:
       self.kv_creator = de.CuckooHashTableCreator(
           saver=de.FileSystemSaver(proc_size=get_world_size(), proc_rank=get_rank())
       )

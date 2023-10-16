@@ -74,7 +74,6 @@ $mpi_command python train.py \
     --stop_steps=20 \
     --epochs=$epochs \
     --model_dir=${RESULTS_DIR} \
-    --model_export_path=${RESULTS_DIR} \
     $use_hvd $use_fp16 $use_xla_tag |& tee $LOGFILE
 
 set +x
