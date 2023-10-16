@@ -455,7 +455,7 @@ def main(_):
   FLAGS([sys.argv[0], f"--num_train_examples={input_meta_data['train_data_size']}"])
 
   if FLAGS.mode == 'export_only':
-    export_squad(FLAGS.model_export_path, input_meta_data)
+    export_squad(FLAGS.model_dir, input_meta_data)
     return
 
   os.makedirs(FLAGS.model_dir, exist_ok=True)

@@ -528,8 +528,8 @@ class Trainer(Module):
             and what the model expects or when the input data is empty.
     """
     self.steps_per_epoch = steps_per_epoch if steps_per_epoch else 0
-    if FLAGS.benchmark or FLAGS.stop_steps:
-      if FLAGS.stop_steps:
+    if FLAGS.benchmark or FLAGS.stop_steps >= 0:
+      if FLAGS.stop_steps >= 0:
         self.steps_per_epoch = FLAGS.stop_steps
       else:
         self.steps_per_epoch = 1000
@@ -717,7 +717,7 @@ class Trainer(Module):
     for epoch in range(self.epochs):
       train_iterator = distribution_utils.make_distributed_iterator(self.strategy, train_input)
       self.on_epoch_begin(epoch)
-      while self.steps_per_epoch <= 0 or self._step_epoch < self.steps_per_epoch:
+      while self.steps_per_epoch < 0 or self._step_epoch < self.steps_per_epoch:
         t0 = time.time()
         self.callbacks.on_train_batch_begin(self.current_step)
         # Runs several steps in the host while loop.
@@ -760,10 +760,10 @@ class Trainer(Module):
 
     export.export_to_checkpoint(self.manager, self.current_step)
     if is_main_process():
-      training_summary = {
-          'total_training_steps': self.current_step,
-          'train_loss': self._float_metric_value(self.loss_container.metrics[0]),
-      }
+      training_summary = {'total_training_steps': self.current_step}
+      if self.metric_container.metrics:
+        training_summary['train_loss'] = self._float_metric_value(self.loss_container.metrics[0])
+
       if self.metric_container and self.metric_container.metrics:
         # TODO(hongkuny): Cleans up summary reporting in text.
         for metric in self.metric_container.metrics:
@@ -975,6 +975,7 @@ class Trainer(Module):
     if not self.run_eagerly:
       _train_single_step = tf.function(self.train_single_step)
       _train_multi_steps = tf.function(self.train_steps)
+      self.predict_step = tf.function(self.predict_step)
     else:
       _train_single_step = self.train_single_step
       _train_multi_steps = self.train_steps

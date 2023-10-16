@@ -134,7 +134,7 @@ class Module():
     step_num = 0
     while 1:
       try:
-        self._test_step(eval_input)
+        self.predict_step(next(eval_input))
         step_num += 1
       except (tf.errors.OutOfRangeError, StopIteration):
         if is_main_process():

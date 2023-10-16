@@ -79,7 +79,6 @@ $mpi_command python train.py \
     --learning_rate=$learning_rate \
     --batch_size=$batch_size \
     --model_dir=${RESULTS_DIR} \
-    --model_export_path=${RESULTS_DIR} \
     $use_hvd $use_fp16 $use_xla_tag
 #      |& tee $LOGFILE
 
