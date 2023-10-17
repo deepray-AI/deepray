@@ -527,7 +527,7 @@ class Trainer(Module):
         ValueError: In case of mismatch between the provided input data
             and what the model expects or when the input data is empty.
     """
-    self.steps_per_epoch = steps_per_epoch if steps_per_epoch else 0
+    self.steps_per_epoch = steps_per_epoch if steps_per_epoch else -1
     if FLAGS.benchmark or FLAGS.stop_steps >= 0:
       if FLAGS.stop_steps >= 0:
         self.steps_per_epoch = FLAGS.stop_steps
@@ -895,7 +895,7 @@ class Trainer(Module):
       """Replicated accuracy calculation."""
       inputs, labels, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
       model_outputs = self.model(inputs, training=False)
-      if labels and self.metric_container:
+      if labels is not None and self.metric_container:
         self.metric_container.update_state(labels, model_outputs, sample_weight=sample_weight)
       return model_outputs
 

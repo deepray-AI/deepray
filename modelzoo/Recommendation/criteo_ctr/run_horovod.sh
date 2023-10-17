@@ -86,7 +86,6 @@ if [ $num_gpu -gt 1 ]; then
         --feature_map=feature_map_small.csv \
         --use_dynamic_embedding=True \
         --model_dir=${RESULTS_DIR} \
-        --model_export_path=${RESULTS_DIR} \
         --distribution_strategy=off \
         $use_fp16 $use_xla_tag
 fi
