@@ -60,7 +60,14 @@ def main(_):
               dtype=tf.float32
           )
   }
-  print(trainer.model(a))
+
+  logging.info(model(a))
+  logging.info(trainer.model(a))
+
+  for name in ["feature_14", "feature_15"]:
+    tensor = a[name]
+    test = model.embedding_layer[name](tensor)
+    print(test)
 
   export_to_savedmodel(trainer.model)
 

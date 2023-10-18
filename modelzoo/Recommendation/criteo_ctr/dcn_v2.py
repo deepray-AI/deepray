@@ -62,20 +62,28 @@ class Ranking(tf.keras.models.Model):
       )
 
   def build(self, input_shape):
-    self._embedding_layer = {}
-    for name, dim, dtype in self.feature_map[(self.feature_map['ftype'] == "Categorical")][["name", "dim",
-                                                                                            "dtype"]].values:
-      self._embedding_layer[name] = DistributedDynamicEmbedding(
-          embedding_dim=dim,
-          key_dtype=dtype,
-          value_dtype=tf.float32,
-          initializer=None if self.training else tf.keras.initializers.Zeros(),
-          name='emb' + name,
-          de_option=DynamicEmbeddingOption(
-              device="DRAM",
-              init_capacity=1 * 1024 * 1024,
-          ),
-      )
+    self.embedding_layer = {}
+    for name, dim, dtype, voc_size in self.feature_map[(self.feature_map['ftype'] == "Categorical")][[
+        "name", "dim", "dtype", "voc_size"
+    ]].values:
+      if voc_size and not FLAGS.use_dynamic_embedding:
+        self.embedding_layer[name] = tf.keras.layers.Embedding(
+            input_dim=voc_size,
+            output_dim=dim,
+            embeddings_initializer="uniform",
+        )
+      else:
+        self.embedding_layer[name] = DistributedDynamicEmbedding(
+            embedding_dim=dim,
+            key_dtype=dtype,
+            value_dtype=tf.float32,
+            initializer=None if self.training else tf.keras.initializers.Zeros(),
+            name='emb' + name,
+            de_option=DynamicEmbeddingOption(
+                device="HBM",
+                init_capacity=1 * 1024 * 1024,
+            ),
+        )
 
   def call(self, inputs: Dict[str, tf.Tensor], training=None, mask=None) -> tf.Tensor:
     """Executes forward and backward pass, returns loss.
@@ -91,7 +99,9 @@ class Ranking(tf.keras.models.Model):
     for name, dim in self.feature_map[(self.feature_map['ftype'] == "Categorical")][["name", "dim"]].values:
       tensor = inputs[name]
       # (batch_size, emb).
-      sparse_embedding_vecs.append(self._embedding_layer[name](tensor))
+      test = self.embedding_layer[name](tensor)
+      # print(test)
+      sparse_embedding_vecs.append(test)
 
     dense_embedding_vec = self._bottom_stack(dense_features)
 

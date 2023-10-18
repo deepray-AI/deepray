@@ -11,6 +11,7 @@ from absl import app, flags
 from deepray.datasets.criteo.criteo_tsv_reader import CriteoTsvReader
 from deepray.utils.benchmark import PerformanceCalculator
 from deepray.utils.export import SavedModel
+from dcn_v2 import Ranking
 
 FLAGS = flags.FLAGS
 
@@ -21,10 +22,10 @@ def runner(argv=None):
     argv = [
         sys.argv[0],
         "--batch_size=4096",
-        "--run_eagerly=True",
+        "--run_eagerly=false",
         "--use_dynamic_embedding=True",
         f"--feature_map={dir_path}/feature_map_small.csv",
-        "--model_dir=/workspaces/tmp/export_main_optimized/",
+        "--model_dir=/results/tf_tfra_training_criteo_dcn_fp32_gbs16384_231017142132/export_main",
     ]
   if argv:
     FLAGS(argv, known_only=True)
@@ -32,13 +33,14 @@ def runner(argv=None):
   data_pipe = CriteoTsvReader(use_synthetic_data=True)
   # create data pipline of train & test dataset
   train_dataset = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
-  model = SavedModel(FLAGS.model_dir, "amp" if FLAGS.dtype else "fp32")
-  signature = model.saved_model_loaded.signatures['serving_default']
-  print(signature)
 
-  _performance_calculator = PerformanceCalculator(0, 1000)
-  num_examples = 0
-  step = 0
+  mode = "123"
+  if mode == "sm_predict":
+    # TODO: bugfix
+    model = SavedModel(FLAGS.model_dir, "amp" if FLAGS.dtype else "fp32")
+  else:
+    model = Ranking(interaction="cross", training=False)
+    model.load_weights(os.path.join(FLAGS.model_dir, "variables/variables"))
 
   a = {
       "feature_14":
@@ -57,15 +59,24 @@ def runner(argv=None):
           )
   }
 
-  b = {
-      "feature_14": tf.constant(np.array([1]), dtype=tf.int32),
-      "feature_15": tf.constant(np.array([1]), dtype=tf.int32),
-      "dense_features": tf.constant(np.array([[1.0, 1.0]]), dtype=tf.float32)
-  }
+  # b = {
+  #     "feature_14": tf.constant(np.array([1]), dtype=tf.int32),
+  #     "feature_15": tf.constant(np.array([1]), dtype=tf.int32),
+  #     "dense_features": tf.constant(np.array([[1.0, 1.0]]), dtype=tf.float32)
+  # }
 
   print(model(a))
-  print(model(b))
+
+  for name in ["feature_14", "feature_15"]:
+    tensor = a[name]
+    test = model.embedding_layer[name](tensor)
+    print(test)
+  # print(model(b))
   exit(0)
+
+  _performance_calculator = PerformanceCalculator(0, 1000)
+  num_examples = 0
+  step = 0
 
   for x, y in train_dataset.take(300):
     preds = model(x)
