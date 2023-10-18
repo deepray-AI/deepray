@@ -59,7 +59,7 @@ class Module():
     # Updates training logging.
     if self.steps_per_epoch > 0:
       training_status = 'Train Step: %d/%d / time=%.3f sec' % (
-          self.current_step, self.steps_per_epoch * self.epochs, elapse_time
+          self.current_step, self.steps_per_epoch * self.epochs + self._first_steps, elapse_time
       )
     else:
       training_status = 'Train Step: %d / time=%.3f sec' % (self.current_step, elapse_time)
