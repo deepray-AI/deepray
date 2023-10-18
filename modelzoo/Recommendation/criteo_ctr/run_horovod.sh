@@ -65,16 +65,18 @@ else
     nsys_command=""
 fi
 
+
 set -x
 $hvd_command $nsys_command python train.py \
     --feature_map=feature_map_small.csv \
     --num_gpus=$num_gpu \
     --batch_size=$batch_size \
     --use_dynamic_embedding=True \
-    --steps_per_summary=50 \
+    --steps_per_summary=10 \
     --run_eagerly=false \
     --save_checkpoint_steps=200 \
-    --steps_per_epoch=200 \
+    --init_checkpoint=/results/tf_tfra_training_criteo_dcn_fp32_gbs4096_231018021802/ckpt_main_model/ \
+    --stop_steps=600 \
     --learning_rate=$learning_rate \
     --epochs=$epochs \
     --model_dir=${RESULTS_DIR} \

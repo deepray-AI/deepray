@@ -611,8 +611,9 @@ class Trainer(Module):
       if FLAGS.init_checkpoint:
         for (name, ckpt), init_ckpt in zip(self._checkpoints.items(), FLAGS.init_checkpoint):
           if init_ckpt:
-            logging.info(f'Checkpoint file {init_ckpt} found and restoring from initial checkpoint for {name} model.')
-            ckpt.restore(init_ckpt).assert_existing_objects_matched()
+            latest_checkpoint = tf.train.latest_checkpoint(init_ckpt)
+            logging.info(f'Checkpoint file {latest_checkpoint} found and restoring from initial checkpoint for {name} model.')
+            ckpt.restore(latest_checkpoint).assert_existing_objects_matched()
             logging.info('Loading from checkpoint file completed')
 
       if FLAGS.init_weights:
