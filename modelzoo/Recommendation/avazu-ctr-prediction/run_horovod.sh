@@ -73,7 +73,7 @@ $mpi_command python train.py \
     --benchmark \
     --use_dynamic_embedding=True \
     --steps_per_summary=20 \
-    --model_type=$model \
+    --model_name=$model \
     --epochs=1 \
     --run_eagerly=true \
     --learning_rate=$learning_rate \

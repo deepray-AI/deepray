@@ -59,7 +59,7 @@ DTYPE_MAP = {
 
 def get_raw_results(predictions):
   """Converts multi-replica predictions to RawResult."""
-  squad_lib = MODEL_CLASSES[FLAGS.model_type][1]
+  squad_lib = MODEL_CLASSES[FLAGS.model_name][1]
   for unique_ids, start_logits, end_logits in zip(
       predictions['unique_ids'], predictions['start_positions'], predictions['end_positions']
   ):
@@ -196,7 +196,7 @@ def train_squad(
 ):
   """Run bert squad training."""
 
-  bert_config = MODEL_CLASSES[FLAGS.model_type][0].from_json_file(FLAGS.config_file)
+  bert_config = MODEL_CLASSES[FLAGS.model_name][0].from_json_file(FLAGS.config_file)
   max_seq_length = input_meta_data['max_seq_length']
 
   # The original BERT model does not scale the loss by
@@ -246,7 +246,7 @@ def train_squad(
 def predict_squad(input_meta_data):
   """Makes predictions for a squad dataset."""
 
-  config_cls, squad_lib, tokenizer_cls = MODEL_CLASSES[FLAGS.model_type]
+  config_cls, squad_lib, tokenizer_cls = MODEL_CLASSES[FLAGS.model_name]
   bert_config = config_cls.from_json_file(FLAGS.config_file)
   if tokenizer_cls == tokenization.FullTokenizer:
     tokenizer = tokenizer_cls(vocab_file=FLAGS.vocab_file, do_lower_case=FLAGS.do_lower_case)
@@ -344,7 +344,7 @@ def export_squad(model_export_path, input_meta_data):
   """
   if not model_export_path:
     raise ValueError('Export path is not specified: %s' % model_export_path)
-  bert_config = MODEL_CLASSES[FLAGS.model_type][0].from_json_file(FLAGS.config_file)
+  bert_config = MODEL_CLASSES[FLAGS.model_name][0].from_json_file(FLAGS.config_file)
   squad_model, _ = bert_models.squad_model(bert_config, input_meta_data['max_seq_length'], float_type=tf.float32)
   export.export_to_savedmodel(model_export_path + '/savedmodel', model=squad_model, checkpoint_dir=FLAGS.model_dir)
 

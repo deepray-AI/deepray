@@ -68,7 +68,7 @@ mkdir -p /results
 
 $mpi_command python run_squad.py \
     --mode=train \
-    --model_type=bert \
+    --model_name=bert \
     --num_accumulation_steps=5 \
     --optimizer_type=adam \
     --input_meta_data_path=${SQUAD_DIR}/squad_${SQUAD_VERSION}_meta_data \

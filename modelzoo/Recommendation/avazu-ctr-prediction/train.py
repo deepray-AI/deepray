@@ -50,11 +50,11 @@ def main(_):
       ]
   }
 
-  if FLAGS.model_type == "flen":
+  if FLAGS.model_name == "flen":
     from deepray.models.rec.flen import FLEN as mymodel
-  elif FLAGS.model_type == "flend":
+  elif FLAGS.model_name == "flend":
     from deepray.models.rec.flend import FLEND as mymodel
-  elif FLAGS.model_type == "ccpm":
+  elif FLAGS.model_name == "ccpm":
     from .ccpm_diamond import CCPM as mymodel
 
   _strategy = distribution_utils.get_distribution_strategy()
