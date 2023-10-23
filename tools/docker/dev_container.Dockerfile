@@ -10,6 +10,7 @@ FROM hailinfufu/deepray-release:${CUDA_DOCKER_VERSION} as dev_container
 
 RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
     iputils-ping \
+    tmux \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY tools/install_deps /install_deps

@@ -85,7 +85,7 @@ class DataPipeLine(tf.keras.layers.Layer):
     """
     raise NotImplementedError("build_dataset: not implemented!")
 
-  def call(self, input_file_pattern=None, batch_size=None, is_training=None, prebatch_size=0, *args, **kwargs):
+  def call(self, input_file_pattern=None, batch_size=None, is_training=True, prebatch_size=0, *args, **kwargs):
     """Gets a closure to create a dataset."""
 
     return self.build_dataset(
