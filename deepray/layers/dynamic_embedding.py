@@ -28,6 +28,7 @@ class DynamicEmbeddingOption(object):
       max_capacity=128 * 1024 * 1024,
       max_hbm_for_vectors=4 * 1024 * 1024 * 1024
   ):
+    self.device_name = device
     self.init_capacity = init_capacity
     self.max_capacity = max_capacity
     self.max_hbm_for_vectors = max_hbm_for_vectors
@@ -109,7 +110,7 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
       **kwargs
   ):
     super(DistributedDynamicEmbedding, self).__init__()
-    if de_option.devices == "Redis":
+    if de_option.device_name == "Redis":
       self.emb = EmbeddingLayerRedis(
           embedding_size=embedding_dim,
           key_dtype=key_dtype,
@@ -120,7 +121,7 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
           kv_creator=de_option.kv_creator,
           **kwargs
       )
-      logging.info(f"Create EmbeddingLayerRedis for {name} on {de_option.devices} with {embedding_dim} dim")
+      logging.info(f"Create EmbeddingLayer for {name} on {de_option.device_name} with {embedding_dim} dim")
       return
 
     if not FLAGS.use_horovod:
@@ -135,7 +136,7 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
           kv_creator=de_option.kv_creator,
           **kwargs
       )
-      logging.info(f"Create EmbeddingLayerGPU for {name} on {de_option.devices} with {embedding_dim} dim")
+      logging.info(f"Create EmbeddingLayer for {name} on {de_option.device_name} with {embedding_dim} dim")
     else:
       self.emb = HvdAllToAllEmbedding(
           embedding_size=embedding_dim,
@@ -148,7 +149,7 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
           kv_creator=de_option.kv_creator,
           **kwargs
       )
-      logging.info(f"Create HvdAllToAllEmbedding for {name} on {de_option.devices} with {embedding_dim} dim")
+      logging.info(f"Create HvdAllToAllEmbedding for {name} on {de_option.device_name} with {embedding_dim} dim")
 
   def call(self, ids, *args, **kwargs):
     return self.emb(ids)
