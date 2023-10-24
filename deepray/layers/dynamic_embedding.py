@@ -40,6 +40,7 @@ class DynamicEmbeddingOption(object):
 
       self.devices = ['/CPU:0']
       self.kv_creator = tfra.dynamic_embedding.RedisTableCreator(redis_config)
+      return
     elif device == "HKV":
       self.devices = ['/GPU:0']
       hkv_config = tfra.dynamic_embedding.HkvHashTableConfig(
@@ -47,13 +48,19 @@ class DynamicEmbeddingOption(object):
           max_capacity=max_capacity,
           max_hbm_for_vectors=max_hbm_for_vectors,
       )
-      self.kv_creator = tfra.dynamic_embedding.HkvHashTableCreator(hkv_config)
+      if FLAGS.use_horovod:
+        self.kv_creator = tfra.dynamic_embedding.HkvHashTableCreator(
+            hkv_config, saver=de.FileSystemSaver(proc_size=get_world_size(), proc_rank=get_rank())
+        )
+      else:
+        self.kv_creator = tfra.dynamic_embedding.HkvHashTableCreator(hkv_config)
+      return
     elif device == "HBM":
       self.devices = ['/GPU:0']
     elif device == "DRAM":
       self.devices = ['/CPU:0']
     else:
-      self.devices = ['/GPU:0']
+      raise ValueError(f"Found device {device} not in supported type Redis, DRAM, HBM, HKV")
     if FLAGS.use_horovod:
       self.kv_creator = de.CuckooHashTableCreator(
           saver=de.FileSystemSaver(proc_size=get_world_size(), proc_rank=get_rank())
@@ -98,7 +105,7 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
       value_dtype: str,
       initializer=None,
       name: str = '',
-      de_option: DynamicEmbeddingOption = DynamicEmbeddingOption(),
+      de_option: DynamicEmbeddingOption = DynamicEmbeddingOption(device="DRAM"),
       **kwargs
   ):
     super(DistributedDynamicEmbedding, self).__init__()
