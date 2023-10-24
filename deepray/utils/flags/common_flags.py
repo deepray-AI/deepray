@@ -76,7 +76,7 @@ def define_common_flags():
       'If specified, init_checkpoint flag should not be used.'
   )
   flags.DEFINE_string(
-      'model_type', None, 'Specifies the type of the model. '
+      'model_name', None, 'Specifies the name of the model. '
       'If "bert", will use canonical BERT; if "albert", will use ALBERT model.'
   )
   flags.DEFINE_enum(

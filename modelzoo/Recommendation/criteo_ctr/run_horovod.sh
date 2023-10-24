@@ -17,6 +17,11 @@
 set -eu
 set -o pipefail
 
+# while true
+# do
+#     sleep 1
+# done
+
 num_gpu=${1:-"4"}
 batch_size=${2:-"4096"}
 learning_rate=${3:-"5e-6"}
@@ -65,7 +70,6 @@ else
     nsys_command=""
 fi
 
-
 set -x
 $hvd_command $nsys_command python train.py \
     --feature_map=feature_map_small.csv \
@@ -75,19 +79,21 @@ $hvd_command $nsys_command python train.py \
     --steps_per_summary=10 \
     --run_eagerly=false \
     --save_checkpoint_steps=200 \
-    --init_checkpoint=/results/tf_tfra_training_criteo_dcn_fp32_gbs4096_231018021802/ckpt_main_model/ \
-    --stop_steps=600 \
+    --stop_steps=400 \
     --learning_rate=$learning_rate \
     --epochs=$epochs \
     --model_dir=${RESULTS_DIR} \
     $use_hvd $use_fp16 $use_xla_tag
 set +x
 
-if [ $num_gpu -gt 1 ]; then
-    python optimize_for_inference.py \
-        --feature_map=feature_map_small.csv \
-        --use_dynamic_embedding=True \
-        --model_dir=${RESULTS_DIR} \
-        --distribution_strategy=off \
-        $use_fp16 $use_xla_tag
-fi
+# if [ $num_gpu -gt 1 ]; then
+#     python optimize_for_inference.py \
+#         --feature_map=feature_map_small.csv \
+#         --use_dynamic_embedding=True \
+#         --model_dir=${RESULTS_DIR} \
+#         --distribution_strategy=off \
+#         $use_fp16 $use_xla_tag
+# fi
+
+# --init_checkpoint=/results/tf_tfra_training_criteo_dcn_fp32_gbs4096_231018053444/ckpt_main_model/ \
+# --init_weights="/results/tf_tfra_training_criteo_dcn_fp32_gbs16384_231016072901/export_main/variables" \

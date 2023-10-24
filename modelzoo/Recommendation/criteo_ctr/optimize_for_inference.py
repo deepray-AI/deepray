@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-import logging
 import os
 import tempfile
 
 import tensorflow as tf
-from absl import app, flags
+from absl import app, flags, logging
 
 from dcn_v2 import Ranking
 from deepray.datasets.criteo import CriteoTsvReader

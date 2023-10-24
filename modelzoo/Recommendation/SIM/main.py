@@ -65,7 +65,7 @@ def dien_auxiliary_loss_fn(click_probs, noclick_probs, mask=None):
 
 
 def build_model_and_loss(model_params):
-  if FLAGS.model_type == "sim":
+  if FLAGS.model_name == "sim":
     model = SIMModel(
         model_params['feature_spec'],
         mlp_hidden_dims=model_params["mlp_hidden_dims"],
@@ -101,7 +101,7 @@ def build_model_and_loss(model_params):
       loss_dict = {"total_loss": total_loss, "classification_loss": classification_loss, "dien_aux_loss": dien_aux_loss}
 
       return (targets, logits), loss_dict
-  elif FLAGS.model_type == "dien":
+  elif FLAGS.model_name == "dien":
     model = DIENModel(
         model_params['feature_spec'],
         mlp_hidden_dims={
@@ -150,7 +150,7 @@ def build_model_and_loss(model_params):
       loss_dict = {"total_loss": total_loss, "classification_loss": classification_loss, "dien_aux_loss": dien_aux_loss}
 
       return (targets, logits), loss_dict
-  elif FLAGS.model_type == "din":
+  elif FLAGS.model_name == "din":
     model = DINModel(
         model_params['feature_spec'],
         mlp_hidden_dims=model_params["mlp_hidden_dims"]["stage_2"],

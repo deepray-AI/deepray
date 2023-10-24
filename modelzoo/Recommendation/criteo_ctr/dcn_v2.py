@@ -42,7 +42,7 @@ class Ranking(tf.keras.models.Model):
   the `compute_loss` and `call` methods.
   """
 
-  def __init__(self, interaction, training=False, *args, **kwargs):
+  def __init__(self, interaction, training=True, *args, **kwargs):
     super().__init__(*args, **kwargs)
 
     self.feature_map = FeatureMap(feature_map=FLAGS.feature_map, black_list=FLAGS.black_list).feature_map

@@ -59,7 +59,7 @@ DTYPE_MAP = {
 
 def get_raw_results(predictions):
   """Converts multi-replica predictions to RawResult."""
-  squad_lib = MODEL_CLASSES[FLAGS.model_type][1]
+  squad_lib = MODEL_CLASSES[FLAGS.model_name][1]
   for unique_ids, start_logits, end_logits in zip(
       predictions['unique_ids'], predictions['start_positions'], predictions['end_positions']
   ):
@@ -185,7 +185,7 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
 
 def predict_squad(input_meta_data):
   """Makes predictions for a squad dataset."""
-  config_cls, squad_lib, tokenizer_cls = MODEL_CLASSES[FLAGS.model_type]
+  config_cls, squad_lib, tokenizer_cls = MODEL_CLASSES[FLAGS.model_name]
   bert_config = config_cls.from_json_file(FLAGS.config_file)
   if tokenizer_cls == tokenization.FullTokenizer:
     tokenizer = tokenizer_cls(vocab_file=FLAGS.vocab_file, do_lower_case=FLAGS.do_lower_case)
