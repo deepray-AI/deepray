@@ -20,10 +20,12 @@ from __future__ import print_function
 
 import os
 import re
-from typing import Optional, Union, Dict, Text
+import tempfile
+from typing import Optional, Union, Dict, Text, List
 
 import tensorflow as tf
 from absl import logging, flags
+from keras.engine import data_adapter
 from tensorflow.python.compiler.tensorrt import trt_convert as trt
 from tensorflow.python.saved_model import signature_constants
 from tensorflow.python.saved_model import tag_constants
@@ -84,7 +86,7 @@ def export_to_savedmodel(
     savedmodel_dir: Optional[Text] = None,
     checkpoint_dir: Optional[Union[Text, Dict[Text, Text]]] = None,
     restore_model_using_load_weights: bool = False
-) -> None:
+) -> Text:
   """Export keras model for serving which does not include the optimizer.
 
   Arguments:
@@ -148,11 +150,46 @@ def export_to_savedmodel(
     if is_main_process():
       logging.info(f"save pb model to: {_savedmodel_dir}, without optimizer & traces")
 
+    return _savedmodel_dir
+
+  if isinstance(model, dict):
+    ans = []
+    for name, _model in model.items():
+      _dir = helper(name, _model, _checkpoint_dir=checkpoint_dir[name] if checkpoint_dir else None)
+      ans.append(_dir)
+    prefix_path = longestCommonPrefix(ans)
+    logging.info(f"Export multiple models to {prefix_path}*")
+    return prefix_path
+  else:
+    return helper(name="main", _model=model, _checkpoint_dir=checkpoint_dir)
+
+
+def optimize_for_inference(
+    model: Union[tf.keras.Model, Dict[Text, tf.keras.Model]],
+    dataset: tf.data.Dataset,
+    savedmodel_dir: Text,
+) -> None:
+  x, y, z = data_adapter.unpack_x_y_sample_weight(next(iter(dataset)))
+  preds = model(x)
+  logging.info(preds)
+
+  def helper(_model, path):
+    tmp_path = tempfile.mkdtemp(dir='/tmp/')
+    export_to_savedmodel(_model, savedmodel_dir=tmp_path)
+    file = os.path.join(path, "saved_model.pb")
+    if tf.io.gfile.exists(file):
+      tf.io.gfile.remove(file)
+      logging.info(f"Replace optimized saved_modle.pb for {file}")
+      tf.io.gfile.copy(os.path.join(tmp_path + "_main", "saved_model.pb"), file, overwrite=True)
+    else:
+      raise FileNotFoundError(f"{file} does not exist.")
+
   if isinstance(model, dict):
     for name, _model in model.items():
-      helper(name, _model, _checkpoint_dir=checkpoint_dir[name] if checkpoint_dir else None)
+      src = savedmodel_dir + name
+      helper(_model, src)
   else:
-    helper(name="main", _model=model, _checkpoint_dir=checkpoint_dir)
+    helper(model, savedmodel_dir)
 
 
 class SavedModel:
@@ -219,3 +256,16 @@ class TFTRTModel:
   def infer_step(self, x):
     output = self.graph_func(**x)
     return output
+
+
+def longestCommonPrefix(strs: List[str]) -> str:
+  if not strs:
+    return ""
+
+  length, count = len(strs[0]), len(strs)
+  for i in range(length):
+    c = strs[0][i]
+    if any(i == len(strs[j]) or strs[j][i] != c for j in range(1, count)):
+      return strs[0][:i]
+
+  return strs[0]

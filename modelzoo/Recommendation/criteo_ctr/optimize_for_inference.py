@@ -33,6 +33,8 @@ def main(_):
     tf.io.gfile.remove(file)
     logging.info(f"Replace optimized saved_modle.pb for {file}")
     tf.io.gfile.copy(os.path.join(tmp_path + "_main", "saved_model.pb"), file, overwrite=True)
+  else:
+    raise FileNotFoundError(f"{file} does not exist.")
 
 
 if __name__ == "__main__":

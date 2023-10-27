@@ -497,7 +497,7 @@ def get_from_cache(
       # GET file object
       if url.startswith("s3://"):
         if resume_download:
-          logger.warn('Warning: resumable downloads are not implemented for "s3://" urls')
+          logging.warning('Warning: resumable downloads are not implemented for "s3://" urls')
         s3_get(url, temp_file, proxies=proxies)
       else:
         http_get(url, temp_file, proxies=proxies, resume_size=resume_size, user_agent=user_agent)
