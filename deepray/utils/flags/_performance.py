@@ -220,7 +220,7 @@ def define_performance(
       flags.DEFINE_enum(
           name="fp16_implementation",
           default="keras",
-          enum_values=("keras', 'graph_rewrite"),
+          enum_values=("keras", "graph_rewrite"),
           help=help_wrap(
               "When --dtype=fp16, how fp16 should be implemented. This has no "
               "impact on correctness. 'keras' uses the "
