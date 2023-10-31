@@ -86,14 +86,5 @@ $hvd_command $nsys_command python train.py \
     $use_hvd $use_fp16 $use_xla_tag
 set +x
 
-# if [ $num_gpu -gt 1 ]; then
-#     python optimize_for_inference.py \
-#         --feature_map=feature_map_small.csv \
-#         --use_dynamic_embedding=True \
-#         --model_dir=${RESULTS_DIR} \
-#         --distribution_strategy=off \
-#         $use_fp16 $use_xla_tag
-# fi
-
 # --init_checkpoint=/results/tf_tfra_training_criteo_dcn_fp32_gbs4096_231018053444/ckpt_main_model/ \
 # --init_weights="/results/tf_tfra_training_criteo_dcn_fp32_gbs16384_231016072901/export_main/variables" \

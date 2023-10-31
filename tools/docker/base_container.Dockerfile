@@ -29,6 +29,7 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
     librdmacm1 \
     libibverbs1 \
     ibverbs-providers \
+    libjemalloc-dev \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY tools/install_deps /install_deps

@@ -31,6 +31,7 @@ _check_tf_version()
 # Local project imports
 from deepray import activations
 from deepray import callbacks
+from deepray import custom_ops
 from deepray import image
 from deepray import layers
 from deepray import losses

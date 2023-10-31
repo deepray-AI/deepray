@@ -9,6 +9,7 @@ docker pull hailinfufu/deepray-dev:latest-py${PY_VERSION}-tf${TF_VERSION}-cu116-
 
 docker run --gpus all -it \
     --rm=true \
+    --name="deepray_dev" \
     -w /workspaces \
     --volume=dev-build:/workspaces \
     --shm-size=1g \

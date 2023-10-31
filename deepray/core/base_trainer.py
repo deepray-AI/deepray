@@ -208,22 +208,25 @@ class Trainer(Module):
 
     self._model = {}
     if isinstance(model, list):
-      if len(model) == 1:
+      if len(model) > 0:
         self._model = {"main_model": model[0]}
-      elif len(model) == 2:
-        self._model = {"main_model": model[0], "sub_model": model[1]}
-      else:
-        for i in range(len(model)):
-          if i == 0:
-            self._model["main_model"] = model[i]
-          else:
+        if len(model) == 2:
+          self._model["sub_model"] = model[1]
+        else:
+          for i in range(1, len(model)):
             self._model[f"sub_model{i}"] = model[i]
+      else:
+        raise ValueError("Not a reachable model.")
     elif isinstance(model, dict):
-      self._model = model
+      main_keys = [k for k in model.keys() if "main" in k]
+      if len(main_keys) == 1:
+        self._model = model
+      else:
+        raise ValueError("Must set one model with key contains \"main\"")
     elif isinstance(model, tf.keras.Model):
       self._model = {"main_model": model}
     else:
-      ValueError("Not a reachable model.")
+      raise ValueError("Not a reachable model.")
 
     self._loss = loss
     self._metrics = metrics
@@ -258,7 +261,7 @@ class Trainer(Module):
       self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, dynamic=True)
 
   @property
-  def model(self):
+  def main_model(self):
     """
     Returns:
       The main model
@@ -584,12 +587,12 @@ class Trainer(Module):
           self.loss_container = self._loss
         else:
           self.loss_container = compile_utils.LossesContainer(
-              self._loss, self._loss_weights, output_names=self.model.output_names
+              self._loss, self._loss_weights, output_names=self.main_model.output_names
           )
         self.metric_container = compile_utils.MetricsContainer(
             self._metrics,
             self._weighted_metrics,
-            output_names=self.model.output_names,
+            output_names=self.main_model.output_names,
             # from_serialized=from_serialized,
         ) if self._metrics or self._weighted_metrics else None
 
@@ -611,7 +614,10 @@ class Trainer(Module):
       if FLAGS.init_checkpoint:
         for (name, ckpt), init_ckpt in zip(self._checkpoints.items(), FLAGS.init_checkpoint):
           if init_ckpt:
-            latest_checkpoint = tf.train.latest_checkpoint(init_ckpt)
+            if tf.io.gfile.isdir(init_ckpt):
+              latest_checkpoint = tf.train.latest_checkpoint(init_ckpt)
+            else:
+              latest_checkpoint = init_ckpt
             logging.info(
                 f'Checkpoint file {latest_checkpoint} found and restoring from initial checkpoint for {name} model.'
             )
@@ -636,7 +642,7 @@ class Trainer(Module):
             callbacks,
             add_history=True,
             add_progbar=verbose != 0,
-            model=self.model,
+            model=self.main_model,
             verbose=verbose,
             epochs=self.epochs,
             steps=self.steps_per_epoch * self.epochs,
@@ -649,7 +655,7 @@ class Trainer(Module):
       else:
         opt = self.optimizer
 
-      self.model.compile(
+      self.main_model.compile(
           optimizer=opt,
           loss=self._loss,
           loss_weights=self._loss_weights,
@@ -680,7 +686,7 @@ class Trainer(Module):
 
       # Horovod: write logs on worker 0.
       verbose = 2 if is_main_process() else 0
-      history = self.model.fit(
+      history = self.main_model.fit(
           train_input,
           epochs=self.epochs,
           steps_per_epoch=self.steps_per_epoch if self.steps_per_epoch else None,
@@ -703,7 +709,7 @@ class Trainer(Module):
     self.current_step = self._first_steps = self.optimizer.iterations.numpy()
 
     self.first_batch = True
-    if not hasattr(self.model, 'optimizer'):
+    if not hasattr(self.main_model, 'optimizer'):
       raise ValueError('User should set optimizer attribute to model '
                        'inside `model_fn`.')
     # if self.sub_model_export_name and self.sub_model is None:
@@ -750,8 +756,8 @@ class Trainer(Module):
         self.first_batch = False
         self.on_batch_end(training_logs, steps, t0)
       self.on_epoch_end(epoch, self.current_step, eval_input, epoch_logs=training_logs)
-      if self.model.stop_training:
-        logging.info(f"self.model.stop_training = {self.model.stop_training}")
+      if self.main_model.stop_training:
+        logging.info(f"self.model.stop_training = {self.main_model.stop_training}")
         break
     self.callbacks.on_train_end(logs=training_logs)
 
@@ -764,7 +770,7 @@ class Trainer(Module):
     export.export_to_checkpoint(self.manager, self.current_step)
     if is_main_process():
       training_summary = {'total_training_steps': self.current_step}
-      if self.metric_container.metrics:
+      if self.loss_container:
         training_summary['train_loss'] = self._float_metric_value(self.loss_container.metrics[0])
 
       if self.metric_container and self.metric_container.metrics:
@@ -797,7 +803,7 @@ class Trainer(Module):
         dllogging.logger.log(step=(), data={"total_loss": training_summary['train_loss']}, verbosity=Verbosity.DEFAULT)
         dllogging.logger.log(data=results_perf, step=tuple())
 
-      return self.model
+      return self.main_model
 
   def train_single_step(self, iterator, num_grad_accumulates):
     """Performs a distributed training step.
@@ -814,7 +820,7 @@ class Trainer(Module):
         if _ == 0 or (_ + 1) % num_grad_accumulates == 0:
           self.step(num_grad_accumulates)
         if self.use_horovod and _ == 0 and self.first_batch:
-          hvd.broadcast_variables(self.model.variables, 0)
+          hvd.broadcast_variables(self.main_model.variables, 0)
           hvd.broadcast_variables(self.optimizer.variables(), 0)
     else:
       self._replicated_step(iterator, self.first_batch)
@@ -823,15 +829,15 @@ class Trainer(Module):
   @property
   def trainable_variables(self):
     if hasattr(self.loss_container, 'trainable_variables'):
-      return self.model.trainable_variables + self.loss_container.trainable_variables
+      return self.main_model.trainable_variables + self.loss_container.trainable_variables
     else:
-      return self.model.trainable_variables
+      return self.main_model.trainable_variables
 
   def _replicated_step(self, inputs, first_batch=False):
     """Replicated training step."""
     inputs, labels, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
     with tf.GradientTape() as tape:
-      model_outputs = self.model(inputs, training=True)
+      model_outputs = self.main_model(inputs, training=True)
       loss = self.loss_container(labels, model_outputs, sample_weight=sample_weight)
 
     if self.use_horovod and not FLAGS.use_dynamic_embedding:
@@ -843,7 +849,7 @@ class Trainer(Module):
 
     if self.use_horovod and first_batch:
       broadcast_vars = [
-          var for var in self.model.variables
+          var for var in self.main_model.variables
           if (not isinstance(var, TrainableWrapper)) and (not isinstance(var, DEResourceVariable))
       ]
       hvd.broadcast_variables(broadcast_vars, root_rank=0)
@@ -861,7 +867,7 @@ class Trainer(Module):
   def forward(self, inputs):
     inputs, labels, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
     with tf.GradientTape() as tape:
-      model_outputs = self.model(inputs, training=True)
+      model_outputs = self.main_model(inputs, training=True)
       loss = self.loss_container(labels, model_outputs, sample_weight=sample_weight)
 
     # Compute gradients
@@ -897,7 +903,7 @@ class Trainer(Module):
     def _test_step_fn(inputs):
       """Replicated accuracy calculation."""
       inputs, labels, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
-      model_outputs = self.model(inputs, training=False)
+      model_outputs = self.main_model(inputs, training=False)
       if labels is not None and self.metric_container:
         self.metric_container.update_state(labels, model_outputs, sample_weight=sample_weight)
       return model_outputs
@@ -949,7 +955,7 @@ class Trainer(Module):
         if _ == 0 or (_ + 1) % num_grad_accumulates == 0:
           self.step(num_grad_accumulates)
         if self.use_horovod and _ == 0 and self.first_batch:
-          hvd.broadcast_variables(self.model.variables, 0)
+          hvd.broadcast_variables(self.main_model.variables, 0)
           hvd.broadcast_variables(self.optimizer.variables(), 0)
     else:
       for _ in tf.range(steps):

@@ -8,3 +8,4 @@ pudb
 tabulate
 tensorflow_hub
 sentencepiece
+boto3

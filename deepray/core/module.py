@@ -102,7 +102,7 @@ class Module():
   def on_epoch_end(self, epoch, current_step, eval_input, epoch_logs=None):
     # Saves model checkpoints and run validation steps at every epoch end.
     # To avoid repeated model saving, we do not save after the last step of training.
-    if (epoch < self.epochs - 1) and is_main_process():
+    if epoch < self.epochs - 1:
       export.export_to_checkpoint(self.manager, current_step)
     if eval_input:  # and is_main_process():
       if is_main_process():
