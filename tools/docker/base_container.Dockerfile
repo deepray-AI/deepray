@@ -23,13 +23,15 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
     git \
     curl \
     vim \
+    tmux \
     rsync \
     s3fs \
     ca-certificates \
     librdmacm1 \
     libibverbs1 \
-    ibverbs-providers \
     libjemalloc-dev \
+    ibverbs-providers \
+    iputils-ping \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY tools/install_deps /install_deps
