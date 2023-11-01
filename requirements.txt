@@ -9,3 +9,4 @@ tabulate
 tensorflow_hub
 sentencepiece
 boto3
+fastavro
