@@ -14,11 +14,11 @@
 # ==============================================================================
 """Tests for EmbeddingBag layer."""
 
-import pytest
 import numpy as np
+import pytest
 import tensorflow as tf
 
-from deepray.layers.embedding_bag import EmbeddingBag, _embedding_bag
+from deepray.custom_ops.embedding_bag import EmbeddingBag, _embedding_bag
 from deepray.utils import test_utils
 
 

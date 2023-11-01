@@ -17,12 +17,12 @@ limitations under the License.
 
 #define EIGEN_USE_GPU
 
-#include "deepray/custom_ops/layers/cc/kernels/embedding_bag_ops.h"
+#include "deepray/custom_ops/embedding_bag/cc/kernels/embedding_bag_ops.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"
 
 namespace tensorflow {
-namespace deepray {
+namespace addons {
 
 typedef Eigen::GpuDevice GPUDevice;
 
@@ -102,7 +102,7 @@ DECLARE_GPU_SPECS(double);
 #undef DECLARE_GPU_SPECS
 
 }  // namespace functor
-}  // namespace deepray
+}  // namespace addons
 }  // namespace tensorflow
 
 #endif  // GOOGLE_CUDA

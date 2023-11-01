@@ -13,10 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 
-import pytest
 import numpy as np
+import pytest
 import tensorflow as tf
-from ..optical_flow import CorrelationCost
+
+from deepray.custom_ops.correlation_cost import CorrelationCost
 
 
 def _forward(

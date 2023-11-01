@@ -21,14 +21,14 @@ limitations under the License.
 #include <thrust/fill.h>
 #include <thrust/sort.h>
 
-#include "deepray/custom_ops/layers/cc/kernels/embedding_bag_ops.h"
+#include "deepray/custom_ops/embedding_bag/cc/kernels/embedding_bag_ops.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"
 
 constexpr int MAX_THREADS_PER_BLOCK = 1024;
 
 namespace tensorflow {
-namespace deepray {
+namespace addons {
 namespace functor {
 
 typedef Eigen::GpuDevice GPUDevice;
@@ -241,7 +241,7 @@ template struct EmbeddingBagBackwardFunctor<GPUDevice, double, int64>;
 template struct EmbeddingBagBackwardFunctor<GPUDevice, float, int64>;
 template struct EmbeddingBagBackwardFunctor<GPUDevice, Eigen::half, int64>;
 }  // namespace functor
-}  // namespace deepray
+}  // namespace addons
 }  // namespace tensorflow
 
 #endif  // GOOGLE_CUDA

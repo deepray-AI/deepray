@@ -1,4 +1,4 @@
-# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
+# Copyright (c) 2023, NVIDIA CORPORATION. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,10 +11,4 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# ==============================================================================
-"""Load the simple_hash_table_op kernel."""
-
-import tensorflow as tf
-from tensorflow.python.platform import resource_loader
-
-gen_simple_hash_table_op = tf.load_op_library(resource_loader.get_path_to_datafile("simple_hash_table_kernel.so"))
+#

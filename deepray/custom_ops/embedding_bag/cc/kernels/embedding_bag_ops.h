@@ -20,7 +20,7 @@ limitations under the License.
 #include "tensorflow/core/framework/tensor_types.h"
 
 namespace tensorflow {
-namespace deepray {
+namespace addons {
 
 enum class Combiner {
   kSum,
@@ -51,7 +51,7 @@ struct EmbeddingBagBackwardFunctor {
 };
 
 }  // namespace functor
-}  // namespace deepray
+}  // namespace addons
 }  // namespace tensorflow
 
 #endif  // DEEPRAY_LAYERS_KERNELS_EMBEDDING_BAG_OPS_H_
