@@ -114,7 +114,9 @@ def export_to_savedmodel(
       rank_array = hvd.allgather_object(get_rank(), name='check_tfra_ranks')
       assert len(set(rank_array)) == get_world_size()
     except:
-      raise ValueError(f"Shouldn't place {sys._getframe().f_code.co_name} only in the main_process when use TFRA and Horovod.")
+      raise ValueError(
+          f"Shouldn't place {sys._getframe().f_code.co_name} only in the main_process when use TFRA and Horovod."
+      )
 
   def helper(name, _model: tf.keras.Model, _checkpoint_dir):
     _savedmodel_dir = os.path.join(FLAGS.model_dir, 'export') if savedmodel_dir is None else savedmodel_dir
