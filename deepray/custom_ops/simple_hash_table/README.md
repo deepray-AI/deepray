@@ -84,7 +84,7 @@ cause the corresponding element of the variable to be doubled.
 <!-- test_snippets_in_readme skip -->
 ```python
 import tensorflow as tf
-from tensorflow.examples.custom_ops_doc.multiplex_2 import multiplex_2_op
+from deepray.custom_ops.multiplex_2 import multiplex_2_op
 
 def variable_and_stateless_op():
   n = 10
@@ -870,7 +870,7 @@ Use the op by importing and calling it as follows:
 ```python
 import tensorflow as tf
 
-from tensorflow.examples.custom_ops_doc.simple_hash_table import simple_hash_table
+from deepray.custom_ops.simple_hash_table import simple_hash_table
 
 hash_table = simple_hash_table.SimpleHashTable(tf.int32, float, -999.0)
 result1 = hash_table.find(1, -999.0)  # -999.0
