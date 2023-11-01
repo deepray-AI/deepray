@@ -20,9 +20,11 @@ from __future__ import print_function
 
 import os
 import re
+import sys
 import tempfile
 from typing import Optional, Union, Dict, Text, List
 
+import horovod.tensorflow as hvd
 import tensorflow as tf
 from absl import logging, flags
 from keras.engine import data_adapter
@@ -106,6 +108,13 @@ def export_to_savedmodel(
   Raises:
     ValueError when model is not specified.
   """
+
+  if FLAGS.use_dynamic_embedding and FLAGS.use_horovod:
+    try:
+      rank_array = hvd.allgather_object(get_rank(), name='check_tfra_ranks')
+      assert len(set(rank_array)) == get_world_size()
+    except:
+      raise ValueError(f"Shouldn't place {sys._getframe().f_code.co_name} only in the main_process when use TFRA and Horovod.")
 
   def helper(name, _model: tf.keras.Model, _checkpoint_dir):
     _savedmodel_dir = os.path.join(FLAGS.model_dir, 'export') if savedmodel_dir is None else savedmodel_dir
