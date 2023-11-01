@@ -19,7 +19,7 @@ from typeguard import typechecked
 from deepray.utils.types import Constraint, Initializer, Regularizer
 from deepray.utils.resource_loader import LazySO
 
-_embedding_bag_so = LazySO("custom_ops/layers/_embedding_bag_ops.so")
+_embedding_bag_so = LazySO("custom_ops/embedding_bag/_embedding_bag_ops.so")
 
 
 def _embedding_bag(
@@ -67,7 +67,6 @@ def _embedding_bag_grad(op, grads):
   return [None, value_grads, weight_grads]
 
 
-@tf.keras.utils.register_keras_serializable(package="Deepray")
 class EmbeddingBag(tf.keras.layers.Layer):
   """EmbeddingBag Layer.
 

@@ -22,7 +22,6 @@ import tensorflow as tf
 from deepray.custom_ops.simple_hash_table.simple_hash_table_op import gen_simple_hash_table_op
 
 
-
 class SimpleHashTable(tf.saved_model.experimental.TrackableResource):
   """A simple mutable hash table implementation.
 
@@ -49,11 +48,7 @@ class SimpleHashTable(tf.saved_model.experimental.TrackableResource):
     result3 = hash_table.find(1, -999)  # -999
   """
 
-  def __init__(self,
-               key_dtype,
-               value_dtype,
-               default_value,
-               name="SimpleHashTable"):
+  def __init__(self, key_dtype, value_dtype, default_value, name="SimpleHashTable"):
     """Creates an empty `SimpleHashTable` object.
 
     Creates a table, the type of its keys and values are specified by key_dtype
@@ -92,9 +87,8 @@ class SimpleHashTable(tf.saved_model.experimental.TrackableResource):
     """
     assert self._default_value.get_shape().ndims == 0
     table_ref = gen_simple_hash_table_op.examples_simple_hash_table_create(
-        key_dtype=self._key_dtype,
-        value_dtype=self._value_dtype,
-        name=self._name)
+        key_dtype=self._key_dtype, value_dtype=self._value_dtype, name=self._name
+    )
     return table_ref
 
   def _serialize_to_tensors(self):
@@ -105,8 +99,8 @@ class SimpleHashTable(tf.saved_model.experimental.TrackableResource):
   def _restore_from_tensors(self, restored_tensors):
     """Implements checkpointing protocols for `Trackable`."""
     return gen_simple_hash_table_op.examples_simple_hash_table_import(
-        self.resource_handle, restored_tensors["table-keys"],
-        restored_tensors["table-values"])
+        self.resource_handle, restored_tensors["table-keys"], restored_tensors["table-values"]
+    )
 
   @property
   def key_dtype(self):
@@ -140,12 +134,11 @@ class SimpleHashTable(tf.saved_model.experimental.TrackableResource):
       key = tf.convert_to_tensor(key, dtype=self._key_dtype, name="key")
       if dynamic_default_value is not None:
         dynamic_default_value = tf.convert_to_tensor(
-            dynamic_default_value,
-            dtype=self._value_dtype,
-            name="default_value")
+            dynamic_default_value, dtype=self._value_dtype, name="default_value"
+        )
       value = gen_simple_hash_table_op.examples_simple_hash_table_find(
-          self.resource_handle, key, dynamic_default_value
-          if dynamic_default_value is not None else self._default_value)
+          self.resource_handle, key, dynamic_default_value if dynamic_default_value is not None else self._default_value
+      )
     return value
 
   def insert(self, key, value, name=None):
@@ -167,8 +160,7 @@ class SimpleHashTable(tf.saved_model.experimental.TrackableResource):
       key = tf.convert_to_tensor(key, self._key_dtype, name="key")
       value = tf.convert_to_tensor(value, self._value_dtype, name="value")
       # pylint: disable=protected-access
-      op = gen_simple_hash_table_op.examples_simple_hash_table_insert(
-          self.resource_handle, key, value)
+      op = gen_simple_hash_table_op.examples_simple_hash_table_insert(self.resource_handle, key, value)
       return op
 
   def remove(self, key, name=None):
@@ -195,7 +187,8 @@ class SimpleHashTable(tf.saved_model.experimental.TrackableResource):
 
       # pylint: disable=protected-access
       op = gen_simple_hash_table_op.examples_simple_hash_table_remove(
-          self.resource_handle, key, value_dtype=self._value_dtype)
+          self.resource_handle, key, value_dtype=self._value_dtype
+      )
       return op
 
   def export(self, name=None):
@@ -211,9 +204,8 @@ class SimpleHashTable(tf.saved_model.experimental.TrackableResource):
     with tf.name_scope(name or "%s_lookup_table_export" % self._name):
       # pylint: disable=protected-access
       keys, values = gen_simple_hash_table_op.examples_simple_hash_table_export(
-          self.resource_handle,
-          key_dtype=self._key_dtype,
-          value_dtype=self._value_dtype)
+          self.resource_handle, key_dtype=self._key_dtype, value_dtype=self._value_dtype
+      )
       return keys, values
 
   def do_import(self, keys, values, name=None):
@@ -233,8 +225,7 @@ class SimpleHashTable(tf.saved_model.experimental.TrackableResource):
     """
     with tf.name_scope(name or "%s_lookup_table_import" % self._name):
       # pylint: disable=protected-access
-      op = gen_simple_hash_table_op.examples_simple_hash_table_import(
-          self.resource_handle, keys, values)
+      op = gen_simple_hash_table_op.examples_simple_hash_table_import(self.resource_handle, keys, values)
       return op
 
 

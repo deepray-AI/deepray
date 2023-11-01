@@ -24,14 +24,12 @@ from deepray.layers.adaptive_pooling import (
 )
 
 from deepray.layers.embedding import Embedding
-from deepray.layers.embedding_bag import EmbeddingBag
 from deepray.layers.max_unpooling_2d import MaxUnpooling2D
 from deepray.layers.max_unpooling_2d_v2 import MaxUnpooling2DV2
 from deepray.layers.maxout import Maxout
 from deepray.layers.normalizations import FilterResponseNormalization
 from deepray.layers.normalizations import GroupNormalization
 from deepray.layers.normalizations import InstanceNormalization
-from deepray.layers.optical_flow import CorrelationCost
 from deepray.layers.poincare import PoincareNormalize
 from deepray.layers.polynomial import PolynomialCrossing
 from deepray.layers.snake import Snake

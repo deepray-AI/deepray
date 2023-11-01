@@ -9,10 +9,6 @@ py_library(
         "*.py",
         "**/*.py",
     ]),
-    data = [
-        "//deepray/custom_ops/layers:_correlation_cost_ops.so",
-        "//deepray/custom_ops/layers:_embedding_bag_ops.so",
-    ],
     deps = [
         "//deepray/activations",
         "//deepray/rnn",
