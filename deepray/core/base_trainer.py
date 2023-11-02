@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import json
 import os
+import sys
 import time
 from typing import Union, List, Dict, Text
 
@@ -708,7 +709,7 @@ class Trainer(Module):
     # Training loop starts here.
     self.current_step = self._first_steps = self.optimizer.iterations.numpy()
 
-    self.first_batch = True
+    self.first_batch = tf.Variable(True, trainable=False, dtype=tf.bool, name='first_batch')
     if not hasattr(self.main_model, 'optimizer'):
       raise ValueError('User should set optimizer attribute to model '
                        'inside `model_fn`.')
@@ -749,11 +750,9 @@ class Trainer(Module):
           elif steps > 1 and self.optimizer.iterations.numpy() > self.current_step:
             steps = self.optimizer.iterations.numpy() - self.current_step
             training_logs = self.get_metrics_result()
-            self.first_batch = False
             self.on_batch_end(training_logs, steps, t0)
           break
 
-        self.first_batch = False
         self.on_batch_end(training_logs, steps, t0)
       self.on_epoch_end(epoch, self.current_step, eval_input, epoch_logs=training_logs)
       if self.main_model.stop_training:
@@ -819,11 +818,10 @@ class Trainer(Module):
         self.forward(iterator)
         if _ == 0 or (_ + 1) % num_grad_accumulates == 0:
           self.step(num_grad_accumulates)
-        if self.use_horovod and _ == 0 and self.first_batch:
-          hvd.broadcast_variables(self.main_model.variables, 0)
-          hvd.broadcast_variables(self.optimizer.variables(), 0)
+        if self.use_horovod and self.first_batch:
+          self.do_broadcast()
     else:
-      self._replicated_step(iterator, self.first_batch)
+      self._replicated_step(iterator)
     return self.get_metrics_result()
 
   @property
@@ -833,7 +831,24 @@ class Trainer(Module):
     else:
       return self.main_model.trainable_variables
 
-  def _replicated_step(self, inputs, first_batch=False):
+  def do_broadcast(self):
+    broadcast_vars = [
+        var for var in self.main_model.variables
+        if (not isinstance(var, TrainableWrapper)) and (not isinstance(var, DEResourceVariable))
+    ]
+    opt_broadcast_vars = [
+        var for var in self.optimizer.variables()
+        if (not isinstance(var, TrainableWrapper)) and (not isinstance(var, DEResourceVariable))
+    ]
+
+    print_op = tf.print(
+        f"Broadcasting {len(broadcast_vars + opt_broadcast_vars)} variables...", output_stream=sys.stdout
+    )
+    with tf.control_dependencies([print_op]):
+      hvd.broadcast_variables(broadcast_vars + opt_broadcast_vars, root_rank=0)
+    self.first_batch.assign(False)
+
+  def _replicated_step(self, inputs):
     """Replicated training step."""
     inputs, labels, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
     with tf.GradientTape() as tape:
@@ -847,18 +862,8 @@ class Trainer(Module):
     # Run backwards pass.
     self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
 
-    if self.use_horovod and first_batch:
-      broadcast_vars = [
-          var for var in self.main_model.variables
-          if (not isinstance(var, TrainableWrapper)) and (not isinstance(var, DEResourceVariable))
-      ]
-      hvd.broadcast_variables(broadcast_vars, root_rank=0)
-
-      opt_broadcast_vars = [
-          var for var in self.optimizer.variables()
-          if (not isinstance(var, TrainableWrapper)) and (not isinstance(var, DEResourceVariable))
-      ]
-      hvd.broadcast_variables(opt_broadcast_vars, root_rank=0)
+    if self.use_horovod and self.first_batch:
+      self.do_broadcast()
 
     # For reporting, the metric takes the mean of losses.
     if self.metric_container:
@@ -954,12 +959,11 @@ class Trainer(Module):
         self.forward(next(iterator))
         if _ == 0 or (_ + 1) % num_grad_accumulates == 0:
           self.step(num_grad_accumulates)
-        if self.use_horovod and _ == 0 and self.first_batch:
-          hvd.broadcast_variables(self.main_model.variables, 0)
-          hvd.broadcast_variables(self.optimizer.variables(), 0)
+        if self.use_horovod and self.first_batch:
+          self.do_broadcast()
     else:
       for _ in tf.range(steps):
-        self._replicated_step(next(iterator), (self.first_batch and _ == 0))
+        self._replicated_step(next(iterator))
     return self.get_metrics_result()
 
   def train_single_step_strategy(self, iterator, num_grad_accumulates):
