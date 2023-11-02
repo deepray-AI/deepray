@@ -222,7 +222,7 @@ class Trainer(Module):
       if len(main_keys) == 1:
         self._model = model
       else:
-        raise ValueError("Must set one model with key contains \"main\"")
+        raise ValueError(f"Must set only one model with key contains \"main\", found {main_keys}.")
     elif isinstance(model, tf.keras.Model):
       self._model = {"main_model": model}
     else:

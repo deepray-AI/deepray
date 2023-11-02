@@ -18,9 +18,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import inspect
 import os
 import re
-import sys
 import tempfile
 from typing import Optional, Union, Dict, Text, List
 
@@ -114,9 +114,7 @@ def export_to_savedmodel(
       rank_array = hvd.allgather_object(get_rank(), name='check_tfra_ranks')
       assert len(set(rank_array)) == get_world_size()
     except:
-      raise ValueError(
-          f"Shouldn't place {sys._getframe().f_code.co_name} only in the main_process when use TFRA and Horovod."
-      )
+      raise ValueError(f"Shouldn't place {inspect.stack()[0][3]} only in the main_process when use TFRA and Horovod.")
 
   def helper(name, _model: tf.keras.Model, _checkpoint_dir):
     _savedmodel_dir = os.path.join(FLAGS.model_dir, 'export') if savedmodel_dir is None else savedmodel_dir
@@ -181,8 +179,14 @@ def optimize_for_inference(
     savedmodel_dir: Text,
 ) -> None:
   x, y, z = data_adapter.unpack_x_y_sample_weight(next(iter(dataset)))
-  preds = model(x)
-  logging.info(preds)
+  if isinstance(model, dict):
+    for name, _model in model.items():
+      if "main" in name:
+        preds = _model(x)
+        logging.info(preds)
+  else:
+    preds = model(x)
+    logging.info(preds)
 
   def helper(_model, path):
     tmp_path = tempfile.mkdtemp(dir='/tmp/')
@@ -197,9 +201,14 @@ def optimize_for_inference(
 
   if isinstance(model, dict):
     for name, _model in model.items():
+      if "main" in name:
+        preds = _model(x)
+        logging.info(preds)
       src = savedmodel_dir + name
       helper(_model, src)
   else:
+    preds = model(x)
+    logging.info(preds)
     helper(model, savedmodel_dir)
 
 
