@@ -832,7 +832,7 @@ class Trainer(Module):
       return self.main_model.trainable_variables
 
   def do_broadcast(self):
-    broadcast_vars = [
+    model_broadcast_vars = [
         var for var in self.main_model.variables
         if (not isinstance(var, TrainableWrapper)) and (not isinstance(var, DEResourceVariable))
     ]
@@ -842,10 +842,11 @@ class Trainer(Module):
     ]
 
     print_op = tf.print(
-        f"Broadcasting {len(broadcast_vars + opt_broadcast_vars)} variables...", output_stream=sys.stdout
+        f"Broadcasting {len(model_broadcast_vars)} model variables & {len(opt_broadcast_vars)} optimizer variables...",
+        output_stream=sys.stdout
     )
     with tf.control_dependencies([print_op]):
-      hvd.broadcast_variables(broadcast_vars + opt_broadcast_vars, root_rank=0)
+      hvd.broadcast_variables(model_broadcast_vars + opt_broadcast_vars, root_rank=0)
     self.first_batch.assign(False)
 
   def _replicated_step(self, inputs):
