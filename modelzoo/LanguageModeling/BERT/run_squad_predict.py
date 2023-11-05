@@ -122,7 +122,7 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
   elapsed_secs = 0
 
   for _ in range(num_steps):
-    predictions = trainer.predict_step(next(predict_iterator))
+    predictions = trainer.forward_step(next(predict_iterator))
     if FLAGS.benchmark:
       # transfer tensor to CPU for synchronization
       t0 = predictions['unique_ids'][0]

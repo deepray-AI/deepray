@@ -203,8 +203,9 @@ class Trainer(Module):
       use_horovod=None,
       run_eagerly=None,
       jit_compile=None,
-      **kwargs,
+      **kwargs
   ):
+    super().__init__(**kwargs)
     self.strategy = distribution_utils.get_distribution_strategy()
 
     self._model = {}
@@ -260,6 +261,22 @@ class Trainer(Module):
     self.use_float16 = common_flags.use_float16()
     if self.use_float16:
       self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, dynamic=True)
+
+    with distribution_utils.get_strategy_scope(self.strategy):
+      # To correctly place the model weights on accelerators,
+      # model should be created in scope.
+      if isinstance(self._loss, compile_utils.LossesContainer):
+        self.loss_container = self._loss
+      else:
+        self.loss_container = compile_utils.LossesContainer(
+            self._loss, self._loss_weights, output_names=self.main_model.output_names
+        )
+      self.metric_container = compile_utils.MetricsContainer(
+          self._metrics,
+          self._weighted_metrics,
+          output_names=self.main_model.output_names,
+          # from_serialized=from_serialized,
+      ) if self._metrics or self._weighted_metrics else None
 
   @property
   def main_model(self):
@@ -532,6 +549,7 @@ class Trainer(Module):
             and what the model expects or when the input data is empty.
     """
     self.steps_per_epoch = steps_per_epoch if steps_per_epoch else -1
+    self.validation_steps = eval_steps
     if FLAGS.benchmark or FLAGS.stop_steps >= 0:
       if FLAGS.stop_steps >= 0:
         self.steps_per_epoch = FLAGS.stop_steps
@@ -580,22 +598,6 @@ class Trainer(Module):
         self.eval_summary_writer = None
         self.train_summary_writer = None
         eval_input_fn = None
-
-      with distribution_utils.get_strategy_scope(self.strategy):
-        # To correctly place the model weights on accelerators,
-        # model should be created in scope.
-        if isinstance(self._loss, compile_utils.LossesContainer):
-          self.loss_container = self._loss
-        else:
-          self.loss_container = compile_utils.LossesContainer(
-              self._loss, self._loss_weights, output_names=self.main_model.output_names
-          )
-        self.metric_container = compile_utils.MetricsContainer(
-            self._metrics,
-            self._weighted_metrics,
-            output_names=self.main_model.output_names,
-            # from_serialized=from_serialized,
-        ) if self._metrics or self._weighted_metrics else None
 
       self._checkpoints, self._managers = {}, {}
       for name, model in self._model.items():
@@ -709,7 +711,9 @@ class Trainer(Module):
     # Training loop starts here.
     self.current_step = self._first_steps = self.optimizer.iterations.numpy()
 
-    self.first_batch = tf.Variable(True, trainable=False, dtype=tf.bool, name='first_batch')
+    if self.use_horovod:
+      with tf.init_scope():
+        self.first_batch = tf.Variable(True, trainable=False, dtype=tf.bool, name='first_batch')
     if not hasattr(self.main_model, 'optimizer'):
       raise ValueError('User should set optimizer attribute to model '
                        'inside `model_fn`.')
@@ -851,10 +855,10 @@ class Trainer(Module):
 
   def _replicated_step(self, inputs):
     """Replicated training step."""
-    inputs, labels, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
+    x, y, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
     with tf.GradientTape() as tape:
-      model_outputs = self.main_model(inputs, training=True)
-      loss = self.loss_container(labels, model_outputs, sample_weight=sample_weight)
+      model_outputs = self.main_model(x, training=True)
+      loss = self.loss_container(y, model_outputs, sample_weight=sample_weight)
 
     if self.use_horovod and not FLAGS.use_dynamic_embedding:
       tape = hvd.DistributedGradientTape(
@@ -868,13 +872,13 @@ class Trainer(Module):
 
     # For reporting, the metric takes the mean of losses.
     if self.metric_container:
-      self.metric_container.update_state(y_true=labels, y_pred=model_outputs, sample_weight=sample_weight)
+      self.metric_container.update_state(y_true=y, y_pred=model_outputs, sample_weight=sample_weight)
 
   def forward(self, inputs):
-    inputs, labels, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
+    x, y, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
     with tf.GradientTape() as tape:
-      model_outputs = self.main_model(inputs, training=True)
-      loss = self.loss_container(labels, model_outputs, sample_weight=sample_weight)
+      model_outputs = self.main_model(x, training=True)
+      loss = self.loss_container(y, model_outputs, sample_weight=sample_weight)
 
     # Compute gradients
     if version.parse(tf.keras.__version__.replace("-tf", "+tf")) < version.parse("2.11"):
@@ -886,7 +890,7 @@ class Trainer(Module):
 
     # For reporting, the metric takes the mean of losses.
     if self.metric_container:
-      self.metric_container.update_state(y_true=labels, y_pred=model_outputs, sample_weight=sample_weight)
+      self.metric_container.update_state(y_true=y, y_pred=model_outputs, sample_weight=sample_weight)
 
   def step(self, num_grad_accumulates):
     gradients = self.accum_gradients.gradients
@@ -903,25 +907,31 @@ class Trainer(Module):
     self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
     self.accum_gradients.reset()
 
-  def predict_step(self, iterator):
+  def forward_step(self, iterator):
     """Calculates evaluation metrics on distributed devices."""
 
-    def _test_step_fn(inputs):
+    def _forward_step_fn(inputs):
       """Replicated accuracy calculation."""
-      inputs, labels, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
-      model_outputs = self.main_model(inputs, training=False)
-      if labels is not None and self.metric_container:
-        self.metric_container.update_state(labels, model_outputs, sample_weight=sample_weight)
+      x, y, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
+      model_outputs = self.main_model(x, training=False)
+      if y is not None and self.metric_container:
+        if self.use_horovod:
+          y = hvd.allgather(y)
+          model_outputs = hvd.allgather(model_outputs)
+          if sample_weight:
+            sample_weight = hvd.allgather(sample_weight)
+
+        self.metric_container.update_state(y, model_outputs, sample_weight=sample_weight)
       return model_outputs
 
     def tuple_fun(x):
       return x,
 
     if self.strategy:
-      outputs = self.strategy.run(_test_step_fn, args=(iterator,))
+      outputs = self.strategy.run(_forward_step_fn, args=(iterator,))
       map_func = self.strategy.experimental_local_results
     else:
-      outputs = _test_step_fn(iterator)
+      outputs = _forward_step_fn(iterator)
       map_func = tuple_fun
     return tf.nest.map_structure(map_func, outputs)
 
@@ -989,7 +999,7 @@ class Trainer(Module):
     if not self.run_eagerly:
       _train_single_step = tf.function(self.train_single_step)
       _train_multi_steps = tf.function(self.train_steps)
-      self.predict_step = tf.function(self.predict_step)
+      self.forward_step = tf.function(self.forward_step)
     else:
       _train_single_step = self.train_single_step
       _train_multi_steps = self.train_steps

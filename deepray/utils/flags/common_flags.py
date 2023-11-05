@@ -156,7 +156,6 @@ def define_common_flags():
   )
   flags.DEFINE_integer("max_seq_length", 128, "Maximum sequence length.")
   flags.DEFINE_integer("prebatch", 1, "prebatch size for tfrecord")
-  flags.DEFINE_list("label", [], "label name")
   flags.DEFINE_string("feature_map", os.path.join(os.getcwd(), "business/data/feature_map.csv"), "path to feature_map")
   flags.DEFINE_string("black_list", None, "black list for feature_map")
   flags.DEFINE_string("white_list", None, "white list for feature_map")

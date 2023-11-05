@@ -14,6 +14,10 @@ FLAGS = flags.FLAGS
 
 class Module():
 
+  def __init__(self, **kwargs):
+    super().__init__(**kwargs)
+    self.validation_steps = None
+
   def steps_to_run(self, current_step, steps_per_epoch, steps_per_loop):
     """Calculates steps to run on device."""
     if steps_per_loop <= 0:
@@ -112,7 +116,7 @@ class Module():
       if self.metric_container:
         self.metric_container.reset_state()
 
-      val_logs = self.run_evaluation(eval_input, current_step)
+      val_logs = self.run_evaluation(eval_input, self.validation_steps)
       val_logs = {'val_' + name: val for name, val in val_logs.items()}
       epoch_logs.update(val_logs)
 
@@ -126,19 +130,38 @@ class Module():
     """
     self.callbacks.on_epoch_end(epoch, epoch_logs)
 
-  def run_evaluation(self, eval_input, current_training_step=0):
+  def run_evaluation(self, eval_input, validation_steps=None):
+    if validation_steps is None:
+      if self.validation_steps is not None:
+        validation_steps = self.validation_steps
+    else:
+      if self.validation_steps is None:
+        self.validation_steps = validation_steps
     """Runs validation steps and aggregate metrics."""
     if not isinstance(eval_input, Iterator):
       eval_input = distribution_utils.make_distributed_iterator(self.strategy, eval_input)
 
-    step_num = 0
-    while 1:
+    current_step = 0
+    while validation_steps is None or current_step < validation_steps:
       try:
-        self.predict_step(next(eval_input))
-        step_num += 1
+        t0 = time.time()
+        for _ in tf.range(FLAGS.steps_per_summary):
+          self.forward_step(next(eval_input))
+          current_step += 1
+        elapse_time = time.time() - t0
+        # Updates validing logging.
+        if validation_steps is None:
+          training_status = 'Valid Step: %d / time=%.3f sec' % (current_step, elapse_time)
+        else:
+          training_status = 'Valid Step: %d/%d / time=%.3f sec' % (current_step, validation_steps, elapse_time)
+        for key, value in self.get_metrics_result().items():
+          metric_value = value.numpy().astype(float)
+          training_status += '  %s=%f' % (key, metric_value)
+        logging.info(training_status)
       except (tf.errors.OutOfRangeError, StopIteration):
+        self.validation_steps = current_step
         if is_main_process():
-          logging.info('Data exhausted after %d steps', step_num)
+          logging.info('Data exhausted after %d steps', current_step)
         break
 
     return self.get_metrics_result()
