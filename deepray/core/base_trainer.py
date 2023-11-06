@@ -28,6 +28,7 @@ import tensorflow as tf
 from absl import logging, flags
 from dllogger import Verbosity
 from keras.engine import compile_utils
+from .compile_utils import HvdMetricsContainer
 from keras.engine import data_adapter
 from packaging import version
 
@@ -271,7 +272,7 @@ class Trainer(Module):
         self.loss_container = compile_utils.LossesContainer(
             self._loss, self._loss_weights, output_names=self.main_model.output_names
         )
-      self.metric_container = compile_utils.MetricsContainer(
+      self.metric_container = HvdMetricsContainer(
           self._metrics,
           self._weighted_metrics,
           output_names=self.main_model.output_names,
@@ -915,12 +916,6 @@ class Trainer(Module):
       x, y, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
       model_outputs = self.main_model(x, training=False)
       if y is not None and self.metric_container:
-        if self.use_horovod:
-          y = hvd.allgather(y)
-          model_outputs = hvd.allgather(model_outputs)
-          if sample_weight:
-            sample_weight = hvd.allgather(sample_weight)
-
         self.metric_container.update_state(y, model_outputs, sample_weight=sample_weight)
       return model_outputs
 
