@@ -157,7 +157,6 @@ def define_base(
             "specified, the training batch size (--batch_size) will be used."
         )
     )
-    flags.DEFINE_integer("predict_batch_size", 8, 'Total batch size for prediction.')
     key_flags.append("batch_size")
 
   if num_gpus:
