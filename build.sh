@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+export TF_NEED_CUDA=1
 python ./configure.py
 
 # bazel build build_pip_pkg \

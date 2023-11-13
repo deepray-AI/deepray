@@ -15,6 +15,15 @@ def _tf_repositories():
     # and update the sha256 with the result.
 
     http_archive(
+        name = "com_google_absl",
+        urls = [
+            "https://github.com/abseil/abseil-cpp/archive/refs/tags/20211102.0.tar.gz",
+        ],
+        strip_prefix = "abseil-cpp-20211102.0",
+        sha256 = "dcf71b9cba8dc0ca9940c4b316a0c796be8fab42b070bb6b7cab62b48f0e66c4",
+    )
+
+    http_archive(
         name = "com_github_google_double_conversion",
         urls = ["https://github.com/google/double-conversion/archive/v3.2.0.tar.gz"],
         build_file = Label("//third_party:double_conversion.BUILD"),
@@ -170,6 +179,25 @@ def _tf_repositories():
         urls = [
             "https://github.com/aws/aws-sdk-cpp/archive/1.8.186.tar.gz",
         ],
+    )
+
+    http_archive(
+        name = "cutlass",
+        urls = ["https://github.com/NVIDIA/cutlass/archive/319a389f42b776fae5701afcb943fc03be5b5c25.zip"],
+        build_file = "//third_party:cutlass.BUILD",
+        strip_prefix = "cutlass-319a389f42b776fae5701afcb943fc03be5b5c25",
+    )
+
+    http_archive(
+        name = "flash_attn",
+        urls = ["https://github.com/Dao-AILab/flash-attention/archive/9818f85fee29ac6b60c9214bce841f8109a18b1b.zip"],  # v1.0.4
+        build_file = "//third_party/flash_attn:flash_attn.BUILD",
+        sha256 = "15f29a1095600ba2a3af688fa96a0a48635edb90fffec56c6eb7c48a4a322d2b",
+        strip_prefix = "flash-attention-9818f85fee29ac6b60c9214bce841f8109a18b1b",
+        # patches = [
+        #     "//third_party/flash_attn:flash_attn.patch",
+        # ],
+        # patch_args = ["-p1"],
     )
 
 def workspace():
