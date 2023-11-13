@@ -5,8 +5,6 @@ load("//deepray:deepray.bzl", "custom_op_library")
 
 licenses(["notice"])
 
-package(default_visibility = ["//visibility:public"])
-
 custom_op_library(
     name = "simple_hash_table_kernel.so",
     srcs = [
@@ -40,6 +38,7 @@ py_library(
         ],
     ),
     srcs_version = "PY3",
+    visibility = ["//visibility:public"],
     deps = [
         ":simple_hash_table_op",
     ],

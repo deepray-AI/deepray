@@ -3,8 +3,6 @@ load("@local_config_cuda//cuda:build_defs.bzl", "if_cuda")
 
 licenses(["notice"])  # Apache 2.0
 
-package(default_visibility = ["//visibility:public"])
-
 custom_op_library(
     name = "_flash_attn_ops.so",
     cuda_deps = [
@@ -31,6 +29,7 @@ py_library(
         ":_flash_attn_ops.so",
         "//deepray:options.py",
     ],
+    visibility = ["//visibility:public"],
     deps = [
         "//deepray/utils",
     ],
