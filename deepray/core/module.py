@@ -145,7 +145,8 @@ class Module():
     while validation_steps is None or current_step < validation_steps:
       try:
         t0 = time.time()
-        for _ in tf.range(FLAGS.steps_per_summary):
+        steps, _ = self.steps_to_run(current_step, validation_steps, FLAGS.steps_per_summary)
+        for _ in tf.range(steps):
           self.forward_step(next(eval_input))
           current_step += 1
         elapse_time = time.time() - t0
@@ -157,7 +158,8 @@ class Module():
         for key, value in self.get_metrics_result().items():
           metric_value = value.numpy().astype(float)
           training_status += '  %s=%f' % (key, metric_value)
-        logging.info(training_status)
+        if is_main_process():
+          logging.info(training_status)
       except (tf.errors.OutOfRangeError, StopIteration):
         self.validation_steps = current_step
         if is_main_process():

@@ -52,3 +52,5 @@ dp_workspace2()
 load("@//deepray:workspace0.bzl", "dp_workspace0")
 
 dp_workspace0()
+
+cuda_configure(name = "local_config_cuda")
