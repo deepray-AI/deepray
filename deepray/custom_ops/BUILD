@@ -14,6 +14,7 @@ py_library(
         "//deepray/custom_ops/parquet_dataset",
         "//deepray/custom_ops/simple_hash_table",
         "//deepray/custom_ops/sleep:sleep_op",
+        "//deepray/custom_ops/training_ops",
         "//deepray/custom_ops/zero_out:zero_out_ops",
     ],
 )
