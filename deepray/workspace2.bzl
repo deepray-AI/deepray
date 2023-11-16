@@ -194,10 +194,65 @@ def _tf_repositories():
         build_file = "//third_party/flash_attn:flash_attn.BUILD",
         sha256 = "15f29a1095600ba2a3af688fa96a0a48635edb90fffec56c6eb7c48a4a322d2b",
         strip_prefix = "flash-attention-9818f85fee29ac6b60c9214bce841f8109a18b1b",
-        # patches = [
-        #     "//third_party/flash_attn:flash_attn.patch",
-        # ],
-        # patch_args = ["-p1"],
+        patches = [
+            "//third_party/flash_attn:flash_attn.patch",
+        ],
+        patch_args = ["-p1"],
+    )
+
+    http_archive(
+        name = "tbb",
+        build_file = "//third_party:tbb.BUILD",
+        sha256 = "e75fafb171fcd392fdedac14f1a6d6c6211230c6a38169a0ec279ea0d80b8a22",
+        strip_prefix = "oneTBB-2019_U1",
+        urls = [
+            "https://github.com/01org/tbb/archive/2019_U1.zip",
+        ],
+    )
+
+    http_archive(
+        name = "libcuckoo",
+        build_file = "//third_party:libcuckoo.BUILD",
+        patch_args = ["-p1"],
+        patches = [
+            "//third_party:cuckoohash_map.patch",
+        ],
+        sha256 = "7238436b7346a0edf4ce57c12f43f71af5347b8b15f9bf2f0e24bfdca6225fc5",
+        strip_prefix = "libcuckoo-0.3",
+        urls = [
+            "https://github.com/efficient/libcuckoo/archive/v0.3.zip",
+        ],
+    )
+
+    http_archive(
+        name = "sparsehash",
+        build_file = "//third_party:sparsehash.BUILD",
+        sha256 = "d4a43cad1e27646ff0ef3a8ce3e18540dbcb1fdec6cc1d1cb9b5095a9ca2a755",
+        strip_prefix = "sparsehash-c11-2.11.1",
+        urls = [
+            "https://github.com/sparsehash/sparsehash-c11/archive/v2.11.1.tar.gz",
+        ],
+    )
+
+    http_archive(
+        name = "murmurhash",
+        build_file = "//third_party:murmurhash.BUILD",
+        sha256 = "19a7ccc176ca4185db94047de6847d8a0332e8f4c14e8e88b9048f74bdafe879",
+        strip_prefix = "smhasher-master",
+        urls = [
+            "https://github.com/aappleby/smhasher/archive/master.zip",
+        ],
+    )
+
+    http_archive(
+        name = "farmhash",
+        sha256 = "6560547c63e4af82b0f202cb710ceabb3f21347a4b996db565a411da5b17aba0",
+        build_file = "//third_party:farmhash.BUILD",
+        strip_prefix = "farmhash-816a4ae622e964763ca0862d9dbd19324a1eaf45",
+        urls = [
+            "https://mirror.bazel.build/github.com/google/farmhash/archive/816a4ae622e964763ca0862d9dbd19324a1eaf45.tar.gz",
+            "https://github.com/google/farmhash/archive/816a4ae622e964763ca0862d9dbd19324a1eaf45.tar.gz",
+        ],
     )
 
 def workspace():

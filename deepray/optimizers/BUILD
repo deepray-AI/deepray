@@ -18,5 +18,6 @@ py_test(
     main = "tests/run_all_test.py",
     deps = [
         ":optimizers",
+        "//deepray/custom_ops/training_ops",
     ],
 )
