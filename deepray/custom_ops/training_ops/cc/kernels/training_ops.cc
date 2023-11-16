@@ -24,9 +24,8 @@ limitations under the License.
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/util/tensor_format.h"
 #include "tensorflow/core/util/work_sharder.h"
-// #include "tensorflow/core/kernels/training_op_helpers.h"
-#include "training_op_helpers.h"
-
+#include "tensorflow/core/kernels/training_op_helpers.h"
+// #include "training_op_helpers.h"
 
 #ifdef TENSORFLOW_USE_SYCL
 #include "tensorflow/core/common_runtime/sycl/sycl_util.h"

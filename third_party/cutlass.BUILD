@@ -1,14 +1,17 @@
-# Description:
-#   CUDA Templates for Linear Algebra Subroutines
+load("@local_config_cuda//cuda:build_defs.bzl", "cuda_header_library", "if_cuda")
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
+licenses(["notice"])  # # BSD 3-Clause
 
-cc_library(
+package(default_visibility = ["//visibility:public"])
+
+cuda_header_library(
     name = "cutlass",
-    hdrs = glob([
-        "include/**/*.h",
-        "include/**/*.hpp",
+    hdrs = if_cuda(glob([
+        "include/cutlass/**",
+    ])),
+    includes = if_cuda([
+        "include",
     ]),
-    includes = ["include/"],
+    strip_include_prefix = "include",
     visibility = ["//visibility:public"],
 )

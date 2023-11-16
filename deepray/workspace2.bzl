@@ -194,10 +194,10 @@ def _tf_repositories():
         build_file = "//third_party/flash_attn:flash_attn.BUILD",
         sha256 = "15f29a1095600ba2a3af688fa96a0a48635edb90fffec56c6eb7c48a4a322d2b",
         strip_prefix = "flash-attention-9818f85fee29ac6b60c9214bce841f8109a18b1b",
-        # patches = [
-        #     "//third_party/flash_attn:flash_attn.patch",
-        # ],
-        # patch_args = ["-p1"],
+        patches = [
+            "//third_party/flash_attn:flash_attn.patch",
+        ],
+        patch_args = ["-p1"],
     )
 
     http_archive(

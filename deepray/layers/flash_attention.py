@@ -3,7 +3,7 @@ import tensorflow as tf
 from deepray.custom_ops.flash_attn import gen_flash_attention_ops
 
 
-class FlashAttention(tf.keras.layers.Layer):
+class FlashAttentionLayer(tf.keras.layers.Layer):
   """
   FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness
   Tri Dao, Daniel Y. Fu, Stefano Ermon, Atri Rudra
@@ -51,7 +51,7 @@ class FlashAttention(tf.keras.layers.Layer):
       num_splits(int): How many SMs per attention matrix.
                        SelfAttention default is 1
     """
-    super(FlashAttention, self).__init__(**kwargs)
+    super(FlashAttentionLayer, self).__init__(**kwargs)
     self.num_heads = num_heads
     if dim_head % 8 != 0:
       raise ValueError(
@@ -144,5 +144,5 @@ class FlashAttention(tf.keras.layers.Layer):
 
   def get_config(self):
     config = {'dropout_rate': self.dropout_rate}
-    base_config = super(FlashAttention, self).get_config()
+    base_config = super(FlashAttentionLayer, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))
