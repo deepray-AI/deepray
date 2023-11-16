@@ -186,8 +186,14 @@ VariableInputLockHolder MaybeLockVariableInputMutexesInOrder(
                                  std::move(shared_locks));
 }
 
+// Copy from tensorflow since we cannot use training_op_helpers.h
+// https://github.com/tensorflow/tensorflow/blob/r1.13/tensorflow/core/kernels/training_op_helpers.cc#L23
 void MaybeForwardRefInputToRefOutput(OpKernelContext* ctx, int input,
-                                     int output);
+                                     int output) {
+  if (ctx->input_dtype(input) != DT_RESOURCE) {
+    ctx->forward_ref_input_to_ref_output(input, output);
+  }
+}
 
 // This is for use with ResourceVariables to ensure *tensor has a
 // reference count of 1 before you update it.
