@@ -56,6 +56,7 @@ FLAGS = flags.FLAGS
 if FLAGS.use_dynamic_embedding:
   from tensorflow_recommenders_addons import dynamic_embedding as de
   from tensorflow_recommenders_addons.dynamic_embedding.python.ops.dynamic_embedding_ops import TrainableWrapper, DEResourceVariable
+  # tf.train.Checkpoint = de.train.checkpoint.DEHvdCheckpoint
 else:
   TrainableWrapper, DEResourceVariable = type(None), type(None)
 
@@ -255,10 +256,11 @@ class Trainer(Module):
       self.global_batch_size *= get_world_size()
       learning_rate *= get_world_size()
 
-    if isinstance(optimizer, optimizers.Optimizer):
+    # TODO: fuhailin 
+    # if isinstance(optimizer, optimizers.Optimizer):
       self.optimizer = optimizer
-    else:
-      raise ValueError("Not support opt.")
+    # else:
+    #   raise ValueError("Not support opt.")
     self.use_float16 = common_flags.use_float16()
     if self.use_float16:
       self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, dynamic=True)

@@ -64,6 +64,9 @@ def build_tensor_serving_input_receiver_fn(shape, dtype=tf.float32, batch_size=1
 
 
 def export_to_checkpoint(saver: Union[tf.train.Checkpoint, tf.train.CheckpointManager], checkpoint_number=None):
+  if FLAGS.use_dynamic_embedding:
+    # TFRA not support ckpt yet.
+    return
 
   def helper(name, _saver):
     """Saves model to with provided checkpoint prefix."""
