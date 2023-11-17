@@ -49,4 +49,4 @@ from deepray.optimizers.weight_decay_optimizers import (
 )
 from deepray.optimizers.yogi import Yogi
 from deepray.optimizers.cocob import COCOB
-from deepray.optimizers.adam import AdamOptimizer
+from deepray.optimizers.adam import Adam

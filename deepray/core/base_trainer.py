@@ -258,7 +258,7 @@ class Trainer(Module):
 
     # TODO: fuhailin 
     # if isinstance(optimizer, optimizers.Optimizer):
-      self.optimizer = optimizer
+    self.optimizer = optimizer
     # else:
     #   raise ValueError("Not support opt.")
     self.use_float16 = common_flags.use_float16()
