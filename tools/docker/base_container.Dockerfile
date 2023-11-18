@@ -1,9 +1,8 @@
 #syntax=docker/dockerfile:1.1.5-experimental
-
+ARG CUDA_VERSION=11.6.2
 # Currenly all of our dev images are GPU capable but at a cost of being quite large.
 # See https://github.com/tensorflow/build/pull/47
-ARG CUDA_VERSION=11.6.2
-FROM nvidia/cuda:${CUDA_DOCKER_VERSION}-cudnn8-devel-ubuntu20.04 as base_container
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu20.04 as base_container
 ARG TF_PACKAGE=tensorflow-gpu
 ARG TF_VERSION=2.9.3
 ARG PY_VERSION=3.8
