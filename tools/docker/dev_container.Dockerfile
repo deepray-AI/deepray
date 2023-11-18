@@ -1,11 +1,11 @@
 #syntax=docker/dockerfile:1.1.5-experimental
-ARG IMAGE_TYPE
+ARG CUDA_VERSION=11.6.2
 ARG TF_VERSION=2.9.3
 ARG PY_VERSION=3.8
 
 # Currenly all of our dev images are GPU capable but at a cost of being quite large.
 # See https://github.com/tensorflow/build/pull/47
-ARG CUDA_DOCKER_VERSION=latest-py${PY_VERSION}-tf${TF_VERSION}-cu116-ubuntu20.04
+ARG CUDA_DOCKER_VERSION=latest-py${PY_VERSION}-tf${TF_VERSION}-cu${CUDA_VERSION}-ubuntu20.04
 FROM hailinfufu/deepray-release:${CUDA_DOCKER_VERSION} as dev_container
 
 COPY tools/install_deps /install_deps
