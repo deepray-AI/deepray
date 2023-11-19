@@ -17,7 +17,6 @@ limitations under the License.
 #include "tensorflow/core/framework/shape_inference.h"
 
 namespace tensorflow {
-namespace deepray {
 
 using ::tensorflow::shape_inference::DimensionHandle;
 using ::tensorflow::shape_inference::InferenceContext;
@@ -76,25 +75,6 @@ static Status ApplyAdamShapeFn(InferenceContext* c, bool sparse) {
   return Status::OK();
 }
 
-REGISTER_OP("ApplyAdam")
-    .Input("var: Ref(T)")
-    .Input("m: Ref(T)")
-    .Input("v: Ref(T)")
-    .Input("beta1_power: T")
-    .Input("beta2_power: T")
-    .Input("lr: T")
-    .Input("beta1: T")
-    .Input("beta2: T")
-    .Input("epsilon: T")
-    .Input("grad: T")
-    .Output("out: Ref(T)")
-    .Attr("T: numbertype")
-    .Attr("use_locking: bool = false")
-    .Attr("use_nesterov: bool = false")
-    .SetShapeFn([](InferenceContext* c) {
-      return ApplyAdamShapeFn(c, false /* sparse */);
-    });
-
 REGISTER_OP("SparseApplyAdam")
     .Input("var: Ref(T)")
     .Input("m: Ref(T)")
@@ -152,5 +132,4 @@ REGISTER_OP("ResourceApplyAdam")
       return ApplyAdamShapeFn(c, false /* sparse */);
     });
 
-}  // namespace deepray
 }  // namespace tensorflow

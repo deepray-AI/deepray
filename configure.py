@@ -182,7 +182,7 @@ def configure_cuda():
 
   write("test --config=cuda")
   write("build --config=cuda")
-  write("build:cuda --define=using_cuda=true --define=using_cuda_nvcc=true")
+  write("build:cuda --define=using_cuda=true --define=using_cuda_nvcc=true --@local_config_cuda//:enable_cuda")
   write("build:cuda --crosstool_top=@local_config_cuda//crosstool:toolchain")
 
 

@@ -13,17 +13,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef DEEPRAY_KERNELS_TRAINING_OPS_H_
-#define DEEPRAY_KERNELS_TRAINING_OPS_H_
+#ifndef DEEPRAY_CUSTOM_OPS_TRAINING_OPS_H_
+#define DEEPRAY_CUSTOM_OPS_TRAINING_OPS_H_
 
-#include "tensorflow/core/framework/op_kernel.h"
-#include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/framework/tensor_types.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/platform/types.h"
+#include "unsupported/Eigen/CXX11/Tensor"  // from @eigen_archive
 
 namespace tensorflow {
-namespace deepray {
 namespace functor {
 
 // Each training algorithm has a ApplyXYZ functor struct declared in
@@ -46,7 +44,6 @@ struct SparseApplyAdam {
 };
 
 }  // end namespace functor
-}  // end namespace deepray
-}  // namespace tensorflow
+}  // end namespace tensorflow
 
-#endif  // DEEPRAY_KERNELS_TRAINING_OPS_H_
+#endif  // DEEPRAY_CUSTOM_OPS_TRAINING_OPS_H_

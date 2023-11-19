@@ -16,32 +16,26 @@ limitations under the License.
 #define EIGEN_USE_THREADS
 #include "training_ops.h"
 
-#include <algorithm>
+#include <algorithm>  // NOLINT
 
 #include "tensorflow/core/framework/bounds_check.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
-#include "tensorflow/core/framework/types.h"
-#include "tensorflow/core/util/tensor_format.h"
-#include "tensorflow/core/util/work_sharder.h"
-#include "training_op_helpers.h"
-
-#ifdef TENSORFLOW_USE_SYCL
-#include "tensorflow/core/common_runtime/sycl/sycl_util.h"
-#endif  // TENSORFLOW_USE_SYCL
+#include "tensorflow/core/kernels/training_op_helpers.h"
+#include "tensorflow/core/kernels/variable_ops.h"
+// #include "training_op_helpers.h"
 
 namespace tensorflow {
-namespace deepray {
 
 using CPUDevice = Eigen::ThreadPoolDevice;
 using GPUDevice = Eigen::GpuDevice;
-using SYCLDevice = Eigen::SyclDevice;
 using Index = Eigen::Index;
 
 namespace functor {
+
 template <typename T, typename Tindex>
 struct SparseApplyAdam<CPUDevice, T, Tindex> {
-  Status operator()(const CPUDevice &d, typename TTypes<T>::Matrix var,
+  Status operator()(const CPUDevice& d, typename TTypes<T>::Matrix var,
                     typename TTypes<T>::Matrix m, typename TTypes<T>::Matrix v,
                     typename TTypes<T>::ConstMatrix grad,
                     typename TTypes<T>::ConstScalar beta1_power,
@@ -114,10 +108,10 @@ struct SparseApplyAdam<CPUDevice, T, Tindex> {
                      &alpha](Tindex start_idx, Tindex end_idx) {
         for (Tindex i = start_idx; i < end_idx; i++) {
           const Tindex index = internal::SubtleMustCopy(indices(i));
-          T &var_a = var(index);
-          T &m_a = m(index);
-          T &v_a = v(index);
-          const T &g_i = grad(i);
+          T& var_a = var(index);
+          T& m_a = m(index);
+          T& v_a = v(index);
+          const T& g_i = grad(i);
           m_a += (g_i - m_a) * (static_cast<T>(1) - beta1_scalar);
           v_a += (g_i * g_i - v_a) * (static_cast<T>(1) - beta2_scalar);
           var_a -= (m_a * alpha) / (Eigen::numext::sqrt(v_a) + epsilon_scalar);
@@ -130,16 +124,17 @@ struct SparseApplyAdam<CPUDevice, T, Tindex> {
     return Status::OK();
   }
 };
-}  // End of namespace functor
+
+}  // namespace functor
 
 template <typename Device, typename T, typename Tindex>
 class SparseApplyAdamOp : public OpKernel {
  public:
-  explicit SparseApplyAdamOp(OpKernelConstruction *ctx) : OpKernel(ctx) {
+  explicit SparseApplyAdamOp(OpKernelConstruction* ctx) : OpKernel(ctx) {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("use_locking", &use_exclusive_lock_));
   }
 
-  void Compute(OpKernelContext *ctx) override NO_THREAD_SAFETY_ANALYSIS {
+  void Compute(OpKernelContext* ctx) override NO_THREAD_SAFETY_ANALYSIS {
     const bool sparse = true;
     auto locks = MaybeLockVariableInputMutexesInOrder<Device, T>(
         ctx, use_exclusive_lock_, sparse, {0, 1, 2});
@@ -176,14 +171,14 @@ class SparseApplyAdamOp : public OpKernel {
     OP_REQUIRES(ctx, TensorShapeUtils::IsVectorOrHigher(var.shape()),
                 errors::InvalidArgument("var must be at least 1 dimensional"));
 
-    const Tensor &beta1_power = ctx->input(3);
-    const Tensor &beta2_power = ctx->input(4);
-    const Tensor &lr = ctx->input(5);
-    const Tensor &beta1 = ctx->input(6);
-    const Tensor &beta2 = ctx->input(7);
-    const Tensor &epsilon = ctx->input(8);
-    const Tensor &grad = ctx->input(9);
-    const Tensor &indices = ctx->input(10);
+    const Tensor& beta1_power = ctx->input(3);
+    const Tensor& beta2_power = ctx->input(4);
+    const Tensor& lr = ctx->input(5);
+    const Tensor& beta1 = ctx->input(6);
+    const Tensor& beta2 = ctx->input(7);
+    const Tensor& epsilon = ctx->input(8);
+    const Tensor& grad = ctx->input(9);
+    const Tensor& indices = ctx->input(10);
 
     OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(beta1_power.shape()),
                 errors::InvalidArgument("beta1_power is not a scalar: ",
@@ -223,7 +218,7 @@ class SparseApplyAdamOp : public OpKernel {
         errors::InvalidArgument(
             "grad must be the same size as indices in the first dimension."));
 
-    const Device &device = ctx->template eigen_device<Device>();
+    const Device& device = ctx->template eigen_device<Device>();
     OP_REQUIRES_OK(ctx,
                    functor::SparseApplyAdam<Device, T, Tindex>()(
                        device, var.flat_outer_dims<T>(), m.flat_outer_dims<T>(),
@@ -266,7 +261,7 @@ namespace functor {
 #define DECLARE_GPU_SPEC(T, Tindex)                                      \
   template <>                                                            \
   Status SparseApplyAdam<GPUDevice, T, Tindex>::operator()(              \
-      const GPUDevice &d, typename TTypes<T>::Matrix var,                \
+      const GPUDevice& d, typename TTypes<T>::Matrix var,                \
       typename TTypes<T>::Matrix m, typename TTypes<T>::Matrix v,        \
       typename TTypes<T>::ConstMatrix grad,                              \
       typename TTypes<T>::ConstScalar beta1_power,                       \
@@ -296,5 +291,4 @@ REGISTER_KERNELS(GPU, double, int64);
 #endif  // GOOGLE_CUDA || TENSORFLOW_USE_ROCM
 #undef REGISTER_KERNELS
 
-}  // namespace deepray
 }  // namespace tensorflow

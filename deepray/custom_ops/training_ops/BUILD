@@ -5,7 +5,7 @@ licenses(["notice"])  # Apache 2.0
 custom_op_library(
     name = "_training_ops.so",
     srcs = [
-        "cc/kernels/training_op_helpers.h",
+        # "cc/kernels/training_op_helpers.h",
         "cc/kernels/training_ops.cc",
         "cc/kernels/training_ops.h",
         "cc/ops/training_ops.cc",

@@ -13,8 +13,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef DEEPRAY_TRAINING_OP_HELPERS_H_
-#define DEEPRAY_TRAINING_OP_HELPERS_H_
+#ifndef DEEPRAY_CUSTOM_OPS_TRAINING_OP_HELPERS_H_
+#define DEEPRAY_CUSTOM_OPS_TRAINING_OP_HELPERS_H_
+
+#include <optional>
 
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/tensor.h"
@@ -24,17 +26,33 @@ limitations under the License.
 #include "tensorflow/core/lib/core/refcount.h"
 
 namespace tensorflow {
-namespace deepray {
 
 // Must be called before performing a sparse operation on a variable. Ensures
 // that no concurrent dense operations can happen while holding the variable's
 // lock.
+// @param ctx        OpKernelContext for variable tensor cloning
+// @param var        Variable to be shared
+// @param lock_held  Whether the variable mutex was already held or not
+// NOTE: This function uses variable's `copy_on_read_mode` flag to decide if
+// it should immediately return or continue to lock the variable mutex for more
+// processing, and always sets the `copy_on_read_mode` flag to true when this
+// function returns. However, there is no guarantee that another op won't set
+// the `copy_on_read_mode` flag back to false after this function.
+// Therefore, for the operation that requires `copy_on_read` to stay true during
+// its execution, the caller needs to lock the variable mutex outside and call
+// this function with `lock_held = true` to avoid double locking.
 template <typename Device, typename T>
-Status EnsureSparseVariableAccess(OpKernelContext* ctx, Var* var) {
+Status EnsureSparseVariableAccess(OpKernelContext* ctx, Var* var,
+                                  bool lock_held = false) {
   if (var->copy_on_read_mode.load()) {
     return Status::OK();
   }
-  mutex_lock ml(*var->mu());
+
+  std::optional<mutex_lock> ml;
+  if (!lock_held) {
+    ml.emplace(*var->mu());
+  }
+
   // Once copy-on-read mode is True the refcount is guaranteed to be 1. This can
   // also happen if there are no concurrent reads of the variable and
   // copy-on-read mode is false.
@@ -60,7 +78,7 @@ Status EnsureSparseVariableAccess(OpKernelContext* ctx, Var* var) {
     attr.set_nic_compatible(true);
     TF_RETURN_IF_ERROR(ctx->allocate_temp(var->tensor()->dtype(),
                                           var->tensor()->shape(), &tmp, attr));
-    tensorflow::functor::DenseUpdate<Device, T, ASSIGN> copy_functor;
+    functor::DenseUpdate<Device, T, ASSIGN> copy_functor;
     copy_functor(ctx->eigen_device<Device>(), tmp.flat<T>(),
                  const_cast<const Tensor*>(var->tensor())->flat<T>());
   }
@@ -108,15 +126,11 @@ struct VariableInputLockHolder {
 // `*maybe_resource` will be updated to contain the underlying resource, and the
 // caller will be responsible for calling `Unref()` on that resource.
 template <typename Device, typename T>
-mutex* GetTrainingVariableMutex(OpKernelContext* ctx, int input, bool sparse,
+mutex* GetTrainingVariableMutex(OpKernelContext* ctx, int input,
                                 Var** maybe_resource) {
   *maybe_resource = nullptr;
   if (ctx->input_dtype(input) == DT_RESOURCE) {
     if (LookupResource(ctx, HandleFromInput(ctx, input), maybe_resource).ok()) {
-      if (sparse) {
-        EnsureSparseVariableAccess<Device, T>(ctx, *maybe_resource)
-            .IgnoreError();
-      }
       return (*maybe_resource)->mu();
     } else {
       ctx->CtxFailureWithWarning(
@@ -156,8 +170,7 @@ VariableInputLockHolder MaybeLockVariableInputMutexesInOrder(
   std::vector<int> acquire_order;
   for (auto input : input_ids) {
     Var* var;
-    mutex* mutex =
-        GetTrainingVariableMutex<Device, T>(ctx, input, sparse, &var);
+    mutex* mutex = GetTrainingVariableMutex<Device, T>(ctx, input, &var);
     if (var) vars.push_back(var);
     // Only lock each mutex once if duplicates exist (n^2 but n is 2 or 3).
     if (std::find(mutexes.begin(), mutexes.end(), mutex) == mutexes.end()) {
@@ -168,8 +181,8 @@ VariableInputLockHolder MaybeLockVariableInputMutexesInOrder(
   std::sort(acquire_order.begin(), acquire_order.end(),
             [&mutexes](int a, int b) { return mutexes[a] < mutexes[b]; });
 
-  auto locks = absl::make_unique<std::vector<mutex_lock>>();
-  auto shared_locks = absl::make_unique<std::vector<tf_shared_lock>>();
+  auto locks = std::make_unique<std::vector<mutex_lock>>();
+  auto shared_locks = std::make_unique<std::vector<tf_shared_lock>>();
   locks->reserve(acquire_order.size());
 
   for (auto acquire : acquire_order) {
@@ -182,18 +195,26 @@ VariableInputLockHolder MaybeLockVariableInputMutexesInOrder(
       }
     }
   }
-  return VariableInputLockHolder(std::move(vars), std::move(locks),
-                                 std::move(shared_locks));
+  auto variableInputLock =
+      VariableInputLockHolder(vars, std::move(locks), std::move(shared_locks));
+  if (sparse) {
+    // Enable sparse variables' access.
+    // NOTE: This can not be done before the variable input locks are held,
+    // because a race condition can happen between this and another thread that
+    // turns off some variable's `copy_on_read_mode` after this thread enables
+    // sparse access; when a later function sees `copy_on_read_mode` is off, it
+    // will try to lock the variable again for updating `copy_on_read_mode` and
+    // cause the deadlock, since the variable mutex is non-re-entrant.
+    for (auto* var : vars) {
+      EnsureSparseVariableAccess<Device, T>(ctx, var, /*lock_held=*/true)
+          .IgnoreError();
+    }
+  }
+  return variableInputLock;
 }
 
-// Copy from tensorflow since we cannot use training_op_helpers.h
-// https://github.com/tensorflow/tensorflow/blob/r1.13/tensorflow/core/kernels/training_op_helpers.cc#L23
 void MaybeForwardRefInputToRefOutput(OpKernelContext* ctx, int input,
-                                     int output) {
-  if (ctx->input_dtype(input) != DT_RESOURCE) {
-    ctx->forward_ref_input_to_ref_output(input, output);
-  }
-}
+                                     int output);
 
 // This is for use with ResourceVariables to ensure *tensor has a
 // reference count of 1 before you update it.
@@ -222,7 +243,7 @@ Status PrepareToUpdateVariable(OpKernelContext* ctx, Tensor* tensor,
       attr.set_nic_compatible(true);
       TF_RETURN_IF_ERROR(
           ctx->allocate_temp(tensor->dtype(), tensor->shape(), &tmp, attr));
-      tensorflow::functor::DenseUpdate<Device, T, ASSIGN> copy_functor;
+      functor::DenseUpdate<Device, T, ASSIGN> copy_functor;
       copy_functor(ctx->eigen_device<Device>(), tmp.flat<T>(),
                    const_cast<const Tensor*>(tensor)->flat<T>());
     }
@@ -258,7 +279,7 @@ Status GetInputTensorFromVariable(OpKernelContext* ctx, int input,
   *out = ctx->mutable_input(input, lock_held);
   return Status::OK();
 }
-}  // end namespace deepray
+
 }  // end namespace tensorflow
 
-#endif  // DEEPRAY_TRAINING_OP_HELPERS_H_
+#endif  // DEEPRAY_CUSTOM_OPS_TRAINING_OP_HELPERS_H_

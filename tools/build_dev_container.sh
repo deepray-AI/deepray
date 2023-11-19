@@ -10,7 +10,6 @@ docker build \
     -f tools/docker/dev_container.Dockerfile \
     --build-arg CUDA_VERSION=${CUDA_VERSION} \
     --build-arg TF_VERSION=${TF_VERSION} \
-    --build-arg TF_PACKAGE=tensorflow \
     --build-arg PY_VERSION=$PY_VERSION \
     --target dev_container \
     -t hailinfufu/deepray-dev:latest-py${PY_VERSION}-tf${TF_VERSION}-cu${CUDA_VERSION}-ubuntu20.04 ./
