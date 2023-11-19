@@ -256,7 +256,7 @@ class Trainer(Module):
       self.global_batch_size *= get_world_size()
       learning_rate *= get_world_size()
 
-    # TODO: fuhailin 
+    # TODO: fuhailin
     # if isinstance(optimizer, optimizers.Optimizer):
     self.optimizer = optimizer
     # else:
