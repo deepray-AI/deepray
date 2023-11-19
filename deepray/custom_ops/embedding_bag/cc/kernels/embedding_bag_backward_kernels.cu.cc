@@ -28,7 +28,7 @@ limitations under the License.
 constexpr int MAX_THREADS_PER_BLOCK = 1024;
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 namespace functor {
 
 typedef Eigen::GpuDevice GPUDevice;
@@ -241,7 +241,7 @@ template struct EmbeddingBagBackwardFunctor<GPUDevice, double, int64>;
 template struct EmbeddingBagBackwardFunctor<GPUDevice, float, int64>;
 template struct EmbeddingBagBackwardFunctor<GPUDevice, Eigen::half, int64>;
 }  // namespace functor
-}  // namespace addons
+}  // namespace deepray
 }  // namespace tensorflow
 
 #endif  // GOOGLE_CUDA
