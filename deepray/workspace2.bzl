@@ -255,6 +255,17 @@ def _tf_repositories():
         ],
     )
 
+    http_archive(
+        name = "cuCollections",  # Apache License 2.0
+        # patches = ["//third_party/cucollection:cucollection.patch"],
+        build_file = "//third_party/cucollection:cuco.BUILD",
+        sha256 = "c5c77a1f96b439b67280e86483ce8d5994aa4d14b7627b1d3bd7880be6be23fa",
+        strip_prefix = "cuCollections-193de1aa74f5721717f991ca757dc610c852bb17",
+        urls = [
+            "https://github.com/NVIDIA/cuCollections/archive/193de1aa74f5721717f991ca757dc610c852bb17.zip",
+        ],
+    )
+
 def workspace():
     # Import all other repositories. This should happen before initializing
     # any external repositories, because those come with their own

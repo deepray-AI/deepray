@@ -14,7 +14,7 @@
 # limitations under the License.
 # pylint:disable=missing-docstring, no-self-use, invalid-name
 import tensorflow as tf
-from deepray.custom_ops.distributed_embeddings import embedding_lookup
+from distributed_embeddings import embedding_lookup
 
 
 class EmbeddingLookupTest(tf.test.TestCase):
@@ -25,7 +25,8 @@ class EmbeddingLookupTest(tf.test.TestCase):
     data_a = tf.random.uniform(shape=[batch, max_hotness], minval=1, maxval=max_hotness + 1)
     data_b = tf.random.uniform(shape=[batch], minval=1, maxval=max_hotness + 1)
     # make sure there is no empty row
-    data_c = tf.reshape(tf.eye(max_hotness, batch_shape=[batch // max_hotness + 1]), [-1, max_hotness])[:batch]
+    data_c = tf.reshape(tf.eye(max_hotness, batch_shape=[batch // max_hotness + 1]),
+                        [-1, max_hotness])[:batch]
 
     data_0 = tf.cast((data_a / tf.reshape(data_b, [-1, 1]) + data_c) > 1, tf.int64)
     data_1 = tf.random.uniform(shape=[batch, max_hotness], minval=0, maxval=voc, dtype=tf.int64)
@@ -85,7 +86,8 @@ class EmbeddingLookupTest(tf.test.TestCase):
     data_a = tf.random.uniform(shape=[batch, max_hotness], minval=1, maxval=max_hotness + 1)
     data_b = tf.random.uniform(shape=[batch], minval=1, maxval=max_hotness + 1)
     # make sure there is no empty row
-    data_c = tf.reshape(tf.eye(max_hotness, batch_shape=[batch // max_hotness + 1]), [-1, max_hotness])[:batch]
+    data_c = tf.reshape(tf.eye(max_hotness, batch_shape=[batch // max_hotness + 1]),
+                        [-1, max_hotness])[:batch]
 
     data_0 = tf.cast((data_a / tf.reshape(data_b, [-1, 1]) + data_c) > 1, tf.int64)
     data_1 = tf.random.uniform(shape=[batch, max_hotness], minval=0, maxval=voc, dtype=tf.int64)

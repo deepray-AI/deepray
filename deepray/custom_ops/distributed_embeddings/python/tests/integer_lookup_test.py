@@ -21,7 +21,7 @@ from absl.testing import parameterized
 
 from keras.layers.preprocessing import integer_lookup
 from keras.testing_infra import test_combinations
-from ..layers.embedding import IntegerLookup
+from distributed_embeddings.python.layers.embedding import IntegerLookup
 
 
 # pylint:disable=missing-docstring, no-self-use
