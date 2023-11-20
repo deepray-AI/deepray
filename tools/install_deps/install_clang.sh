@@ -17,9 +17,11 @@ set -x -e
 
 CLANG_VERSION=${1:-"16"}
 
-apt install lsb-release wget software-properties-common gnupg &&
-    wget https://apt.llvm.org/llvm.sh \
-        --progress=dot:mega -O /tmp/llvm-install.sh &&
+apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
+    lsb-release wget software-properties-common gnupg
+
+wget https://apt.llvm.org/llvm.sh \
+    --progress=dot:mega -O /tmp/llvm-install.sh &&
     chmod u+x /tmp/llvm-install.sh &&
     /tmp/llvm-install.sh ${CLANG_VERSION} &&
     /usr/bin/clang-${CLANG_VERSION} --version
