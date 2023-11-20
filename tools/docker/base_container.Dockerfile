@@ -2,7 +2,9 @@
 ARG CUDA_VERSION=11.6.2
 # Currenly all of our dev images are GPU capable but at a cost of being quite large.
 # See https://github.com/tensorflow/build/pull/47
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu20.04 as base_container
+# FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu20.04 as base_container
+FROM nvcr.io/nvidia/tensorflow:22.09-tf2-py3 as base_container
+
 ARG TF_PACKAGE=tensorflow-gpu
 ARG TF_VERSION=2.9.3
 ARG PY_VERSION=3.8
@@ -38,7 +40,7 @@ RUN bash /install_deps/install_python.sh ${PY_VERSION}
 RUN bash /install_deps/install_cmake.sh
 RUN bash /install_deps/install_openmpi.sh
 
-RUN pip install --default-timeout=1000 $TF_PACKAGE==$TF_VERSION
+# RUN pip install --default-timeout=1000 $TF_PACKAGE==$TF_VERSION
 # RUN mkdir -p /usr/local/lib/python${PY_VERSION}/dist-packages/tensorflow/include/third_party/gpus/cuda && \
 #     ln -s /usr/local/cuda/include /usr/local/lib/python${PY_VERSION}/dist-packages/tensorflow/include/third_party/gpus/cuda
 
