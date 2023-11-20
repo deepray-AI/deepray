@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY tools/install_deps /install_deps
-RUN bash /install_deps/install_python.sh ${PY_VERSION}
+# RUN bash /install_deps/install_python.sh ${PY_VERSION}
 
 RUN bash /install_deps/install_cmake.sh
 RUN bash /install_deps/install_openmpi.sh
