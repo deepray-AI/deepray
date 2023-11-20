@@ -14,5 +14,13 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+
+cc_library(
+    name = "libtensorflow_cc",
+    srcs = ["%{TF_SHARED_CC_LIBRARY_NAME}"],
+    visibility = ["//visibility:public"],
+)
+
 %{TF_HEADER_GENRULE}
 %{TF_SHARED_LIBRARY_GENRULE}
+%{TF_SHARED_CC_LIBRARY_GENRULE}

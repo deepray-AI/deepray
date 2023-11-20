@@ -689,10 +689,10 @@ def set_gcc_host_compiler_path(environ_cp):
 
 
 def choose_compiler(environ_cp):
-  question = 'Do you want to use Clang to build TensorFlow?'
-  yes_reply = 'Clang will be used to compile TensorFlow.'
-  no_reply = 'GCC will be used to compile TensorFlow.'
-  var = int(get_var(environ_cp, 'TF_NEED_CLANG', None, True, question, yes_reply, no_reply))
+  question = 'Do you want to use Clang to build Deepray?'
+  yes_reply = 'Clang will be used to compile Deepray.'
+  no_reply = 'GCC will be used to compile Deepray.'
+  var = int(get_var(environ_cp, 'TF_NEED_CLANG', None, False, question, yes_reply, no_reply))
   return var
 
 
@@ -1141,6 +1141,10 @@ def main():
   write_action_env_to_bazelrc("TF_HEADER_DIR", get_tf_header_dir())
   write_action_env_to_bazelrc("TF_SHARED_LIBRARY_DIR", get_tf_shared_lib_dir())
   write_action_env_to_bazelrc("TF_SHARED_LIBRARY_NAME", get_shared_lib_name())
+  write_action_env_to_bazelrc(
+      "TF_SHARED_CC_LIBRARY_NAME",
+      get_shared_lib_name().replace("libtensorflow_framework", "libtensorflow_cc")
+  )
   write_action_env_to_bazelrc("TF_CXX11_ABI_FLAG", tf.sysconfig.CXX11_ABI_FLAG)
   # This should be replaced with a call to tf.sysconfig if it's added
   write_action_env_to_bazelrc("TF_CPLUSPLUS_VER", get_cpp_version())

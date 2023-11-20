@@ -6,6 +6,8 @@ _TF_SHARED_LIBRARY_DIR = "TF_SHARED_LIBRARY_DIR"
 
 _TF_SHARED_LIBRARY_NAME = "TF_SHARED_LIBRARY_NAME"
 
+_TF_SHARED_CC_LIBRARY_NAME = "TF_SHARED_CC_LIBRARY_NAME"
+
 _TF_CXX11_ABI_FLAG = "TF_CXX11_ABI_FLAG"
 
 _TF_CPLUSPLUS_VER = "TF_CPLUSPLUS_VER"
@@ -204,7 +206,9 @@ def _tf_pip_impl(repository_ctx):
 
     tf_shared_library_dir = repository_ctx.os.environ[_TF_SHARED_LIBRARY_DIR]
     tf_shared_library_name = repository_ctx.os.environ[_TF_SHARED_LIBRARY_NAME]
+    tf_shared_cc_library_name = repository_ctx.os.environ[_TF_SHARED_CC_LIBRARY_NAME]
     tf_shared_library_path = "%s/%s" % (tf_shared_library_dir, tf_shared_library_name)
+    tf_shared_cc_library_path = "%s/%s" % (tf_shared_library_dir, tf_shared_cc_library_name)
     tf_cx11_abi = "-D_GLIBCXX_USE_CXX11_ABI=%s" % (repository_ctx.os.environ[_TF_CXX11_ABI_FLAG])
     tf_cplusplus_ver = "-std=%s" % repository_ctx.os.environ[_TF_CPLUSPLUS_VER]
 
@@ -217,10 +221,21 @@ def _tf_pip_impl(repository_ctx):
         [tf_shared_library_name],
     )
 
+    tf_shared_cc_library_rule = _symlink_genrule_for_dir(
+        repository_ctx,
+        None,
+        "",
+        tf_shared_cc_library_name,
+        [tf_shared_cc_library_path],
+        [tf_shared_cc_library_name],
+    )
+
     _tpl(repository_ctx, "BUILD", {
         "%{TF_HEADER_GENRULE}": tf_header_rule,
         "%{TF_SHARED_LIBRARY_GENRULE}": tf_shared_library_rule,
+        "%{TF_SHARED_CC_LIBRARY_GENRULE}": tf_shared_cc_library_rule,
         "%{TF_SHARED_LIBRARY_NAME}": tf_shared_library_name,
+        "%{TF_SHARED_CC_LIBRARY_NAME}": tf_shared_cc_library_name,
     })
 
     _tpl(
@@ -237,6 +252,7 @@ tf_configure = repository_rule(
         _TF_HEADER_DIR,
         _TF_SHARED_LIBRARY_DIR,
         _TF_SHARED_LIBRARY_NAME,
+        _TF_SHARED_CC_LIBRARY_NAME,
         _TF_CXX11_ABI_FLAG,
         _TF_CPLUSPLUS_VER,
     ],

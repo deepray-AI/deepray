@@ -23,7 +23,6 @@ limitations under the License.
 #include "tensorflow/core/framework/register_types.h"
 #include "tensorflow/core/kernels/training_op_helpers.h"
 #include "tensorflow/core/kernels/variable_ops.h"
-// #include "training_op_helpers.h"
 
 namespace tensorflow {
 
