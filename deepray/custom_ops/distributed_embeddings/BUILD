@@ -12,7 +12,10 @@ custom_op_library(
         "cc/ops/embedding_lookup_ops.cc",
     ],
     cuda_srcs = [
-        "cc/kernels/embedding_lookup_kernels.cu",
+        "cc/kernels/embedding_lookup_kernels.cu.cc",
+    ],
+    deps = [
+        "@cuCollections//:cuco_hash_table",
     ],
 )
 

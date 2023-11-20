@@ -17,16 +17,15 @@
 import tensorflow as tf
 
 from tensorflow.python.ops.ragged import ragged_tensor
+from tensorflow.python.platform import resource_loader
 from tensorflow.python.ops import resource_variable_ops
 
-from deepray.utils.resource_loader import LazySO
-
-_distributed_embeddings_so = LazySO('custom_ops/distributed_embeddings/_distributed_embeddings_ops.so')
+ops = tf.load_op_library(resource_loader.get_path_to_datafile('_embedding_lookup_ops.so'))
 
 
 def read_var_no_copy(res_var):
   resource_variable_ops.variable_accessed(res_var)
-  return _distributed_embeddings_so.ops.read_variable_no_copy(res_var.handle, dtype=res_var.dtype)
+  return ops.read_variable_no_copy(res_var.handle, dtype=res_var.dtype)
 
 
 @tf.RegisterGradient("ReadVariableNoCopy")
@@ -71,28 +70,30 @@ def embedding_lookup(param, ids, combiner=None):
     try:
       dim_0 = tf.shape(ids, out_type=tf.int32)[0] if ids.shape[0] is None else ids.shape[0]
     except:  # pylint: disable=bare-except
-      dim_0 = tf.shape(ids.row_splits, out_type=tf.int32)[0] - 1 if ids.shape[0] is None else ids.shape[0]
-    num_input = tf.shape(ids.values, out_type=tf.int32)[0] if ids.values.shape[0] is None else ids.values.shape[0]
+      dim_0 = tf.shape(ids.row_splits,
+                       out_type=tf.int32)[0] - 1 if ids.shape[0] is None else ids.shape[0]
+    num_input = tf.shape(
+        ids.values, out_type=tf.int32)[0] if ids.values.shape[0] is None else ids.values.shape[0]
     if dim_0 == num_input:
       return tf.nn.embedding_lookup(param, ids.values)
-    return _distributed_embeddings_so.ops.embedding_lookup_variable_hotness(
-        read_var_no_copy(param), ids.values, ids.row_splits, combiner
-    )
+    return ops.embedding_lookup_variable_hotness(read_var_no_copy(param), ids.values,
+                                                 ids.row_splits, combiner)
   if isinstance(ids, tf.SparseTensor):
     # sparse is ordered but may not be right-ragged. so we generate offset here
     # avoid d2h copy in eager mode by using sparsetensor's shape directly
     dim_0 = tf.shape(ids, out_type=tf.int32)[0] if ids.shape[0] is None else ids.shape[0]
-    num_input = tf.shape(ids.values, out_type=tf.int32)[0] if ids.values.shape[0] is None else ids.values.shape[0]
+    num_input = tf.shape(
+        ids.values, out_type=tf.int32)[0] if ids.values.shape[0] is None else ids.values.shape[0]
     if dim_0 == num_input:
       return tf.nn.embedding_lookup(param, ids.values)
     # use custom op to avoid bad XLA bahavior and d2h copy caused by searchsorted
-    row_splits = _distributed_embeddings_so.ops.row_to_split(ids.indices, dim_0)
+    row_splits = ops.row_to_split(ids.indices, dim_0)
     # we really want ids.values and row_splits to be same dtype to simplify things
     # since max(row_splits) here is likely ~total hotness, int32 should be ok
     # TODO(Deyu): fuse this cast into above row_to_split function and make always int32
-    return _distributed_embeddings_so.ops.embedding_lookup_variable_hotness(
-        read_var_no_copy(param), ids.values, tf.cast(row_splits, dtype=ids.values.dtype), combiner
-    )
+    return ops.embedding_lookup_variable_hotness(read_var_no_copy(param), ids.values,
+                                                 tf.cast(row_splits, dtype=ids.values.dtype),
+                                                 combiner)
   dim1 = tf.shape(ids, out_type=tf.int32)[1] if ids.shape[1] is None else ids.shape[1]
   if dim1 == 1:
     return tf.nn.embedding_lookup(param, tf.squeeze(ids, [1]))
@@ -115,9 +116,8 @@ def _embedding_lookup_variable_hotness_grad(op, grad):
   param_shape = tf.shape(op.inputs[0])
   flat_ids = tf.reshape(op.inputs[1], [-1])
   offsets = op.inputs[2]
-  unique_ids, unique_grad = _distributed_embeddings_so.ops.embedding_lookup_variable_hotness_grad(
-      flat_ids, offsets, grad, op.inputs[0], combiner=op.get_attr('combiner')
-  )
+  unique_ids, unique_grad = ops.embedding_lookup_variable_hotness_grad(
+      flat_ids, offsets, grad, op.inputs[0], combiner=op.get_attr('combiner'))
 
   return (tf.IndexedSlices(unique_grad, unique_ids, param_shape), None, None)
 
@@ -125,4 +125,4 @@ def _embedding_lookup_variable_hotness_grad(op, grad):
 def integer_lookup(table, count, keys, capacity):
   resource_variable_ops.variable_accessed(table)
   resource_variable_ops.variable_accessed(count)
-  return _distributed_embeddings_so.ops.integer_lookup(table.handle, count.handle, keys, capacity, count.dtype)
+  return ops.integer_lookup(table.handle, count.handle, keys, capacity, count.dtype)

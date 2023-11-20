@@ -26,5 +26,7 @@ cmake(
     out_headers_only = True,
     out_include_dir = "include/eigen3",
     # Dependency on other cmake_external rule; can also depend on cc_import, cc_library rules
-    deps = ["@openblas"],
+    deps = [
+        "@com_github_OpenMathLib_OpenBLAS//:openblas",
+    ],
 )

@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
 
-export TF_NEED_CUDA=1
-python ./configure.py
+yes "" | bash ./configure || true
 
 # bazel build build_pip_pkg \
 #     --action_env=HTTP_PROXY=http://127.0.0.1:7890 \

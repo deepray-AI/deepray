@@ -47,16 +47,16 @@ def _tf_repositories():
         sha256 = "8586084f71f9bde545ee7fa6d00288b264a2b7ac3607b974e54d13e7162c1c72",
     )
 
-    OPENBLAS_VERSION = "0.3.23"
+    OPENBLAS_VERSION = "0.3.25"
     http_archive(
-        name = "openblas",
+        name = "com_github_OpenMathLib_OpenBLAS",
         urls = [
-            "https://github.com/xianyi/OpenBLAS/releases/download/v{tag}/OpenBLAS-{tag}.tar.gz".format(tag = OPENBLAS_VERSION),
+            "https://github.com/OpenMathLib/OpenBLAS/releases/download/v{tag}/OpenBLAS-{tag}.tar.gz".format(tag = OPENBLAS_VERSION),
         ],
         type = "tar.gz",
         strip_prefix = "OpenBLAS-{}".format(OPENBLAS_VERSION),
         build_file = Label("//third_party:openblas.BUILD"),
-        sha256 = "5d9491d07168a5d00116cdc068a40022c3455bf9293c7cb86a65b1054d7e5114",
+        # sha256 = "5d9491d07168a5d00116cdc068a40022c3455bf9293c7cb86a65b1054d7e5114",
     )
 
     ARROW_VERSION = "7.0.0"
@@ -252,6 +252,17 @@ def _tf_repositories():
         urls = [
             "https://mirror.bazel.build/github.com/google/farmhash/archive/816a4ae622e964763ca0862d9dbd19324a1eaf45.tar.gz",
             "https://github.com/google/farmhash/archive/816a4ae622e964763ca0862d9dbd19324a1eaf45.tar.gz",
+        ],
+    )
+
+    http_archive(
+        name = "cuCollections",  # Apache License 2.0
+        # patches = ["//third_party/cucollection:cucollection.patch"],
+        build_file = "//third_party/cucollection:cuco.BUILD",
+        sha256 = "c5c77a1f96b439b67280e86483ce8d5994aa4d14b7627b1d3bd7880be6be23fa",
+        strip_prefix = "cuCollections-193de1aa74f5721717f991ca757dc610c852bb17",
+        urls = [
+            "https://github.com/NVIDIA/cuCollections/archive/193de1aa74f5721717f991ca757dc610c852bb17.zip",
         ],
     )
 

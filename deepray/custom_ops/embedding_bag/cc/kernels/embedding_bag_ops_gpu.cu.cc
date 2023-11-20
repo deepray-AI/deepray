@@ -22,7 +22,7 @@ limitations under the License.
 #include "tensorflow/core/util/gpu_kernel_helper.h"
 
 namespace tensorflow {
-namespace addons {
+namespace deepray {
 
 typedef Eigen::GpuDevice GPUDevice;
 
@@ -102,7 +102,7 @@ DECLARE_GPU_SPECS(double);
 #undef DECLARE_GPU_SPECS
 
 }  // namespace functor
-}  // namespace addons
+}  // namespace deepray
 }  // namespace tensorflow
 
 #endif  // GOOGLE_CUDA
