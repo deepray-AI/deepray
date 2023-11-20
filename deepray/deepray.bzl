@@ -11,6 +11,7 @@ def custom_op_library(
         **kwargs):
     deps = deps + [
         "@local_config_tf//:libtensorflow_framework",
+        "@local_config_tf//:libtensorflow_cc",
         "@local_config_tf//:tf_header_lib",
     ]
 
