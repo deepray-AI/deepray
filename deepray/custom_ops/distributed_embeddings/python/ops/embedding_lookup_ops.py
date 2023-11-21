@@ -70,20 +70,16 @@ def embedding_lookup(param, ids, combiner=None):
     try:
       dim_0 = tf.shape(ids, out_type=tf.int32)[0] if ids.shape[0] is None else ids.shape[0]
     except:  # pylint: disable=bare-except
-      dim_0 = tf.shape(ids.row_splits,
-                       out_type=tf.int32)[0] - 1 if ids.shape[0] is None else ids.shape[0]
-    num_input = tf.shape(
-        ids.values, out_type=tf.int32)[0] if ids.values.shape[0] is None else ids.values.shape[0]
+      dim_0 = tf.shape(ids.row_splits, out_type=tf.int32)[0] - 1 if ids.shape[0] is None else ids.shape[0]
+    num_input = tf.shape(ids.values, out_type=tf.int32)[0] if ids.values.shape[0] is None else ids.values.shape[0]
     if dim_0 == num_input:
       return tf.nn.embedding_lookup(param, ids.values)
-    return ops.embedding_lookup_variable_hotness(read_var_no_copy(param), ids.values,
-                                                 ids.row_splits, combiner)
+    return ops.embedding_lookup_variable_hotness(read_var_no_copy(param), ids.values, ids.row_splits, combiner)
   if isinstance(ids, tf.SparseTensor):
     # sparse is ordered but may not be right-ragged. so we generate offset here
     # avoid d2h copy in eager mode by using sparsetensor's shape directly
     dim_0 = tf.shape(ids, out_type=tf.int32)[0] if ids.shape[0] is None else ids.shape[0]
-    num_input = tf.shape(
-        ids.values, out_type=tf.int32)[0] if ids.values.shape[0] is None else ids.values.shape[0]
+    num_input = tf.shape(ids.values, out_type=tf.int32)[0] if ids.values.shape[0] is None else ids.values.shape[0]
     if dim_0 == num_input:
       return tf.nn.embedding_lookup(param, ids.values)
     # use custom op to avoid bad XLA bahavior and d2h copy caused by searchsorted
@@ -91,9 +87,9 @@ def embedding_lookup(param, ids, combiner=None):
     # we really want ids.values and row_splits to be same dtype to simplify things
     # since max(row_splits) here is likely ~total hotness, int32 should be ok
     # TODO(Deyu): fuse this cast into above row_to_split function and make always int32
-    return ops.embedding_lookup_variable_hotness(read_var_no_copy(param), ids.values,
-                                                 tf.cast(row_splits, dtype=ids.values.dtype),
-                                                 combiner)
+    return ops.embedding_lookup_variable_hotness(
+        read_var_no_copy(param), ids.values, tf.cast(row_splits, dtype=ids.values.dtype), combiner
+    )
   dim1 = tf.shape(ids, out_type=tf.int32)[1] if ids.shape[1] is None else ids.shape[1]
   if dim1 == 1:
     return tf.nn.embedding_lookup(param, tf.squeeze(ids, [1]))
@@ -117,7 +113,8 @@ def _embedding_lookup_variable_hotness_grad(op, grad):
   flat_ids = tf.reshape(op.inputs[1], [-1])
   offsets = op.inputs[2]
   unique_ids, unique_grad = ops.embedding_lookup_variable_hotness_grad(
-      flat_ids, offsets, grad, op.inputs[0], combiner=op.get_attr('combiner'))
+      flat_ids, offsets, grad, op.inputs[0], combiner=op.get_attr('combiner')
+  )
 
   return (tf.IndexedSlices(unique_grad, unique_ids, param_shape), None, None)
 

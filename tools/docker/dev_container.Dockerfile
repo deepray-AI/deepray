@@ -18,7 +18,7 @@ RUN bash /install_deps/install_clang.sh
 RUN git clone --depth 1 https://github.com/deepray-AI/deepray.git /deepray
 WORKDIR /deepray
 
-RUN yes "" | bash ./configure || true
+RUN printf '\n\nn' | bash ./configure || true
 # Build
 RUN bazel build \
     --noshow_progress \

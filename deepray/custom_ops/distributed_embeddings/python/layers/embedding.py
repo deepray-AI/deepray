@@ -69,21 +69,22 @@ class Embedding(tf.keras.layers.Layer):
   Embedding picked from last input dimension will be reduced with given combiner.
   """
 
-  def __init__(self,
-               input_dim,
-               output_dim,
-               embeddings_initializer='uniform',
-               embeddings_regularizer=None,
-               activity_regularizer=None,
-               embeddings_constraint=None,
-               combiner=None,
-               use_custom_kernel=True,
-               **kwargs):
+  def __init__(
+      self,
+      input_dim,
+      output_dim,
+      embeddings_initializer='uniform',
+      embeddings_regularizer=None,
+      activity_regularizer=None,
+      embeddings_constraint=None,
+      combiner=None,
+      use_custom_kernel=True,
+      **kwargs
+  ):
     if 'input_shape' not in kwargs:
       kwargs['input_shape'] = (None,)
     if input_dim <= 0 or output_dim <= 0:
-      raise ValueError(
-          f'Both input_dim and output_dim should be positive, found {input_dim} and {output_dim}')
+      raise ValueError(f'Both input_dim and output_dim should be positive, found {input_dim} and {output_dim}')
     if (not base_layer_utils.v2_dtype_behavior_enabled() and 'dtype' not in kwargs):
       # In TF1, the dtype defaults to the input dtype which is typically int32,
       # so explicitly set it to floatx
@@ -103,12 +104,14 @@ class Embedding(tf.keras.layers.Layer):
 
   @tf_utils.shape_type_conversion
   def build(self, input_shape):  # pylint: disable=unused-argument
-    self.embeddings = self.add_weight(shape=(self.input_dim, self.output_dim),
-                                      initializer=self.embeddings_initializer_cpu,
-                                      name='embeddings',
-                                      regularizer=self.embeddings_regularizer,
-                                      constraint=self.embeddings_constraint,
-                                      experimental_autocast=False)
+    self.embeddings = self.add_weight(
+        shape=(self.input_dim, self.output_dim),
+        initializer=self.embeddings_initializer_cpu,
+        name='embeddings',
+        regularizer=self.embeddings_regularizer,
+        constraint=self.embeddings_constraint,
+        experimental_autocast=False
+    )
     self.built = True
 
   @tf_utils.shape_type_conversion
@@ -184,9 +187,7 @@ class ConcatOneHotEmbedding(tf.keras.layers.Layer):
     self.embedding_width = embedding_width
     self._offsets_np = np.array([0] + feature_sizes).cumsum()
 
-    self.params = self.add_weight("params",
-                                  shape=[self._offsets_np[-1], self.embedding_width],
-                                  dtype=tf.float32)
+    self.params = self.add_weight("params", shape=[self._offsets_np[-1], self.embedding_width], dtype=tf.float32)
     self.offsets = tf.constant(self._offsets_np, dtype=tf.int32)
 
   def call(self, inputs):
@@ -226,11 +227,9 @@ class IntegerLookup(tf.keras.layers.Layer):
       self.table = tf.Variable(tf.zeros((2 * int(1.5 * self.capacity),), tf.int64), trainable=False)
     else:
       with tf.device('/CPU'):
-        self.table = tf.lookup.experimental.DenseHashTable(key_dtype=tf.int64,
-                                                           value_dtype=tf.int64,
-                                                           default_value=0,
-                                                           empty_key=-2,
-                                                           deleted_key=-3)
+        self.table = tf.lookup.experimental.DenseHashTable(
+            key_dtype=tf.int64, value_dtype=tf.int64, default_value=0, empty_key=-2, deleted_key=-3
+        )
 
         # TODO(deyuf): benchmark code that handles max_token for cpu table
         self.table.insert(-1, 0)
