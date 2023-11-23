@@ -130,6 +130,7 @@ class Module():
     """
     self.callbacks.on_epoch_end(epoch, epoch_logs)
 
+
   def evaluate(self, eval_input: tf.data.Dataset, eval_steps: int = None):
     """Returns the loss value & metrics values for the model in test mode.
 
@@ -166,9 +167,13 @@ class Module():
       if self.eval_steps is not None:
         eval_steps = self.eval_steps
     else:
+
+      if self.eval_steps is None:
+        self.eval_steps = eval_steps
       """Runs validation steps and aggregate metrics."""
       if self.eval_steps is None:
         self.eval_steps = eval_steps
+
     if not isinstance(eval_input, Iterator):
       eval_input = distribution_utils.make_distributed_iterator(self.strategy, eval_input)
 

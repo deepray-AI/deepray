@@ -13,11 +13,12 @@ COPY tools/install_deps /install_deps
 RUN bash /install_deps/buildifier.sh
 RUN bash /install_deps/clang-format.sh
 RUN bash /install_deps/install_bazelisk.sh
+RUN bash /install_deps/install_clang.sh
 
 RUN git clone --depth 1 https://github.com/deepray-AI/deepray.git /deepray
 WORKDIR /deepray
 
-RUN python configure.py
+RUN printf '\n\nn' | bash ./configure || true
 # Build
 RUN bazel build \
     --noshow_progress \

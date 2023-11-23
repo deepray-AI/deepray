@@ -81,9 +81,7 @@ class EmbeddingTest(keras_parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def test_ragged_input(self):
-    layer = embedding.Embedding(input_dim=3,
-                                output_dim=2,
-                                weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])])
+    layer = embedding.Embedding(input_dim=3, output_dim=2, weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])])
     inputs = tf.keras.layers.Input(shape=(None,), dtype=tf.int64, ragged=True)
     outputs = layer(inputs)
 
@@ -92,18 +90,15 @@ class EmbeddingTest(keras_parameterized.TestCase):
     ids = ragged_factory_ops.constant([[1, 2, 2], [0], [1, 2]], ragged_rank=1)
     outputs = model.predict(ids)
 
-    ref_layer = tf.keras.layers.Embedding(input_dim=3,
-                                          output_dim=2,
-                                          weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])])
+    ref_layer = tf.keras.layers.Embedding(input_dim=3, output_dim=2, weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])])
     ref_outputs = ref_layer(ids)
     self.assertAllEqual(outputs, ref_outputs)
 
   @keras_parameterized.run_all_keras_modes
   def test_ragged_input_with_mean_combiner(self):
-    layer = embedding.Embedding(input_dim=3,
-                                output_dim=2,
-                                combiner='mean',
-                                weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])])
+    layer = embedding.Embedding(
+        input_dim=3, output_dim=2, combiner='mean', weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])]
+    )
     inputs = tf.keras.layers.Input(shape=(None,), dtype=tf.int64, ragged=True)
     outputs = layer(inputs)
 
@@ -114,10 +109,9 @@ class EmbeddingTest(keras_parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def test_sparse_input_with_mean_combiner(self):
-    layer = embedding.Embedding(input_dim=3,
-                                output_dim=2,
-                                combiner='mean',
-                                weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])])
+    layer = embedding.Embedding(
+        input_dim=3, output_dim=2, combiner='mean', weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])]
+    )
     inputs = tf.keras.layers.Input(shape=(None,), dtype=tf.int64, sparse=True)
     outputs = layer(inputs)
 
@@ -125,9 +119,10 @@ class EmbeddingTest(keras_parameterized.TestCase):
     model.run_eagerly = testing_utils.should_run_eagerly()
 
     outputs = model.predict(
-        tf.sparse.SparseTensor(indices=[[0, 0], [0, 1], [0, 2], [1, 0], [2, 0], [2, 1]],
-                               values=[1, 2, 2, 0, 1, 2],
-                               dense_shape=[3, 4]))
+        tf.sparse.SparseTensor(
+            indices=[[0, 0], [0, 1], [0, 2], [1, 0], [2, 0], [2, 1]], values=[1, 2, 2, 0, 1, 2], dense_shape=[3, 4]
+        )
+    )
     self.assertAllEqual(outputs, [[5., 3.], [0., 3.], [4., 3.5]])
 
   @combinations.generate(combinations.combine(mode=['eager']))
