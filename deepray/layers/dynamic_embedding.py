@@ -110,6 +110,12 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
       **kwargs
   ):
     super(DistributedDynamicEmbedding, self).__init__()
+    self.embedding_dim = embedding_dim
+    self.key_dtype = key_dtype
+    self.value_dtype = value_dtype
+    self.initializer = initializer
+    self.de_option = de_option
+
     if de_option.device_name == "Redis":
       self.emb = EmbeddingLayerRedis(
           embedding_size=embedding_dim,
@@ -143,7 +149,6 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
           key_dtype=key_dtype,
           value_dtype=value_dtype,
           initializer=initializer,
-          name=name,
           devices=de_option.devices,
           init_capacity=de_option.init_capacity,
           kv_creator=de_option.kv_creator,
@@ -153,6 +158,20 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
 
   def call(self, ids, *args, **kwargs):
     return self.emb(ids)
+
+  def get_config(self):
+    config = super().get_config()
+    config.update(
+        {
+            "embedding_dim": self.embedding_dim,
+            "key_dtype": self.key_dtype,
+            "value_dtype": self.value_dtype,
+            "initializer": self.initializer,
+            "name": self.name,
+            "de_option": self.de_option,
+        }
+    )
+    return config
 
 
 class CompositionalEmbedding(tf.keras.layers.Layer):

@@ -116,7 +116,7 @@ class Module():
       if self.metric_container:
         self.metric_container.reset_state()
 
-      val_logs = self.run_evaluation(eval_input, self.eval_steps)
+      val_logs = self.evaluate(eval_input, self.eval_steps)
       val_logs = {'val_' + name: val for name, val in val_logs.items()}
       epoch_logs.update(val_logs)
 
@@ -130,14 +130,50 @@ class Module():
     """
     self.callbacks.on_epoch_end(epoch, epoch_logs)
 
-  def run_evaluation(self, eval_input, eval_steps=None):
+
+  def evaluate(self, eval_input: tf.data.Dataset, eval_steps: int = None):
+    """Returns the loss value & metrics values for the model in test mode.
+
+    Computation is done in batches (see the `batch_size` arg.)
+
+    Args:
+        eval_input: Target data. Like the input data `x`, it could be either Numpy
+          array(s) or TensorFlow tensor(s). It should be consistent with `x`
+          (you cannot have Numpy inputs and tensor targets, or inversely).
+          If `x` is a dataset, generator or `keras.utils.Sequence` instance,
+          `y` should not be specified (since targets will be obtained from
+          the iterator/dataset).
+        eval_steps: Integer or `None`. Total number of steps (batches of samples)
+          before declaring the evaluation round finished. Ignored with the
+          default value of `None`. If x is a `tf.data` dataset and `steps`
+          is None, 'evaluate' will run until the dataset is exhausted. This
+          argument is not supported with array inputs.
+
+
+    See the discussion of `Unpacking behavior for iterator-like inputs` for
+    `Model.fit`.
+
+    Returns:
+        Scalar test loss (if the model has a single output and no metrics)
+        or list of scalars (if the model has multiple outputs
+        and/or metrics). The attribute `model.metrics_names` will give you
+        the display labels for the scalar outputs.
+
+    Raises:
+        RuntimeError: If `trainer.evaluate` is wrapped in a `tf.function`.
+    """
+
     if eval_steps is None:
       if self.eval_steps is not None:
         eval_steps = self.eval_steps
     else:
+
       if self.eval_steps is None:
         self.eval_steps = eval_steps
-    """Runs validation steps and aggregate metrics."""
+      """Runs validation steps and aggregate metrics."""
+      if self.eval_steps is None:
+        self.eval_steps = eval_steps
+
     if not isinstance(eval_input, Iterator):
       eval_input = distribution_utils.make_distributed_iterator(self.strategy, eval_input)
 
@@ -163,7 +199,7 @@ class Module():
       except (tf.errors.OutOfRangeError, StopIteration):
         self.eval_steps = current_step
         if is_main_process():
-          logging.info('Data exhausted after %d steps', current_step)
+          logging.info('Data exhausted after %d eval_steps', current_step)
         break
 
     return self.get_metrics_result()

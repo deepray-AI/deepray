@@ -472,13 +472,13 @@ class Trainer(Module):
             with array inputs.
             When using `tf.distribute.experimental.ParameterServerStrategy`:
               * `steps_per_epoch=None` is not supported.
-        validation_steps: Only relevant if `validation_data` is provided and
+        eval_steps: Only relevant if `validation_data` is provided and
             is a `tf.data` dataset. Total number of steps (batches of
             samples) to draw before stopping when performing validation
-            at the end of every epoch. If 'validation_steps' is None,
+            at the end of every epoch. If 'eval_steps' is None,
             validation will run until the `validation_data` dataset is
             exhausted. In the case of an infinitely repeated dataset, it
-            will run into an infinite loop. If 'validation_steps' is
+            will run into an infinite loop. If 'eval_steps' is
             specified and only part of the dataset will be consumed, the
             evaluation will start from the beginning of the dataset at each
             epoch. This ensures that the same validation samples are used
@@ -552,7 +552,7 @@ class Trainer(Module):
             and what the model expects or when the input data is empty.
     """
     self.steps_per_epoch = steps_per_epoch if steps_per_epoch else -1
-    self.validation_steps = eval_steps
+    self.eval_steps = eval_steps
     if FLAGS.benchmark or FLAGS.stop_steps >= 0:
       if FLAGS.stop_steps >= 0:
         self.steps_per_epoch = FLAGS.stop_steps

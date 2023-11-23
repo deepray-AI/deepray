@@ -20,48 +20,32 @@ https://github.com/tensorflow/tensorflow/blob/r1.13/tensorflow/contrib/opt/pytho
 from __future__ import absolute_import, division, print_function
 
 from tensorflow.python.ops import math_ops
-from tensorflow.python.training import adam as tf_adam
+from tensorflow.python.keras.optimizer_v2 import adam as tf_adam
 
 from deepray.custom_ops.training_ops import gen_training_ops
 
 
-class AdamOptimizer(tf_adam.AdamOptimizer):
+class Adam(tf_adam.Adam):
   """Deepray Adam optimizer for efficient sparse updates"""
 
-  def _apply_sparse_shared(self, grad, var, indices, scatter_add):
+  def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     m = self.get_slot(var, 'm')
     v = self.get_slot(var, 'v')
-    beta1_power, beta2_power = self._get_beta_accumulators()
-    return gen_training_ops.sparse_apply_adam(
-        var,
-        m,
-        v,
-        math_ops.cast(beta1_power, var.dtype.base_dtype),
-        math_ops.cast(beta2_power, var.dtype.base_dtype),
-        math_ops.cast(self._lr_t, var.dtype.base_dtype),
-        math_ops.cast(self._beta1_t, var.dtype.base_dtype),
-        math_ops.cast(self._beta2_t, var.dtype.base_dtype),
-        math_ops.cast(self._epsilon_t, var.dtype.base_dtype),
-        grad,
-        indices,
-        use_locking=self._use_locking
-    )
-
-  def _resource_apply_sparse_shared(self, grad, var, indices, scatter_add):
-    m = self.get_slot(var, 'm')
-    v = self.get_slot(var, 'v')
-    beta1_power, beta2_power = self._get_beta_accumulators()
+    var_device, var_dtype = var.device, var.dtype.base_dtype
+    coefficients = ((apply_state or {}).get((var_device, var_dtype))
+                    or self._fallback_apply_state(var_device, var_dtype))
+    # beta1_power, beta2_power = self._get_beta_accumulators()
     return gen_training_ops.resource_sparse_apply_adam(
-        var.handle,
-        m.handle,
-        v.handle,
-        math_ops.cast(beta1_power, grad.dtype.base_dtype),
-        math_ops.cast(beta2_power, grad.dtype.base_dtype),
-        math_ops.cast(self._lr_t, grad.dtype.base_dtype),
-        math_ops.cast(self._beta1_t, grad.dtype.base_dtype),
-        math_ops.cast(self._beta2_t, grad.dtype.base_dtype),
-        math_ops.cast(self._epsilon_t, grad.dtype.base_dtype),
-        grad,
-        indices,
+        var=var.handle,
+        m=m.handle,
+        v=v.handle,
+        beta1_power=coefficients['beta_1_power'],
+        beta2_power=coefficients['beta_2_power'],
+        lr=coefficients['lr_t'],
+        beta1=coefficients['beta_1_t'],
+        beta2=coefficients['beta_2_t'],
+        epsilon=coefficients['epsilon'],
+        grad=grad,
+        indices=indices,
         use_locking=self._use_locking
     )
