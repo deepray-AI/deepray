@@ -34,10 +34,10 @@ pip-wheel-metadata
 *.iml
 
 # Build
-/.bazelrc
 /bazel-*
 /artifacts
-.bazelrc
+/.bazelrc.user
+/.dp_configure.bazelrc
 
 .coverage*
 htmlcov

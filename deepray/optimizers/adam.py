@@ -32,8 +32,9 @@ class Adam(tf_adam.Adam):
     m = self.get_slot(var, 'm')
     v = self.get_slot(var, 'v')
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = ((apply_state or {}).get((var_device, var_dtype))
-                    or self._fallback_apply_state(var_device, var_dtype))
+    coefficients = (
+        (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
+    )
     # beta1_power, beta2_power = self._get_beta_accumulators()
     return gen_training_ops.resource_sparse_apply_adam(
         var=var.handle,
