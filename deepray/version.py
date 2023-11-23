@@ -15,7 +15,7 @@
 """Define Deepray version information."""
 
 # Required TensorFlow version [min, max)
-INCLUSIVE_MIN_TF_VERSION = "2.9.3"
+INCLUSIVE_MIN_TF_VERSION = "2.9.1"
 EXCLUSIVE_MAX_TF_VERSION = "2.13.0"
 
 # We follow Semantic Versioning (https://semver.org/)

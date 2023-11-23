@@ -3,8 +3,8 @@
 set -x -e
 
 PY_VERSION=${1:-"3.8"}
-TF_VERSION=${2:-"2.9.3"}
-CUDA_VERSION=${3:-"11.6.2"}
+TF_VERSION=${2:-"2.9.1"}
+CUDA_VERSION=${3:-"11.8.0"}
 
 docker build \
     -f tools/docker/dev_container.Dockerfile \
