@@ -56,7 +56,7 @@ FLAGS = flags.FLAGS
 if FLAGS.use_dynamic_embedding:
   from tensorflow_recommenders_addons import dynamic_embedding as de
   from tensorflow_recommenders_addons.dynamic_embedding.python.ops.dynamic_embedding_ops import TrainableWrapper, DEResourceVariable
-  # tf.train.Checkpoint = de.train.checkpoint.DEHvdCheckpoint
+  tf.train.Checkpoint = de.train.checkpoint.DEHvdCheckpoint
 else:
   TrainableWrapper, DEResourceVariable = type(None), type(None)
 

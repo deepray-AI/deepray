@@ -70,7 +70,7 @@ class Module():
 
     self._steps_from_save += steps
 
-    if is_main_process() and self._steps_from_save >= FLAGS.save_checkpoint_steps:
+    if self._steps_from_save >= FLAGS.save_checkpoint_steps:
       export.export_to_checkpoint(self.manager, self.current_step)
       self._steps_from_save = 0
 

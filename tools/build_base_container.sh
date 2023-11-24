@@ -8,6 +8,7 @@ CUDA_VERSION=${3:-"11.8.0"}
 
 docker build \
     -f tools/docker/base_container.Dockerfile \
+    --network=host \
     --build-arg CUDA_VERSION=${CUDA_VERSION} \
     --build-arg TF_VERSION=${TF_VERSION} \
     --build-arg TF_PACKAGE=tensorflow-gpu \
