@@ -130,7 +130,6 @@ class Module():
     """
     self.callbacks.on_epoch_end(epoch, epoch_logs)
 
-
   def evaluate(self, eval_input: tf.data.Dataset, eval_steps: int = None):
     """Returns the loss value & metrics values for the model in test mode.
 

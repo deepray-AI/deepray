@@ -10,7 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 RUN sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 
-RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     build-essential \
     git \
@@ -29,7 +29,6 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
 
 COPY tools/install_deps /install_deps
 RUN bash /install_deps/install_cmake.sh
-RUN bash /install_deps/install_openmpi.sh
 
 
 COPY requirements.txt /tmp/requirements.txt
@@ -56,4 +55,5 @@ RUN cat /tmp/bashrc.bash >> /root/.bashrc \
 # Clean up
 RUN apt-get autoremove -y \
     && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /install_deps/
