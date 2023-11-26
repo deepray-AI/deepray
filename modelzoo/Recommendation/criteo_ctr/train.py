@@ -23,7 +23,6 @@ import tensorflow as tf
 import deepray as dp
 from absl import app, flags
 from tensorflow.keras import backend as K
-from tensorflow_recommenders_addons import dynamic_embedding as de
 
 from dcn_v2 import Ranking
 from deepray.core.base_trainer import Trainer
@@ -35,9 +34,11 @@ FLAGS = flags.FLAGS
 
 
 def main(_):
-  model = Ranking(interaction="cross")  
+  model = Ranking(interaction="cross")
   optimizer = tf.keras.optimizers.Adam(learning_rate=FLAGS.learning_rate, amsgrad=False)
+  # optimizer = dp.optimizers.Adam(learning_rate=FLAGS.learning_rate, amsgrad=False)
   if FLAGS.use_dynamic_embedding:
+    from tensorflow_recommenders_addons import dynamic_embedding as de
     optimizer = de.DynamicEmbeddingOptimizer(optimizer, synchronous=FLAGS.use_horovod)
   trainer = Trainer(model=model, optimizer=optimizer, loss="binary_crossentropy", metrics=['AUC'])
   data_pipe = CriteoTsvReader(use_synthetic_data=True)

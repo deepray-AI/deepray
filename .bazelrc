@@ -373,3 +373,6 @@ try-import %workspace%/.dp_configure.bazelrc
 
 # Load rc file with user-specific options.
 try-import %workspace%/.bazelrc.user
+
+# Bazel build cache
+build --remote_cache=http://localhost:7070

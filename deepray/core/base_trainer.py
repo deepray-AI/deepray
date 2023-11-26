@@ -865,7 +865,7 @@ class Trainer(Module):
 
     if self.use_horovod and not FLAGS.use_dynamic_embedding:
       tape = hvd.DistributedGradientTape(
-          tape, sparse_as_dense=True, compression=Compression.fp16 if self.use_float16 else Compression.none
+          tape, sparse_as_dense=False, compression=Compression.fp16 if self.use_float16 else Compression.none
       )
     # Run backwards pass.
     self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
