@@ -149,6 +149,7 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
           key_dtype=key_dtype,
           value_dtype=value_dtype,
           initializer=initializer,
+          name=name,
           devices=de_option.devices,
           init_capacity=de_option.init_capacity,
           kv_creator=de_option.kv_creator,

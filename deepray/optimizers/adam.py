@@ -19,7 +19,7 @@ https://github.com/tensorflow/tensorflow/blob/r1.13/tensorflow/contrib/opt/pytho
 
 from __future__ import absolute_import, division, print_function
 
-from tensorflow.python.ops import math_ops
+from absl import logging
 from tensorflow.python.keras.optimizer_v2 import adam as tf_adam
 
 from deepray.custom_ops.training_ops import gen_training_ops
@@ -28,6 +28,10 @@ from deepray.custom_ops.training_ops import gen_training_ops
 class Adam(tf_adam.Adam):
   """Deepray Adam optimizer for efficient sparse updates"""
 
+  def __init__(self, **kwargs):
+    super().__init__(**kwargs)
+    logging.info("Using deepray Adam optimizer.")
+
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     m = self.get_slot(var, 'm')
     v = self.get_slot(var, 'v')
@@ -35,7 +39,6 @@ class Adam(tf_adam.Adam):
     coefficients = (
         (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
     )
-    # beta1_power, beta2_power = self._get_beta_accumulators()
     return gen_training_ops.resource_sparse_apply_adam(
         var=var.handle,
         m=m.handle,

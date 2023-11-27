@@ -15,12 +15,14 @@
 # ==============================================================================
 set -x -e
 
+OPENMPI_VERSION=${1:-"5.0.0"}
+
 # Install Open MPI
 mkdir /tmp/openmpi &&
     cd /tmp/openmpi &&
-    wget --progress=dot:mega -O openmpi-4.1.5.tar.gz https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.5.tar.gz &&
-    tar -zxf openmpi-4.1.5.tar.gz &&
-    cd openmpi-4.1.5 &&
+    wget --progress=dot:mega -O openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${OPENMPI_VERSION}.tar.gz &&
+    tar -zxf openmpi-${OPENMPI_VERSION}.tar.gz &&
+    cd openmpi-${OPENMPI_VERSION} &&
     ./configure --enable-orterun-prefix-by-default &&
     make -j $(nproc) all &&
     make install &&

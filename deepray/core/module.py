@@ -70,7 +70,7 @@ class Module():
 
     self._steps_from_save += steps
 
-    if is_main_process() and self._steps_from_save >= FLAGS.save_checkpoint_steps:
+    if self._steps_from_save >= FLAGS.save_checkpoint_steps:
       export.export_to_checkpoint(self.manager, self.current_step)
       self._steps_from_save = 0
 
@@ -129,7 +129,6 @@ class Module():
     """Calls the `on_epoch_end` methods of its callbacks.
     """
     self.callbacks.on_epoch_end(epoch, epoch_logs)
-
 
   def evaluate(self, eval_input: tf.data.Dataset, eval_steps: int = None):
     """Returns the loss value & metrics values for the model in test mode.

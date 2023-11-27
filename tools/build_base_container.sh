@@ -3,11 +3,12 @@
 set -x -e
 
 PY_VERSION=${1:-"3.8"}
-TF_VERSION=${2:-"2.9.3"}
+TF_VERSION=${2:-"2.9.1"}
 CUDA_VERSION=${3:-"11.6.2"}
 
 docker build \
     -f tools/docker/base_container.Dockerfile \
+    --network=host \
     --build-arg CUDA_VERSION=${CUDA_VERSION} \
     --build-arg TF_VERSION=${TF_VERSION} \
     --build-arg TF_PACKAGE=tensorflow-gpu \

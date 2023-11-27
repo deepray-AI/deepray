@@ -17,6 +17,7 @@ set -x -e
 
 CMAKE_VERSION=${1:-"3.23.2"}
 
+apt autoremove cmake -y
 wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-Linux-x86_64.sh \
     --progress=dot:mega -O /tmp/cmake-install.sh &&
     chmod u+x /tmp/cmake-install.sh &&
