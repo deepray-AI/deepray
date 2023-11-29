@@ -64,9 +64,6 @@ def build_tensor_serving_input_receiver_fn(shape, dtype=tf.float32, batch_size=1
 
 
 def export_to_checkpoint(saver: Union[tf.train.Checkpoint, tf.train.CheckpointManager], checkpoint_number=None):
-  # TODO(@hejia): Fix export_to_checkpoint when use TFRA.
-  if FLAGS.use_dynamic_embedding:
-    return
 
   def helper(name, _saver):
     """Saves model to with provided checkpoint prefix."""
@@ -78,12 +75,18 @@ def export_to_checkpoint(saver: Union[tf.train.Checkpoint, tf.train.CheckpointMa
       save_path = _saver.save(checkpoint_number)
       logging.info('Saved checkpoint to {}'.format(save_path))
 
-  if is_main_process():
+  def _save_fn():
     if isinstance(saver, dict):
       for name, _saver in saver.items():
         helper(name, _saver)
     else:
       helper(name="main", _saver=saver)
+
+  if FLAGS.use_horovod and FLAGS.use_dynamic_embedding:
+    _save_fn()
+  else:
+    if is_main_process():
+      _save_fn()
 
 
 def export_to_savedmodel(
@@ -139,8 +142,7 @@ def export_to_savedmodel(
         # Restores the model from latest checkpoint.
         latest_checkpoint_file = tf.train.latest_checkpoint(_checkpoint_dir)
         assert latest_checkpoint_file
-        logging.info('Checkpoint file %s found and restoring from '
-                     'checkpoint', latest_checkpoint_file)
+        logging.info('Checkpoint file %s found and restoring from ' 'checkpoint', latest_checkpoint_file)
         checkpoint.restore(latest_checkpoint_file).assert_existing_objects_matched()
 
     options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA']) if FLAGS.use_dynamic_embedding else None

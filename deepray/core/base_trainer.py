@@ -43,7 +43,7 @@ from deepray.optimizers.optimization import GradientAccumulator
 from deepray.utils import dllogger_class
 try:
   from deepray.utils import gpu_affinity
-except: 
+except:
   gpu_affinity = None
 from deepray.utils.flags import common_flags
 from deepray.utils.misc import keras_utils
@@ -60,7 +60,7 @@ FLAGS = flags.FLAGS
 if FLAGS.use_dynamic_embedding:
   from tensorflow_recommenders_addons import dynamic_embedding as de
   from tensorflow_recommenders_addons.dynamic_embedding.python.ops.dynamic_embedding_ops import TrainableWrapper, DEResourceVariable
-  tf.train.Checkpoint = de.train.checkpoint.DEHvdCheckpoint
+  tf.train.Checkpoint = de.train.checkpoint.DECheckpoint
 else:
   TrainableWrapper, DEResourceVariable = type(None), type(None)
 
@@ -636,7 +636,9 @@ class Trainer(Module):
             logging.info(
                 f'Checkpoint file {latest_checkpoint} found and restoring from initial checkpoint for {name} model.'
             )
-            ckpt.restore(latest_checkpoint).assert_existing_objects_matched()
+            restore_fn = ckpt.restore(latest_checkpoint)
+            if not FLAGS.use_dynamic_embedding:
+              restore_fn.assert_existing_objects_matched()
             logging.info('Loading from checkpoint file completed')
 
       if FLAGS.init_weights:
@@ -727,8 +729,7 @@ class Trainer(Module):
       with tf.init_scope():
         self.first_batch = tf.Variable(True, trainable=False, dtype=tf.bool, name='first_batch')
     if not hasattr(self.main_model, 'optimizer'):
-      raise ValueError('User should set optimizer attribute to model '
-                       'inside `model_fn`.')
+      raise ValueError('User should set optimizer attribute to model ' 'inside `model_fn`.')
     # if self.sub_model_export_name and self.sub_model is None:
     #   raise ValueError('sub_model_export_name is specified as %s, but '
     #                    'sub_model is None.' % self.sub_model_export_name)
@@ -786,7 +787,8 @@ class Trainer(Module):
     if is_main_process():
       training_summary = {'total_training_steps': self.current_step}
       if self.loss_container:
-        training_summary['train_loss'] = self._float_metric_value(self.loss_container.metrics[0])
+        if self.loss_container.metrics:
+          training_summary['train_loss'] = self._float_metric_value(self.loss_container.metrics[0])
 
       if self.metric_container and self.metric_container.metrics:
         # TODO(hongkuny): Cleans up summary reporting in text.
@@ -931,8 +933,7 @@ class Trainer(Module):
       ValueError: Any of the arguments or tensor shapes are invalid.
     """
     if not isinstance(steps, tf.Tensor):
-      raise ValueError('steps should be an Tensor. Python object may cause '
-                       'retracing.')
+      raise ValueError('steps should be an Tensor. Python object may cause ' 'retracing.')
 
     if num_grad_accumulates != 1:
       for _ in tf.range(steps * num_grad_accumulates):
@@ -946,8 +947,7 @@ class Trainer(Module):
 
   def train_steps(self, iterator, steps, num_grad_accumulates):
     if not isinstance(steps, tf.Tensor):
-      raise ValueError('steps should be an Tensor. Python object may cause '
-                       'retracing.')
+      raise ValueError('steps should be an Tensor. Python object may cause ' 'retracing.')
 
     if num_grad_accumulates != 1:
       for _ in tf.range(steps * num_grad_accumulates):
