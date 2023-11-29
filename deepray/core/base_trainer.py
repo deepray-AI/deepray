@@ -41,7 +41,10 @@ from deepray.callbacks import HvdCallbackList
 from deepray.core.common import distribution_utils
 from deepray.optimizers.optimization import GradientAccumulator
 from deepray.utils import dllogger_class
-from deepray.utils import gpu_affinity
+try:
+  from deepray.utils import gpu_affinity
+except: 
+  gpu_affinity = None
 from deepray.utils.flags import common_flags
 from deepray.utils.misc import keras_utils
 from deepray.utils.benchmark import PerformanceCalculator
@@ -79,7 +82,8 @@ if FLAGS.use_horovod:
   hvd.init()
   if gpus:
     tf.config.experimental.set_visible_devices(gpus[hvd.local_rank()], 'GPU')
-    gpu_affinity.set_affinity(hvd.local_rank())
+    if gpu_affinity is not None:
+      gpu_affinity.set_affinity(hvd.local_rank())
 
 # Enables XLA in Session Config. Should not be set for TPU.
 keras_utils.set_config_v2(FLAGS.enable_xla)
