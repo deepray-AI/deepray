@@ -173,7 +173,7 @@ def test_masking():
 @pytest.mark.parametrize("attention_cls", attention_classes)
 def test_memory_re_setup(attention_cls):
 
-  class MyModel(tf.keras.models.Model):
+  class MyModel(tf.keras.Model):
 
     def __init__(self, vocab, embedding_dim, memory_size, units):
       super().__init__()

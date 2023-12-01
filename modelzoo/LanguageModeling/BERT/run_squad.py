@@ -192,7 +192,6 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
 
 def train_squad(
     input_meta_data,
-    custom_callbacks=None,
 ):
   """Run bert squad training."""
 
@@ -237,7 +236,6 @@ def train_squad(
           "start_positions": 0.5,
           "end_positions": 0.5
       },
-      callbacks=custom_callbacks,
   )
   trainer.fit(train_input=train_input,)
   export.export_to_savedmodel(model=trainer.models)

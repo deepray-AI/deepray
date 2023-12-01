@@ -216,7 +216,7 @@ def construct_model(user_input: tf.Tensor, item_input: tf.Tensor, params: Dict[T
                                  name=movielens.RATING_COLUMN)(predict_vector)
 
   # Print model topology.
-  model = tf.keras.models.Model([user_input, item_input], logits)
+  model = tf.keras.Model([user_input, item_input], logits)
   model.summary()
   sys.stdout.flush()
 
