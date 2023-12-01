@@ -106,6 +106,7 @@ class COCOB(KerasLegacyOptimizer):
     raise NotImplementedError()
 
   def get_config(self):
+
     config = {
         "alpha": self._serialize_hyperparameter("alpha"),
     }

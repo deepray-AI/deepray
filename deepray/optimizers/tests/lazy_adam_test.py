@@ -96,6 +96,7 @@ def _test_sparse(dtype):
 @pytest.mark.parametrize("dtype", [tf.int32, tf.int64])
 @pytest.mark.with_device(["cpu", "gpu"])
 def test_sparse_device_placement(dtype):
+
   # If a GPU is available, tests that all optimizer ops can be placed on
   # it (i.e. they have GPU kernels).
   var = tf.Variable([[1.0], [2.0]])

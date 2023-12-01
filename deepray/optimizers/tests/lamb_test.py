@@ -35,6 +35,7 @@ def _dtypes_to_test(use_gpu):
 
 
 def lamb_update_numpy(param, g_t, t, m, v, lr=0.001, lamb_wd=0.0, beta1=0.9, beta2=0.999, epsilon=1e-6):
+
   m_t = beta1 * m + (1 - beta1) * g_t
   v_t = beta2 * v + (1 - beta2) * g_t * g_t
 

@@ -16,6 +16,14 @@ limitations under the License.
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
 
+/* After TensorFlow version 2.10.0, "Status::OK()" upgraded to "OkStatus()".
+This code is for compatibility.*/
+#if TF_VERSION_INTEGER >= 2100
+#define TFOkStatus ::tensorflow::OkStatus()
+#else
+#define TFOkStatus ::tensorflow::Status::OK()
+#endif
+
 // Use a namespace when registering by prepending the
 // package's name to the op’s name and separate with a '>'.
 // This is the recommendation for out-of-tree ops to avoid name collisions in
@@ -41,7 +49,7 @@ REGISTER_OP("Examples1>MultiplexDense")
       TF_RETURN_IF_ERROR(c->Merge(c->input(0), c->input(2), &unused));
 
       c->set_output(0, out);
-      return ::tensorflow::Status::OK();
+      return TFOkStatus;
     })
     .Doc(R"doc(
 Return elements chosen from `a` or `b` depending on `cond`.
