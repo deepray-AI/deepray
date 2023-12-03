@@ -19,7 +19,6 @@ https://github.com/tensorflow/tensorflow/blob/r1.13/tensorflow/contrib/opt/pytho
 
 from __future__ import absolute_import, division, print_function
 
-from absl import logging
 from tensorflow.python.keras.optimizer_v2 import adam as tf_adam
 
 from deepray.custom_ops.training_ops import gen_training_ops
@@ -27,10 +26,6 @@ from deepray.custom_ops.training_ops import gen_training_ops
 
 class Adam(tf_adam.Adam):
   """Deepray Adam optimizer for efficient sparse updates"""
-
-  def __init__(self, **kwargs):
-    super().__init__(**kwargs)
-    logging.info("Using deepray Adam optimizer.")
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     m = self.get_slot(var, 'm')

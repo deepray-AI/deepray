@@ -18,6 +18,14 @@ limitations under the License.
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
 
+/* After TensorFlow version 2.10.0, "Status::OK()" upgraded to "OkStatus()".
+This code is for compatibility.*/
+#if TF_VERSION_INTEGER >= 2100
+#define TFOkStatus ::tensorflow::OkStatus()
+#else
+#define TFOkStatus ::tensorflow::Status::OK()
+#endif
+
 // Please use the appropriate namespace for your project
 namespace tensorflow {
 namespace custom_op_examples {
@@ -29,14 +37,14 @@ using ::tensorflow::shape_inference::ShapeHandle;
 
 Status ScalarOutput(InferenceContext* c) {
   c->set_output(0, c->Scalar());
-  return Status::OK();
+  return TFOkStatus;
 }
 
 Status TwoScalarInputs(InferenceContext* c) {
   ShapeHandle handle;
   TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 0, &handle));
   TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 0, &handle));
-  return Status::OK();
+  return TFOkStatus;
 }
 
 Status TwoScalarInputsScalarOutput(InferenceContext* c) {
@@ -51,7 +59,7 @@ Status ThreeScalarInputs(InferenceContext* c) {
   TF_RETURN_IF_ERROR(c->WithRank(c->input(0), 0, &handle));
   TF_RETURN_IF_ERROR(c->WithRank(c->input(1), 0, &handle));
   TF_RETURN_IF_ERROR(c->WithRank(c->input(2), 0, &handle));
-  return Status::OK();
+  return TFOkStatus;
 }
 
 Status ThreeScalarInputsScalarOutput(InferenceContext* c) {
@@ -85,7 +93,7 @@ Status ValidateTableType(InferenceContext* c,
         DataTypeString(value_shape_and_type.dtype), " got ",
         DataTypeString(value_dtype));
   }
-  return Status::OK();
+  return TFOkStatus;
 }
 
 Status ExportShapeFunction(InferenceContext* c) {
@@ -103,7 +111,7 @@ Status ExportShapeFunction(InferenceContext* c) {
   // Different lookup tables have different output shapes.
   c->set_output(0, c->UnknownShape());
   c->set_output(1, c->UnknownShape());
-  return Status::OK();
+  return TFOkStatus;
 }
 
 Status ImportShapeFunction(InferenceContext* c) {
@@ -115,7 +123,7 @@ Status ImportShapeFunction(InferenceContext* c) {
   DimensionHandle unused;
   TF_RETURN_IF_ERROR(
       c->Merge(c->Dim(keys, 0), c->Dim(c->input(2), 0), &unused));
-  return Status::OK();
+  return TFOkStatus;
 }
 
 // Note that if an op has any Input or Output of type "resource", it

@@ -213,7 +213,7 @@ class Trainer(Module):
     self._model = {}
     if isinstance(model, list):
       if len(model) > 0:
-        self._model = {"main_model": model[0]}
+        self._model = {"main": model[0]}
         if len(model) == 2:
           self._model["sub_model"] = model[1]
         else:
@@ -224,11 +224,14 @@ class Trainer(Module):
     elif isinstance(model, dict):
       main_keys = [k for k in model.keys() if "main" in k]
       if len(main_keys) == 1:
-        self._model = model
+        if (len(model) == 1):
+          self._model = {"main": next(iter(model.values()))}
+        else:
+          self._model = model
       else:
         raise ValueError(f"Must set only one model with key contains \"main\", found {main_keys}.")
     elif isinstance(model, tf.keras.Model):
-      self._model = {"main_model": model}
+      self._model = {"main": model}
     else:
       raise ValueError("Not a reachable model.")
 
@@ -288,7 +291,7 @@ class Trainer(Module):
       The main model
     """
     if len(self._model) == 1:
-      return self._model["main_model"]
+      return self._model["main"]
     else:
       for name, _model in self._model.items():
         if "main" in name:
@@ -298,21 +301,21 @@ class Trainer(Module):
   @property
   def models(self):
     if len(self._model) == 1:
-      return self._model["main_model"]
+      return self._model["main"]
     else:
       return self._model
 
   @property
   def checkpoint(self):
     if len(self._checkpoints) == 1:
-      return self._checkpoints["main_model"]
+      return self._checkpoints["main"]
     else:
       return self._checkpoints
 
   @property
   def manager(self):
     if len(self._managers) == 1:
-      return self._managers["main_model"]
+      return self._managers["main"]
     else:
       return self._managers
 

@@ -37,7 +37,7 @@ except ImportError:
 _DEFAULT_CUDA_VERSION = '11'
 _DEFAULT_CUDNN_VERSION = '2'
 _DEFAULT_TENSORRT_VERSION = '6'
-_DEFAULT_CUDA_COMPUTE_CAPABILITIES = '7.0,7.5,8.0,8.6,9.0'
+_DEFAULT_CUDA_COMPUTE_CAPABILITIES = '7.0,7.5,8.0,8.6'
 
 _SUPPORTED_ANDROID_NDK_VERSIONS = [19, 20, 21, 25]
 
@@ -102,6 +102,54 @@ def get_tf_header_dir():
   if is_windows():
     tf_header_dir = tf_header_dir.replace("\\", "/")
   return tf_header_dir
+
+def get_tf_version_integer():
+  """
+  Get Tensorflow version as a 4 digits string.
+
+  For example:
+    1.15.2 get 1152
+    2.4.1 get 2041
+    2.6.3 get 2063
+    2.8.3 get 2083
+
+  The 4-digits-string will be passed to C macro to discriminate different
+  Tensorflow versions.
+
+  We assume that major version has 1 digit, minor version has 2 digits. And
+  patch version has 1 digit.
+  """
+  try:
+    version = tf.__version__
+  except AttributeError:
+    raise ImportError(
+        '\nPlease install a TensorFlow on your compiling machine, '
+        'The compiler needs to know the version of Tensorflow '
+        'and get TF c++ headers according to the installed TensorFlow. '
+        '\nNote: Only TensorFlow 2.8.3, 2.6.3, 2.4.1, 1.15.2 are supported.')
+  try:
+    major, minor, patch = version.split('.')
+    assert len(
+        major
+    ) == 1, "Tensorflow major version must be length of 1. Version: {}".format(
+        version)
+    assert len(
+        minor
+    ) <= 2, "Tensorflow minor version must be less or equal to 2. Version: {}".format(
+        version)
+    assert len(
+        patch
+    ) == 1, "Tensorflow patch version must be length of 1. Version: {}".format(
+        version)
+  except:
+    raise ValueError('got wrong tf.__version__: {}'.format(version))
+  tf_version_num = str(int(major) * 1000 + int(minor) * 10 + int(patch))
+  if len(tf_version_num) != 4:
+    raise ValueError('Tensorflow version flag must be length of 4 (major'
+                     ' version: 1, minor version: 2, patch_version: 1). But'
+                     ' get: {}'.format(tf_version_num))
+  return int(tf_version_num)
+
 
 
 def get_cpp_version():
@@ -1148,6 +1196,8 @@ def main():
   write_action_env_to_bazelrc("TF_CXX11_ABI_FLAG", tf.sysconfig.CXX11_ABI_FLAG)
   # This should be replaced with a call to tf.sysconfig if it's added
   write_action_env_to_bazelrc("TF_CPLUSPLUS_VER", get_cpp_version())
+  # This is used to trace the difference between Tensorflow versions.
+  write_action_env_to_bazelrc("TF_VERSION_INTEGER", get_tf_version_integer())
 
   if is_windows():
     environ_cp['TF_NEED_OPENCL'] = '0'

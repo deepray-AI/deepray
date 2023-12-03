@@ -179,6 +179,7 @@ def test_basic_nuclear(use_resource):
   for i, dtype in enumerate(
       _dtypes_with_checking_system(use_gpu=test_utils.is_gpu_available(), system=platform.system())
   ):
+
     if use_resource:
       var0 = tf.Variable([1.0, 2.0], dtype=dtype, name="var0_%d" % i)
       var1 = tf.Variable([3.0, 4.0], dtype=dtype, name="var1_%d" % i)
