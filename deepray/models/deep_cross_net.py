@@ -19,7 +19,7 @@ categorical_columns_layer = tf.keras.layers.DenseFeatures(categorical_columns)
 numberical_columns_layer = tf.keras.layers.DenseFeatures(numberical_columns)
 
 
-class MyModel(tf.keras.models.Model):
+class MyModel(tf.keras.Model):
 
   def __init__(self):
     super(MyModel, self).__init__(name='my_model')

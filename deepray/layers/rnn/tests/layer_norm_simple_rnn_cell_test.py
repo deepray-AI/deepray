@@ -17,7 +17,7 @@
 import numpy as np
 import tensorflow.keras as keras
 
-from deepray.rnn import LayerNormSimpleRNNCell
+from deepray.layers.rnn import LayerNormSimpleRNNCell
 
 
 def test_constraints_layernorm_rnn():

@@ -14,8 +14,8 @@
 # ==============================================================================
 """Additional RNN cells that corform to Keras API."""
 
-from deepray.rnn.nas_cell import NASCell
-from deepray.rnn.layer_norm_lstm_cell import LayerNormLSTMCell
-from deepray.rnn.layer_norm_simple_rnn_cell import LayerNormSimpleRNNCell
-from deepray.rnn.esn_cell import ESNCell
-from deepray.rnn.peephole_lstm_cell import PeepholeLSTMCell
+from deepray.layers.rnn.nas_cell import NASCell
+from deepray.layers.rnn.layer_norm_lstm_cell import LayerNormLSTMCell
+from deepray.layers.rnn.layer_norm_simple_rnn_cell import LayerNormSimpleRNNCell
+from deepray.layers.rnn.esn_cell import ESNCell
+from deepray.layers.rnn.peephole_lstm_cell import PeepholeLSTMCell

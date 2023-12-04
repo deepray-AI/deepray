@@ -18,7 +18,7 @@ import numpy as np
 import tensorflow as tf
 import tensorflow.keras as keras
 
-from deepray.rnn import NASCell
+from deepray.layers.rnn import NASCell
 
 
 def test_base():

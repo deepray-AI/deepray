@@ -15,7 +15,7 @@
 """Implements Echo State recurrent Network (ESN) layer."""
 
 import tensorflow as tf
-from deepray.rnn import ESNCell
+from deepray.layers.rnn import ESNCell
 from typeguard import typechecked
 
 from deepray.utils.types import (
