@@ -11,7 +11,7 @@ py_library(
     ]),
     deps = [
         "//deepray/activations",
-        "//deepray/rnn",
+        "//deepray/layers/rnn",
         "//deepray/testing",
         "//deepray/text",
         "//deepray/utils",

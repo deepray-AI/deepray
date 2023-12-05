@@ -32,12 +32,11 @@ _check_tf_version()
 from deepray import activations
 from deepray import callbacks
 from deepray import custom_ops
-from deepray import image
 from deepray import layers
 from deepray import losses
 from deepray import metrics
 from deepray import optimizers
-from deepray import rnn
+from deepray.layers import rnn
 from deepray import seq2seq
 from deepray import text
 from deepray import options
