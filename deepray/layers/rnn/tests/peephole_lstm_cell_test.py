@@ -17,7 +17,7 @@
 import numpy as np
 import tensorflow as tf
 
-from deepray.rnn import PeepholeLSTMCell
+from deepray.layers.rnn import PeepholeLSTMCell
 
 
 def test_peephole_lstm_cell():

@@ -264,7 +264,7 @@ class ConstructModel(tf.keras.layers.Layer):
     logits = self.prediction_layer(predict_vector)
 
     # # Print model topology.
-    # model = tf.keras.models.Model([user_input, item_input], logits)
+    # model = tf.keras.Model([user_input, item_input], logits)
     # model.summary()
     # sys.stdout.flush()
 
