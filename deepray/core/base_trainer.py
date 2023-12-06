@@ -28,9 +28,10 @@ import tensorflow as tf
 from absl import logging, flags
 from dllogger import Verbosity
 from keras.engine import compile_utils
-from .compile_utils import HvdMetricsContainer
 from keras.engine import data_adapter
 from packaging import version
+
+from .compile_utils import HvdMetricsContainer
 
 if version.parse(tf.keras.__version__.replace("-tf", "+tf")) < version.parse("2.11"):
   from tensorflow.keras import optimizers
@@ -208,8 +209,6 @@ class Trainer(Module):
       **kwargs
   ):
     super().__init__(**kwargs)
-    self.strategy = distribution_utils.get_distribution_strategy()
-
     self._model = {}
     if isinstance(model, list):
       if len(model) > 0:
@@ -242,6 +241,7 @@ class Trainer(Module):
 
     self.use_horovod = use_horovod if use_horovod else FLAGS.use_horovod
     self.run_eagerly = run_eagerly if run_eagerly else FLAGS.run_eagerly
+    self._jit_compile = jit_compile
 
     self.epochs = FLAGS.epochs
 
@@ -268,7 +268,7 @@ class Trainer(Module):
     if self.use_float16:
       self.optimizer = tf.keras.mixed_precision.LossScaleOptimizer(self.optimizer, dynamic=True)
 
-    with distribution_utils.get_strategy_scope(self.strategy):
+    with distribution_utils.get_strategy_scope(self._distribution_strategy):
       # To correctly place the model weights on accelerators,
       # model should be created in scope.
       if isinstance(self._loss, compile_utils.LossesContainer):
@@ -575,6 +575,8 @@ class Trainer(Module):
               ' steps_per_summary.', self.steps_per_loop, self.steps_per_epoch
           )
         self.steps_per_loop = self.steps_per_epoch
+
+      self._configure_steps_per_execution(self.steps_per_loop or 1)
       assert tf.executing_eagerly()
 
       if self.run_eagerly:
@@ -582,7 +584,7 @@ class Trainer(Module):
         #   raise ValueError(
         #     'steps_per_loop is used for performance optimization. When you want '
         #     'to run eagerly, you cannot leverage graph mode loop.')
-        if isinstance(self.strategy, tf.distribute.experimental.TPUStrategy):
+        if isinstance(self._distribution_strategy, tf.distribute.experimental.TPUStrategy):
           raise ValueError(
               'TPUStrategy should not run eagerly as it heavily replies on graph'
               ' optimization for the distributed system.'
@@ -643,7 +645,7 @@ class Trainer(Module):
       if FLAGS.num_accumulation_steps > 1:
         self.accum_gradients = GradientAccumulator()
 
-      verbose = 0  # training_module._get_verbosity(verbose, self.strategy)
+      verbose = 0  # training_module._get_verbosity(verbose, self._distribution_strategy)
 
       # Container that configures and calls `tf.keras.Callback`s.
       if not isinstance(callbacks, HvdCallbackList):
@@ -735,7 +737,7 @@ class Trainer(Module):
     self.callbacks.on_train_begin()
     training_logs = None
     for epoch in range(self.epochs):
-      train_iterator = distribution_utils.make_distributed_iterator(self.strategy, train_input)
+      train_iterator = distribution_utils.make_distributed_iterator(self._distribution_strategy, train_input)
       self.on_epoch_begin(epoch)
       while self.steps_per_epoch < 0 or self._step_epoch < self.steps_per_epoch:
         t0 = time.time()
@@ -913,28 +915,6 @@ class Trainer(Module):
     self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
     self.accum_gradients.reset()
 
-  def forward_step(self, iterator):
-    """Calculates evaluation metrics on distributed devices."""
-
-    def _forward_step_fn(inputs):
-      """Replicated accuracy calculation."""
-      x, y, sample_weight = data_adapter.unpack_x_y_sample_weight(inputs)
-      model_outputs = self.main_model(x, training=False)
-      if y is not None and self.metric_container:
-        self.metric_container.update_state(y, model_outputs, sample_weight=sample_weight)
-      return model_outputs
-
-    def tuple_fun(x):
-      return x,
-
-    if self.strategy:
-      outputs = self.strategy.run(_forward_step_fn, args=(iterator,))
-      map_func = self.strategy.experimental_local_results
-    else:
-      outputs = _forward_step_fn(iterator)
-      map_func = tuple_fun
-    return tf.nest.map_structure(map_func, outputs)
-
   def train_steps_strategy(self, iterator, steps, num_grad_accumulates):
     """Performs distributed training steps in a loop.
 
@@ -952,12 +932,12 @@ class Trainer(Module):
 
     if num_grad_accumulates != 1:
       for _ in tf.range(steps * num_grad_accumulates):
-        self.strategy.run(self.forward, args=(next(iterator),))
+        self._distribution_strategy.run(self.forward, args=(next(iterator),))
         if _ == 0 or (_ + 1) % num_grad_accumulates == 0:
-          self.strategy.run(self.step, args=(num_grad_accumulates,))
+          self._distribution_strategy.run(self.step, args=(num_grad_accumulates,))
     else:
       for _ in tf.range(steps):
-        self.strategy.run(self._replicated_step, args=(next(iterator),))
+        self._distribution_strategy.run(self._replicated_step, args=(next(iterator),))
     return self.get_metrics_result()
 
   def train_steps(self, iterator, steps, num_grad_accumulates):
@@ -988,23 +968,22 @@ class Trainer(Module):
     """
     if num_grad_accumulates != 1:
       for _ in tf.range(num_grad_accumulates):
-        self.strategy.run(self.forward, args=(iterator,))
+        self._distribution_strategy.run(self.forward, args=(iterator,))
         if _ == 0 or (_ + 1) % num_grad_accumulates == 0:
-          self.strategy.run(self.step, args=(num_grad_accumulates,))
+          self._distribution_strategy.run(self.step, args=(num_grad_accumulates,))
     else:
-      self.strategy.run(self._replicated_step, args=(iterator,))
+      self._distribution_strategy.run(self._replicated_step, args=(iterator,))
     return self.get_metrics_result()
 
   def make_train_function(self):
     if not self.run_eagerly:
       _train_single_step = tf.function(self.train_single_step)
       _train_multi_steps = tf.function(self.train_steps)
-      self.forward_step = tf.function(self.forward_step)
     else:
       _train_single_step = self.train_single_step
       _train_multi_steps = self.train_steps
 
-    if self.strategy:
+    if self._distribution_strategy:
       self._train_step = self.train_single_step_strategy
       self._train_steps = self.train_steps_strategy
     else:

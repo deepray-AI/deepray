@@ -9,6 +9,7 @@ import pandas as pd
 import tensorflow as tf
 import tensorflow_recommenders_addons as tfra
 from absl import flags, logging
+from tensorflow.python.keras import regularizers, initializers
 from tensorflow_recommenders_addons import dynamic_embedding as de
 from tensorflow_recommenders_addons.dynamic_embedding.python.keras.layers import BasicEmbedding as DynamicEmbedding
 from tensorflow_recommenders_addons.dynamic_embedding.python.keras.layers import HvdAllToAllEmbedding
@@ -72,6 +73,11 @@ class DynamicEmbeddingOption(object):
 
 class EmbeddingLayerRedis(DynamicEmbedding):
 
+  def __init__(self, mini_batch_regularizer=None, mask_value=None, **kwargs):
+    self.mini_batch_regularizer = regularizers.get(mini_batch_regularizer)
+    self.mask_value = mask_value
+    super().__init__(**kwargs)
+
   def call(self, ids):
     with tf.name_scope(self.name + "/EmbeddingLookupUnique"):
       ids_flat = tf.reshape(ids, [-1])
@@ -83,8 +89,22 @@ class EmbeddingLayerRedis(DynamicEmbedding):
       embeddings = tf.reshape(embeddings_flat, embeddings_shape)
       return embeddings
 
+  def get_config(self):
+    config = {
+        'mini_batch_regularizer': initializers.serialize(self.mini_batch_regularizer),
+        'mask_value': self.mask_value
+    }
+    base_config = super(EmbeddingLayerRedis, self).get_config()
+
+    return dict(list(base_config.items()) + list(config.items()))
+
 
 class EmbeddingLayerGPU(DynamicEmbedding):
+
+  def __init__(self, mini_batch_regularizer=None, mask_value=None, **kwargs):
+    self.mini_batch_regularizer = regularizers.get(mini_batch_regularizer)
+    self.mask_value = mask_value
+    super().__init__(**kwargs)
 
   def call(self, ids):
     with tf.name_scope(self.name + "/EmbeddingLookupUnique"):
@@ -95,6 +115,15 @@ class EmbeddingLayerGPU(DynamicEmbedding):
       embeddings_shape = tf.concat([tf.shape(ids), tf.constant(self.embedding_size, shape=(1,))], 0)
       embeddings = tf.reshape(embeddings_flat, embeddings_shape)
       return embeddings
+
+  def get_config(self):
+    config = {
+        'mini_batch_regularizer': initializers.serialize(self.mini_batch_regularizer),
+        'mask_value': self.mask_value
+    }
+    base_config = super(EmbeddingLayerGPU, self).get_config()
+
+    return dict(list(base_config.items()) + list(config.items()))
 
 
 class DistributedDynamicEmbedding(tf.keras.layers.Layer):
