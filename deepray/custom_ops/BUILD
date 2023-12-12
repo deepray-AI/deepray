@@ -4,7 +4,7 @@ py_library(
     name = "custom_ops",
     srcs = glob(["**/*.py"]),
     deps = [
-        # "//deepray/custom_ops/flash_attn",
+        "//deepray/custom_ops/correlation_cost",
         "//deepray/custom_ops/multiplex_1:multiplex_1_op",
         "//deepray/custom_ops/multiplex_2:multiplex_2_op",
         "//deepray/custom_ops/multiplex_3:multiplex_3_op",
