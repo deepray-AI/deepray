@@ -38,7 +38,7 @@ RUN bash install_bazelisk.sh
 
 COPY ./ /deepray
 WORKDIR /deepray
-RUN python ./configure.py
+RUN printf '\n\nn' | bash ./configure || true
 RUN --mount=type=cache,id=cache_bazel,target=/root/.cache/bazel \
     bazel build --nobuild -- //deepray/...
 RUN touch /ok.txt
