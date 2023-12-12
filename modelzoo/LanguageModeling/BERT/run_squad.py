@@ -190,9 +190,7 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
   return all_results
 
 
-def train_squad(
-    input_meta_data,
-):
+def train_squad(input_meta_data,):
   """Run bert squad training."""
 
   bert_config = MODEL_CLASSES[FLAGS.model_name][0].from_json_file(FLAGS.config_file)
