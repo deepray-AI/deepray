@@ -103,6 +103,7 @@ def get_tf_header_dir():
     tf_header_dir = tf_header_dir.replace("\\", "/")
   return tf_header_dir
 
+
 def get_tf_version_integer():
   """
   Get Tensorflow version as a 4 digits string.
@@ -126,30 +127,23 @@ def get_tf_version_integer():
         '\nPlease install a TensorFlow on your compiling machine, '
         'The compiler needs to know the version of Tensorflow '
         'and get TF c++ headers according to the installed TensorFlow. '
-        '\nNote: Only TensorFlow 2.8.3, 2.6.3, 2.4.1, 1.15.2 are supported.')
+        '\nNote: Only TensorFlow 2.8.3, 2.6.3, 2.4.1, 1.15.2 are supported.'
+    )
   try:
     major, minor, patch = version.split('.')
-    assert len(
-        major
-    ) == 1, "Tensorflow major version must be length of 1. Version: {}".format(
-        version)
-    assert len(
-        minor
-    ) <= 2, "Tensorflow minor version must be less or equal to 2. Version: {}".format(
-        version)
-    assert len(
-        patch
-    ) == 1, "Tensorflow patch version must be length of 1. Version: {}".format(
-        version)
+    assert len(major) == 1, "Tensorflow major version must be length of 1. Version: {}".format(version)
+    assert len(minor) <= 2, "Tensorflow minor version must be less or equal to 2. Version: {}".format(version)
+    assert len(patch) == 1, "Tensorflow patch version must be length of 1. Version: {}".format(version)
   except:
     raise ValueError('got wrong tf.__version__: {}'.format(version))
   tf_version_num = str(int(major) * 1000 + int(minor) * 10 + int(patch))
   if len(tf_version_num) != 4:
-    raise ValueError('Tensorflow version flag must be length of 4 (major'
-                     ' version: 1, minor version: 2, patch_version: 1). But'
-                     ' get: {}'.format(tf_version_num))
+    raise ValueError(
+        'Tensorflow version flag must be length of 4 (major'
+        ' version: 1, minor version: 2, patch_version: 1). But'
+        ' get: {}'.format(tf_version_num)
+    )
   return int(tf_version_num)
-
 
 
 def get_cpp_version():
@@ -224,7 +218,7 @@ def write_to_bazelrc(line):
     f.write(line + '\n')
 
 
-def write_action_env_to_bazelrc(var_name, var):
+def write_action_env(var_name, var):
   write_to_bazelrc('build --action_env {}="{}"'.format(var_name, str(var)))
 
 
@@ -327,8 +321,8 @@ def setup_python(environ_cp):
     python_lib_path = cygpath(python_lib_path)
 
   # Set-up env variables used by python_configure.bzl
-  write_action_env_to_bazelrc('PYTHON_BIN_PATH', python_bin_path)
-  write_action_env_to_bazelrc('PYTHON_LIB_PATH', python_lib_path)
+  write_action_env('PYTHON_BIN_PATH', python_bin_path)
+  write_action_env('PYTHON_LIB_PATH', python_lib_path)
   write_to_bazelrc('build --python_path=\"{}"'.format(python_bin_path))
   environ_cp['PYTHON_BIN_PATH'] = python_bin_path
 
@@ -337,7 +331,7 @@ def setup_python(environ_cp):
   if environ_cp.get('PYTHONPATH'):
     python_paths = environ_cp.get('PYTHONPATH').split(':')
     if python_lib_path in python_paths:
-      write_action_env_to_bazelrc('PYTHONPATH', environ_cp.get('PYTHONPATH'))
+      write_action_env('PYTHONPATH', environ_cp.get('PYTHONPATH'))
 
   # Write tools/python_bin_path.sh
   with open(os.path.join(_DP_WORKSPACE_ROOT, 'tools', 'python_bin_path.sh'), 'w') as f:
@@ -469,7 +463,7 @@ def set_action_env_var(
   var = int(get_var(environ_cp, var_name, query_item, enabled_by_default, question, yes_reply, no_reply))
 
   if not bazel_config_name:
-    write_action_env_to_bazelrc(var_name, var)
+    write_action_env(var_name, var)
   elif var:
     write_to_bazelrc('build --config=%s' % bazel_config_name)
   environ_cp[var_name] = str(var)
@@ -709,7 +703,7 @@ def set_clang_cuda_compiler_path(environ_cp):
 
   # Set CLANG_CUDA_COMPILER_PATH
   environ_cp['CLANG_CUDA_COMPILER_PATH'] = clang_cuda_compiler_path
-  write_action_env_to_bazelrc('CLANG_CUDA_COMPILER_PATH', clang_cuda_compiler_path)
+  write_action_env('CLANG_CUDA_COMPILER_PATH', clang_cuda_compiler_path)
   return clang_cuda_compiler_path
 
 
@@ -733,7 +727,7 @@ def set_gcc_host_compiler_path(environ_cp):
       error_msg='Invalid gcc path. %s cannot be found.',
   )
 
-  write_action_env_to_bazelrc('GCC_HOST_COMPILER_PATH', gcc_host_compiler_path)
+  write_action_env('GCC_HOST_COMPILER_PATH', gcc_host_compiler_path)
 
 
 def choose_compiler(environ_cp):
@@ -778,7 +772,7 @@ def set_clang_compiler_path(environ_cp):
       ),
   )
 
-  write_action_env_to_bazelrc('CLANG_COMPILER_PATH', clang_compiler_path)
+  write_action_env('CLANG_COMPILER_PATH', clang_compiler_path)
   write_to_bazelrc('build --repo_env=CC=%s' % clang_compiler_path)
   write_to_bazelrc('build --repo_env=BAZEL_COMPILER=%s' % clang_compiler_path)
 
@@ -987,7 +981,7 @@ def set_tf_cuda_compute_capabilities(environ_cp):
 
   # Set TF_CUDA_COMPUTE_CAPABILITIES
   environ_cp['TF_CUDA_COMPUTE_CAPABILITIES'] = tf_cuda_compute_capabilities
-  write_action_env_to_bazelrc('TF_CUDA_COMPUTE_CAPABILITIES', tf_cuda_compute_capabilities)
+  write_action_env('TF_CUDA_COMPUTE_CAPABILITIES', tf_cuda_compute_capabilities)
 
 
 def set_other_cuda_vars(environ_cp):
@@ -1040,7 +1034,7 @@ def set_system_libs_flag(environ_cp):
       syslibs = ','.join(sorted(syslibs.split(',')))
     else:
       syslibs = ','.join(sorted(syslibs.split()))
-    write_action_env_to_bazelrc('TF_SYSTEM_LIBS', syslibs)
+    write_action_env('TF_SYSTEM_LIBS', syslibs)
 
   for varname in ('PREFIX', 'LIBDIR', 'INCLUDEDIR', 'PROTOBUF_INCLUDE_PATH'):
     if varname in environ_cp:
@@ -1186,18 +1180,20 @@ def main():
   cleanup_makefile()
   setup_python(environ_cp)
 
-  write_action_env_to_bazelrc("TF_HEADER_DIR", get_tf_header_dir())
-  write_action_env_to_bazelrc("TF_SHARED_LIBRARY_DIR", get_tf_shared_lib_dir())
-  write_action_env_to_bazelrc("TF_SHARED_LIBRARY_NAME", get_shared_lib_name())
-  write_action_env_to_bazelrc(
+  write_action_env("TF_HEADER_DIR", get_tf_header_dir())
+  write_action_env("TF_SHARED_LIBRARY_DIR", get_tf_shared_lib_dir())
+  write_action_env("TF_SHARED_LIBRARY_NAME", get_shared_lib_name())
+  write_action_env(
       "TF_SHARED_CC_LIBRARY_NAME",
       get_shared_lib_name().replace("libtensorflow_framework", "libtensorflow_cc")
   )
-  write_action_env_to_bazelrc("TF_CXX11_ABI_FLAG", tf.sysconfig.CXX11_ABI_FLAG)
+  write_action_env("TF_CXX11_ABI_FLAG", tf.sysconfig.CXX11_ABI_FLAG)
+
   # This should be replaced with a call to tf.sysconfig if it's added
-  write_action_env_to_bazelrc("TF_CPLUSPLUS_VER", get_cpp_version())
+  write_action_env("TF_CPLUSPLUS_VER", get_cpp_version())
+
   # This is used to trace the difference between Tensorflow versions.
-  write_action_env_to_bazelrc("TF_VERSION_INTEGER", get_tf_version_integer())
+  write_action_env("TF_VERSION_INTEGER", get_tf_version_integer())
 
   if is_windows():
     environ_cp['TF_NEED_OPENCL'] = '0'
@@ -1238,13 +1234,13 @@ def main():
       environ_cp.get('TF_NEED_ROCM') == '1' and 'LD_LIBRARY_PATH' in environ_cp and
       environ_cp.get('LD_LIBRARY_PATH') != '1'
   ):
-    write_action_env_to_bazelrc('LD_LIBRARY_PATH', environ_cp.get('LD_LIBRARY_PATH'))
+    write_action_env('LD_LIBRARY_PATH', environ_cp.get('LD_LIBRARY_PATH'))
 
   if (environ_cp.get('TF_NEED_ROCM') == '1' and environ_cp.get('ROCM_PATH')):
-    write_action_env_to_bazelrc('ROCM_PATH', environ_cp.get('ROCM_PATH'))
+    write_action_env('ROCM_PATH', environ_cp.get('ROCM_PATH'))
 
   if (environ_cp.get('TF_NEED_ROCM') == '1' and environ_cp.get('HIP_PLATFORM')):
-    write_action_env_to_bazelrc('HIP_PLATFORM', environ_cp.get('HIP_PLATFORM'))
+    write_action_env('HIP_PLATFORM', environ_cp.get('HIP_PLATFORM'))
 
   if is_windows():
     print(
@@ -1282,7 +1278,7 @@ def main():
         # Note: set_action_env_var above already writes to bazelrc.
         for name in cuda_env_names:
           if name in environ_cp:
-            write_action_env_to_bazelrc(name, environ_cp[name])
+            write_action_env(name, environ_cp[name])
         break
 
       # Restore settings changed below if CUDA config could not be validated.
@@ -1306,7 +1302,7 @@ def main():
 
     set_tf_cuda_compute_capabilities(environ_cp)
     if 'LD_LIBRARY_PATH' in environ_cp and environ_cp.get('LD_LIBRARY_PATH') != '1':
-      write_action_env_to_bazelrc('LD_LIBRARY_PATH', environ_cp.get('LD_LIBRARY_PATH'))
+      write_action_env('LD_LIBRARY_PATH', environ_cp.get('LD_LIBRARY_PATH'))
 
     set_tf_cuda_clang(environ_cp)
     if environ_cp.get('TF_CUDA_CLANG') == '1':
