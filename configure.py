@@ -103,6 +103,7 @@ def get_tf_header_dir():
     tf_header_dir = tf_header_dir.replace("\\", "/")
   return tf_header_dir
 
+
 def get_tf_version_integer():
   """
   Get Tensorflow version as a 4 digits string.
@@ -126,30 +127,23 @@ def get_tf_version_integer():
         '\nPlease install a TensorFlow on your compiling machine, '
         'The compiler needs to know the version of Tensorflow '
         'and get TF c++ headers according to the installed TensorFlow. '
-        '\nNote: Only TensorFlow 2.8.3, 2.6.3, 2.4.1, 1.15.2 are supported.')
+        '\nNote: Only TensorFlow 2.8.3, 2.6.3, 2.4.1, 1.15.2 are supported.'
+    )
   try:
     major, minor, patch = version.split('.')
-    assert len(
-        major
-    ) == 1, "Tensorflow major version must be length of 1. Version: {}".format(
-        version)
-    assert len(
-        minor
-    ) <= 2, "Tensorflow minor version must be less or equal to 2. Version: {}".format(
-        version)
-    assert len(
-        patch
-    ) == 1, "Tensorflow patch version must be length of 1. Version: {}".format(
-        version)
+    assert len(major) == 1, "Tensorflow major version must be length of 1. Version: {}".format(version)
+    assert len(minor) <= 2, "Tensorflow minor version must be less or equal to 2. Version: {}".format(version)
+    assert len(patch) == 1, "Tensorflow patch version must be length of 1. Version: {}".format(version)
   except:
     raise ValueError('got wrong tf.__version__: {}'.format(version))
   tf_version_num = str(int(major) * 1000 + int(minor) * 10 + int(patch))
   if len(tf_version_num) != 4:
-    raise ValueError('Tensorflow version flag must be length of 4 (major'
-                     ' version: 1, minor version: 2, patch_version: 1). But'
-                     ' get: {}'.format(tf_version_num))
+    raise ValueError(
+        'Tensorflow version flag must be length of 4 (major'
+        ' version: 1, minor version: 2, patch_version: 1). But'
+        ' get: {}'.format(tf_version_num)
+    )
   return int(tf_version_num)
-
 
 
 def get_cpp_version():
@@ -1197,7 +1191,7 @@ def main():
 
   # This should be replaced with a call to tf.sysconfig if it's added
   write_action_env("TF_CPLUSPLUS_VER", get_cpp_version())
-  
+
   # This is used to trace the difference between Tensorflow versions.
   write_action_env("TF_VERSION_INTEGER", get_tf_version_integer())
 
