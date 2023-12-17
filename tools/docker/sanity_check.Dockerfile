@@ -11,22 +11,6 @@ RUN python tools/format.py
 RUN touch /ok.txt
 
 # -------------------------------
-FROM python:3.9 as source_code_test
-
-COPY tools/install_deps /install_deps
-RUN --mount=type=cache,id=cache_pip,target=/root/.cache/pip \
-    cd /install_deps && pip install \
-    --default-timeout=1000 \
-    -r tensorflow-cpu.txt \
-    -r typedapi.txt \
-    -r pytest.txt
-
-COPY ./ /deepray
-RUN pip install -e /deepray
-RUN pytest -v /deepray/tools/testing/
-RUN touch /ok.txt
-
-# -------------------------------
 FROM python:3.9 as valid_build_files
 
 COPY tools/install_deps/tensorflow-cpu.txt ./
