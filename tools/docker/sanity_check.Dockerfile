@@ -47,9 +47,9 @@ RUN touch /ok.txt
 FROM python:3.9-alpine as clang-format
 
 RUN apk update && apk add git
-RUN git clone https://github.com/gabrieldemarmiesse/clang-format-lint-action.git
+RUN git clone https://github.com/DoozyX/clang-format-lint-action.git
 WORKDIR ./clang-format-lint-action
-RUN git checkout 1044fee
+RUN git checkout f85c199
 
 COPY ./ /deepray
 RUN python run-clang-format.py \

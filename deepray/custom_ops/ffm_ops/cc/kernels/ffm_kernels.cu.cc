@@ -14,6 +14,7 @@
 
 #if GOOGLE_CUDA
 #define EIGEN_USE_GPU
+
 #include "ffm_kernels.h"
 
 #include <string>
