@@ -112,4 +112,3 @@ COPY --from=2 /ok.txt /ok2.txt
 COPY --from=3 /ok.txt /ok3.txt
 COPY --from=4 /ok.txt /ok4.txt
 COPY --from=5 /ok.txt /ok5.txt
-COPY --from=6 /ok.txt /ok6.txt
