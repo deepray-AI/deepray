@@ -375,4 +375,4 @@ try-import %workspace%/.dp_configure.bazelrc
 try-import %workspace%/.bazelrc.user
 
 # Bazel build cache
-build --remote_cache=http://localhost:7070
+# build --remote_cache=http://localhost:7070
