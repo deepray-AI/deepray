@@ -136,42 +136,42 @@ class UniqueAliOp : public OpKernel {
 };
 
 #define REGISTER_UNIQUE(type)                                    \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>Unique")                         \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>Unique")                 \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int32>("out_idx"), \
                           UniqueAliOp<type, int32>);             \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>Unique")                         \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>Unique")                 \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int64>("out_idx"), \
                           UniqueAliOp<type, int64>);             \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueV2")                       \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueV2")               \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int32>("out_idx"), \
                           UniqueAliOp<type, int32>);             \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueV2")                       \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueV2")               \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int64>("out_idx"), \
                           UniqueAliOp<type, int64>);             \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCounts")               \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCounts")       \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int32>("out_idx"), \
                           UniqueAliOp<type, int32>)              \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCounts")               \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCounts")       \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int64>("out_idx"), \
                           UniqueAliOp<type, int64>);             \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCountsV2")             \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCountsV2")     \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int32>("out_idx"), \
                           UniqueAliOp<type, int32>)              \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCountsV2")             \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCountsV2")     \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int64>("out_idx"), \
@@ -182,7 +182,7 @@ REGISTER_UNIQUE(tstring)
 
 #if GOOGLE_CUDA
 #define REGISTER_UNIQUE(type)                                    \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCounts")               \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCounts")       \
                               .Device(DEVICE_GPU)                \
                               .HostMemory("x")                   \
                               .HostMemory("y")                   \
@@ -191,7 +191,7 @@ REGISTER_UNIQUE(tstring)
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int32>("out_idx"), \
                           UniqueAliOp<type, int32>)              \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCounts")               \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCounts")       \
                               .Device(DEVICE_GPU)                \
                               .HostMemory("x")                   \
                               .HostMemory("y")                   \

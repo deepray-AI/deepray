@@ -5,12 +5,12 @@ licenses(["notice"])  # Apache 2.0
 
 custom_op_library(
     name = "_ffm_ops.so",
-    copts = [CPLUSPLUS_VERSION],
     srcs = [
         "cc/kernels/ffm_kernels.cc",
         "cc/kernels/ffm_kernels.h",
         "cc/ops/ffm_ops.cc",
     ],
+    copts = [CPLUSPLUS_VERSION],
     cuda_srcs = [
         "cc/kernels/ffm_kernels.h",
         "cc/kernels/ffm_kernels.cu.cc",

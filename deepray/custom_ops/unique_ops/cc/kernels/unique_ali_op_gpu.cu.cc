@@ -256,7 +256,7 @@ class UniqueAliV2GpuOp : public AsyncOpKernel {
 };
 
 #define REGISTER_UNIQUE_ALI_V2_GPU_KERNEL(T, TIndex)              \
-  REGISTER_KERNEL_BUILDER(Name("Deepray>Unique")                          \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>Unique")                  \
                               .Device(DEVICE_GPU)                 \
                               .TypeConstraint<T>("T")             \
                               .TypeConstraint<TIndex>("out_idx"), \
