@@ -1,0 +1,303 @@
+# Copyright 2015 The TensorFlow Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Tests for tensorflow.kernels.unique_op."""
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import os
+
+import numpy as np
+from tensorflow.python.framework import dtypes
+from tensorflow.python.platform import test
+from tensorflow.python.framework import errors_impl
+
+from deepray.custom_ops.unique_ops import gen_array_ops
+
+unique = gen_array_ops.deepray_unique
+
+# set environ before tf initializing global varialbes
+PreservedKey = 1 << 10
+os.environ["DEEPREC_CONFIG_RAND_64"] = str(PreservedKey)
+
+
+class UniqueTest(test.TestCase):
+
+  def testInt32(self):
+    x = np.random.randint(2, high=10, size=7000)
+    with self.cached_session() as sess:
+      y, idx = gen_array_ops.deepray_unique(x)
+      tf_y, tf_idx = self.evaluate([y, idx])
+
+    self.assertEqual(len(x), len(tf_idx))
+    self.assertEqual(len(tf_y), len(np.unique(x)))
+    for i in range(len(x)):
+      self.assertEqual(x[i], tf_y[tf_idx[i]])
+
+  def testInt32OutIdxInt64(self):
+    x = np.random.randint(2, high=10, size=7000)
+    with self.cached_session() as sess:
+      y, idx = gen_array_ops.deepray_unique(x, out_idx=dtypes.int64)
+      tf_y, tf_idx = self.evaluate([y, idx])
+
+    self.assertEqual(len(x), len(tf_idx))
+    self.assertEqual(len(tf_y), len(np.unique(x)))
+    for i in range(len(x)):
+      self.assertEqual(x[i], tf_y[tf_idx[i]])
+
+  def testInt64OutIdxInt64(self):
+    np.random.seed(0)
+    x = np.random.randint(-1000000000, high=1000000000, size=1000000, dtype=np.int64)
+    with self.cached_session(use_gpu=True) as sess:
+      y, idx = unique(x, out_idx=dtypes.int64)
+      tf_y, tf_idx = sess.run([y, idx])
+
+    self.assertEqual(len(x), len(tf_idx))
+    self.assertEqual(len(tf_y), len(np.unique(x)))
+    for i in range(len(x)):
+      self.assertEqual(x[i], tf_y[tf_idx[i]])
+
+  def testInt64OutIdxInt32(self):
+    np.random.seed(0)
+    x = np.random.randint(-1000000000, high=1000000000, size=1000000, dtype=np.int64)
+    with self.cached_session(use_gpu=True) as sess:
+      y, idx = unique(x, out_idx=dtypes.int32)
+      tf_y, tf_idx = sess.run([y, idx])
+
+    self.assertEqual(len(x), len(tf_idx))
+    self.assertEqual(len(tf_y), len(np.unique(x)))
+    for i in range(len(x)):
+      self.assertEqual(x[i], tf_y[tf_idx[i]])
+
+  def testString(self):
+    indx = np.random.randint(65, high=122, size=7000)
+    x = [chr(i) for i in indx]
+    with self.cached_session() as sess:
+      y, idx = gen_array_ops.deepray_unique(x)
+      tf_y, tf_idx = self.evaluate([y, idx])
+
+    self.assertEqual(len(x), len(tf_idx))
+    self.assertEqual(len(tf_y), len(np.unique(x)))
+    for i in range(len(x)):
+      self.assertEqual(x[i], tf_y[tf_idx[i]].decode('ascii'))
+
+  def testInt32Axis(self):
+    for dtype in [np.int32, np.int64]:
+      x = np.array([[1, 0, 0], [1, 0, 0], [2, 0, 0]])
+      with self.cached_session() as sess:
+        y0, idx0 = gen_array_ops.deepray_unique_v2(x, axis=np.array([0], dtype))
+        tf_y0, tf_idx0 = self.evaluate([y0, idx0])
+        y1, idx1 = gen_array_ops.deepray_unique_v2(x, axis=np.array([1], dtype))
+        tf_y1, tf_idx1 = self.evaluate([y1, idx1])
+      self.assertAllEqual(tf_y0, np.array([[1, 0, 0], [2, 0, 0]]))
+      self.assertAllEqual(tf_idx0, np.array([0, 0, 1]))
+      self.assertAllEqual(tf_y1, np.array([[1, 0], [1, 0], [2, 0]]))
+      self.assertAllEqual(tf_idx1, np.array([0, 1, 1]))
+
+  def testInt32V2(self):
+    # This test is only temporary, once V2 is used
+    # by default, the axis will be wrapped to allow `axis=None`.
+    x = np.random.randint(2, high=10, size=7000)
+    with self.cached_session() as sess:
+      y, idx = gen_array_ops.deepray_unique_v2(x, axis=np.array([], np.int32))
+      tf_y, tf_idx = self.evaluate([y, idx])
+
+    self.assertEqual(len(x), len(tf_idx))
+    self.assertEqual(len(tf_y), len(np.unique(x)))
+    for i in range(len(x)):
+      self.assertEqual(x[i], tf_y[tf_idx[i]])
+
+  def IllegalIdForMultMapUnique(self):
+    recover_env = False
+    if 'DEEPREC_UNIQUE_OP_PARTITION_SIZE' in os.environ:
+      recover_env = True
+      old_env = os.environ['DEEPREC_UNIQUE_OP_PARTITION_SIZE']
+    os.environ['DEEPREC_UNIQUE_OP_PARTITION_SIZE'] = '2'
+
+    with self.cached_session() as sess:
+      x = np.array([-1, 0, 1, PreservedKey], dtype=np.int64)
+      y, idx = unique(x, out_idx=dtypes.int64)
+      with self.assertRaisesRegexp(
+          errors_impl.InvalidArgumentError, "Input id is preserved key of dense_hash_map, "
+          "not supported: " + str(PreservedKey)
+      ):
+        tf_y, tf_idx = sess.run([y, idx])
+
+    del os.environ['DEEPREC_UNIQUE_OP_PARTITION_SIZE']
+    if recover_env:
+      os.environ['DEEPREC_UNIQUE_OP_PARTITION_SIZE'] = old_env
+
+  def RunUniqueWithDifferentMaps(self, map_type, test_illegal_key=False):
+    recover_env = False
+    if 'DEEPREC_UNIQUE_OP_HASH_MAP' in os.environ:
+      recover_env = True
+      old_env = os.environ['DEEPREC_UNIQUE_OP_HASH_MAP']
+
+    os.environ['DEEPREC_UNIQUE_OP_HASH_MAP'] = map_type
+    self.testInt32()
+    self.testInt32OutIdxInt64()
+    self.testInt64OutIdxInt64()
+    self.testInt64OutIdxInt32()
+    self.testInt32Axis()
+    self.testInt32V2()
+    if test_illegal_key:
+      self.IllegalIdForMultMapUnique()
+
+    del os.environ['DEEPREC_UNIQUE_OP_HASH_MAP']
+    if recover_env:
+      os.environ['DEEPREC_UNIQUE_OP_HASH_MAP'] = old_env
+
+  def testUniqueMultiMap(self):
+    self.RunUniqueWithDifferentMaps('MULTIMAP')
+
+  def testUniqueStlMap(self):
+    self.RunUniqueWithDifferentMaps('STL')
+
+  def testUniqueAbslMap(self):
+    self.RunUniqueWithDifferentMaps('ABSL')
+
+  def testUniqueDenseHashMap(self):
+    self.RunUniqueWithDifferentMaps('GOOGLE')
+
+  # def testBool(self):
+  #   x = np.random.choice([True, False], size=7000)
+  #   with self.cached_session() as sess:
+  #     y, idx = gen_array_ops.deepray_unique(x)
+  #     tf_y, tf_idx = self.evaluate([y, idx])
+
+  #   self.assertEqual(len(x), len(tf_idx))
+  #   self.assertEqual(len(tf_y), len(np.unique(x)))
+  #   for i in range(len(x)):
+  #     self.assertEqual(x[i], tf_y[tf_idx[i]])
+
+  # def testBoolV2(self):
+  #   x = np.random.choice([True, False], size=7000)
+  #   with self.cached_session() as sess:
+  #     y, idx = gen_array_ops.deepray_unique_v2(x, axis=np.array([], np.int32))
+  #     tf_y, tf_idx = self.evaluate([y, idx])
+
+  #   self.assertEqual(len(x), len(tf_idx))
+  #   self.assertEqual(len(tf_y), len(np.unique(x)))
+  #   for i in range(len(x)):
+  #     self.assertEqual(x[i], tf_y[tf_idx[i]])
+
+
+# class UniqueWithCountsTest(test.TestCase):
+
+#   def testInt32(self):
+#     x = np.random.randint(2, high=10, size=7000)
+#     with self.cached_session() as sess:
+#       y, idx, count = array_ops.unique_with_counts(x)
+#       tf_y, tf_idx, tf_count = self.evaluate([y, idx, count])
+
+#     self.assertEqual(len(x), len(tf_idx))
+#     self.assertEqual(len(tf_y), len(np.unique(x)))
+#     for i in range(len(x)):
+#       self.assertEqual(x[i], tf_y[tf_idx[i]])
+#     for value, count in zip(tf_y, tf_count):
+#       self.assertEqual(count, np.sum(x == value))
+
+#   def testInt32OutIdxInt64(self):
+#     x = np.random.randint(2, high=10, size=7000)
+#     with self.cached_session() as sess:
+#       y, idx, count = array_ops.unique_with_counts(x, out_idx=dtypes.int64)
+#       tf_y, tf_idx, tf_count = self.evaluate([y, idx, count])
+
+#     self.assertEqual(len(x), len(tf_idx))
+#     self.assertEqual(len(tf_y), len(np.unique(x)))
+#     for i in range(len(x)):
+#       self.assertEqual(x[i], tf_y[tf_idx[i]])
+#     for value, count in zip(tf_y, tf_count):
+#       self.assertEqual(count, np.sum(x == value))
+
+#   def testString(self):
+#     indx = np.random.randint(65, high=122, size=7000)
+#     x = [chr(i) for i in indx]
+
+#     with self.cached_session() as sess:
+#       y, idx, count = array_ops.unique_with_counts(x)
+#       tf_y, tf_idx, tf_count = self.evaluate([y, idx, count])
+
+#     self.assertEqual(len(x), len(tf_idx))
+#     self.assertEqual(len(tf_y), len(np.unique(x)))
+#     for i in range(len(x)):
+#       self.assertEqual(x[i], tf_y[tf_idx[i]].decode('ascii'))
+#     for value, count in zip(tf_y, tf_count):
+#       v = [1 if x[i] == value.decode('ascii') else 0 for i in range(7000)]
+#       self.assertEqual(count, sum(v))
+
+#   def testInt32Axis(self):
+#     for dtype in [np.int32, np.int64]:
+#       x = np.array([[1, 0, 0], [1, 0, 0], [2, 0, 0]])
+#       with self.cached_session() as sess:
+#         y0, idx0, count0 = gen_array_ops.deepray_unique_with_counts_v2(
+#             x, axis=np.array([0], dtype))
+#         tf_y0, tf_idx0, tf_count0 = self.evaluate([y0, idx0, count0])
+#         y1, idx1, count1 = gen_array_ops.deepray_unique_with_counts_v2(
+#             x, axis=np.array([1], dtype))
+#         tf_y1, tf_idx1, tf_count1 = self.evaluate([y1, idx1, count1])
+#       self.assertAllEqual(tf_y0, np.array([[1, 0, 0], [2, 0, 0]]))
+#       self.assertAllEqual(tf_idx0, np.array([0, 0, 1]))
+#       self.assertAllEqual(tf_count0, np.array([2, 1]))
+#       self.assertAllEqual(tf_y1, np.array([[1, 0], [1, 0], [2, 0]]))
+#       self.assertAllEqual(tf_idx1, np.array([0, 1, 1]))
+#       self.assertAllEqual(tf_count1, np.array([1, 2]))
+
+#   def testInt32V2(self):
+#     # This test is only temporary, once V2 is used
+#     # by default, the axis will be wrapped to allow `axis=None`.
+#     x = np.random.randint(2, high=10, size=7000)
+#     with self.cached_session() as sess:
+#       y, idx, count = gen_array_ops.deepray_unique_with_counts_v2(
+#           x, axis=np.array([], np.int32))
+#       tf_y, tf_idx, tf_count = self.evaluate([y, idx, count])
+
+#     self.assertEqual(len(x), len(tf_idx))
+#     self.assertEqual(len(tf_y), len(np.unique(x)))
+#     for i in range(len(x)):
+#       self.assertEqual(x[i], tf_y[tf_idx[i]])
+#     for value, count in zip(tf_y, tf_count):
+#       self.assertEqual(count, np.sum(x == value))
+
+#   def testBool(self):
+#     x = np.random.choice([True, False], size=7000)
+#     with self.cached_session() as sess:
+#       y, idx, count = array_ops.unique_with_counts(x)
+#       tf_y, tf_idx, tf_count = self.evaluate([y, idx, count])
+
+#     self.assertEqual(len(x), len(tf_idx))
+#     self.assertEqual(len(tf_y), len(np.unique(x)))
+#     for i in range(len(x)):
+#       self.assertEqual(x[i], tf_y[tf_idx[i]])
+#     for value, count in zip(tf_y, tf_count):
+#       self.assertEqual(count, np.sum(x == value))
+
+#   def testBoolV2(self):
+#     x = np.random.choice([True, False], size=7000)
+#     with self.cached_session() as sess:
+#       y, idx, count = gen_array_ops.deepray_unique_with_counts_v2(
+#           x, axis=np.array([], np.int32))
+#       tf_y, tf_idx, tf_count = self.evaluate([y, idx, count])
+
+#     self.assertEqual(len(x), len(tf_idx))
+#     self.assertEqual(len(tf_y), len(np.unique(x)))
+#     for i in range(len(x)):
+#       self.assertEqual(x[i], tf_y[tf_idx[i]])
+#     for value, count in zip(tf_y, tf_count):
+#       self.assertEqual(count, np.sum(x == value))
+
+if __name__ == '__main__':
+  test.main()
