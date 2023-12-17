@@ -54,7 +54,7 @@ RUN git checkout f85c199
 COPY ./ /deepray
 RUN python run-clang-format.py \
                -r \
-               --cli-args=--style=google \
+               --style=google \
                --clang-format-executable ./clang-format/clang-format9 \
                /deepray
 RUN touch /ok.txt

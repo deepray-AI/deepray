@@ -15,11 +15,10 @@
 #if GOOGLE_CUDA
 #define EIGEN_USE_GPU
 
-#include "ffm_kernels.h"
-
 #include <string>
 #include <vector>
 
+#include "ffm_kernels.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/tensor.h"
