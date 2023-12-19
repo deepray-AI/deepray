@@ -11,22 +11,6 @@ RUN python tools/format.py
 RUN touch /ok.txt
 
 # -------------------------------
-FROM python:3.9 as source_code_test
-
-COPY tools/install_deps /install_deps
-RUN --mount=type=cache,id=cache_pip,target=/root/.cache/pip \
-    cd /install_deps && pip install \
-    --default-timeout=1000 \
-    -r tensorflow-cpu.txt \
-    -r typedapi.txt \
-    -r pytest.txt
-
-COPY ./ /deepray
-RUN pip install -e /deepray
-RUN pytest -v /deepray/tools/testing/
-RUN touch /ok.txt
-
-# -------------------------------
 FROM python:3.9 as valid_build_files
 
 COPY tools/install_deps/tensorflow-cpu.txt ./
@@ -47,14 +31,14 @@ RUN touch /ok.txt
 FROM python:3.9-alpine as clang-format
 
 RUN apk update && apk add git
-RUN git clone https://github.com/gabrieldemarmiesse/clang-format-lint-action.git
+RUN git clone https://github.com/DoozyX/clang-format-lint-action.git
 WORKDIR ./clang-format-lint-action
-RUN git checkout 1044fee
+RUN git checkout f85c199
 
 COPY ./ /deepray
 RUN python run-clang-format.py \
                -r \
-               --cli-args=--style=google \
+               --style=google \
                --clang-format-executable ./clang-format/clang-format9 \
                /deepray
 RUN touch /ok.txt
@@ -128,4 +112,3 @@ COPY --from=2 /ok.txt /ok2.txt
 COPY --from=3 /ok.txt /ok3.txt
 COPY --from=4 /ok.txt /ok4.txt
 COPY --from=5 /ok.txt /ok5.txt
-COPY --from=6 /ok.txt /ok6.txt

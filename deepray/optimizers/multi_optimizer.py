@@ -14,25 +14,19 @@
 # ==============================================================================
 """Discriminative Layer Training Optimizer for TensorFlow."""
 
+from collections import defaultdict
 from typing import List, Union
 
 import tensorflow as tf
-
-from packaging.version import Version
-from deepray.optimizers import KerasLegacyOptimizer
+from tensorflow.keras.optimizers import Optimizer as keras_optimizer
+from tensorflow.python.keras.optimizer_v2 import optimizer_v2
+from tensorflow.python.training import optimizer
 from typeguard import typechecked
 
-if Version(tf.__version__).release >= Version("2.13").release:
-  # New versions of Keras require importing from `keras.src` when
-  # importing internal symbols.
-  from keras.src import backend
-  from keras.src.utils import tf_utils
-else:
-  from keras import backend
-  from keras.utils import tf_utils
+import deepray as dp
+from deepray.optimizers import KerasLegacyOptimizer
 
 
-@tf.keras.utils.register_keras_serializable(package="Deepray")
 class MultiOptimizer(KerasLegacyOptimizer):
   """Multi Optimizer Wrapper for Discriminative Layer Training.
 
@@ -46,30 +40,29 @@ class MultiOptimizer(KerasLegacyOptimizer):
     Please note that the layers must be instantiated before instantiating the optimizer.
 
     Args:
-        optimizers_and_layers: a list of tuples of an optimizer and a layer or model.
+        optimizers_and_varnames: a list of tuples of an optimizer and a layer or model.
             Each tuple should contain exactly 1 instantiated optimizer and 1 object that
             subclasses `tf.keras.Model`, `tf.keras.Sequential` or `tf.keras.layers.Layer`.
             Nested layers and models will be automatically discovered.
             Alternatively, in place of a single layer, you can pass a list of layers.
-        optimizer_specs: specialized list for serialization.
-            Should be left as None for almost all cases.
-            If you are loading a serialized version of this optimizer,
-            please use `tf.keras.models.load_model` after saving a model compiled with this optimizer.
+        default_optimizer: Default optimizer for the left trainable variables.
 
     Usage:
 
     >>> model = tf.keras.Sequential([
     ...     tf.keras.Input(shape=(4,)),
-    ...     tf.keras.layers.Dense(8),
-    ...     tf.keras.layers.Dense(16),
-    ...     tf.keras.layers.Dense(32),
+    ...     tf.keras.layers.Dense(8, name="varname1"),
+    ...     tf.keras.layers.Dense(16, name="varname2"),
+    ...     tf.keras.layers.Dense(32, name="varname3"),
+    ...     tf.keras.layers.Dense(64),
     ... ])
     >>> optimizers = [
     ...     tf.keras.optimizers.Adam(learning_rate=1e-4),
-    ...     tf.keras.optimizers.Adam(learning_rate=1e-2)
+    ...     tf.keras.optimizers.Adam(learning_rate=1e-2),
+    ...     tf.keras.optimizers.Adam(learning_rate=1e-3)
     ... ]
-    >>> optimizers_and_layers = [(optimizers[0], model.layers[0]), (optimizers[1], model.layers[1:])]
-    >>> optimizer = dp.optimizers.MultiOptimizer(optimizers_and_layers)
+    >>> optimizers_and_varnames = [(optimizers[0], "varname1"), (optimizers[1], "varname2,varname3")]
+    >>> optimizer = dp.optimizers.MultiOptimizer(optimizers_and_varnames, optimizers[2])
     >>> model.compile(optimizer=optimizer, loss="mse")
 
     Reference:
@@ -88,96 +81,86 @@ class MultiOptimizer(KerasLegacyOptimizer):
   @typechecked
   def __init__(
       self,
-      optimizers_and_layers: Union[list, None] = None,
-      optimizer_specs: Union[list, None] = None,
+      optimizers_and_varnames: Union[list, None] = None,
+      default_optimizer: KerasLegacyOptimizer = None,
       name: str = "MultiOptimizer",
       **kwargs,
   ):
 
     super(MultiOptimizer, self).__init__(name, **kwargs)
+    if default_optimizer is None:
+      raise RuntimeError("Must specify `default_optimizer`.")
+    self.optimizers_and_varnames = optimizers_and_varnames
+    self.default_optimizer = default_optimizer
 
-    if optimizer_specs is None and optimizers_and_layers is not None:
-      self.optimizer_specs = [
-          self.create_optimizer_spec(optimizer, layers_or_model) for optimizer, layers_or_model in optimizers_and_layers
-      ]
-
-    elif optimizer_specs is not None and optimizers_and_layers is None:
-      self.optimizer_specs = [self.maybe_initialize_optimizer_spec(spec) for spec in optimizer_specs]
-
+    if isinstance(self, optimizer.Optimizer):
+      self.compute_gradients = self.default_optimizer.compute_gradients
+    elif isinstance(self, optimizer_v2.OptimizerV2) or isinstance(self, keras_optimizer):
+      self.compute_gradients = self.default_optimizer._compute_gradients
     else:
-      raise RuntimeError("Must specify one of `optimizers_and_layers` or `optimizer_specs`.")
+      raise Exception("Optimizer type is not supported! got {}".format(str(type(self))))
 
-  def apply_gradients(self, grads_and_vars, **kwargs):
-    """Wrapped apply_gradient method.
+  def minimize(self, loss, var_list, tape):
+    # Compute gradients
+    grads_and_vars = self.compute_gradients(loss=loss, var_list=var_list, tape=tape)
+    self.apply_gradients(grads_and_vars)
 
-        Returns an operation to be executed.
-        """
+  def apply_gradients(self, grads_and_vars, name=None, **kwargs):
+    # Create a dictionary with a default optimizer and an empty variable list
+    var_dict, grad_dict = defaultdict(list), defaultdict(list)
 
-    for spec in self.optimizer_specs:
-      spec["gv"] = []
+    # Iterate over the trainable variables list
+    for grad, var in grads_and_vars:
+      # Check if each variable name exists in the variable name list
+      for optimizer, varnames in self.optimizers_and_varnames:
+        if any(name in var.name for name in varnames.split(',')):
+          # If it does, append the variable to the optimizer's variable list
+          var_dict[optimizer].append(var)
+          grad_dict[optimizer].append(grad)
+          break
+      else:
+        # If it doesn't, append the variable to the default optimizer's variable list
+        var_dict[self.default_optimizer].append(var)
+        grad_dict[self.default_optimizer].append(grad)
 
-    for grad, var in tuple(grads_and_vars):
-      for spec in self.optimizer_specs:
-        for name in spec["weights"]:
-          if var.name == name:
-            spec["gv"].append((grad, var))
-
-    update_ops = [spec["optimizer"].apply_gradients(spec["gv"], **kwargs) for spec in self.optimizer_specs]
-    update_group = tf.group(update_ops)
-
-    any_symbolic = any(isinstance(i, tf.Operation) or tf_utils.is_symbolic_tensor(i) for i in update_ops)
-
-    if not tf.executing_eagerly() or any_symbolic:
-      # If the current context is graph mode or any of the update ops are
-      # symbolic then the step update should be carried out under a graph
-      # context. (eager updates execute immediately)
-      with backend._current_graph(  # pylint: disable=protected-access
-          update_ops
-      ).as_default():
-        with tf.control_dependencies([update_group]):
-          return self.iterations.assign_add(1, read_value=False)
-
-    return self.iterations.assign_add(1)
+    # Call the apply_gradients method for each optimizer with the corresponding gradient and variable list
+    for optimizer, partvar_list in var_dict.items():
+      optimizer.apply_gradients(zip(grad_dict[optimizer], partvar_list))
 
   def get_config(self):
-    config = super(MultiOptimizer, self).get_config()
-    optimizer_specs_without_gv = []
-    for optimizer_spec in self.optimizer_specs:
-      optimizer_specs_without_gv.append(
-          {
-              "optimizer": optimizer_spec["optimizer"],
-              "weights": optimizer_spec["weights"],
-          }
-      )
-    config.update({"optimizer_specs": optimizer_specs_without_gv})
-    return config
+    # https://github.com/tensorflow/addons/blob/062a7aaf33e4618fc3eb55f54915278287bb545f/tensorflow_addons/optimizers/discriminative_layer_training.py#L153
+    raise NotImplementedError("MultiOptimizer cannot be serialized because"
+                              " it uses callable to get variables.")
 
-  @classmethod
-  def create_optimizer_spec(
-      cls,
-      optimizer: KerasLegacyOptimizer,
-      layers_or_model: Union[tf.keras.Model, tf.keras.Sequential, tf.keras.layers.Layer, List[tf.keras.layers.Layer],],
-  ):
-    """Creates a serializable optimizer spec.
+  @property
+  def iterations(self):
+    """The number of training steps this `optimizer` has run.
 
-        The name of each variable is used rather than `var.ref()` to enable serialization and deserialization.
-        """
-    if isinstance(layers_or_model, list):
-      weights = [var.name for sublayer in layers_or_model for var in sublayer.weights]
-    else:
-      weights = [var.name for var in layers_or_model.weights]
+    By default, iterations would be incremented by one every time
+    `apply_gradients()` is called.
+    """
+    return self.default_optimizer.iterations
 
-    return {
-        "optimizer": optimizer,
-        "weights": weights,
-    }
+  @iterations.setter
+  def iterations(self, variable):
+    """See base class."""
+    for optimizer, _ in self.optimizers_and_varnames:
+      optimizer.iterations = variable
 
-  @classmethod
-  def maybe_initialize_optimizer_spec(cls, optimizer_spec):
-    if isinstance(optimizer_spec["optimizer"], dict):
-      optimizer_spec["optimizer"] = tf.keras.optimizers.deserialize(optimizer_spec["optimizer"])
+  def variables(self):
+    """Returns the optimizer's variables."""
+    # OptimizerV2.variables() returns self._weights, so override that method.
+    return self.weights
 
-    return optimizer_spec
+  @property
+  def weights(self) -> List[tf.Variable]:
+    """Returns the optimizer's variables."""
+    weights = []
+    for optimizer, _ in self.optimizers_and_varnames:
+      weights += optimizer.weights
+    return weights
 
-  def __repr__(self):
-    return "Multi Optimizer with %i optimizer layer pairs" % len(self.optimizer_specs)
+  @property
+  def optimizers(self) -> List[tf.keras.optimizers.legacy.Optimizer]:
+    """Returns the optimizers in composite optimizer (in the original order)."""
+    return [optimizer for optimizer, _ in self.optimizers_and_varnames]
