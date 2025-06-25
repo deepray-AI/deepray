@@ -103,6 +103,8 @@ ignore = [
     "B904",
     # Zip without explicit strict parameter
     "B905",
+    # imported but unused
+    "F401",
 ]
 select = [
     "B9",
