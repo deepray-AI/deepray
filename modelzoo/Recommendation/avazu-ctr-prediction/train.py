@@ -22,7 +22,6 @@ from absl import flags
 
 import tensorflow as tf
 from absl import app
-from absl import flags
 import tensorflow_recommenders_addons as tfra
 
 from deepray.core.trainer import Trainer

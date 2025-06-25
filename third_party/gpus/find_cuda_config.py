@@ -151,7 +151,7 @@ def _get_ld_config_paths():
       match = False
     if match:
       result.add(os.path.dirname(match.group(1)))
-  return sorted(list(result))
+  return sorted(result)
 
 
 def _get_default_cuda_paths(cuda_version):

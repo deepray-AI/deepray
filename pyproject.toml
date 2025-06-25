@@ -79,8 +79,9 @@ preview = true
 exclude = [
     ".git",
     "build",
-    "deepray/datasets",
     "__pycache__",
+    "deepray/datasets/",
+    "modelzoo/LanguageModeling/ELECTRA/"
 ]
 line-length = 120
 indent-width = 2
@@ -115,6 +116,7 @@ ignore = [
     "F821",
     "C400",
     "C416",
+    "YTT202",
 ]
 select = [
     "B9",
