@@ -16,10 +16,10 @@ namespace {
 // cols: How many elements to do SparseSegmentSum
 // output: rows * embedding_size
 template <typename T>
-static void sparse_gather_v1(T *input, int rows, int cols,
-                             float *embedding_table, float *output,
+static void sparse_gather_v1(T* input, int rows, int cols,
+                             float* embedding_table, float* output,
                              int embedding_size, bool is_mean) {
-  T *pidx = input;
+  T* pidx = input;
   for (int i = 0; i < rows; ++i) {
     for (int j = 0; j < embedding_size; ++j) {
       float value = 0;
@@ -44,10 +44,10 @@ static void sparse_gather_v1(T *input, int rows, int cols,
 
 // embedding_size = 1
 template <typename T>
-static void sparse_gather_embeddingsize1(T *input, int rows, int cols,
-                                         float *embedding_table, float *output,
+static void sparse_gather_embeddingsize1(T* input, int rows, int cols,
+                                         float* embedding_table, float* output,
                                          bool is_mean) {
-  T *pidx = input;
+  T* pidx = input;
   for (int i = 0; i < rows; ++i) {
     float value = 0;
     int dense_num = 0;
@@ -69,13 +69,13 @@ static void sparse_gather_embeddingsize1(T *input, int rows, int cols,
 
 // input cols = 1
 template <typename T>
-static void sparse_gather_column1(T *input, int rows, float *embedding_table,
-                                  float *output, int embedding_size) {
-  T *pidx = input;
+static void sparse_gather_column1(T* input, int rows, float* embedding_table,
+                                  float* output, int embedding_size) {
+  T* pidx = input;
   for (int i = 0; i < rows; ++i) {
     int embedding_row = *pidx++;
     if (embedding_row >= 0) {
-      float *pembedding = &embedding_table[embedding_row * embedding_size];
+      float* pembedding = &embedding_table[embedding_row * embedding_size];
       for (int j = 0; j < embedding_size; ++j) {
         output[j] = pembedding[j];
       }
@@ -89,8 +89,8 @@ static void sparse_gather_column1(T *input, int rows, float *embedding_table,
 }
 
 template <typename T>
-static void sparse_gather(T *input, int rows, int cols, float *embedding_table,
-                          float *output, int embedding_size, bool is_mean) {
+static void sparse_gather(T* input, int rows, int cols, float* embedding_table,
+                          float* output, int embedding_size, bool is_mean) {
   if (embedding_size == 1) {
     sparse_gather_embeddingsize1(input, rows, cols, embedding_table, output,
                                  is_mean);
@@ -104,21 +104,21 @@ static void sparse_gather(T *input, int rows, int cols, float *embedding_table,
 }
 
 // Use memcpy or manually assign?
-static void mycopy(float *dst, float *src, int float_num) {
+static void mycopy(float* dst, float* src, int float_num) {
   memcpy(dst, src, float_num * sizeof(float));
 }
 
-static void myadd(float *dst, float *src, int float_num) {
+static void myadd(float* dst, float* src, int float_num) {
   for (int i = 0; i < float_num; ++i) {
     dst[i] += src[i];
   }
 }
 
 template <typename T>
-static void row_add(std::map<T *, std::vector<T *>> &mapSet, int64 row_nums) {
+static void row_add(std::map<T*, std::vector<T*>>& mapSet, int64 row_nums) {
   for (auto it = mapSet.begin(); it != mapSet.end(); ++it) {
-    T *dst = it->first;
-    std::vector<T *> srcs(std::move(it->second));
+    T* dst = it->first;
+    std::vector<T*> srcs(std::move(it->second));
     int64 src_size = srcs.size();
 
     for (int row = 0; row < row_nums; ++row) {
@@ -131,13 +131,13 @@ static void row_add(std::map<T *, std::vector<T *>> &mapSet, int64 row_nums) {
 }
 
 template <typename T>
-static void row_add_mean(std::map<T *, std::vector<T *>> &mapSet,
-                         int64 row_nums, bool is_mean) {
+static void row_add_mean(std::map<T*, std::vector<T*>>& mapSet, int64 row_nums,
+                         bool is_mean) {
 #define L(n) srcs[index + n][row]
 
   for (auto it = mapSet.begin(); it != mapSet.end(); ++it) {
-    T *dst = it->first;
-    std::vector<T *> srcs(std::move(it->second));
+    T* dst = it->first;
+    std::vector<T*> srcs(std::move(it->second));
     int64 src_size = srcs.size();
 
     if (src_size == 1) {
@@ -211,22 +211,22 @@ static void row_add_mean(std::map<T *, std::vector<T *>> &mapSet,
   }
 }
 
-static void myscale(float *dst, float factor, int float_num) {
+static void myscale(float* dst, float factor, int float_num) {
   for (int i = 0; i < float_num; ++i) {
     dst[i] *= factor;
   }
 }
 
 template <typename Tid, typename Tshape>
-static void sparse_gather(Tid *input, int64 input_size, Tshape *indice,
-                          int indice_dim, Tshape *shape, int rows, int cols,
-                          float *embedding_table, float *output,
+static void sparse_gather(Tid* input, int64 input_size, Tshape* indice,
+                          int indice_dim, Tshape* shape, int rows, int cols,
+                          float* embedding_table, float* output,
                           int embedding_size, bool is_mean) {
   // Record how many values in each row
-  int *row_values = new int[rows];
+  int* row_values = new int[rows];
   memset(row_values, 0, rows * sizeof(int));
 
-  std::map<float *, std::vector<float *>> mapSet;
+  std::map<float*, std::vector<float*>> mapSet;
 
   for (int64 i = 0; i < input_size; ++i) {
     Tid id = input[i];
@@ -241,7 +241,7 @@ static void sparse_gather(Tid *input, int64 input_size, Tshape *indice,
 
     auto index = row * embedding_size;
     if (!mapSet.count(&output[index])) {
-      std::vector<float *> srcs;
+      std::vector<float*> srcs;
       mapSet[&output[index]] = srcs;
     }
     mapSet[&output[index]].push_back(&embedding_table[id * embedding_size]);
@@ -314,7 +314,7 @@ static void sparse_gather(Tid *input, int64 input_size, Tshape *indice,
 template <typename Device, typename Tid, typename Tshape>
 class FusedSafeEmbeddingLookupSparseLocalOp : public OpKernel {
  public:
-  explicit FusedSafeEmbeddingLookupSparseLocalOp(OpKernelConstruction *context)
+  explicit FusedSafeEmbeddingLookupSparseLocalOp(OpKernelConstruction* context)
       : OpKernel(context) {
     OP_REQUIRES_OK(context, context->GetAttr("combiner", &combiner_));
     // OP_REQUIRES_OK(context, context->GetAttr("Dims", &dims));
@@ -323,14 +323,14 @@ class FusedSafeEmbeddingLookupSparseLocalOp : public OpKernel {
 
   ~FusedSafeEmbeddingLookupSparseLocalOp() {}
 
-  void Compute(OpKernelContext *context) override {
+  void Compute(OpKernelContext* context) override {
     // Grab the weight
-    float *weight;
-    const Tensor *weight_tensor = &context->input(0);
+    float* weight;
+    const Tensor* weight_tensor = &context->input(0);
 
     // for saved model
     if (weight_tensor->dtype() == DT_RESOURCE) {
-      Var *variable;
+      Var* variable;
       OP_REQUIRES_OK(
           context,
           LookupResource(context, HandleFromInput(context, 0), &variable));
@@ -341,14 +341,14 @@ class FusedSafeEmbeddingLookupSparseLocalOp : public OpKernel {
           errors::InvalidArgument("Expect float weight in ", node_name));
     }
 
-    weight = (float *)weight_tensor->tensor_data().data();
+    weight = (float*)weight_tensor->tensor_data().data();
 
     // Input id
-    const Tensor &input_tensor = context->input(1);
-    Tid *input = (Tid *)input_tensor.tensor_data().data();
+    const Tensor& input_tensor = context->input(1);
+    Tid* input = (Tid*)input_tensor.tensor_data().data();
 
-    const Tensor &shape_tensor = context->input(2);
-    Tshape *shape = (Tshape *)shape_tensor.tensor_data().data();
+    const Tensor& shape_tensor = context->input(2);
+    Tshape* shape = (Tshape*)shape_tensor.tensor_data().data();
 
     // To check the input
     OP_REQUIRES(
@@ -372,16 +372,16 @@ class FusedSafeEmbeddingLookupSparseLocalOp : public OpKernel {
     int embedding_size = weight_tensor->dim_size(1);
     bool is_mean = (combiner_ == "mean");
 
-    const Tensor &indice_tensor = context->input(3);
-    Tshape *indice = (Tshape *)indice_tensor.tensor_data().data();
+    const Tensor& indice_tensor = context->input(3);
+    Tshape* indice = (Tshape*)indice_tensor.tensor_data().data();
     int indice_dim = indice_tensor.dim_size(1);
 
     // Create an output tensor
-    Tensor *output_tensor = NULL;
+    Tensor* output_tensor = NULL;
     TensorShape output_shape({batch_size, embedding_size});
     OP_REQUIRES_OK(context,
                    context->allocate_output(0, output_shape, &output_tensor));
-    float *output = (float *)output_tensor->tensor_data().data();
+    float* output = (float*)output_tensor->tensor_data().data();
 
     if (false && input_size == batch_size * cols) {  // input id is dense
       // fixme(marvin): disable this branch just for test.
@@ -425,7 +425,7 @@ namespace functor {
 
 template <typename T, typename Index, typename SegmentId>
 struct SparseSegmentGradFunctor {
-  void operator()(OpKernelContext *context,
+  void operator()(OpKernelContext* context,
                   SparseSegmentReductionOperation operation,
                   typename TTypes<T>::ConstMatrix input_flat,
                   typename TTypes<Index>::ConstVec indices_vec,
@@ -524,7 +524,7 @@ template <typename Device, typename T, typename Tinput, typename Tindices,
 class FusedSafeEmbeddingLookupSparseLocalGradOp : public OpKernel {
  public:
   explicit FusedSafeEmbeddingLookupSparseLocalGradOp(
-      OpKernelConstruction *context)
+      OpKernelConstruction* context)
       : OpKernel(context) {
     OP_REQUIRES_OK(context, context->GetAttr("combiner", &combiner_));
     // OP_REQUIRES_OK(context, context->GetAttr("Dims", &dims));
@@ -553,10 +553,10 @@ class FusedSafeEmbeddingLookupSparseLocalGradOp : public OpKernel {
 
   ~FusedSafeEmbeddingLookupSparseLocalGradOp() {}
 
-  void Compute(OpKernelContext *context) override {
+  void Compute(OpKernelContext* context) override {
     // Grab gradients
-    const Tensor &gradients_tensor = context->input(0);
-    T *gradients = (T *)gradients_tensor.tensor_data().data();
+    const Tensor& gradients_tensor = context->input(0);
+    T* gradients = (T*)gradients_tensor.tensor_data().data();
     OP_REQUIRES(
         context, (gradients_tensor.dims() == 2),
         errors::InvalidArgument("Gradients tensor is not valid (dims != 2)"));
@@ -564,16 +564,16 @@ class FusedSafeEmbeddingLookupSparseLocalGradOp : public OpKernel {
     int64 embedding_col = gradients_tensor.dim_size(1);
 
     // Grad input hash value
-    const Tensor &input_tensor = context->input(1);
-    Tinput *input = (Tinput *)input_tensor.tensor_data().data();
+    const Tensor& input_tensor = context->input(1);
+    Tinput* input = (Tinput*)input_tensor.tensor_data().data();
     int64 input_size = 1;
     for (int i = 0; i < input_tensor.dims(); ++i) {
       input_size *= input_tensor.dim_size(i);
     }
 
     // Grad indices value
-    const Tensor &indices_tensor = context->input(2);
-    Tindices *indices_ptr = (Tindices *)indices_tensor.tensor_data().data();
+    const Tensor& indices_tensor = context->input(2);
+    Tindices* indices_ptr = (Tindices*)indices_tensor.tensor_data().data();
     int indices_row = indices_tensor.dim_size(0);
     int indices_col = indices_tensor.dim_size(1);
     OP_REQUIRES(context, (indices_tensor.dims() == 2),
@@ -589,9 +589,9 @@ class FusedSafeEmbeddingLookupSparseLocalGradOp : public OpKernel {
     }
 
     // Grad input dense shape
-    const Tensor &dense_shape_tensor = context->input(3);
-    Tdense_shape *dense_shape =
-        (Tdense_shape *)dense_shape_tensor.tensor_data().data();
+    const Tensor& dense_shape_tensor = context->input(3);
+    Tdense_shape* dense_shape =
+        (Tdense_shape*)dense_shape_tensor.tensor_data().data();
     OP_REQUIRES(
         context, (dense_shape_tensor.dims() == 1),
         errors::InvalidArgument("Shape tensor is not valid (dims != 1)"));
@@ -641,20 +641,20 @@ class FusedSafeEmbeddingLookupSparseLocalGradOp : public OpKernel {
     // printf("\n");
 
     // Create an output tensor
-    Tensor *output_tensor = NULL;
+    Tensor* output_tensor = NULL;
     TensorShape output_shape({unique_value.size(), embedding_col});
     OP_REQUIRES_OK(context,
                    context->allocate_output(0, output_shape, &output_tensor));
     output_tensor->flat<T>().setZero();
-    T *output = (T *)output_tensor->tensor_data().data();
+    T* output = (T*)output_tensor->tensor_data().data();
 
     memset(output, 0, embedding_col * sizeof(float) * unique_value.size());
 
-    Tensor *unique_tensor = NULL;
+    Tensor* unique_tensor = NULL;
     TensorShape unique_shape({unique_value.size()});
     OP_REQUIRES_OK(context,
                    context->allocate_output(1, unique_shape, &unique_tensor));
-    Tinput *unique = (Tinput *)unique_tensor->tensor_data().data();
+    Tinput* unique = (Tinput*)unique_tensor->tensor_data().data();
 
     int64 unique_num = unique_value.size();
     for (int64 i = 0; i < unique_num; ++i) {
@@ -678,7 +678,7 @@ class FusedSafeEmbeddingLookupSparseLocalGradOp : public OpKernel {
     } else if (operation_ == SparseSegmentReductionOperation::kSum) {
       uint64 rows = unique_indices.size();
       // std::vector<int64> row_values(unique_value.size(), 0);
-      std::map<float *, std::vector<float *>> mapSet;
+      std::map<float*, std::vector<float*>> mapSet;
 
       for (int64 i = 0; i < rows; ++i) {
         // row_values[unique_indices[i]] += 1;
@@ -687,7 +687,7 @@ class FusedSafeEmbeddingLookupSparseLocalGradOp : public OpKernel {
         // memset(&output[index * embedding_col], 0, embedding_col *
         // sizeof(float));
         if (!mapSet.count(&output[index])) {
-          std::vector<float *> srcs;
+          std::vector<float*> srcs;
           mapSet[&output[index]] = srcs;
         }
         mapSet[&output[index]].push_back(
@@ -712,19 +712,19 @@ class FusedSafeEmbeddingLookupSparseLocalGradOp : public OpKernel {
 
  private:
   template <typename Tdata>
-  void copy(Tdata *dst, const Tdata *src, const int64 num) {
+  void copy(Tdata* dst, const Tdata* src, const int64 num) {
     memcpy(dst, src, num * sizeof(T));
   }
 
   template <typename Tdata>
-  void add(Tdata *dst, const Tdata *src, const int64 num) {
+  void add(Tdata* dst, const Tdata* src, const int64 num) {
     for (int64 i = 0; i < num; ++i) {
       dst[i] += src[i];
     }
   }
 
   template <typename Tdata>
-  void scale(Tdata *dst, const Tdata factor, const int64 num) {
+  void scale(Tdata* dst, const Tdata factor, const int64 num) {
     for (int64 i = 0; i < num; ++i) {
       dst[i] *= factor;
     }

@@ -178,8 +178,8 @@ TEST(DivSparsePartitionerTest, TestCalcGlobalOffset) {
 
 class CollectOpTest : public OpsTestBase {
  protected:
-  void MakeOp(const string &config_str, const string &tensor_name,
-              DataType ktype, const string &part_mode = "div",
+  void MakeOp(const string& config_str, const string& tensor_name,
+              DataType ktype, const string& part_mode = "div",
               int64 part_idx = 0, int64 part_count = 0,
               int64 hash_bucket_size = 0) {
     TF_EXPECT_OK(NodeDefBuilder("collect_op", "CollectSparseIndices")
@@ -209,7 +209,7 @@ class CollectOpTest : public OpsTestBase {
     params_.get()->frame_iter = FrameAndIter(0, 0);
     params_.get()->inputs = &inputs_;
     params_.get()->op_kernel = kernel_.get();
-    step_container_.reset(new ScopedStepContainer(0, [](const string &) {}));
+    step_container_.reset(new ScopedStepContainer(0, [](const string&) {}));
     params_->step_container = step_container_.get();
     std::vector<AllocatorAttributes> attrs;
     test::SetOutputAttrs(params_.get(), &attrs);
@@ -219,12 +219,12 @@ class CollectOpTest : public OpsTestBase {
 
     context_.reset(new OpKernelContext(params_.get()));
 
-    IndicesIncrRecorder<KeyType> *sparse_incr_res = nullptr;
+    IndicesIncrRecorder<KeyType>* sparse_incr_res = nullptr;
     auto rm = device_->resource_manager();
 
     Status s = rm->LookupOrCreate<IndicesIncrRecorder<KeyType>>(
         "", tensor_name + "_sparse_incr", &sparse_incr_res,
-        [this, tensor_name](IndicesIncrRecorder<KeyType> **ptr) {
+        [this, tensor_name](IndicesIncrRecorder<KeyType>** ptr) {
           *ptr = new IndicesIncrRecorder<KeyType>(tensor_name);
           (*ptr)->UpdateGlobalVersion();
           return OkStatus();

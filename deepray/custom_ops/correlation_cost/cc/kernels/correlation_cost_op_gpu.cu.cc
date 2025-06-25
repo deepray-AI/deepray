@@ -43,8 +43,8 @@ https://github.com/NVIDIA/flownet2-pytorch
 */
 
 template <unsigned int THREADS_PER_BLOCK>
-__global__ void pad_and_transpose(const float *__restrict__ input,
-                                  float *__restrict__ output, int C, int H,
+__global__ void pad_and_transpose(const float* __restrict__ input,
+                                  float* __restrict__ output, int C, int H,
                                   int W, int P) {
   // NCHW -> pad(NHWC)
   const int n = blockIdx.x;
@@ -61,8 +61,8 @@ __global__ void pad_and_transpose(const float *__restrict__ input,
 }
 
 template <unsigned int THREADS_PER_BLOCK>
-__global__ void pad_and_no_transpose(const float *__restrict__ input,
-                                     float *__restrict__ output, int C, int H,
+__global__ void pad_and_no_transpose(const float* __restrict__ input,
+                                     float* __restrict__ output, int C, int H,
                                      int W, int P) {
   // NHWC -> pad(NHWC)
   const int n = blockIdx.x;
@@ -79,11 +79,11 @@ __global__ void pad_and_no_transpose(const float *__restrict__ input,
 }
 
 template <unsigned int THREADS_PER_BLOCK>
-__global__ void Correlation_forward(float *__restrict__ output, int Cout,
+__global__ void Correlation_forward(float* __restrict__ output, int Cout,
                                     int Hout, int Wout,
-                                    const float *__restrict__ pInput1, int Cin,
+                                    const float* __restrict__ pInput1, int Cin,
                                     int Hin, int Win,
-                                    const float *__restrict__ pInput2, int pad,
+                                    const float* __restrict__ pInput2, int pad,
                                     int kernel_size, int max_displacement,
                                     int stride1, int stride2) {
   const int pWin = Win + 2 * pad;
@@ -139,9 +139,9 @@ __global__ void Correlation_forward(float *__restrict__ output, int Cout,
 
 template <unsigned int THREADS_PER_BLOCK>
 __global__ void Correlation_backward_input1(
-    int item, float *__restrict__ gradInput1, int Cin, int Hin, int Win,
-    const float *__restrict__ gradOutput, int Cout, int Hout, int Wout,
-    const float *__restrict__ rInput2, int pad_size, int kernel_size,
+    int item, float* __restrict__ gradInput1, int Cin, int Hin, int Win,
+    const float* __restrict__ gradOutput, int Cout, int Hout, int Wout,
+    const float* __restrict__ rInput2, int pad_size, int kernel_size,
     int max_displacement, int stride1, int stride2, bool is_NCHW) {
   const int n = item;
   const int h = blockIdx.x * stride1 + pad_size;
@@ -220,9 +220,9 @@ __global__ void Correlation_backward_input1(
 
 template <unsigned int THREADS_PER_BLOCK>
 __global__ void Correlation_backward_input2(
-    int item, float *__restrict__ gradInput2, int Cin, int Hin, int Win,
-    const float *__restrict__ gradOutput, int Cout, int Hout, int Wout,
-    const float *rInput1, int pad_size, int kernel_size, int max_displacement,
+    int item, float* __restrict__ gradInput2, int Cin, int Hin, int Win,
+    const float* __restrict__ gradOutput, int Cout, int Hout, int Wout,
+    const float* rInput1, int pad_size, int kernel_size, int max_displacement,
     int stride1, int stride2, bool is_NCHW) {
   const int n = item;
   const int h = blockIdx.x * stride1 + pad_size;
@@ -301,8 +301,8 @@ __global__ void Correlation_backward_input2(
 
 template <typename Dtype>
 struct CorrelationCostFunctor<GPUDevice, Dtype> {
-  Status operator()(OpKernelContext *context, const Tensor &input_a_t,
-                    const Tensor &input_b_t, Tensor *output_t,
+  Status operator()(OpKernelContext* context, const Tensor& input_a_t,
+                    const Tensor& input_b_t, Tensor* output_t,
                     /* params */
                     int kernel_size, int max_displacement, int stride_1,
                     int stride_2, int pad, TensorFormat data_format) {
@@ -355,7 +355,7 @@ struct CorrelationCostFunctor<GPUDevice, Dtype> {
           iH, iW, pad);
     }
 
-    const GPUDevice &d = context->eigen_gpu_device();
+    const GPUDevice& d = context->eigen_gpu_device();
 
     dim3 threadsPerBlock(THREADS_PER_BLOCK);
     dim3 totalBlocksCorr(N, oH, oW);
@@ -373,9 +373,9 @@ struct CorrelationCostFunctor<GPUDevice, Dtype> {
 
 template <typename Dtype>
 struct CorrelationCostGradFunctor<GPUDevice, Dtype> {
-  Status operator()(OpKernelContext *context, const Tensor &input_a_t,
-                    const Tensor &input_b_t, const Tensor &topdiff_t,
-                    Tensor *output_a_gradient_t, Tensor *output_b_gradient_t,
+  Status operator()(OpKernelContext* context, const Tensor& input_a_t,
+                    const Tensor& input_b_t, const Tensor& topdiff_t,
+                    Tensor* output_a_gradient_t, Tensor* output_b_gradient_t,
                     /* params */
                     int kernel_size, int max_displacement, int stride_1,
                     int stride_2, int pad, TensorFormat data_format) {
@@ -430,7 +430,7 @@ struct CorrelationCostGradFunctor<GPUDevice, Dtype> {
           iH, iW, pad);
     }
 
-    const GPUDevice &d = context->eigen_gpu_device();
+    const GPUDevice& d = context->eigen_gpu_device();
 
     dim3 threadsPerBlock(THREADS_PER_BLOCK);
     dim3 totalBlocksCorr(iH, iW, iC);

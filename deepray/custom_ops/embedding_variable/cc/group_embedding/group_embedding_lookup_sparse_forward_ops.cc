@@ -38,13 +38,13 @@ class GroupEmbeddingVariableLookupCpuOp
   USING_BASE_CLASS_MEMBER
 
  public:
-  explicit GroupEmbeddingVariableLookupCpuOp(OpKernelConstruction *c)
+  explicit GroupEmbeddingVariableLookupCpuOp(OpKernelConstruction* c)
       : GroupLookupBaseCpuOp<TKey, TValue>(c) {
     OP_REQUIRES_OK(c, c->GetAttr("is_use_default_value_tensor",
                                  &m_is_use_default_value_tensor));
   }
 
-  void Compute(OpKernelContext *ctx) override {
+  void Compute(OpKernelContext* ctx) override {
     /*
       step 1: unique and assign unique output and index
       step 2: doing unique value gather
@@ -53,16 +53,16 @@ class GroupEmbeddingVariableLookupCpuOp
     auto worker_threads = ctx->device()->tensorflow_cpu_worker_threads();
 
     for (int i = 0; i < m_num_lookup; ++i) {
-      EmbeddingVar<TKey, TValue> *embedding_var = nullptr;
+      EmbeddingVar<TKey, TValue>* embedding_var = nullptr;
       OP_REQUIRES_OK(
           ctx, LookupResource(ctx, HandleFromInput(ctx, i), &embedding_var));
       core::ScopedUnref unref_me(embedding_var);
 
-      const Tensor &sp_values_tensor = ctx->input(m_num_lookup + i);
-      const Tensor &sp_indices_tensor = ctx->input(m_num_lookup * 2 + i);
+      const Tensor& sp_values_tensor = ctx->input(m_num_lookup + i);
+      const Tensor& sp_indices_tensor = ctx->input(m_num_lookup * 2 + i);
       auto sp_indices = sp_indices_tensor.flat<int64>().data();
       int nnz = sp_values_tensor.NumElements();
-      const Tensor &dense_shape_tensor = ctx->input(m_num_lookup * 4 + i);
+      const Tensor& dense_shape_tensor = ctx->input(m_num_lookup * 4 + i);
       auto dense_shape = dense_shape_tensor.flat<int64>().data();
       int64 batch_size = dense_shape[0];
 
@@ -87,15 +87,15 @@ class GroupEmbeddingVariableLookupCpuOp
       ctx->set_output(m_num_lookup + i, unique_tensor);
       ctx->set_output(2 * m_num_lookup + i, unique_idx_tensor);
 
-      auto *unique = unique_tensor.flat<TKey>().data();
-      auto *unique_idx = unique_idx_tensor.flat<int>().data();
+      auto* unique = unique_tensor.flat<TKey>().data();
+      auto* unique_idx = unique_idx_tensor.flat<int>().data();
 
       int unique_nnz = unique_tensor.shape().dim_size(0);
       TensorShape unique_shape{static_cast<int64>(unique_nnz)};
 
       TensorShape batch_nums_tensor_shape =
           TensorShape(std::vector<int64>({batch_size}));
-      Tensor *batch_nums_tensor = nullptr;
+      Tensor* batch_nums_tensor = nullptr;
       // allocate output
       OP_REQUIRES_OK(ctx, ctx->allocate_output(3 * m_num_lookup + i,
                                                batch_nums_tensor_shape,
@@ -123,8 +123,7 @@ class GroupEmbeddingVariableLookupCpuOp
       if (m_is_use_default_value_tensor) {
         embedding_var->GetEmbeddings(
             ev_ctx, unique, unique_embedding_data, unique_nnz,
-            reinterpret_cast<TValue *>(
-                ctx->input(m_num_lookup * 4 + 1).data()));
+            reinterpret_cast<TValue*>(ctx->input(m_num_lookup * 4 + 1).data()));
       } else {
         embedding_var->GetEmbeddings(ev_ctx, unique, unique_embedding_data,
                                      unique_nnz);
@@ -133,12 +132,12 @@ class GroupEmbeddingVariableLookupCpuOp
       }
 
       std::vector<TValue> default_weights(nnz, 1.0);
-      TValue *sp_weights = default_weights.data();
+      TValue* sp_weights = default_weights.data();
       if (!this->m_ignore_weights) {
-        const Tensor &sp_weights_tensor =
+        const Tensor& sp_weights_tensor =
             ctx->input(this->m_num_lookup * 3 + i);
         sp_weights =
-            const_cast<TValue *>(sp_weights_tensor.flat<TValue>().data());
+            const_cast<TValue*>(sp_weights_tensor.flat<TValue>().data());
       }
 
       // Stage 3
@@ -151,7 +150,7 @@ class GroupEmbeddingVariableLookupCpuOp
         emb_vectors_tensor_shape =
             TensorShape(std::vector<int64>({batch_size, m_dimension}));
       }
-      Tensor *gather_embedding_tensor = nullptr;
+      Tensor* gather_embedding_tensor = nullptr;
       // allocate output
       OP_REQUIRES_OK(ctx, ctx->allocate_output(i, emb_vectors_tensor_shape,
                                                &gather_embedding_tensor));
@@ -176,7 +175,7 @@ class GroupEmbeddingVariableLookupCpuOp
             int batch_num = batch_nums[i] - batch_offset;
             for (int j = 0; j < batch_num; ++j) {
               int unique_indice = unique_idx[batch_offset + j];
-              float *u_embedding =
+              float* u_embedding =
                   unique_embedding_data + unique_indice * m_dimension;
               __m512 _weights =
                   _mm512_set1_ps(*(sp_weights + batch_offset + j));
@@ -209,7 +208,7 @@ class GroupEmbeddingVariableLookupCpuOp
             int batch_num = batch_nums[i] - batch_offset;
             for (int j = 0; j < batch_num; ++j) {
               int unique_indice = unique_idx[batch_offset + j];
-              float *u_embedding =
+              float* u_embedding =
                   unique_embedding_data + unique_indice * m_dimension;
               TValue sp_weight = sp_weights[batch_offset + j];
               batch_total_weights += sp_weight;
@@ -246,7 +245,7 @@ class GroupEmbeddingVariableLookupCpuOp
             int batch_num = batch_nums[i] - batch_offset;
             for (int j = 0; j < batch_num; ++j) {
               int unique_indice = unique_idx[batch_offset + j];
-              float *u_embedding =
+              float* u_embedding =
                   unique_embedding_data + unique_indice * m_dimension;
               __m512 _weights =
                   _mm512_set1_ps(*(sp_weights + batch_offset + j));
@@ -272,7 +271,7 @@ class GroupEmbeddingVariableLookupCpuOp
             int batch_num = batch_nums[i] - batch_offset;
             for (int j = 0; j < batch_num; ++j) {
               int unique_indice = unique_idx[batch_offset + j];
-              float *u_embedding =
+              float* u_embedding =
                   unique_embedding_data + unique_indice * m_dimension;
               for (int d = 0; d < m_dimension; ++d) {
                 tmp_embedding[d] =
@@ -304,7 +303,7 @@ class GroupEmbeddingVariableLookupCpuOp
             int batch_num = batch_nums[i] - batch_offset;
             for (int j = 0; j < batch_num; ++j) {
               int unique_indice = unique_idx[batch_offset + j];
-              float *u_embedding =
+              float* u_embedding =
                   unique_embedding_data + unique_indice * m_dimension;
               TValue local_weight = *(sp_weights + batch_offset + j);
               __m512 _weights = _mm512_set1_ps(local_weight);
@@ -342,7 +341,7 @@ class GroupEmbeddingVariableLookupCpuOp
             int batch_num = batch_nums[i] - batch_offset;
             for (int j = 0; j < batch_num; ++j) {
               int unique_indice = unique_idx[batch_offset + j];
-              float *u_embedding =
+              float* u_embedding =
                   unique_embedding_data + unique_indice * m_dimension;
               TValue sp_weight = sp_weights[batch_offset + j];
               batch_total_weights =
@@ -390,27 +389,27 @@ template <typename TKey, typename TValue>
 class GroupVariableLookupCpuOp : public GroupLookupBaseCpuOp<TKey, TValue> {
   USING_BASE_CLASS_MEMBER
  public:
-  explicit GroupVariableLookupCpuOp(OpKernelConstruction *c)
+  explicit GroupVariableLookupCpuOp(OpKernelConstruction* c)
       : GroupLookupBaseCpuOp<TKey, TValue>(c) {}
 
-  void Compute(OpKernelContext *ctx) override {
+  void Compute(OpKernelContext* ctx) override {
     auto worker_threads = ctx->device()->tensorflow_cpu_worker_threads();
     for (int i = 0; i < m_num_lookup; ++i) {
-      const Tensor &emb_variable_tensor = ctx->input(i);
-      const Tensor &sp_values_tensor = ctx->input(m_num_lookup + i);
+      const Tensor& emb_variable_tensor = ctx->input(i);
+      const Tensor& sp_values_tensor = ctx->input(m_num_lookup + i);
       int nnz = sp_values_tensor.NumElements();
       auto embedding_variable = emb_variable_tensor.flat<TValue>().data();
 
-      const Tensor &sp_indices_tensor = ctx->input(m_num_lookup * 2 + i);
+      const Tensor& sp_indices_tensor = ctx->input(m_num_lookup * 2 + i);
       auto sp_indices = sp_indices_tensor.flat<int64>().data();
 
-      const Tensor &dense_shape_tensor = ctx->input(m_num_lookup * 4 + i);
+      const Tensor& dense_shape_tensor = ctx->input(m_num_lookup * 4 + i);
       auto dense_shape = dense_shape_tensor.flat<int64>().data();
       int64 batch_size = dense_shape[0];
 
       TensorShape batch_nums_tensor_shape =
           TensorShape(std::vector<int64>({batch_size}));
-      Tensor *batch_nums_tensor = nullptr;
+      Tensor* batch_nums_tensor = nullptr;
       // allocate output
       OP_REQUIRES_OK(ctx, ctx->allocate_output(3 * m_num_lookup + i,
                                                batch_nums_tensor_shape,
@@ -435,7 +434,7 @@ class GroupVariableLookupCpuOp : public GroupLookupBaseCpuOp<TKey, TValue> {
             TensorShape(std::vector<int64>({batch_size, m_dimension}));
       }
 
-      Tensor *emb_vectors_tensor = nullptr;
+      Tensor* emb_vectors_tensor = nullptr;
       OP_REQUIRES_OK(ctx, ctx->allocate_output(i, emb_vectors_tensor_shape,
                                                &emb_vectors_tensor));
       auto emb_vectors = emb_vectors_tensor->flat<TValue>().data();
@@ -453,16 +452,16 @@ class GroupVariableLookupCpuOp : public GroupLookupBaseCpuOp<TKey, TValue> {
       ctx->set_output(m_num_lookup + i, unique_tensor);
       ctx->set_output(2 * m_num_lookup + i, unique_idx_tensor);
 
-      auto *unique = unique_tensor.flat<TKey>().data();
-      auto *unique_idx = unique_idx_tensor.flat<int>().data();
+      auto* unique = unique_tensor.flat<TKey>().data();
+      auto* unique_idx = unique_idx_tensor.flat<int>().data();
 
       std::vector<TValue> default_weights(nnz, 1.0);
-      TValue *sp_weights = default_weights.data();
+      TValue* sp_weights = default_weights.data();
       if (!this->m_ignore_weights) {
-        const Tensor &sp_weights_tensor =
+        const Tensor& sp_weights_tensor =
             ctx->input(this->m_num_lookup * 3 + i);
         sp_weights =
-            const_cast<TValue *>(sp_weights_tensor.flat<TValue>().data());
+            const_cast<TValue*>(sp_weights_tensor.flat<TValue>().data());
       }
 
       int slice_bytes = nnz / batch_size * m_dimension * 1000;
@@ -487,7 +486,7 @@ class GroupVariableLookupCpuOp : public GroupLookupBaseCpuOp<TKey, TValue> {
                   _mm512_set1_ps(*(sp_weights + batch_offset + j));
               batch_total_weights =
                   _mm512_add_ps(batch_total_weights, _weights);
-              const float *embedding_ptr =
+              const float* embedding_ptr =
                   embedding_variable + unique_id * m_dimension;
 
               for (int d = 0; d < m_dimension; d += 16) {
@@ -553,7 +552,7 @@ class GroupVariableLookupCpuOp : public GroupLookupBaseCpuOp<TKey, TValue> {
               int unique_id = unique[unique_indice];
               __m512 _weights =
                   _mm512_set1_ps(*(sp_weights + batch_offset + j));
-              const float *embedding_ptr =
+              const float* embedding_ptr =
                   embedding_variable + unique_id * m_dimension;
               for (int d = 0; d < m_dimension; d += 16) {
                 int index = d / 16;
@@ -612,7 +611,7 @@ class GroupVariableLookupCpuOp : public GroupLookupBaseCpuOp<TKey, TValue> {
               __m512 _weights = _mm512_set1_ps(local_weight);
               batch_total_weights =
                   std::fma(local_weight, local_weight, batch_total_weights);
-              const float *embedding_ptr =
+              const float* embedding_ptr =
                   embedding_variable + unique_id * m_dimension;
               for (int d = 0; d < m_dimension; d += 16) {
                 int index = d / 16;

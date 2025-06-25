@@ -21,9 +21,9 @@
 namespace sok {
 
 template <typename DType>
-__global__ void hotnessCalKernel(const DType *row_length_recv_buffer,
+__global__ void hotnessCalKernel(const DType* row_length_recv_buffer,
                                  size_t local_batchsize, int num_lookup,
-                                 int num_gpus, int *outputs) {
+                                 int num_gpus, int* outputs) {
   size_t thread_cnt = blockDim.x * gridDim.x;
   size_t thread_idx = blockDim.x * blockIdx.x + threadIdx.x;
   size_t items = local_batchsize * num_lookup * num_gpus;
@@ -55,12 +55,12 @@ void HotnessCalLauncher<DType>::initialize() {
 
 template <typename DType>
 void HotnessCalLauncher<DType>::operator()(
-    const void *row_length_recv_buffer, size_t local_batchsize, int num_lookup,
-    int num_gpus, void *output_device, void *output_host, cudaStream_t stream) {
-  const DType *t_row_length_recv_buffer =
-      reinterpret_cast<const DType *>(row_length_recv_buffer);
-  int32_t *t_output_device = reinterpret_cast<int32_t *>(output_device);
-  int32_t *t_output_host = reinterpret_cast<int32_t *>(output_host);
+    const void* row_length_recv_buffer, size_t local_batchsize, int num_lookup,
+    int num_gpus, void* output_device, void* output_host, cudaStream_t stream) {
+  const DType* t_row_length_recv_buffer =
+      reinterpret_cast<const DType*>(row_length_recv_buffer);
+  int32_t* t_output_device = reinterpret_cast<int32_t*>(output_device);
+  int32_t* t_output_host = reinterpret_cast<int32_t*>(output_host);
 
   dim3 grid_dim(2 * sm_count_);
   dim3 block_dim(1024ul);

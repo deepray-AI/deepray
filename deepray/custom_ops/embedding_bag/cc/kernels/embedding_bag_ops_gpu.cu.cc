@@ -29,10 +29,10 @@ typedef Eigen::GpuDevice GPUDevice;
 namespace {
 // Define the GPU kernel.
 template <typename T, typename Tindices, const int kThreadsPerBlock>
-__global__ void EmbeddingBagGPUKernel(const Tindices *__restrict__ indices,
-                                      const T *__restrict__ params,
-                                      const T *__restrict__ weights,
-                                      T *__restrict__ output,
+__global__ void EmbeddingBagGPUKernel(const Tindices* __restrict__ indices,
+                                      const T* __restrict__ params,
+                                      const T* __restrict__ weights,
+                                      T* __restrict__ output,
                                       const Eigen::Index output_dim,
                                       const Eigen::Index sequence_length,
                                       Combiner combiner) {
@@ -71,7 +71,7 @@ template <typename T, typename Tindices>
 struct EmbeddingBagFunctor<GPUDevice, T, Tindices> {
   static constexpr int kThreadsPerBlock = 32;
 
-  void operator()(const GPUDevice &device,
+  void operator()(const GPUDevice& device,
                   typename TTypes<Tindices, 2>::ConstTensor indices,
                   typename TTypes<T, 2>::ConstTensor params,
                   typename TTypes<T, 2>::ConstTensor weights,

@@ -28,31 +28,31 @@ namespace {
 template <typename TKey, typename TValue>
 struct GroupEmbeddingBackWardArgs {
   GroupEmbeddingBackWardArgs() = default;
-  GroupEmbeddingBackWardArgs(TValue *grads, TKey *sp_values,
-                             TValue *emb_variable, TValue *grads_output,
-                             int *offset_indices, int nnz)
+  GroupEmbeddingBackWardArgs(TValue* grads, TKey* sp_values,
+                             TValue* emb_variable, TValue* grads_output,
+                             int* offset_indices, int nnz)
       : grads_(grads),
         sp_values_(sp_values),
         emb_variable_(emb_variable),
         grads_output_(grads_output),
         offset_indices_(offset_indices),
         nnz_(nnz) {}
-  TValue *grads_;
-  TKey *sp_values_;
-  TValue *emb_variable_;
-  TValue *grads_output_;
-  int *offset_indices_;
+  TValue* grads_;
+  TKey* sp_values_;
+  TValue* emb_variable_;
+  TValue* grads_output_;
+  int* offset_indices_;
   int nnz_;
 };
 
 template <typename TKey, typename TValue, Combiner combiner, int Tilesize>
 __global__ void ComputeEVGradFn(
     const int batch_size, const float max_norm, const int num_lookups,
-    const int dimension, GroupEmbeddingBackWardArgs<TKey, TValue> *args) {
+    const int dimension, GroupEmbeddingBackWardArgs<TKey, TValue>* args) {
   float l2_sum;
 
-  const auto &block = cooperative_groups::this_thread_block();
-  const auto &tile = cooperative_groups::tiled_partition<Tilesize>(block);
+  const auto& block = cooperative_groups::this_thread_block();
+  const auto& tile = cooperative_groups::tiled_partition<Tilesize>(block);
   // each block partition corresponding to one sample
   const int bid =
       block.group_index().x * tile.meta_group_size() + tile.meta_group_rank();
@@ -100,10 +100,10 @@ __global__ void ComputeEVGradFn(
 template <typename TKey, typename TValue, Combiner combiner, int Tilesize>
 __global__ void ComputeSparseGradFn(
     const int batch_size, const float max_norm, const int num_lookups,
-    const int dimension, GroupEmbeddingBackWardArgs<TKey, TValue> *args) {
+    const int dimension, GroupEmbeddingBackWardArgs<TKey, TValue>* args) {
   float l2_sum;
-  const auto &block = cooperative_groups::this_thread_block();
-  const auto &tile = cooperative_groups::tiled_partition<Tilesize>(block);
+  const auto& block = cooperative_groups::this_thread_block();
+  const auto& tile = cooperative_groups::tiled_partition<Tilesize>(block);
   // each block partition corresponding to one sample
   const int bid =
       block.group_index().x * tile.meta_group_size() + tile.meta_group_rank();
@@ -151,10 +151,10 @@ __global__ void ComputeSparseGradFn(
 template <typename TKey, typename TValue, Combiner combiner>
 __global__ void NormalComputeEVGradFn(
     const int batch_size, const float max_norm, const int num_lookups,
-    const int dimension, GroupEmbeddingBackWardArgs<TKey, TValue> *args) {
+    const int dimension, GroupEmbeddingBackWardArgs<TKey, TValue>* args) {
   __shared__ TValue l2_sum[1];
 
-  const auto &block = cooperative_groups::this_thread_block();
+  const auto& block = cooperative_groups::this_thread_block();
   // each block partition corresponding to one sample
   const int bid = block.group_index().x;
   // each thread corresponding to one element in the embedding vector
@@ -201,10 +201,10 @@ __global__ void NormalComputeEVGradFn(
 template <typename TKey, typename TValue, Combiner combiner>
 __global__ void NormalComputeSparseGradFn(
     const int batch_size, const float max_norm, const int num_lookups,
-    const int dimension, GroupEmbeddingBackWardArgs<TKey, TValue> *args) {
+    const int dimension, GroupEmbeddingBackWardArgs<TKey, TValue>* args) {
   __shared__ TValue l2_sum[1];
 
-  const auto &block = cooperative_groups::this_thread_block();
+  const auto& block = cooperative_groups::this_thread_block();
   // each block partition corresponding to one sample
   const int bid = block.group_index().x;
   // each thread corresponding to one element in the embedding vector
@@ -252,7 +252,7 @@ class GroupEmbeddingLookupBackWard {
  public:
   explicit GroupEmbeddingLookupBackWard(int dimension, int num_lookups,
                                         float max_norm,
-                                        Allocator *gpu_allocator = nullptr)
+                                        Allocator* gpu_allocator = nullptr)
       : alloc_(gpu_allocator) {
     d_args_ =
         TypedAllocator::Allocate<GroupEmbeddingBackWardArgs<TKey, TValue>>(
@@ -263,7 +263,7 @@ class GroupEmbeddingLookupBackWard {
     dimension_ = dimension;
   }
 
-  void set(GroupEmbeddingBackWardArgs<TKey, TValue> &arg) {
+  void set(GroupEmbeddingBackWardArgs<TKey, TValue>& arg) {
     h_args_.emplace_back(arg);
   }
 
@@ -296,8 +296,8 @@ class GroupEmbeddingLookupBackWard {
 
  protected:
   std::vector<GroupEmbeddingBackWardArgs<TKey, TValue>> h_args_;
-  GroupEmbeddingBackWardArgs<TKey, TValue> *d_args_;
-  Allocator *alloc_;
+  GroupEmbeddingBackWardArgs<TKey, TValue>* d_args_;
+  Allocator* alloc_;
   float max_norm_;
   int nums_;
   int dimension_;
@@ -306,7 +306,7 @@ class GroupEmbeddingLookupBackWard {
 template <typename TKey, typename TValue>
 class GroupLookupBackWardBaseOp : public OpKernel {
  public:
-  explicit GroupLookupBackWardBaseOp(OpKernelConstruction *c) : OpKernel(c) {
+  explicit GroupLookupBackWardBaseOp(OpKernelConstruction* c) : OpKernel(c) {
     OP_REQUIRES_OK(c, c->GetAttr("combiner", &combiner_));
     OP_REQUIRES_OK(c, c->GetAttr("max_norm", &max_norm_));
     OP_REQUIRES_OK(c, c->GetAttr("num_lookups", &num_lookups_));
@@ -314,7 +314,7 @@ class GroupLookupBackWardBaseOp : public OpKernel {
   }
 
   template <bool Isev = false, Combiner combiner>
-  inline void compute(GroupEmbeddingLookupBackWard<TKey, TValue> &lookuper,
+  inline void compute(GroupEmbeddingLookupBackWard<TKey, TValue>& lookuper,
                       const int batch_size, cudaStream_t stream) {
     if (Isev) {
       if (dimension_ <= 2) {

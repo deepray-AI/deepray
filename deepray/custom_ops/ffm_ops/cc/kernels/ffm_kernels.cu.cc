@@ -82,7 +82,7 @@ __global__ void FFMKernelDot(TTypes<float>::ConstMatrix left_matrix,
 
 template <>
 struct FFMImpl<GPUDevice> {
-  static void Compute(OpKernelContext *ctx, const std::string &int_type,
+  static void Compute(OpKernelContext* ctx, const std::string& int_type,
                       TTypes<float>::ConstMatrix left_matrix, int left_feat_num,
                       TTypes<float>::ConstMatrix right_matrix,
                       int right_feat_num, int batch_size, int dim_size,
@@ -171,7 +171,7 @@ __global__ void FFMGradKernelDot(
 
 template <>
 struct FFMGradImpl<GPUDevice> {
-  static void Compute(OpKernelContext *ctx, const std::string &int_type,
+  static void Compute(OpKernelContext* ctx, const std::string& int_type,
                       TTypes<float>::ConstMatrix grad_matrix, int grad_feat_num,
                       TTypes<float>::ConstMatrix left_matrix, int left_feat_num,
                       TTypes<float>::ConstMatrix right_matrix,

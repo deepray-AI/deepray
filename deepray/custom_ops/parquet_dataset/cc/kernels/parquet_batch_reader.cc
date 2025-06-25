@@ -27,10 +27,10 @@ namespace data {
 
 class ParquetBatchReader::Impl {
  public:
-  Impl(const string &filename, const int64 batch_size,
-       const std::vector<string> &field_names,
-       const DataTypeVector &field_dtypes,
-       const std::vector<int32> &field_ragged_ranks,
+  Impl(const string& filename, const int64 batch_size,
+       const std::vector<string>& field_names,
+       const DataTypeVector& field_dtypes,
+       const std::vector<int32>& field_ragged_ranks,
        const int64 partition_count, const int64 partition_index,
        const bool drop_remainder)
       : filename_(filename),
@@ -71,15 +71,15 @@ class ParquetBatchReader::Impl {
                                      " must has distinct column names");
     }
     for (size_t i = 0; i < field_names_.size(); ++i) {
-      auto &cname = field_names_[i];
+      auto& cname = field_names_[i];
       int column_index = schema->GetFieldIndex(cname);
       if (TF_PREDICT_FALSE(column_index < 0)) {
         return errors::NotFound("No column called `", cname, "` found in ",
                                 filename_);
       }
       column_indices_.push_back(column_index);
-      const auto &expected_dtype = field_dtypes_[i];
-      const auto &expected_ragged_rank = field_ragged_ranks_[i];
+      const auto& expected_dtype = field_dtypes_[i];
+      const auto& expected_ragged_rank = field_ragged_ranks_[i];
       DataType actual_dtype;
       int32 actual_ragged_rank = 0;
       TF_RETURN_IF_ERROR(ArrowUtil::MakeDataTypeAndRaggedRankFromArrowDataType(
@@ -104,7 +104,7 @@ class ParquetBatchReader::Impl {
     return OkStatus();
   }
 
-  Status Read(std::vector<Tensor> *output_tensors) {
+  Status Read(std::vector<Tensor>* output_tensors) {
     // Read next batch from parquet file.
     std::shared_ptr<::arrow::RecordBatch> batch;
     TF_RETURN_IF_ARROW_ERROR(batch_reader_->ReadNext(&batch));
@@ -142,9 +142,9 @@ class ParquetBatchReader::Impl {
 };
 
 ParquetBatchReader::ParquetBatchReader(
-    const string &filename, const int64 batch_size,
-    const std::vector<string> &field_names, const DataTypeVector &field_dtypes,
-    const std::vector<int32> &field_ragged_ranks, const int64 partition_count,
+    const string& filename, const int64 batch_size,
+    const std::vector<string>& field_names, const DataTypeVector& field_dtypes,
+    const std::vector<int32>& field_ragged_ranks, const int64 partition_count,
     const int64 partition_index, const bool drop_remainder)
     : pimpl_(new ParquetBatchReader::Impl(
           filename, batch_size, field_names, field_dtypes, field_ragged_ranks,
@@ -152,7 +152,7 @@ ParquetBatchReader::ParquetBatchReader(
 
 Status ParquetBatchReader::Open() { return pimpl_->Open(); }
 
-Status ParquetBatchReader::Read(std::vector<Tensor> *output_tensors) {
+Status ParquetBatchReader::Read(std::vector<Tensor>* output_tensors) {
   return pimpl_->Read(output_tensors);
 }
 

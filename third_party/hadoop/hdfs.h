@@ -85,10 +85,10 @@ typedef enum tObjectKind {
  * The C reflection of org.apache.org.hadoop.FileSystem .
  */
 struct hdfs_internal;
-typedef struct hdfs_internal *hdfsFS;
+typedef struct hdfs_internal* hdfsFS;
 
 struct hdfsFile_internal;
-typedef struct hdfsFile_internal *hdfsFile;
+typedef struct hdfsFile_internal* hdfsFile;
 
 struct hadoopRzOptions;
 
@@ -133,7 +133,7 @@ struct hdfsReadStatistics {
  *                 not support read statistics.
  */
 LIBHDFS_EXTERNAL
-int hdfsFileGetReadStatistics(hdfsFile file, struct hdfsReadStatistics **stats);
+int hdfsFileGetReadStatistics(hdfsFile file, struct hdfsReadStatistics** stats);
 
 /**
  * @param stats    HDFS read statistics for a file.
@@ -142,7 +142,7 @@ int hdfsFileGetReadStatistics(hdfsFile file, struct hdfsReadStatistics **stats);
  */
 LIBHDFS_EXTERNAL
 int64_t hdfsReadStatisticsGetRemoteBytesRead(
-    const struct hdfsReadStatistics *stats);
+    const struct hdfsReadStatistics* stats);
 
 /**
  * Clear the read statistics for a file.
@@ -164,7 +164,7 @@ int hdfsFileClearReadStatistics(hdfsFile file);
  * @param stats    The HDFS read statistics to free.
  */
 LIBHDFS_EXTERNAL
-void hdfsFileFreeReadStatistics(struct hdfsReadStatistics *stats);
+void hdfsFileFreeReadStatistics(struct hdfsReadStatistics* stats);
 
 /**
  * hdfsConnectAsUser - Connect to a hdfs file system as a specific user
@@ -177,7 +177,7 @@ void hdfsFileFreeReadStatistics(struct hdfsReadStatistics *stats);
  * @deprecated Use hdfsBuilderConnect instead.
  */
 LIBHDFS_EXTERNAL
-hdfsFS hdfsConnectAsUser(const char *nn, tPort port, const char *user);
+hdfsFS hdfsConnectAsUser(const char* nn, tPort port, const char* user);
 
 /**
  * hdfsConnect - Connect to a hdfs file system.
@@ -188,7 +188,7 @@ hdfsFS hdfsConnectAsUser(const char *nn, tPort port, const char *user);
  * @deprecated Use hdfsBuilderConnect instead.
  */
 LIBHDFS_EXTERNAL
-hdfsFS hdfsConnect(const char *nn, tPort port);
+hdfsFS hdfsConnect(const char* nn, tPort port);
 
 /**
  * hdfsConnect - Connect to an hdfs file system.
@@ -202,8 +202,8 @@ hdfsFS hdfsConnect(const char *nn, tPort port);
  * @deprecated   Use hdfsBuilderConnect instead.
  */
 LIBHDFS_EXTERNAL
-hdfsFS hdfsConnectAsUserNewInstance(const char *nn, tPort port,
-                                    const char *user);
+hdfsFS hdfsConnectAsUserNewInstance(const char* nn, tPort port,
+                                    const char* user);
 
 /**
  * hdfsConnect - Connect to an hdfs file system.
@@ -216,7 +216,7 @@ hdfsFS hdfsConnectAsUserNewInstance(const char *nn, tPort port,
  * @deprecated   Use hdfsBuilderConnect instead.
  */
 LIBHDFS_EXTERNAL
-hdfsFS hdfsConnectNewInstance(const char *nn, tPort port);
+hdfsFS hdfsConnectNewInstance(const char* nn, tPort port);
 
 /**
  * Connect to HDFS using the parameters defined by the builder.
@@ -231,7 +231,7 @@ hdfsFS hdfsConnectNewInstance(const char *nn, tPort port);
  * @return       Returns a handle to the filesystem, or NULL on error.
  */
 LIBHDFS_EXTERNAL
-hdfsFS hdfsBuilderConnect(struct hdfsBuilder *bld);
+hdfsFS hdfsBuilderConnect(struct hdfsBuilder* bld);
 
 /**
  * Create an HDFS builder.
@@ -239,7 +239,7 @@ hdfsFS hdfsBuilderConnect(struct hdfsBuilder *bld);
  * @return The HDFS builder, or NULL on error.
  */
 LIBHDFS_EXTERNAL
-struct hdfsBuilder *hdfsNewBuilder(void);
+struct hdfsBuilder* hdfsNewBuilder(void);
 
 /**
  * Force the builder to always create a new instance of the FileSystem,
@@ -248,7 +248,7 @@ struct hdfsBuilder *hdfsNewBuilder(void);
  * @param bld The HDFS builder
  */
 LIBHDFS_EXTERNAL
-void hdfsBuilderSetForceNewInstance(struct hdfsBuilder *bld);
+void hdfsBuilderSetForceNewInstance(struct hdfsBuilder* bld);
 
 /**
  * Set the HDFS NameNode to connect to.
@@ -272,7 +272,7 @@ void hdfsBuilderSetForceNewInstance(struct hdfsBuilder *bld);
  *             port in two different ways.
  */
 LIBHDFS_EXTERNAL
-void hdfsBuilderSetNameNode(struct hdfsBuilder *bld, const char *nn);
+void hdfsBuilderSetNameNode(struct hdfsBuilder* bld, const char* nn);
 
 /**
  * Set the port of the HDFS NameNode to connect to.
@@ -281,7 +281,7 @@ void hdfsBuilderSetNameNode(struct hdfsBuilder *bld, const char *nn);
  * @param port The port.
  */
 LIBHDFS_EXTERNAL
-void hdfsBuilderSetNameNodePort(struct hdfsBuilder *bld, tPort port);
+void hdfsBuilderSetNameNodePort(struct hdfsBuilder* bld, tPort port);
 
 /**
  * Set the username to use when connecting to the HDFS cluster.
@@ -290,7 +290,7 @@ void hdfsBuilderSetNameNodePort(struct hdfsBuilder *bld, tPort port);
  * @param userName The user name.  The string will be shallow-copied.
  */
 LIBHDFS_EXTERNAL
-void hdfsBuilderSetUserName(struct hdfsBuilder *bld, const char *userName);
+void hdfsBuilderSetUserName(struct hdfsBuilder* bld, const char* userName);
 
 /**
  * Set the path to the Kerberos ticket cache to use when connecting to
@@ -301,8 +301,8 @@ void hdfsBuilderSetUserName(struct hdfsBuilder *bld, const char *userName);
  *                            will be shallow-copied.
  */
 LIBHDFS_EXTERNAL
-void hdfsBuilderSetKerbTicketCachePath(struct hdfsBuilder *bld,
-                                       const char *kerbTicketCachePath);
+void hdfsBuilderSetKerbTicketCachePath(struct hdfsBuilder* bld,
+                                       const char* kerbTicketCachePath);
 
 /**
  * Free an HDFS builder.
@@ -313,7 +313,7 @@ void hdfsBuilderSetKerbTicketCachePath(struct hdfsBuilder *bld,
  * @param bld The HDFS builder
  */
 LIBHDFS_EXTERNAL
-void hdfsFreeBuilder(struct hdfsBuilder *bld);
+void hdfsFreeBuilder(struct hdfsBuilder* bld);
 
 /**
  * Set a configuration string for an HdfsBuilder.
@@ -327,8 +327,8 @@ void hdfsFreeBuilder(struct hdfsBuilder *bld);
  * @return         0 on success; nonzero error code otherwise.
  */
 LIBHDFS_EXTERNAL
-int hdfsBuilderConfSetStr(struct hdfsBuilder *bld, const char *key,
-                          const char *val);
+int hdfsBuilderConfSetStr(struct hdfsBuilder* bld, const char* key,
+                          const char* val);
 
 /**
  * Get a configuration string.
@@ -342,7 +342,7 @@ int hdfsBuilderConfSetStr(struct hdfsBuilder *bld, const char *key,
  *                 Failure to find the key is not an error.
  */
 LIBHDFS_EXTERNAL
-int hdfsConfGetStr(const char *key, char **val);
+int hdfsConfGetStr(const char* key, char** val);
 
 /**
  * Get a configuration integer.
@@ -355,7 +355,7 @@ int hdfsConfGetStr(const char *key, char **val);
  *                 Failure to find the key is not an error.
  */
 LIBHDFS_EXTERNAL
-int hdfsConfGetInt(const char *key, int32_t *val);
+int hdfsConfGetInt(const char* key, int32_t* val);
 
 /**
  * Free a configuration string found with hdfsConfGetStr.
@@ -363,7 +363,7 @@ int hdfsConfGetInt(const char *key, int32_t *val);
  * @param val      A configuration string obtained from hdfsConfGetStr
  */
 LIBHDFS_EXTERNAL
-void hdfsConfStrFree(char *val);
+void hdfsConfStrFree(char* val);
 
 /**
  * hdfsDisconnect - Disconnect from the hdfs file system.
@@ -393,7 +393,7 @@ int hdfsDisconnect(hdfsFS fs);
  * @return Returns the handle to the open file or NULL on error.
  */
 LIBHDFS_EXTERNAL
-hdfsFile hdfsOpenFile(hdfsFS fs, const char *path, int flags, int bufferSize,
+hdfsFile hdfsOpenFile(hdfsFS fs, const char* path, int flags, int bufferSize,
                       short replication, tSize blocksize);
 
 /**
@@ -409,7 +409,7 @@ hdfsFile hdfsOpenFile(hdfsFS fs, const char *path, int flags, int bufferSize,
  *         complete before proceeding with further file updates.
  *         -1 on error.
  */
-int hdfsTruncateFile(hdfsFS fs, const char *path, tOffset newlength);
+int hdfsTruncateFile(hdfsFS fs, const char* path, tOffset newlength);
 
 /**
  * hdfsUnbufferFile - Reduce the buffering done on a file.
@@ -442,7 +442,7 @@ int hdfsCloseFile(hdfsFS fs, hdfsFile file);
  * @return Returns 0 on success, -1 on error.
  */
 LIBHDFS_EXTERNAL
-int hdfsExists(hdfsFS fs, const char *path);
+int hdfsExists(hdfsFS fs, const char* path);
 
 /**
  * hdfsSeek - Seek to given offset in file.
@@ -479,7 +479,7 @@ tOffset hdfsTell(hdfsFS fs, hdfsFile file);
  *              but we are not yet at the end of the file.
  */
 LIBHDFS_EXTERNAL
-tSize hdfsRead(hdfsFS fs, hdfsFile file, void *buffer, tSize length);
+tSize hdfsRead(hdfsFS fs, hdfsFile file, void* buffer, tSize length);
 
 /**
  * hdfsPread - Positional read of data from an open file.
@@ -491,7 +491,7 @@ tSize hdfsRead(hdfsFS fs, hdfsFile file, void *buffer, tSize length);
  * @return      See hdfsRead
  */
 LIBHDFS_EXTERNAL
-tSize hdfsPread(hdfsFS fs, hdfsFile file, tOffset position, void *buffer,
+tSize hdfsPread(hdfsFS fs, hdfsFile file, tOffset position, void* buffer,
                 tSize length);
 
 /**
@@ -503,7 +503,7 @@ tSize hdfsPread(hdfsFS fs, hdfsFile file, tOffset position, void *buffer,
  * @return Returns the number of bytes written, -1 on error.
  */
 LIBHDFS_EXTERNAL
-tSize hdfsWrite(hdfsFS fs, hdfsFile file, const void *buffer, tSize length);
+tSize hdfsWrite(hdfsFS fs, hdfsFile file, const void* buffer, tSize length);
 
 /**
  * hdfsWrite - Flush the data.
@@ -554,7 +554,7 @@ int hdfsAvailable(hdfsFS fs, hdfsFile file);
  * @return Returns 0 on success, -1 on error.
  */
 LIBHDFS_EXTERNAL
-int hdfsCopy(hdfsFS srcFS, const char *src, hdfsFS dstFS, const char *dst);
+int hdfsCopy(hdfsFS srcFS, const char* src, hdfsFS dstFS, const char* dst);
 
 /**
  * hdfsMove - Move file from one filesystem to another.
@@ -565,7 +565,7 @@ int hdfsCopy(hdfsFS srcFS, const char *src, hdfsFS dstFS, const char *dst);
  * @return Returns 0 on success, -1 on error.
  */
 LIBHDFS_EXTERNAL
-int hdfsMove(hdfsFS srcFS, const char *src, hdfsFS dstFS, const char *dst);
+int hdfsMove(hdfsFS srcFS, const char* src, hdfsFS dstFS, const char* dst);
 
 /**
  * hdfsDelete - Delete file.
@@ -577,7 +577,7 @@ int hdfsMove(hdfsFS srcFS, const char *src, hdfsFS dstFS, const char *dst);
  * @return Returns 0 on success, -1 on error.
  */
 LIBHDFS_EXTERNAL
-int hdfsDelete(hdfsFS fs, const char *path, int recursive);
+int hdfsDelete(hdfsFS fs, const char* path, int recursive);
 
 /**
  * hdfsRename - Rename file.
@@ -587,7 +587,7 @@ int hdfsDelete(hdfsFS fs, const char *path, int recursive);
  * @return Returns 0 on success, -1 on error.
  */
 LIBHDFS_EXTERNAL
-int hdfsRename(hdfsFS fs, const char *oldPath, const char *newPath);
+int hdfsRename(hdfsFS fs, const char* oldPath, const char* newPath);
 
 /**
  * hdfsGetWorkingDirectory - Get the current working directory for
@@ -598,7 +598,7 @@ int hdfsRename(hdfsFS fs, const char *oldPath, const char *newPath);
  * @return Returns buffer, NULL on error.
  */
 LIBHDFS_EXTERNAL
-char *hdfsGetWorkingDirectory(hdfsFS fs, char *buffer, size_t bufferSize);
+char* hdfsGetWorkingDirectory(hdfsFS fs, char* buffer, size_t bufferSize);
 
 /**
  * hdfsSetWorkingDirectory - Set the working directory. All relative
@@ -608,7 +608,7 @@ char *hdfsGetWorkingDirectory(hdfsFS fs, char *buffer, size_t bufferSize);
  * @return Returns 0 on success, -1 on error.
  */
 LIBHDFS_EXTERNAL
-int hdfsSetWorkingDirectory(hdfsFS fs, const char *path);
+int hdfsSetWorkingDirectory(hdfsFS fs, const char* path);
 
 /**
  * hdfsCreateDirectory - Make the given file and all non-existent
@@ -618,7 +618,7 @@ int hdfsSetWorkingDirectory(hdfsFS fs, const char *path);
  * @return Returns 0 on success, -1 on error.
  */
 LIBHDFS_EXTERNAL
-int hdfsCreateDirectory(hdfsFS fs, const char *path);
+int hdfsCreateDirectory(hdfsFS fs, const char* path);
 
 /**
  * hdfsSetReplication - Set the replication of the specified
@@ -628,20 +628,20 @@ int hdfsCreateDirectory(hdfsFS fs, const char *path);
  * @return Returns 0 on success, -1 on error.
  */
 LIBHDFS_EXTERNAL
-int hdfsSetReplication(hdfsFS fs, const char *path, int16_t replication);
+int hdfsSetReplication(hdfsFS fs, const char* path, int16_t replication);
 
 /**
  * hdfsFileInfo - Information about a file/directory.
  */
 typedef struct {
   tObjectKind mKind;  /* file or directory */
-  char *mName;        /* the name of the file */
+  char* mName;        /* the name of the file */
   tTime mLastMod;     /* the last modification time for the file in seconds */
   tOffset mSize;      /* the size of the file in bytes */
   short mReplication; /* the count of replicas */
   tOffset mBlockSize; /* the block size for the file */
-  char *mOwner;       /* the owner of the file */
-  char *mGroup;       /* the group associated with the file */
+  char* mOwner;       /* the owner of the file */
+  char* mGroup;       /* the group associated with the file */
   short mPermissions; /* the permissions associated with the file */
   tTime mLastAccess;  /* the last access time for the file in seconds */
 } hdfsFileInfo;
@@ -656,7 +656,7 @@ typedef struct {
  * objects; NULL on error.
  */
 LIBHDFS_EXTERNAL
-hdfsFileInfo *hdfsListDirectory(hdfsFS fs, const char *path, int *numEntries);
+hdfsFileInfo* hdfsListDirectory(hdfsFS fs, const char* path, int* numEntries);
 
 /**
  * hdfsGetPathInfo - Get information about a path as a (dynamically
@@ -668,7 +668,7 @@ hdfsFileInfo *hdfsListDirectory(hdfsFS fs, const char *path, int *numEntries);
  * NULL on error.
  */
 LIBHDFS_EXTERNAL
-hdfsFileInfo *hdfsGetPathInfo(hdfsFS fs, const char *path);
+hdfsFileInfo* hdfsGetPathInfo(hdfsFS fs, const char* path);
 
 /**
  * hdfsFreeFileInfo - Free up the hdfsFileInfo array (including fields)
@@ -677,7 +677,7 @@ hdfsFileInfo *hdfsGetPathInfo(hdfsFS fs, const char *path);
  * @param numEntries The size of the array.
  */
 LIBHDFS_EXTERNAL
-void hdfsFreeFileInfo(hdfsFileInfo *hdfsFileInfo, int numEntries);
+void hdfsFreeFileInfo(hdfsFileInfo* hdfsFileInfo, int numEntries);
 
 /**
  * hdfsFileIsEncrypted: determine if a file is encrypted based on its
@@ -686,7 +686,7 @@ void hdfsFreeFileInfo(hdfsFileInfo *hdfsFileInfo, int numEntries);
  *         not encrypted, 1 if the file is encrypted.
  */
 LIBHDFS_EXTERNAL
-int hdfsFileIsEncrypted(hdfsFileInfo *hdfsFileInfo);
+int hdfsFileIsEncrypted(hdfsFileInfo* hdfsFileInfo);
 
 /**
  * hdfsGetHosts - Get hostnames where a particular block (determined by
@@ -701,7 +701,7 @@ int hdfsFileIsEncrypted(hdfsFileInfo *hdfsFileInfo);
  * NULL on error.
  */
 LIBHDFS_EXTERNAL
-char ***hdfsGetHosts(hdfsFS fs, const char *path, tOffset start,
+char*** hdfsGetHosts(hdfsFS fs, const char* path, tOffset start,
                      tOffset length);
 
 /**
@@ -711,7 +711,7 @@ char ***hdfsGetHosts(hdfsFS fs, const char *path, tOffset start,
  * @param numEntries The size of the array.
  */
 LIBHDFS_EXTERNAL
-void hdfsFreeHosts(char ***blockHosts);
+void hdfsFreeHosts(char*** blockHosts);
 
 /**
  * hdfsGetDefaultBlockSize - Get the default blocksize.
@@ -735,7 +735,7 @@ tOffset hdfsGetDefaultBlockSize(hdfsFS fs);
  * @return              Returns the default blocksize, or -1 on error.
  */
 LIBHDFS_EXTERNAL
-tOffset hdfsGetDefaultBlockSizeAtPath(hdfsFS fs, const char *path);
+tOffset hdfsGetDefaultBlockSizeAtPath(hdfsFS fs, const char* path);
 
 /**
  * hdfsGetCapacity - Return the raw capacity of the filesystem.
@@ -763,8 +763,8 @@ tOffset hdfsGetUsed(hdfsFS fs);
  * @return              0 on success else -1
  */
 LIBHDFS_EXTERNAL
-int hdfsChown(hdfsFS fs, const char *path, const char *owner,
-              const char *group);
+int hdfsChown(hdfsFS fs, const char* path, const char* owner,
+              const char* group);
 
 /**
  * hdfsChmod
@@ -774,7 +774,7 @@ int hdfsChown(hdfsFS fs, const char *path, const char *owner,
  * @return 0 on success else -1
  */
 LIBHDFS_EXTERNAL
-int hdfsChmod(hdfsFS fs, const char *path, short mode);
+int hdfsChmod(hdfsFS fs, const char* path, short mode);
 
 /**
  * hdfsUtime
@@ -785,7 +785,7 @@ int hdfsChmod(hdfsFS fs, const char *path, short mode);
  * @return 0 on success else -1
  */
 LIBHDFS_EXTERNAL
-int hdfsUtime(hdfsFS fs, const char *path, tTime mtime, tTime atime);
+int hdfsUtime(hdfsFS fs, const char* path, tTime mtime, tTime atime);
 
 /**
  * Allocate a zero-copy options structure.
@@ -798,7 +798,7 @@ int hdfsUtime(hdfsFS fs, const char *path, tTime mtime, tTime atime);
  *                    contain the error number.
  */
 LIBHDFS_EXTERNAL
-struct hadoopRzOptions *hadoopRzOptionsAlloc(void);
+struct hadoopRzOptions* hadoopRzOptionsAlloc(void);
 
 /**
  * Determine whether we should skip checksums in read0.
@@ -810,7 +810,7 @@ struct hadoopRzOptions *hadoopRzOptionsAlloc(void);
  * @return            0 on success; -1 plus errno on failure.
  */
 LIBHDFS_EXTERNAL
-int hadoopRzOptionsSetSkipChecksum(struct hadoopRzOptions *opts, int skip);
+int hadoopRzOptionsSetSkipChecksum(struct hadoopRzOptions* opts, int skip);
 
 /**
  * Set the ByteBufferPool to use with read0.
@@ -827,8 +827,8 @@ int hadoopRzOptionsSetSkipChecksum(struct hadoopRzOptions *opts, int skip);
  *                    -1 plus errno otherwise.
  */
 LIBHDFS_EXTERNAL
-int hadoopRzOptionsSetByteBufferPool(struct hadoopRzOptions *opts,
-                                     const char *className);
+int hadoopRzOptionsSetByteBufferPool(struct hadoopRzOptions* opts,
+                                     const char* className);
 
 /**
  * Free a hadoopRzOptionsFree structure.
@@ -837,7 +837,7 @@ int hadoopRzOptionsSetByteBufferPool(struct hadoopRzOptions *opts,
  *                    Any associated ByteBufferPool will also be freed.
  */
 LIBHDFS_EXTERNAL
-void hadoopRzOptionsFree(struct hadoopRzOptions *opts);
+void hadoopRzOptionsFree(struct hadoopRzOptions* opts);
 
 /**
  * Perform a byte buffer read.
@@ -863,8 +863,8 @@ void hadoopRzOptionsFree(struct hadoopRzOptions *opts);
  *                   supplied.
  */
 LIBHDFS_EXTERNAL
-struct hadoopRzBuffer *hadoopReadZero(hdfsFile file,
-                                      struct hadoopRzOptions *opts,
+struct hadoopRzBuffer* hadoopReadZero(hdfsFile file,
+                                      struct hadoopRzOptions* opts,
                                       int32_t maxLength);
 
 /**
@@ -874,7 +874,7 @@ struct hadoopRzBuffer *hadoopReadZero(hdfsFile file,
  * @return           the length of the buffer.
  */
 LIBHDFS_EXTERNAL
-int32_t hadoopRzBufferLength(const struct hadoopRzBuffer *buffer);
+int32_t hadoopRzBufferLength(const struct hadoopRzBuffer* buffer);
 
 /**
  * Get a pointer to the raw buffer returned from readZero.
@@ -887,7 +887,7 @@ int32_t hadoopRzBufferLength(const struct hadoopRzBuffer *buffer);
  *                   NULL when end-of-file has been reached.
  */
 LIBHDFS_EXTERNAL
-const void *hadoopRzBufferGet(const struct hadoopRzBuffer *buffer);
+const void* hadoopRzBufferGet(const struct hadoopRzBuffer* buffer);
 
 /**
  * Release a buffer obtained through readZero.
@@ -897,7 +897,7 @@ const void *hadoopRzBufferGet(const struct hadoopRzBuffer *buffer);
  * @param buffer     The buffer to release.
  */
 LIBHDFS_EXTERNAL
-void hadoopRzBufferFree(hdfsFile file, struct hadoopRzBuffer *buffer);
+void hadoopRzBufferFree(hdfsFile file, struct hadoopRzBuffer* buffer);
 
 #ifdef __cplusplus
 }

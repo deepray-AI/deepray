@@ -37,7 +37,7 @@ enum class Device { CPU, GPU };
 enum TestCase { Sqrtn, Mean, Sum, SqrtnAndMaxNorm200, MeanAndMaxNorm100 };
 
 template <TestCase test_case>
-void get_node_attr_from_test_case(string &combiner_str, float &max_norm) {
+void get_node_attr_from_test_case(string& combiner_str, float& max_norm) {
   if (test_case == Sqrtn) {
     combiner_str = "sqrtn";
     max_norm = -1.0f;
@@ -57,10 +57,10 @@ void get_node_attr_from_test_case(string &combiner_str, float &max_norm) {
 }
 
 template <TestCase test_case>
-void fill_emb_vector_expected(Tensor *expected);
+void fill_emb_vector_expected(Tensor* expected);
 
 template <>
-void fill_emb_vector_expected<Sqrtn>(Tensor *expected) {
+void fill_emb_vector_expected<Sqrtn>(Tensor* expected) {
   test::FillValues<float>(
       expected, {22.627416610717773, 24.0416316986084,   25.45584487915039,
                  26.870058059692383, 28.284271240234375, 29.698484420776367,
@@ -76,7 +76,7 @@ void fill_emb_vector_expected<Sqrtn>(Tensor *expected) {
 }
 
 template <>
-void fill_emb_vector_expected<Mean>(Tensor *expected) {
+void fill_emb_vector_expected<Mean>(Tensor* expected) {
   test::FillValues<float>(
       expected, {16.00000000000000, 17.00000000000000, 18.00000000000000,
                  19.00000000000000, 20.00000000000000, 21.00000000000000,
@@ -92,7 +92,7 @@ void fill_emb_vector_expected<Mean>(Tensor *expected) {
 }
 
 template <>
-void fill_emb_vector_expected<Sum>(Tensor *expected) {
+void fill_emb_vector_expected<Sum>(Tensor* expected) {
   test::FillValues<float>(
       expected, {32.0,  34.0,  36.0,  38.0,  40.0,  42.0,  44.0,  46.0,
                  128.0, 131.0, 134.0, 137.0, 140.0, 143.0, 146.0, 149.0,
@@ -101,7 +101,7 @@ void fill_emb_vector_expected<Sum>(Tensor *expected) {
 }
 
 template <>
-void fill_emb_vector_expected<SqrtnAndMaxNorm200>(Tensor *expected) {
+void fill_emb_vector_expected<SqrtnAndMaxNorm200>(Tensor* expected) {
   test::FillValues<float>(
       expected,
       {22.62741661, 24.04163170, 25.45584488,  26.87005806,  28.28427124,
@@ -184,8 +184,8 @@ class FusedEmbeddingLocalSparseLookUpOpTest : public OpsTestBase {
     fill_emb_vector_expected<test_case>(&emb_vector_expected);
     test::FillValues<int32>(&sp_values_offset_expected, {0, 2, 5, 8});
 
-    const Tensor &emb_vector = *GetOutput(0);
-    const Tensor &values_offset = *GetOutput(1);
+    const Tensor& emb_vector = *GetOutput(0);
+    const Tensor& values_offset = *GetOutput(1);
     TF_EXPECT_OK(device_->Sync());
 
     test::ExpectTensorNear<T>(emb_vector_expected, emb_vector, 1e-4);
@@ -194,10 +194,10 @@ class FusedEmbeddingLocalSparseLookUpOpTest : public OpsTestBase {
 };
 
 template <TestCase test_case>
-void fill_grad_expected(Tensor *expected);
+void fill_grad_expected(Tensor* expected);
 
 template <>
-void fill_grad_expected<Sqrtn>(Tensor *expected) {
+void fill_grad_expected<Sqrtn>(Tensor* expected) {
   test::FillValues<float>(
       expected, {0.000000000000000,  0.7071067690849304, 1.4142135381698608,
                  2.1213204860687256, 2.8284270763397217, 3.535533905029297,
@@ -229,7 +229,7 @@ void fill_grad_expected<Sqrtn>(Tensor *expected) {
 }
 
 template <>
-void fill_grad_expected<Mean>(Tensor *expected) {
+void fill_grad_expected<Mean>(Tensor* expected) {
   test::FillValues<float>(
       expected, {0.000000000000000,  0.500000000000000,  1.000000000000000,
                  1.500000000000000,  2.000000000000000,  2.500000000000000,
@@ -261,7 +261,7 @@ void fill_grad_expected<Mean>(Tensor *expected) {
 }
 
 template <>
-void fill_grad_expected<Sum>(Tensor *expected) {
+void fill_grad_expected<Sum>(Tensor* expected) {
   test::FillValues<float>(
       expected,
       {0.0,  1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0,  0.0,  1.0,  2.0,  3.0,
@@ -274,7 +274,7 @@ void fill_grad_expected<Sum>(Tensor *expected) {
 }
 
 template <>
-void fill_grad_expected<MeanAndMaxNorm100>(Tensor *expected) {
+void fill_grad_expected<MeanAndMaxNorm100>(Tensor* expected) {
   test::FillValues<float>(
       expected,
       {0.00000000,  0.50000000,  1.00000000,  1.50000000,  2.00000000,
@@ -365,7 +365,7 @@ class FusedEmbeddingLocalSparseLookUpGradOpTest : public OpsTestBase {
     Tensor grad_expected(dtype, {nnz, emb_vector_dim});
     fill_grad_expected<test_case>(&grad_expected);
 
-    const Tensor &grad = *GetOutput(0);
+    const Tensor& grad = *GetOutput(0);
     TF_EXPECT_OK(device_->Sync());
 
     test::ExpectTensorNear<T>(grad_expected, grad, 1e-4);
@@ -433,12 +433,12 @@ TEST_F(FusedEmbeddingLocalSparseLookUpOpTest, LocalFloatSumCpu) {
   fill_emb_vector_expected<Sum>(&emb_vector_expected);
   // test::FillValues<int32>(&sp_values_offset_expected, {0, 2, 5, 8});
 
-  const Tensor &emb_vector = *GetOutput(0);
+  const Tensor& emb_vector = *GetOutput(0);
   // const Tensor& values_offset = *GetOutput(1);
   // TF_EXPECT_OK(device_->Sync());
 
-  float *output = (float *)emb_vector.tensor_data().data();
-  float *output_ex = (float *)emb_vector_expected.tensor_data().data();
+  float* output = (float*)emb_vector.tensor_data().data();
+  float* output_ex = (float*)emb_vector_expected.tensor_data().data();
 
   test::ExpectTensorNear<float>(emb_vector_expected, emb_vector, 1e-2);
   // test::ExpectTensorEqual<int32>(sp_values_offset_expected, values_offset);
@@ -531,14 +531,14 @@ TEST_F(FusedEmbeddingLocalSparseLookUpOpTest, LocalGradFloatSumCpu) {
        0.0247110203, 0.00123063289, 0.0152365509, 0.0140080536});
 
   test::FillValues<int64>(&output2_tensor_expected, {9, 2});
-  float *output1_ex = (float *)output1_tensor_expected.tensor_data().data();
-  int64 *output2_ex = (int64 *)output2_tensor_expected.tensor_data().data();
+  float* output1_ex = (float*)output1_tensor_expected.tensor_data().data();
+  int64* output2_ex = (int64*)output2_tensor_expected.tensor_data().data();
 
-  const Tensor &output1_tensor = *GetOutput(0);
-  const Tensor &output2_tensor = *GetOutput(1);
+  const Tensor& output1_tensor = *GetOutput(0);
+  const Tensor& output2_tensor = *GetOutput(1);
 
-  float *output1 = (float *)output1_tensor.tensor_data().data();
-  int64 *output2 = (int64 *)output2_tensor.tensor_data().data();
+  float* output1 = (float*)output1_tensor.tensor_data().data();
+  int64* output2 = (int64*)output2_tensor.tensor_data().data();
 
   printf("out = %.11f , expect = %.11f\n", output1[5], output1_ex[5]);
   printf("out = %.11f , expect = %.11f\n", output1[7], output1_ex[7]);
@@ -599,14 +599,14 @@ TEST_F(FusedEmbeddingLocalSparseLookUpOpTest, LocalGradFloatMeanCpu) {
        0.0156683810, -0.0091476020, -0.024522856, 0.0027066143, 0.0069600344,
        -0.0095488075, -0.011598196});
   test::FillValues<int64>(&output2_tensor_expected, {1, 0, 4});
-  float *output1_ex = (float *)output1_tensor_expected.tensor_data().data();
-  int64 *output2_ex = (int64 *)output2_tensor_expected.tensor_data().data();
+  float* output1_ex = (float*)output1_tensor_expected.tensor_data().data();
+  int64* output2_ex = (int64*)output2_tensor_expected.tensor_data().data();
 
-  const Tensor &output1_tensor = *GetOutput(0);
-  const Tensor &output2_tensor = *GetOutput(1);
+  const Tensor& output1_tensor = *GetOutput(0);
+  const Tensor& output2_tensor = *GetOutput(1);
 
-  float *output1 = (float *)output1_tensor.tensor_data().data();
-  int64 *output2 = (int64 *)output2_tensor.tensor_data().data();
+  float* output1 = (float*)output1_tensor.tensor_data().data();
+  int64* output2 = (int64*)output2_tensor.tensor_data().data();
 
   // printf("out = %f , expect = %f\n", output1[0], output1_ex[0]);
   // printf("out = %f , expect = %f\n", output1[1], output1_ex[1]);
@@ -675,10 +675,10 @@ TEST_F(FusedEmbeddingLocalSparseLookUpOpTest, FloatSumCpu) {
        0.00000000,  0.00000000,  -0.04753021, -0.49726167, 0.55058855,
        0.45623600,  -0.17087378, -0.54698306, 0.20810667,  0.50267625});
 
-  const Tensor &emb_vector = *GetOutput(0);
+  const Tensor& emb_vector = *GetOutput(0);
 
-  float *output = (float *)emb_vector.tensor_data().data();
-  float *output_ex = (float *)emb_vector_expected.tensor_data().data();
+  float* output = (float*)emb_vector.tensor_data().data();
+  float* output_ex = (float*)emb_vector_expected.tensor_data().data();
 
   test::ExpectTensorNear<float>(emb_vector_expected, emb_vector, 1e-8);
 }
@@ -736,10 +736,10 @@ TEST_F(FusedEmbeddingLocalSparseLookUpOpTest, FloatMeanCpu) {
        0.000000000,  0.00000000,   -0.022993550, -0.24759622, 0.274842320,
        0.22661813,   -0.084929764, -0.27278733,  0.103755064, 0.25029758});
 
-  const Tensor &emb_vector = *GetOutput(0);
+  const Tensor& emb_vector = *GetOutput(0);
 
-  float *output = (float *)emb_vector.tensor_data().data();
-  float *output_ex = (float *)emb_vector_expected.tensor_data().data();
+  float* output = (float*)emb_vector.tensor_data().data();
+  float* output_ex = (float*)emb_vector_expected.tensor_data().data();
 
   test::ExpectTensorNear<float>(emb_vector_expected, emb_vector, 1e-7);
 }
@@ -811,14 +811,14 @@ TEST_F(FusedEmbeddingLocalSparseLookUpOpTest, GradFloatSumCpu) {
        0.0065145129337906837463378906, 0.0117923058569431304931640625,
        -0.0164990965276956558227539062, -0.0200323369354009628295898438});
   test::FillValues<int64>(&output2_tensor_expected, {1, 0, 4});
-  float *output1_ex = (float *)output1_tensor_expected.tensor_data().data();
-  int64 *output2_ex = (int64 *)output2_tensor_expected.tensor_data().data();
+  float* output1_ex = (float*)output1_tensor_expected.tensor_data().data();
+  int64* output2_ex = (int64*)output2_tensor_expected.tensor_data().data();
 
-  const Tensor &output1_tensor = *GetOutput(0);
-  const Tensor &output2_tensor = *GetOutput(1);
+  const Tensor& output1_tensor = *GetOutput(0);
+  const Tensor& output2_tensor = *GetOutput(1);
 
-  float *output1 = (float *)output1_tensor.tensor_data().data();
-  int64 *output2 = (int64 *)output2_tensor.tensor_data().data();
+  float* output1 = (float*)output1_tensor.tensor_data().data();
+  int64* output2 = (int64*)output2_tensor.tensor_data().data();
 
   printf("out = %.28f , expect = %.28f\n", output1[11], output1_ex[11]);
 
@@ -884,14 +884,14 @@ TEST_F(FusedEmbeddingLocalSparseLookUpOpTest, GradFloatMeanCpu) {
        0.0156683810, -0.0091476020, -0.024522856, 0.0027066143, 0.0069600344,
        -0.0095488075, -0.011598196});
   test::FillValues<int64>(&output2_tensor_expected, {1, 0, 4});
-  float *output1_ex = (float *)output1_tensor_expected.tensor_data().data();
-  int64 *output2_ex = (int64 *)output2_tensor_expected.tensor_data().data();
+  float* output1_ex = (float*)output1_tensor_expected.tensor_data().data();
+  int64* output2_ex = (int64*)output2_tensor_expected.tensor_data().data();
 
-  const Tensor &output1_tensor = *GetOutput(0);
-  const Tensor &output2_tensor = *GetOutput(1);
+  const Tensor& output1_tensor = *GetOutput(0);
+  const Tensor& output2_tensor = *GetOutput(1);
 
-  float *output1 = (float *)output1_tensor.tensor_data().data();
-  int64 *output2 = (int64 *)output2_tensor.tensor_data().data();
+  float* output1 = (float*)output1_tensor.tensor_data().data();
+  int64* output2 = (int64*)output2_tensor.tensor_data().data();
 
   test::ExpectTensorNear<float>(output1_tensor_expected, output1_tensor, 1e-8);
   test::ExpectTensorEqual<int64>(output2_tensor_expected, output2_tensor);

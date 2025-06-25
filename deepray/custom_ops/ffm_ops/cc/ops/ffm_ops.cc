@@ -24,7 +24,7 @@ REGISTER_OP("FFM")
     .Output("output: float")
     .Attr("dim_size: int")
     .Attr("int_type: string")
-    .SetShapeFn([](shape_inference::InferenceContext *ctx) {
+    .SetShapeFn([](shape_inference::InferenceContext* ctx) {
       int dim_size;
       TF_RETURN_IF_ERROR(ctx->GetAttr("dim_size", &dim_size));
       auto batch_size = ctx->Dim(ctx->input(0), 0);
@@ -55,7 +55,7 @@ REGISTER_OP("FFMGrad")
     .Output("right_grad: float")
     .Attr("dim_size: int")
     .Attr("int_type: string")
-    .SetShapeFn([](shape_inference::InferenceContext *ctx) {
+    .SetShapeFn([](shape_inference::InferenceContext* ctx) {
       ctx->set_output(0, ctx->input(1));
       ctx->set_output(1, ctx->input(2));
       return TFOkStatus;

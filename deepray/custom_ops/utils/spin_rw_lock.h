@@ -11,7 +11,7 @@
 #endif
 
 typedef volatile int64_t easy_atomic_t;
-static __inline__ void easy_atomic_add(easy_atomic_t *v, int64_t i) {
+static __inline__ void easy_atomic_add(easy_atomic_t* v, int64_t i) {
 #if defined(__x86_64__)
   __asm__ __volatile__(EASY_SMP_LOCK "addq %1,%0"
                        : "=m"((*v))
@@ -20,7 +20,7 @@ static __inline__ void easy_atomic_add(easy_atomic_t *v, int64_t i) {
   __atomic_add_fetch(v, i, __ATOMIC_SEQ_CST);
 #endif
 }
-static __inline__ int64_t easy_atomic_add_return(easy_atomic_t *value,
+static __inline__ int64_t easy_atomic_add_return(easy_atomic_t* value,
                                                  int64_t i) {
   int64_t __i = i;
 #if defined(__x86_64__)
@@ -32,7 +32,7 @@ static __inline__ int64_t easy_atomic_add_return(easy_atomic_t *value,
 #endif
   return i + __i;
 }
-static __inline__ int64_t easy_atomic_cmp_set(easy_atomic_t *lock, int64_t old,
+static __inline__ int64_t easy_atomic_cmp_set(easy_atomic_t* lock, int64_t old,
                                               int64_t set) {
   uint8_t res;
 #if defined(__x86_64__)
@@ -46,14 +46,14 @@ static __inline__ int64_t easy_atomic_cmp_set(easy_atomic_t *lock, int64_t old,
 #endif
   return res;
 }
-static __inline__ void easy_atomic_inc(easy_atomic_t *v) {
+static __inline__ void easy_atomic_inc(easy_atomic_t* v) {
 #if defined(__x86_64__)
   __asm__ __volatile__(EASY_SMP_LOCK "incq %0" : "=m"(*v) : "m"(*v));
 #else
   __atomic_add_fetch(v, 1, __ATOMIC_SEQ_CST);
 #endif
 }
-static __inline__ void easy_atomic_dec(easy_atomic_t *v) {
+static __inline__ void easy_atomic_dec(easy_atomic_t* v) {
 #if defined(__x86_64__)
   __asm__ __volatile__(EASY_SMP_LOCK "decq %0" : "=m"(*v) : "m"(*v));
 #else
@@ -75,7 +75,7 @@ typedef struct easy_spinrwlock_t {
   easy_atomic_t wait_write;
 } easy_spinrwlock_t;
 #define EASY_SPINRWLOCK_INITIALIZER {0, 0}
-static __inline__ int easy_spinrwlock_rdlock(easy_spinrwlock_t *lock) {
+static __inline__ int easy_spinrwlock_rdlock(easy_spinrwlock_t* lock) {
   int ret = EASY_OK;
 
   if (NULL == lock) {
@@ -105,7 +105,7 @@ static __inline__ int easy_spinrwlock_rdlock(easy_spinrwlock_t *lock) {
 
   return ret;
 }
-static __inline__ int easy_spinrwlock_wrlock(easy_spinrwlock_t *lock) {
+static __inline__ int easy_spinrwlock_wrlock(easy_spinrwlock_t* lock) {
   int ret = EASY_OK;
 
   if (NULL == lock) {
@@ -139,7 +139,7 @@ static __inline__ int easy_spinrwlock_wrlock(easy_spinrwlock_t *lock) {
 
   return ret;
 }
-static __inline__ int easy_spinrwlock_try_rdlock(easy_spinrwlock_t *lock) {
+static __inline__ int easy_spinrwlock_try_rdlock(easy_spinrwlock_t* lock) {
   int ret = EASY_OK;
 
   if (NULL == lock) {
@@ -159,7 +159,7 @@ static __inline__ int easy_spinrwlock_try_rdlock(easy_spinrwlock_t *lock) {
 
   return ret;
 }
-static __inline__ int easy_spinrwlock_try_wrlock(easy_spinrwlock_t *lock) {
+static __inline__ int easy_spinrwlock_try_wrlock(easy_spinrwlock_t* lock) {
   int ret = EASY_OK;
 
   if (NULL == lock) {
@@ -179,7 +179,7 @@ static __inline__ int easy_spinrwlock_try_wrlock(easy_spinrwlock_t *lock) {
 
   return ret;
 }
-static __inline__ int easy_spinrwlock_unlock(easy_spinrwlock_t *lock) {
+static __inline__ int easy_spinrwlock_unlock(easy_spinrwlock_t* lock) {
   int ret = EASY_OK;
 
   if (NULL == lock) {
@@ -215,32 +215,32 @@ class spin_rd_lock {
  public:
   typedef easy_spinrwlock_t lock_type;
 
-  explicit spin_rd_lock(lock_type *lock) : lock_(lock) {
+  explicit spin_rd_lock(lock_type* lock) : lock_(lock) {
     easy_spinrwlock_rdlock(lock_);
   }
-  explicit spin_rd_lock(lock_type &lock) : lock_(&lock) {
+  explicit spin_rd_lock(lock_type& lock) : lock_(&lock) {
     easy_spinrwlock_rdlock(lock_);
   }
   ~spin_rd_lock() { easy_spinrwlock_unlock(lock_); }
 
  private:
-  lock_type *lock_;
+  lock_type* lock_;
 };
 
 class spin_wr_lock {
  public:
   typedef easy_spinrwlock_t lock_type;
 
-  explicit spin_wr_lock(lock_type *lock) : lock_(lock) {
+  explicit spin_wr_lock(lock_type* lock) : lock_(lock) {
     easy_spinrwlock_wrlock(lock_);
   }
-  explicit spin_wr_lock(lock_type &lock) : lock_(&lock) {
+  explicit spin_wr_lock(lock_type& lock) : lock_(&lock) {
     easy_spinrwlock_wrlock(lock_);
   }
   ~spin_wr_lock() { easy_spinrwlock_unlock(lock_); }
 
  private:
-  lock_type *lock_;
+  lock_type* lock_;
 };
 
 }  // namespace tensorflow

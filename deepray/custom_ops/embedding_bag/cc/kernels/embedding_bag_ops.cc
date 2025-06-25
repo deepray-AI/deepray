@@ -38,7 +38,7 @@ struct EmbeddingBagFunctor<CPUDevice, T, Tindices> {
   using VectorMap = Eigen::Map<Eigen::Vector<T, Eigen::Dynamic>>;
   using ConstVectorMap = Eigen::Map<const Eigen::Vector<T, Eigen::Dynamic>>;
 
-  void operator()(const CPUDevice &device,
+  void operator()(const CPUDevice& device,
                   typename TTypes<Tindices, 2>::ConstTensor indices,
                   typename TTypes<T, 2>::ConstTensor params,
                   typename TTypes<T, 2>::ConstTensor weights,
@@ -83,14 +83,14 @@ struct EmbeddingBagBackwardFunctor<CPUDevice, T, Tindices> {
   using VectorMap = Eigen::Map<Eigen::Vector<T, Eigen::Dynamic>>;
   using ConstVectorMap = Eigen::Map<const Eigen::Vector<T, Eigen::Dynamic>>;
 
-  void operator()(const CPUDevice &device,
+  void operator()(const CPUDevice& device,
                   typename TTypes<Tindices, 2>::ConstTensor indices,
                   typename TTypes<T, 2>::ConstTensor params,
                   typename TTypes<T, 2>::ConstTensor weights,
                   typename TTypes<T, 2>::ConstTensor grads,
                   typename TTypes<T, 2>::Tensor params_grads,
                   typename TTypes<T, 2>::Tensor weights_grads,
-                  Combiner combiner, OpKernelContext *context) {
+                  Combiner combiner, OpKernelContext* context) {
     const Eigen::Index sequence_length = indices.dimension(1);
     const Eigen::Index output_dim = params.dimension(1);
 
@@ -138,7 +138,7 @@ struct EmbeddingBagBackwardFunctor<CPUDevice, T, Tindices> {
                        std::move(compute_params_grads));
 
     const auto compute_weights_grads =
-        [&](const Eigen::array<Eigen::Index, 2> &coords) -> T {
+        [&](const Eigen::array<Eigen::Index, 2>& coords) -> T {
       const Eigen::Index bag = coords[0];
       const Eigen::Index seq = coords[1];
       const ConstVectorMap grads_slice(&grads(bag, 0), output_dim);
@@ -158,7 +158,7 @@ struct EmbeddingBagBackwardFunctor<CPUDevice, T, Tindices> {
 }  // namespace functor
 
 namespace {
-bool ValidateCombiner(const std::string &combiner_string, Combiner *combiner) {
+bool ValidateCombiner(const std::string& combiner_string, Combiner* combiner) {
   if (combiner_string == "SUM") {
     *combiner = Combiner::kSum;
   } else if (combiner_string == "MEAN") {
@@ -173,7 +173,7 @@ bool ValidateCombiner(const std::string &combiner_string, Combiner *combiner) {
 template <typename Device, typename T, typename Tindices>
 class EmbeddingBagOp : public OpKernel {
  public:
-  explicit EmbeddingBagOp(OpKernelConstruction *context) : OpKernel(context) {
+  explicit EmbeddingBagOp(OpKernelConstruction* context) : OpKernel(context) {
     std::string combiner_string;
     OP_REQUIRES_OK(context, context->GetAttr("combiner", &combiner_string));
     OP_REQUIRES(
@@ -181,14 +181,14 @@ class EmbeddingBagOp : public OpKernel {
         errors::InvalidArgument("Only support 'SUM' and 'MEAN' combiner."));
   }
 
-  void Compute(OpKernelContext *context) override {
-    const Tensor &indices = context->input(0);
-    const Tensor &params = context->input(1);
-    const Tensor &weights = context->input(2);
+  void Compute(OpKernelContext* context) override {
+    const Tensor& indices = context->input(0);
+    const Tensor& params = context->input(1);
+    const Tensor& weights = context->input(2);
 
-    const TensorShape &indices_shape = indices.shape();
-    const TensorShape &params_shape = params.shape();
-    const TensorShape &weights_shape = weights.shape();
+    const TensorShape& indices_shape = indices.shape();
+    const TensorShape& params_shape = params.shape();
+    const TensorShape& weights_shape = weights.shape();
 
     OP_REQUIRES(context, TensorShapeUtils::IsMatrix(indices_shape),
                 errors::InvalidArgument("indices shape should be 2-D."));
@@ -201,7 +201,7 @@ class EmbeddingBagOp : public OpKernel {
     TensorShape output_shape = {indices_shape.dim_size(0),
                                 params_shape.dim_size(1)};
 
-    Tensor *output = nullptr;
+    Tensor* output = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, output_shape, &output));
 
     functor::EmbeddingBagFunctor<Device, T, Tindices>()(
@@ -217,7 +217,7 @@ class EmbeddingBagOp : public OpKernel {
 template <typename Device, typename T, typename Tindices>
 class EmbeddingBagBackwardOp : public OpKernel {
  public:
-  explicit EmbeddingBagBackwardOp(OpKernelConstruction *context)
+  explicit EmbeddingBagBackwardOp(OpKernelConstruction* context)
       : OpKernel(context) {
     std::string combiner_string;
     OP_REQUIRES_OK(context, context->GetAttr("combiner", &combiner_string));
@@ -226,16 +226,16 @@ class EmbeddingBagBackwardOp : public OpKernel {
         errors::InvalidArgument("Only support 'SUM' and 'MEAN' combiner."));
   }
 
-  void Compute(OpKernelContext *context) override {
-    const Tensor &indices = context->input(0);
-    const Tensor &params = context->input(1);
-    const Tensor &weights = context->input(2);
-    const Tensor &grads = context->input(3);
+  void Compute(OpKernelContext* context) override {
+    const Tensor& indices = context->input(0);
+    const Tensor& params = context->input(1);
+    const Tensor& weights = context->input(2);
+    const Tensor& grads = context->input(3);
 
-    Tensor *params_grads = nullptr;
+    Tensor* params_grads = nullptr;
     OP_REQUIRES_OK(context,
                    context->allocate_output(0, params.shape(), &params_grads));
-    Tensor *weights_grads = nullptr;
+    Tensor* weights_grads = nullptr;
     OP_REQUIRES_OK(
         context, context->allocate_output(1, weights.shape(), &weights_grads));
     functor::EmbeddingBagBackwardFunctor<Device, T, Tindices>()(
@@ -283,7 +283,7 @@ namespace functor {
 #define DECLARE_GPU_SPEC(T, Tindices)                                         \
   template <>                                                                 \
   void EmbeddingBagFunctor<GPUDevice, T, Tindices>::operator()(               \
-      const GPUDevice &, typename TTypes<Tindices, 2>::ConstTensor,           \
+      const GPUDevice&, typename TTypes<Tindices, 2>::ConstTensor,            \
       typename TTypes<T, 2>::ConstTensor, typename TTypes<T, 2>::ConstTensor, \
       typename TTypes<T, 2>::Tensor, Combiner);                               \
   extern template struct EmbeddingBagFunctor<GPUDevice, T, Tindices>;

@@ -35,8 +35,8 @@ typedef Eigen::GpuDevice GPUDevice;
 
 template <typename Tindices, const int kThreadsPerBlock>
 __global__ void PrepTempArraysKernel(
-    const Tindices *__restrict__ indices, Tindices *__restrict__ sortedIndices,
-    Tindices *__restrict__ sortedIndicesCounter, const int indices_size) {
+    const Tindices* __restrict__ indices, Tindices* __restrict__ sortedIndices,
+    Tindices* __restrict__ sortedIndicesCounter, const int indices_size) {
   const int arrayIdx = (blockIdx.x * kThreadsPerBlock) + threadIdx.x;
   if (arrayIdx <
       indices_size) {  // Make sure we don't run off the end of the actual array
@@ -48,9 +48,9 @@ __global__ void PrepTempArraysKernel(
 // Define the CUDA kernel.
 template <typename T, typename Tindices, const int kThreadsPerBlock>
 __global__ void EmbeddingBagWeightsGradKernel(
-    const int value_dim, const Tindices *__restrict__ indices,
-    const T *__restrict__ values, const T *__restrict__ dloss,
-    T *__restrict__ weights_grad, Combiner combiner) {
+    const int value_dim, const Tindices* __restrict__ indices,
+    const T* __restrict__ values, const T* __restrict__ dloss,
+    T* __restrict__ weights_grad, Combiner combiner) {
   const int sample_idx = blockIdx.x;
   const int bag_idx = blockIdx.y;
   const int bag_dim = gridDim.y;
@@ -85,10 +85,10 @@ __global__ void EmbeddingBagWeightsGradKernel(
 template <typename T, typename Tindices>
 __global__ void EmbeddingBagValuesGradKernel(
     const int value_dim, const int bag_dim,
-    const Tindices *__restrict__ sortedIndices,
-    const Tindices *__restrict__ counter, const T *__restrict__ values,
-    const T *__restrict__ weights, const T *__restrict__ dloss,
-    T *__restrict__ values_grad, Combiner combiner) {
+    const Tindices* __restrict__ sortedIndices,
+    const Tindices* __restrict__ counter, const T* __restrict__ values,
+    const T* __restrict__ weights, const T* __restrict__ dloss,
+    T* __restrict__ values_grad, Combiner combiner) {
   const int startIdx = blockIdx.x;
   const int chunk = blockIdx.y;
   const int kThreadsPerBlock = blockDim.x;
@@ -147,14 +147,14 @@ template <typename T, typename Tindices>
 struct EmbeddingBagBackwardFunctor<GPUDevice, T, Tindices> {
   // indices should remain unchanged, but thrust complains if it's a const
   // pointer
-  void operator()(const GPUDevice &d,
+  void operator()(const GPUDevice& d,
                   typename TTypes<Tindices, 2>::ConstTensor indices,
                   typename TTypes<T, 2>::ConstTensor params,
                   typename TTypes<T, 2>::ConstTensor weights,
                   typename TTypes<T, 2>::ConstTensor grads,
                   typename TTypes<T, 2>::Tensor params_grads,
                   typename TTypes<T, 2>::Tensor weights_grads,
-                  Combiner combiner, OpKernelContext *context) {
+                  Combiner combiner, OpKernelContext* context) {
     // I copy-pasted this bit from histogram_op_gpu.cu.cc and I sure hope it
     // works
     tensorflow::AllocatorAttributes gpu_allocator;
