@@ -34,7 +34,6 @@ else:
   from keras.src import constraints
   from keras.src import initializers
   from keras.src import regularizers
-  from keras.src.dtensor import utils
   from keras.src.engine.base_layer import Layer
   from keras.src.engine.input_spec import InputSpec
 

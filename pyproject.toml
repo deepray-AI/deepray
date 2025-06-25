@@ -79,6 +79,7 @@ preview = true
 exclude = [
     ".git",
     "build",
+    "deepray/datasets",
     "__pycache__",
 ]
 line-length = 120
@@ -105,6 +106,15 @@ ignore = [
     "B905",
     # imported but unused
     "F401",
+    # Unnecessary list comprehension
+    "C419",
+    # Unnecessary generator (rewrite as a set comprehension)
+    "C401",
+    "C402",
+    "C403",
+    "F821",
+    "C400",
+    "C416",
 ]
 select = [
     "B9",

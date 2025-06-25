@@ -99,7 +99,7 @@ class MLP(tf.keras.layers.Layer):
         renorm=self.batch_normalization_renorm,
         renorm_clipping=self.batch_normalization_renorm_clipping,
         renorm_momentum=self.batch_normalization_renorm_momentum,
-        name=f"BatchNorm/in",
+        name=f"{self.prefix}/BatchNorm/in",
       )
       self.trainable_weights.extend(bn.trainable_weights)
       self.non_trainable_weights.extend(bn.non_trainable_weights)
@@ -129,7 +129,7 @@ class MLP(tf.keras.layers.Layer):
           renorm=self.batch_normalization_renorm,
           renorm_clipping=self.batch_normalization_renorm_clipping,
           renorm_momentum=self.batch_normalization_renorm_momentum,
-          name=f"BatchNorm/out",
+          name=f"{self.prefix}/BatchNorm/out",
         )
         self.trainable_weights.extend(bn.trainable_weights)
         self.non_trainable_weights.extend(bn.non_trainable_weights)

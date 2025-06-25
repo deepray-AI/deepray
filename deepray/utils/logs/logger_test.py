@@ -26,7 +26,9 @@ import unittest
 
 import mock
 from absl.testing import flagsaver
-import tensorflow as tf  # pylint: disable=g-bad-import-order
+from absl import logging
+
+import tensorflow as tf
 
 try:
   from google.cloud import bigquery

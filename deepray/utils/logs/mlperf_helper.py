@@ -23,15 +23,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from collections import namedtuple
-import json
 import os
 import re
 import subprocess
-import sys
 import typing
+from collections import namedtuple
 
-import tensorflow as tf
+from absl import logging
 
 _MIN_VERSION = (0, 0, 10)
 _STACK_OFFSET = 2

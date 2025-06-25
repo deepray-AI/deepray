@@ -31,12 +31,11 @@ import os
 import threading
 import uuid
 
-from six.moves import _thread as thread
-from absl import flags
 import tensorflow as tf
-from tensorflow.python.client import device_lib
-
+from absl import flags
+from absl import logging
 from official.utils.logs import cloud_lib
+from six.moves import _thread as thread
 
 METRIC_LOG_FILE_NAME = "metric.log"
 BENCHMARK_RUN_LOG_FILE_NAME = "benchmark_run.log"
@@ -57,7 +56,7 @@ def config_benchmark_logger(flag_obj=None):
   try:
     global _benchmark_logger
     if not flag_obj:
-      flag_obj = FLAGS
+      flag_obj = flags.FLAGS
 
     if not hasattr(flag_obj, "benchmark_logger_type") or flag_obj.benchmark_logger_type == "BaseBenchmarkLogger":
       _benchmark_logger = BaseBenchmarkLogger()

@@ -14,13 +14,12 @@
 """Provides a utility class for managing summary writing."""
 
 import os
-from absl import flags, logging
-from datetime import datetime
+
+import horovod.tensorflow as hvd
+import tensorflow as tf
+from absl import flags
 
 from deepray.design_patterns import SingletonType
-
-import tensorflow as tf
-import horovod.tensorflow as hvd
 
 _MIN_SUMMARY_STEPS = 10
 
@@ -46,11 +45,11 @@ class SummaryManager(metaclass=SingletonType):
 
     # Not writing tensorboard summaries if running in MLPerf.
     # Create summary writers
-    if FLAGS.use_horovod and hvd.rank() != 0 or FLAGS.ml_perf:
+    if flags.FLAGS.use_horovod and hvd.rank() != 0 or flags.FLAGS.ml_perf:
       self.summary_writers["train"], self.summary_writers["evel"] = None, None
     else:
       self.summary_writers["evel"] = tf.summary.create_file_writer(os.path.join(self._summary_dir, "eval"))
-      if FLAGS.steps_per_execution >= _MIN_SUMMARY_STEPS:
+      if flags.FLAGS.steps_per_execution >= _MIN_SUMMARY_STEPS:
         # Only writes summary when the stats are collected sufficiently over enough steps.
         self.summary_writers["train"] = tf.summary.create_file_writer(os.path.join(self._summary_dir, "train"))
       else:

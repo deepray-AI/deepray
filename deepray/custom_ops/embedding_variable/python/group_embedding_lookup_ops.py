@@ -178,9 +178,7 @@ def group_embedding_lookup(params, ids, partition_strategy="mod", name=None):
         with ops.name_scope(
           name, "localized_group_embedding_lookup_variable_dim{}".format(dim), params + ids
         ) as name_scope:
-          outputs = group_embedding_lookup_ops.group_variable_lookup_dense(
-            tf_handlers[group_id], tf_ids[group_id], dim
-          )[0]
+          outputs = gen_group_embedding_ops.group_variable_lookup_dense(tf_handlers[group_id], tf_ids[group_id], dim)[0]
           for idx, output in zip(output_index, outputs):
             emb_vec[idx] = output
 
@@ -463,7 +461,7 @@ def group_embedding_lookup_sparse(
           with ops.name_scope(
             name, "localized_group_embedding_lookup_variable_dim{}_{}".format(dim, j), params + sp_ids
           ) as name_scope:
-            outputs = group_embedding_lookup_ops.group_variable_lookup(
+            outputs = gen_group_embedding_ops.group_variable_lookup(
               (tf_handlers[group_id])[j * params_num_per_group : (j + 1) * params_num_per_group],
               (tf_sp_values[group_id])[j * params_num_per_group : (j + 1) * params_num_per_group],
               (tf_sp_indices[group_id])[j * params_num_per_group : (j + 1) * params_num_per_group],
@@ -485,7 +483,7 @@ def group_embedding_lookup_sparse(
           with ops.name_scope(
             name, "localized_group_embedding_lookup_variable_dim{}".format(dim), params + sp_ids
           ) as name_scope:
-            outputs = group_embedding_lookup_ops.group_variable_lookup(
+            outputs = gen_group_embedding_ops.group_variable_lookup(
               (tf_handlers[group_id])[-num_remainder:],
               (tf_sp_values[group_id])[-num_remainder:],
               (tf_sp_indices[group_id])[-num_remainder:],
