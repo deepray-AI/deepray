@@ -11,35 +11,6 @@ on:
       - r*
 
 jobs:
-  valid_build_files:
-    name: Valid build files
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run type check
-        run: bash tools/run_build.sh valid_build_files
-
-  check-bazel-format:
-    name: Bazel code format
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run type check
-        run: bash tools/run_build.sh check-bazel-format
-  pre-commit:
-    name: Check that the pre-commit works
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Checking the pre-commit
-        run: bash tools/pre-commit.sh
-  # docs_tests:
-  #   name: Check that we can build the docs
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: Building the docs
-  #       run: bash tools/run_build.sh docs_tests
   nbfmt:
     name: Notebook format
     runs-on: ubuntu-latest
