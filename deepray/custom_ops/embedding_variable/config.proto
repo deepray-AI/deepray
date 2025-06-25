@@ -23,7 +23,6 @@ enum StorageType {
   // three level
   DRAM_PMEM_SSDHASH = 101;
   HBM_DRAM_SSDHASH = 102;
-
 }
 
 enum CopyBackFlag {
