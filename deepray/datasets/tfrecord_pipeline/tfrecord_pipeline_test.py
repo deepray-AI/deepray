@@ -23,10 +23,8 @@ def runner(argv=None):
         "--batch_size=256",
         "--epochs=1",
         "--prebatch=1",
-        "--train_data=/workspaces/dataset/huxiao/2023-04-16_boss/*.tfrecord",
-        # "--white_list=easy_arsenal/huxiao/white_list.txt",
-        # "--black_list=easy_arsenal/huxiao/black_list.txt",
-        "--feature_map=easy_arsenal/huxiao/feature_map.csv",
+        "--train_data=/workspaces/dataset/*.tfrecord",
+        "--feature_map=feature_map.csv",
         "--label=label",
     ]
   if argv:
