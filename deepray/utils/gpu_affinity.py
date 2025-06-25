@@ -40,10 +40,10 @@ class device:
     return pynvml.nvmlDeviceGetName(self.handle)
 
   def getCpuAffinity(self):
-    affinity_string = ''
+    affinity_string = ""
     for j in pynvml.nvmlDeviceGetCpuAffinity(self.handle, device._nvml_affinity_elements):
       # assume nvml returns list of 64 bit ints
-      affinity_string = '{:064b}'.format(j) + affinity_string
+      affinity_string = "{:064b}".format(j) + affinity_string
     affinity_list = [int(x) for x in affinity_string]
     affinity_list.reverse()  # so core 0 is in 0th element of list
 
@@ -52,7 +52,7 @@ class device:
 
 def set_affinity(gpu_id=None):
   if gpu_id is None:
-    gpu_id = int(os.getenv('LOCAL_RANK', 0))
+    gpu_id = int(os.getenv("LOCAL_RANK", 0))
 
   dev = device(gpu_id)
   os.sched_setaffinity(0, dev.getCpuAffinity())

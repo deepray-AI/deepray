@@ -20,7 +20,7 @@ from typing import Dict, Optional, Union
 import numpy as np
 import tensorflow as tf
 
-Output = Dict[str, Union[tf.Tensor, float, np.number, np.ndarray, 'Output']]  # pytype: disable=not-supported-yet
+Output = Dict[str, Union[tf.Tensor, float, np.number, np.ndarray, "Output"]]  # pytype: disable=not-supported-yet
 
 
 class AbstractTrainer(tf.Module, metaclass=abc.ABCMeta):

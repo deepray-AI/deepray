@@ -51,9 +51,7 @@ def test_non_cell():
 
 
 def test_custom_cell():
-
   class CustomCell(tf.keras.layers.AbstractRNNCell):
-
     @property
     def output_size(self):
       raise ValueError("assert_like_rnncell should not run code")

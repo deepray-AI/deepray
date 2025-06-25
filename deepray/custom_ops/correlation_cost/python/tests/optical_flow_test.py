@@ -20,25 +20,25 @@ from deepray.custom_ops.correlation_cost import CorrelationCost
 
 
 def _forward(
-    input_a,
-    input_b,
-    kernel_size,
-    max_displacement,
-    stride_1,
-    stride_2,
-    pad,
-    data_format,
+  input_a,
+  input_b,
+  kernel_size,
+  max_displacement,
+  stride_1,
+  stride_2,
+  pad,
+  data_format,
 ):
   input_a_op = tf.convert_to_tensor(input_a, dtype=tf.float32)
   input_b_op = tf.convert_to_tensor(input_b, dtype=tf.float32)
 
   output = CorrelationCost(
-      kernel_size=kernel_size,
-      max_displacement=max_displacement,
-      stride_1=stride_1,
-      stride_2=stride_2,
-      pad=pad,
-      data_format=data_format,
+    kernel_size=kernel_size,
+    max_displacement=max_displacement,
+    stride_1=stride_1,
+    stride_2=stride_2,
+    pad=pad,
+    data_format=data_format,
   )([input_a_op, input_b_op])
 
   return output
@@ -47,17 +47,17 @@ def _forward(
 def _create_test_data(data_format):
   # Produce test data for _forward_simple and _keras methods
   val_a = np.array(
+    [
       [
-          [
-              [[0, -6, 9, 5], [1, -5, 10, 3], [2, -4, 11, 1]],
-              [[3, -3, 12, -1], [4, -2, 13, -3], [5, -1, 14, -5]],
-          ],
-          [
-              [[6, 0, 15, -7], [7, 1, 16, -9], [8, 2, 17, -11]],
-              [[9, 3, 18, -13], [10, 4, 19, -15], [11, 5, 20, -17]],
-          ],
+        [[0, -6, 9, 5], [1, -5, 10, 3], [2, -4, 11, 1]],
+        [[3, -3, 12, -1], [4, -2, 13, -3], [5, -1, 14, -5]],
       ],
-      dtype=np.float32,
+      [
+        [[6, 0, 15, -7], [7, 1, 16, -9], [8, 2, 17, -11]],
+        [[9, 3, 18, -13], [10, 4, 19, -15], [11, 5, 20, -17]],
+      ],
+    ],
+    dtype=np.float32,
   )
 
   # pylint: disable=too-many-function-args
@@ -89,14 +89,14 @@ def test_forward_simple(data_format):
   pad = 4
 
   actual = _forward(
-      input_a_tensor,
-      input_b_tensor,
-      kernel_size=kernel_size,
-      max_displacement=max_displacement,
-      stride_1=stride_1,
-      stride_2=stride_2,
-      pad=pad,
-      data_format=data_format,
+    input_a_tensor,
+    input_b_tensor,
+    kernel_size=kernel_size,
+    max_displacement=max_displacement,
+    stride_1=stride_1,
+    stride_2=stride_2,
+    pad=pad,
+    data_format=data_format,
   )
 
   if data_format == "channels_last":
@@ -105,8 +105,8 @@ def test_forward_simple(data_format):
 
   # We can test fixed ids, as output is independent from data_format
   expected_ids = np.concatenate([
-      np.zeros(464),
-      np.ones(464),
+    np.zeros(464),
+    np.ones(464),
   ])
   np.testing.assert_allclose(tf.where(actual == 0)[:, 0].numpy(), expected_ids)
 
@@ -138,12 +138,12 @@ def test_gradients(data_format):
 
   def correlation_fn(input_a, input_b):
     return CorrelationCost(
-        kernel_size=kernel_size,
-        max_displacement=max_displacement,
-        stride_1=stride_1,
-        stride_2=stride_2,
-        pad=pad,
-        data_format=data_format,
+      kernel_size=kernel_size,
+      max_displacement=max_displacement,
+      stride_1=stride_1,
+      stride_2=stride_2,
+      pad=pad,
+      data_format=data_format,
     )([input_a, input_b])
 
   theoretical, numerical = tf.test.compute_gradient(correlation_fn, [input_a_op, input_b_op])
@@ -160,12 +160,12 @@ def test_keras(data_format):
   input_b = tf.keras.Input(shape=val_b.shape[1:])
 
   layer = CorrelationCost(
-      kernel_size=1,
-      max_displacement=2,
-      stride_1=1,
-      stride_2=2,
-      pad=4,
-      data_format=data_format,
+    kernel_size=1,
+    max_displacement=2,
+    stride_1=1,
+    stride_2=2,
+    pad=4,
+    data_format=data_format,
   )
 
   expected_output_shape = tuple(layer.compute_output_shape([input_a.shape, input_b.shape]))

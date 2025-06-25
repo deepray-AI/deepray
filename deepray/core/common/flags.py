@@ -36,47 +36,46 @@ def define_flags():
   use any of the flags.
   """
   flags.DEFINE_string(
-      'experiment', default=None, help='The experiment type registered, specifying an ExperimentConfig.'
+    "experiment", default=None, help="The experiment type registered, specifying an ExperimentConfig."
   )
   flags.DEFINE_string(
-      'model_dir', default=None, help='The directory where the model and training/evaluation summaries'
-      'are stored.'
+    "model_dir", default=None, help="The directory where the model and training/evaluation summariesare stored."
   )
 
   flags.DEFINE_string(
-      'params_override',
-      default=None,
-      help='a YAML/JSON string or a YAML file which specifies additional '
-      'overrides over the default parameters and those specified in '
-      '`--config_file`. Note that this is supposed to be used only to override '
-      'the model parameters, but not the parameters like TPU specific flags. '
-      'One canonical use case of `--config_file` and `--params_override` is '
-      'users first define a template config file using `--config_file`, then '
-      'use `--params_override` to adjust the minimal set of tuning parameters, '
-      'for example setting up different `batch_size`. The final override '
-      'order of parameters: default_model_params --> params from config_file '
-      '--> params in params_override. See also the help message of '
-      '`--config_file`.'
+    "params_override",
+    default=None,
+    help="a YAML/JSON string or a YAML file which specifies additional "
+    "overrides over the default parameters and those specified in "
+    "`--config_file`. Note that this is supposed to be used only to override "
+    "the model parameters, but not the parameters like TPU specific flags. "
+    "One canonical use case of `--config_file` and `--params_override` is "
+    "users first define a template config file using `--config_file`, then "
+    "use `--params_override` to adjust the minimal set of tuning parameters, "
+    "for example setting up different `batch_size`. The final override "
+    "order of parameters: default_model_params --> params from config_file "
+    "--> params in params_override. See also the help message of "
+    "`--config_file`.",
   )
 
   # The libraries rely on gin often make mistakes that include flags inside
   # the library files which causes conflicts.
   try:
-    flags.DEFINE_multi_string('gin_file', default=None, help='List of paths to the config files.')
+    flags.DEFINE_multi_string("gin_file", default=None, help="List of paths to the config files.")
   except flags.DuplicateFlagError:
     pass
 
   try:
-    flags.DEFINE_multi_string('gin_params', default=None, help='Newline separated list of Gin parameter bindings.')
+    flags.DEFINE_multi_string("gin_params", default=None, help="Newline separated list of Gin parameter bindings.")
   except flags.DuplicateFlagError:
     pass
 
   flags.DEFINE_string(
-      'tpu',
-      default=None,
-      help='The Cloud TPU to use for training. This should be either the name '
-      'used when creating the Cloud TPU, or a grpc://ip.address.of.tpu:8470 '
-      'url.'
+    "tpu",
+    default=None,
+    help="The Cloud TPU to use for training. This should be either the name "
+    "used when creating the Cloud TPU, or a grpc://ip.address.of.tpu:8470 "
+    "url.",
   )
 
-  flags.DEFINE_string('tf_data_service', default=None, help='The tf.data service address')
+  flags.DEFINE_string("tf_data_service", default=None, help="The tf.data service address")

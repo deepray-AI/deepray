@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for streaming correlations metrics."""
+
 import pytest
 import numpy as np
 import tensorflow as tf
@@ -27,10 +28,10 @@ from deepray.testing.serialization import check_metric_serialization
 
 class TestStreamingCorrelations:
   scipy_corr = {
-      KendallsTauB: lambda x, y: stats.kendalltau(x, y, variant="b"),
-      KendallsTauC: lambda x, y: stats.kendalltau(x, y, variant="c"),
-      SpearmansRank: stats.spearmanr,
-      PearsonsCorrelation: stats.pearsonr,
+    KendallsTauB: lambda x, y: stats.kendalltau(x, y, variant="b"),
+    KendallsTauC: lambda x, y: stats.kendalltau(x, y, variant="c"),
+    SpearmansRank: stats.spearmanr,
+    PearsonsCorrelation: stats.pearsonr,
   }
 
   testing_types = scipy_corr.keys()
@@ -104,9 +105,9 @@ class TestStreamingCorrelations:
     else:
       optimizer = tf.keras.optimizers.Adam(learning_rate=0.1)
     model.compile(
-        optimizer=optimizer,
-        loss="binary_crossentropy",
-        metrics=[metric],
+      optimizer=optimizer,
+      loss="binary_crossentropy",
+      metrics=[metric],
     )
 
     x = np.random.rand(1024, 128).astype(np.float32)

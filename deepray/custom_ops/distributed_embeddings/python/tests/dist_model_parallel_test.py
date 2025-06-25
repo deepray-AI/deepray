@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Test of distributed model parallel"""
+
 import random
 import os
 from collections import defaultdict
@@ -32,11 +33,47 @@ flags.DEFINE_bool("graph_mode", default=False, help="Run in graph mode.")
 flags.DEFINE_string("mixed_precision_policy", default=None, help="Mixed precision policy to be set.")
 
 large_testcase_sizes = [
-    [2, 8], [2, 16], [10, 8], [10, 16], [10, 16], [10, 16], [10, 16], [10, 16], [10, 32], [10, 128],
-    [10, 128], [10, 128], [10, 128], [10, 1024], [100, 16], [100, 32], [100, 32], [100, 32], [100, 32], [100, 128],
-    [100, 128], [1000, 16], [1000, 16], [1000, 48], [1000, 128], [1000, 128], [1000, 384], [10000, 64], [10000, 64],
-    [10000, 2048], [100000, 32], [100000, 64], [100000, 64], [100000, 64], [100000, 128], [1000000, 96], [1000000, 128],
-    [1000000, 128], [9999999, 8], [10000000, 8], [10000001, 8]
+  [2, 8],
+  [2, 16],
+  [10, 8],
+  [10, 16],
+  [10, 16],
+  [10, 16],
+  [10, 16],
+  [10, 16],
+  [10, 32],
+  [10, 128],
+  [10, 128],
+  [10, 128],
+  [10, 128],
+  [10, 1024],
+  [100, 16],
+  [100, 32],
+  [100, 32],
+  [100, 32],
+  [100, 32],
+  [100, 128],
+  [100, 128],
+  [1000, 16],
+  [1000, 16],
+  [1000, 48],
+  [1000, 128],
+  [1000, 128],
+  [1000, 384],
+  [10000, 64],
+  [10000, 64],
+  [10000, 2048],
+  [100000, 32],
+  [100000, 64],
+  [100000, 64],
+  [100000, 64],
+  [100000, 128],
+  [1000000, 96],
+  [1000000, 128],
+  [1000000, 128],
+  [9999999, 8],
+  [10000000, 8],
+  [10000001, 8],
 ]
 
 
@@ -44,7 +81,6 @@ large_testcase_sizes = [
 # report of unexpected-keyword-arg, no-value-for-parameter. Disable them globally here
 # pylint: disable=no-self-use,unexpected-keyword-arg,no-value-for-parameter,missing-docstring
 class CustomEmbedding(tf.keras.layers.Layer):
-
   def __init__(self, input_dim, output_dim, **kwargs):
     super().__init__(**kwargs)
     self.input_dim = input_dim
@@ -57,7 +93,7 @@ class CustomEmbedding(tf.keras.layers.Layer):
     return tf.gather(params=self.params, indices=inputs, axis=None)
 
   def get_config(self):
-    config = {'input_dim': self.input_dim, 'output_dim': self.output_dim}
+    config = {"input_dim": self.input_dim, "output_dim": self.output_dim}
     return config
 
 
@@ -65,19 +101,19 @@ class EmbeddingListModel(tf.keras.Model):
   """A simple model for test"""
 
   def __init__(
-      self,
-      table_sizes,
-      distribute=False,
-      strategy='basic',
-      dp_input=True,
-      input_table_map=None,
-      column_slice_threshold=None,
-      test_custom_layer=False,
-      combiner=None,
-      use_custom_kernels=True,
-      row_slice_threshold=None,
-      data_parallel_threshold=None,
-      gpu_embedding_size=None
+    self,
+    table_sizes,
+    distribute=False,
+    strategy="basic",
+    dp_input=True,
+    input_table_map=None,
+    column_slice_threshold=None,
+    test_custom_layer=False,
+    combiner=None,
+    use_custom_kernels=True,
+    row_slice_threshold=None,
+    data_parallel_threshold=None,
+    gpu_embedding_size=None,
   ):
     super().__init__()
     self.embeddings = []
@@ -90,14 +126,14 @@ class EmbeddingListModel(tf.keras.Model):
         self.embeddings.append(Embedding(*size, combiner=combiner, use_custom_kernel=use_custom_kernels))
     if distribute:
       self.dist_embeddings = dmp.DistributedEmbedding(
-          self.embeddings,
-          strategy=strategy,
-          dp_input=dp_input,
-          input_table_map=input_table_map,
-          column_slice_threshold=column_slice_threshold,
-          row_slice_threshold=row_slice_threshold,
-          data_parallel_threshold=data_parallel_threshold,
-          gpu_embedding_size=gpu_embedding_size
+        self.embeddings,
+        strategy=strategy,
+        dp_input=dp_input,
+        input_table_map=input_table_map,
+        column_slice_threshold=column_slice_threshold,
+        row_slice_threshold=row_slice_threshold,
+        data_parallel_threshold=data_parallel_threshold,
+        gpu_embedding_size=gpu_embedding_size,
       )
     else:
       self.dist_embeddings = None
@@ -124,15 +160,15 @@ class EmbeddingListModel(tf.keras.Model):
 
 
 def initialize_hvd():
-  os.environ['HOROVOD_STALL_CHECK_TIME_SECONDS'] = '5'
-  os.environ['HOROVOD_STALL_SHUTDOWN_TIME_SECONDS'] = '30'
+  os.environ["HOROVOD_STALL_CHECK_TIME_SECONDS"] = "5"
+  os.environ["HOROVOD_STALL_SHUTDOWN_TIME_SECONDS"] = "30"
 
   hvd.init()
-  gpus = tf.config.experimental.list_physical_devices('GPU')
+  gpus = tf.config.experimental.list_physical_devices("GPU")
   for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
   if gpus:
-    tf.config.experimental.set_visible_devices(gpus[hvd.local_rank()], 'GPU')
+    tf.config.experimental.set_visible_devices(gpus[hvd.local_rank()], "GPU")
 
 
 def gen_table_sizes(num_tables=None):
@@ -169,8 +205,8 @@ def gen_inputs_onehot(global_batch, table_sizes, input_to_table_map=None, mp_inp
   if input_to_table_map is None:
     input_to_table_map = list(range(len(table_sizes)))
   global_inputs = [
-      tf.random.uniform(shape=[global_batch], minval=0, maxval=table_sizes[i][0], dtype=tf.int64)
-      for i in input_to_table_map
+    tf.random.uniform(shape=[global_batch], minval=0, maxval=table_sizes[i][0], dtype=tf.int64)
+    for i in input_to_table_map
   ]
   for t in global_inputs:
     hvd.broadcast(t, root_rank=0)
@@ -180,14 +216,14 @@ def gen_inputs_onehot(global_batch, table_sizes, input_to_table_map=None, mp_inp
 
   local_batch = global_batch // hvd.size()
 
-  dp_inputs = [t[hvd.rank() * local_batch:(hvd.rank() + 1) * local_batch] for t in global_inputs]
+  dp_inputs = [t[hvd.rank() * local_batch : (hvd.rank() + 1) * local_batch] for t in global_inputs]
   mp_inputs = [global_inputs[i] for i in mp_input_ids] if mp_input_ids else []
 
   return dp_inputs, mp_inputs
 
 
 def gen_inputs_multihot(
-    global_batch, table_sizes, hotness=None, input_to_table_map=None, mp_input_ids=None, return_global=False
+  global_batch, table_sizes, hotness=None, input_to_table_map=None, mp_input_ids=None, return_global=False
 ):
   # create global inputs
   if input_to_table_map is None:
@@ -208,14 +244,13 @@ def gen_inputs_multihot(
     return global_inputs
 
   local_batch = global_batch // hvd.size()
-  dp_inputs = [t[hvd.rank() * local_batch:(hvd.rank() + 1) * local_batch, :] for t in global_inputs]
+  dp_inputs = [t[hvd.rank() * local_batch : (hvd.rank() + 1) * local_batch, :] for t in global_inputs]
   mp_inputs = [global_inputs[i] for i in mp_input_ids] if mp_input_ids else []
 
   return dp_inputs, mp_inputs
 
 
 class DistributedEmbeddingTest(keras_parameterized.TestCase):
-
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     initialize_hvd()
@@ -272,17 +307,17 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     num_tables = 7
     table_sizes = [[11, 7], [5, 8], [3, 8], [5, 8], [12, 25], [3, 12], [7, 13]]
 
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic')
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic")
     # create same input on all worker
     dup_ids = [
-        tf.random.uniform(shape=[3], minval=0, maxval=table_sizes[i][0], dtype=tf.int64) for i in range(num_tables)
+      tf.random.uniform(shape=[3], minval=0, maxval=table_sizes[i][0], dtype=tf.int64) for i in range(num_tables)
     ]
     dup_ids = hvd.broadcast_object(dup_ids, root_rank=0)
     # different output from each worker with different weight
     test_out = test_model(dup_ids)
     test_outs = tf.unstack(hvd.allgather(tf.expand_dims(test_out, axis=0)))
     for idx, out1 in enumerate(test_outs):
-      for out2 in test_outs[idx + 1:]:
+      for out2 in test_outs[idx + 1 :]:
         self.assertNotAllClose(out1, out2)
 
     # same output from each worker after broadcast data parallel weights
@@ -296,7 +331,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     table_sizes = gen_table_sizes()
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic')
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic")
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs)
@@ -305,7 +340,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     table_sizes = gen_table_sizes()
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic', row_slice_threshold=1)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic", row_slice_threshold=1)
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs)
@@ -314,7 +349,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     table_sizes = gen_table_sizes()
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic', data_parallel_threshold=100000)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic", data_parallel_threshold=100000)
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs)
@@ -323,7 +358,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     table_sizes = gen_table_sizes()
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='memory_optimized')
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="memory_optimized")
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs)
@@ -333,7 +368,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     input_to_table_map = gen_input_to_table_map(len(table_sizes))
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False, input_table_map=input_to_table_map)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic', input_table_map=input_to_table_map)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic", input_table_map=input_to_table_map)
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes, input_to_table_map)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs)
@@ -344,7 +379,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False, input_table_map=input_to_table_map)
     test_model = EmbeddingListModel(
-        table_sizes, distribute=True, strategy='basic', dp_input=False, input_table_map=input_to_table_map
+      table_sizes, distribute=True, strategy="basic", dp_input=False, input_table_map=input_to_table_map
     )
 
     mp_input_ids = test_model.dist_embeddings.strategy.input_ids_list[hvd.rank()]
@@ -357,7 +392,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False, input_table_map=input_to_table_map)
     test_model = EmbeddingListModel(
-        table_sizes, distribute=True, strategy='memory_balanced', dp_input=False, input_table_map=input_to_table_map
+      table_sizes, distribute=True, strategy="memory_balanced", dp_input=False, input_table_map=input_to_table_map
     )
 
     mp_input_ids = test_model.dist_embeddings.strategy.input_ids_list[hvd.rank()]
@@ -368,7 +403,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     # test on 4 GPUs
     table_sizes = [[100, 8], [5, 8], [10, 8], [25, 4]]
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='memory_balanced', column_slice_threshold=45)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="memory_balanced", column_slice_threshold=45)
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs)
@@ -378,7 +413,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
   def test_column_slice_threshold(self):
     table_sizes = gen_table_sizes(hvd.size() + 1)
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic', column_slice_threshold=30)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic", column_slice_threshold=30)
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs)
@@ -387,7 +422,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     table_sizes = [[10, 4], [11, 2], [4, 2], [4, 2]]
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
     test_model = EmbeddingListModel(
-        table_sizes, distribute=True, strategy='memory_balanced', dp_input=False, column_slice_threshold=10
+      table_sizes, distribute=True, strategy="memory_balanced", dp_input=False, column_slice_threshold=10
     )
     mp_input_ids = test_model.dist_embeddings.strategy.input_ids_list[hvd.rank()]
     dp_inputs, mp_inputs = gen_inputs(self.global_batch, table_sizes, mp_input_ids=mp_input_ids)
@@ -396,7 +431,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
   def test_8table_width2_auto_concat(self):
     table_sizes = [[10, 2], [11, 2], [4, 2], [4, 2], [10, 2], [11, 2], [4, 2], [4, 2]]
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='memory_balanced', dp_input=False)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="memory_balanced", dp_input=False)
     mp_input_ids = test_model.dist_embeddings.strategy.input_ids_list[hvd.rank()]
     dp_inputs, mp_inputs = gen_inputs(self.global_batch, table_sizes, mp_input_ids=mp_input_ids)
     self.run_and_test(ref_model, dp_inputs, test_model, mp_inputs)
@@ -406,7 +441,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     table_sizes = gen_table_sizes()
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic')
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic")
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
 
@@ -422,7 +457,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     table_sizes = gen_table_sizes()
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic', dp_input=False)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic", dp_input=False)
 
     # First generate model parallel batches that's divisible by world_size. We then use (batch_size - 1)
     # which will be indivisible by world_size greater than 1 due to consecutive numbers coprimes
@@ -437,7 +472,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     table_sizes = gen_table_sizes(1)
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='memory_balanced')
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="memory_balanced")
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs)
@@ -446,7 +481,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     table_sizes = gen_table_sizes()
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False, test_custom_layer=True)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic', test_custom_layer=True)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic", test_custom_layer=True)
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs)
@@ -462,12 +497,12 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
     test_model = EmbeddingListModel(
-        table_sizes,
-        distribute=True,
-        strategy='memory_balanced',
-        data_parallel_threshold=10000,
-        column_slice_threshold=1000000,
-        row_slice_threshold=10000000
+      table_sizes,
+      distribute=True,
+      strategy="memory_balanced",
+      data_parallel_threshold=10000,
+      column_slice_threshold=1000000,
+      row_slice_threshold=10000000,
     )
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
@@ -476,7 +511,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
   def test_cpu_offload(self):
     table_sizes = [[100, 32], [100, 32], [100, 32], [100, 32], [1000, 64], [1000, 64], [1000, 64], [1000, 64]]
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic', gpu_embedding_size=32000)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic", gpu_embedding_size=32000)
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs, fwd_tol=1e-6)
@@ -486,7 +521,7 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
     test_model = EmbeddingListModel(
-        table_sizes, distribute=True, strategy='memory_balanced', column_slice_threshold=1000000, gpu_embedding_size=0
+      table_sizes, distribute=True, strategy="memory_balanced", column_slice_threshold=1000000, gpu_embedding_size=0
     )
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes)
@@ -495,8 +530,8 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
   def test_multihot_mp_input(self):
     table_sizes = gen_table_sizes()
 
-    ref_model = EmbeddingListModel(table_sizes, distribute=False, combiner='sum', use_custom_kernels=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, combiner='sum', strategy='basic', dp_input=False)
+    ref_model = EmbeddingListModel(table_sizes, distribute=False, combiner="sum", use_custom_kernels=False)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, combiner="sum", strategy="basic", dp_input=False)
 
     mp_input_ids = test_model.dist_embeddings.strategy.input_ids_list[hvd.rank()]
 
@@ -506,8 +541,8 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
   def test_multihot_dp_input(self):
     table_sizes = gen_table_sizes()
 
-    ref_model = EmbeddingListModel(table_sizes, distribute=False, combiner='sum', use_custom_kernels=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, combiner='sum', strategy='basic')
+    ref_model = EmbeddingListModel(table_sizes, distribute=False, combiner="sum", use_custom_kernels=False)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, combiner="sum", strategy="basic")
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes, hotness=5)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs, fwd_tol=1e-6)
@@ -516,8 +551,8 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
     # More workers than tables
     table_sizes = gen_table_sizes(num_tables=max(hvd.size() // 2, 1))
 
-    ref_model = EmbeddingListModel(table_sizes, distribute=False, combiner='sum', use_custom_kernels=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, combiner='sum', strategy='basic')
+    ref_model = EmbeddingListModel(table_sizes, distribute=False, combiner="sum", use_custom_kernels=False)
+    test_model = EmbeddingListModel(table_sizes, distribute=True, combiner="sum", strategy="basic")
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes, hotness=5)
     self.run_and_test(ref_model, dp_inputs, test_model, dp_inputs, fwd_tol=1e-6)
@@ -525,9 +560,9 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
   def test_multihot_offloaded_mp_input(self):
     table_sizes = gen_table_sizes()
 
-    ref_model = EmbeddingListModel(table_sizes, distribute=False, combiner='sum', use_custom_kernels=False)
+    ref_model = EmbeddingListModel(table_sizes, distribute=False, combiner="sum", use_custom_kernels=False)
     test_model = EmbeddingListModel(
-        table_sizes, distribute=True, combiner='sum', strategy='basic', dp_input=False, gpu_embedding_size=0
+      table_sizes, distribute=True, combiner="sum", strategy="basic", dp_input=False, gpu_embedding_size=0
     )
 
     mp_input_ids = test_model.dist_embeddings.strategy.input_ids_list[hvd.rank()]
@@ -538,9 +573,9 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
   def test_multihot_offloaded_dp_input(self):
     table_sizes = gen_table_sizes()
 
-    ref_model = EmbeddingListModel(table_sizes, distribute=False, combiner='sum', use_custom_kernels=False)
+    ref_model = EmbeddingListModel(table_sizes, distribute=False, combiner="sum", use_custom_kernels=False)
     test_model = EmbeddingListModel(
-        table_sizes, distribute=True, combiner='sum', strategy='basic', gpu_embedding_size=0
+      table_sizes, distribute=True, combiner="sum", strategy="basic", gpu_embedding_size=0
     )
 
     dp_inputs, _ = gen_inputs(self.global_batch, table_sizes, hotness=5)
@@ -548,7 +583,6 @@ class DistributedEmbeddingTest(keras_parameterized.TestCase):
 
 
 class DistributedEmbeddingModelFitTest(keras_parameterized.TestCase):
-
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     initialize_hvd()
@@ -561,7 +595,7 @@ class DistributedEmbeddingModelFitTest(keras_parameterized.TestCase):
     table_sizes = gen_table_sizes()
 
     ref_model = EmbeddingListModel(table_sizes, distribute=False)
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic')
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic")
     optimizer = tf.keras.optimizers.legacy.SGD(learning_rate=1.5, momentum=0)
     bce = tf.keras.losses.BinaryCrossentropy(from_logits=True)
     label = tf.fill([self.global_batch // hvd.size(), 5], 0.5)
@@ -595,7 +629,7 @@ class DistributedEmbeddingModelFitTest(keras_parameterized.TestCase):
     test_history = test_model.fit(dp_inputs, label, epochs=1, steps_per_epoch=1)
     test_weights = test_model.dist_embeddings.get_weights(True) + test_model.dense.get_weights()
 
-    self.assertAllClose(ref_loss, test_history.history['loss'][0])
+    self.assertAllClose(ref_loss, test_history.history["loss"][0])
     for ref_w, test_w in zip(ref_weights, test_weights):
       # assert close here since order of accumulations(inputs and batch dim) might have changed
       self.assertAllClose(tf.convert_to_tensor(ref_w), tf.convert_to_tensor(test_w))
@@ -605,11 +639,11 @@ class DistributedEmbeddingModelFitTest(keras_parameterized.TestCase):
     num_tables = 7
     table_sizes = [[11, 7], [5, 8], [3, 8], [5, 8], [12, 25], [3, 12], [7, 13]]
 
-    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy='basic')
+    test_model = EmbeddingListModel(table_sizes, distribute=True, strategy="basic")
 
     # create same input on all worker
     dup_ids = [
-        tf.random.uniform(shape=[3], minval=0, maxval=table_sizes[i][0], dtype=tf.int64) for i in range(num_tables)
+      tf.random.uniform(shape=[3], minval=0, maxval=table_sizes[i][0], dtype=tf.int64) for i in range(num_tables)
     ]
     dup_ids = hvd.broadcast_object(dup_ids, root_rank=0)
 
@@ -624,7 +658,7 @@ class DistributedEmbeddingModelFitTest(keras_parameterized.TestCase):
     test_history = test_model.fit(dup_ids, label, epochs=1, steps_per_epoch=1, callbacks=[callback])
 
     # losses from initial batch should be different
-    loss = test_history.history['loss'][0]
+    loss = test_history.history["loss"][0]
     losses = tf.unstack(hvd.allgather(tf.expand_dims(loss, axis=0)))
     for loss in losses[1:]:
       self.assertNotAllClose(losses[0], loss)
@@ -637,7 +671,7 @@ class DistributedEmbeddingModelFitTest(keras_parameterized.TestCase):
 
     # now try model fit again, loss should be same
     test_history = test_model.fit(dup_ids, label, epochs=1, steps_per_epoch=1)
-    loss = test_history.history['loss'][0]
+    loss = test_history.history["loss"][0]
     losses = tf.unstack(hvd.allgather(tf.expand_dims(loss, axis=0)))
     for loss in losses[1:]:
       # TODO(deyuf): understand why model.fit causes 1e-8 error sometime
@@ -646,18 +680,22 @@ class DistributedEmbeddingModelFitTest(keras_parameterized.TestCase):
 
 def get_variable_length_ragged_test_data():
   return [
-      tf.ragged.constant(
-          [[11, 12], [13, 14, 15], [16], [17], [21], [22, 23, 24, 25, 26, 27, 28, 29, 210], [211], [212]]
-      ),
-      tf.ragged.constant([[31, 32, 33], [34], [35], [36], [41, 42, 43, 44, 45, 46, 47, 48], [49], [410], [411]]),
-      tf.ragged.constant(
-          [[51], [52, 53, 54, 55, 56, 57, 58, 59, 510], [511], [512], [61, 62, 63, 64, 65, 66, 67], [68], [69], [610]]
-      )
+    tf.ragged.constant([[11, 12], [13, 14, 15], [16], [17], [21], [22, 23, 24, 25, 26, 27, 28, 29, 210], [211], [212]]),
+    tf.ragged.constant([[31, 32, 33], [34], [35], [36], [41, 42, 43, 44, 45, 46, 47, 48], [49], [410], [411]]),
+    tf.ragged.constant([
+      [51],
+      [52, 53, 54, 55, 56, 57, 58, 59, 510],
+      [511],
+      [512],
+      [61, 62, 63, 64, 65, 66, 67],
+      [68],
+      [69],
+      [610],
+    ]),
   ]
 
 
 class DpToMpInputTest(keras_parameterized.TestCase):
-
   def __init__(self, *args, **kwargs):
     super().__init__(*args, **kwargs)
     initialize_hvd()
@@ -719,14 +757,14 @@ class DpToMpInputTest(keras_parameterized.TestCase):
 
   def test_ragged_and_dense_dp_to_mp(self):
     dense_inputs = gen_inputs_onehot(
-        global_batch=8, table_sizes=[[10, 8], [100, 8], [1000, 8], [10, 16], [10, 16], [10, 4]], return_global=True
+      global_batch=8, table_sizes=[[10, 8], [100, 8], [1000, 8], [10, 16], [10, 16], [10, 4]], return_global=True
     )
     all_inputs = [*dense_inputs, *get_variable_length_ragged_test_data()]
     self.run_and_test(all_inputs)
 
   def test_ragged_and_dense_dp_to_mp_reversed(self):
     dense_inputs = gen_inputs_onehot(
-        global_batch=8, table_sizes=[[10, 8], [100, 8], [1000, 8], [10, 16], [10, 16], [10, 4]], return_global=True
+      global_batch=8, table_sizes=[[10, 8], [100, 8], [1000, 8], [10, 16], [10, 16], [10, 4]], return_global=True
     )
     all_inputs = [*get_variable_length_ragged_test_data(), *dense_inputs]
     self.run_and_test(all_inputs)

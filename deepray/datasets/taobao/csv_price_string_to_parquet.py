@@ -2,19 +2,34 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-src_file = 'taobao/taobao_test_data'
-dst_file = src_file + '.parquet'
+src_file = "taobao/taobao_test_data"
+dst_file = src_file + ".parquet"
 
 chunksize = 10000  # this is the number of lines
 
 # Definition of some constants
 INPUT_FEATURES = [
-    'pid', 'adgroup_id', 'cate_id', 'campaign_id', 'customer', 'brand', 'user_id', 'cms_segid', 'cms_group_id',
-    'final_gender_code', 'age_level', 'pvalue_level', 'shopping_level', 'occupation', 'new_user_class_level',
-    'tag_category_list', 'tag_brand_list', 'price'
+  "pid",
+  "adgroup_id",
+  "cate_id",
+  "campaign_id",
+  "customer",
+  "brand",
+  "user_id",
+  "cms_segid",
+  "cms_group_id",
+  "final_gender_code",
+  "age_level",
+  "pvalue_level",
+  "shopping_level",
+  "occupation",
+  "new_user_class_level",
+  "tag_category_list",
+  "tag_brand_list",
+  "price",
 ]
-LABEL_COLUMN = ['clk']
-BUY_COLUMN = ['buy']
+LABEL_COLUMN = ["clk"]
+BUY_COLUMN = ["buy"]
 INPUT_COLUMN = LABEL_COLUMN + BUY_COLUMN + INPUT_FEATURES
 
 label_dtype = {label: int for label in LABEL_COLUMN}
@@ -32,7 +47,7 @@ input_field = label_field + buy_field + features_field
 
 label_default_values = {label: 0 for label in LABEL_COLUMN}
 buy_default_values = {buy: 0 for buy in BUY_COLUMN}
-features_default_values = {feature: ' ' for feature in INPUT_FEATURES}
+features_default_values = {feature: " " for feature in INPUT_FEATURES}
 default_values = {}
 default_values.update(label_default_values)
 default_values.update(buy_default_values)

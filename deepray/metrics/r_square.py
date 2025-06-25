@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Implements R^2 scores."""
+
 import warnings
 
 import numpy as np
@@ -42,63 +43,62 @@ def _reduce_average(input_tensor: tf.Tensor, axis=None, keepdims=False, weights=
 class RSquare(Metric):
   """Compute R^2 score.
 
-    This is also called the [coefficient of determination
-    ](https://en.wikipedia.org/wiki/Coefficient_of_determination).
-    It tells how close are data to the fitted regression line.
+  This is also called the [coefficient of determination
+  ](https://en.wikipedia.org/wiki/Coefficient_of_determination).
+  It tells how close are data to the fitted regression line.
 
-    - Highest score can be 1.0 and it indicates that the predictors
-        perfectly accounts for variation in the target.
-    - Score 0.0 indicates that the predictors do not
-        account for variation in the target.
-    - It can also be negative if the model is worse.
+  - Highest score can be 1.0 and it indicates that the predictors
+      perfectly accounts for variation in the target.
+  - Score 0.0 indicates that the predictors do not
+      account for variation in the target.
+  - It can also be negative if the model is worse.
 
-    The sample weighting for this metric implementation mimics the
-    behaviour of the [scikit-learn implementation
-    ](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html)
-    of the same metric.
+  The sample weighting for this metric implementation mimics the
+  behaviour of the [scikit-learn implementation
+  ](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html)
+  of the same metric.
 
-    Can also calculate the Adjusted R2 Score.
+  Can also calculate the Adjusted R2 Score.
 
-    Args:
-        multioutput: `string`, the reduce method for scores.
-            Should be one of `["raw_values", "uniform_average", "variance_weighted"]`.
-        name: (Optional) string name of the metric instance.
-        dtype: (Optional) data type of the metric result.
-        num_regressors: (Optional) Number of indepedent regressors used (Adjusted R2).
-            Defaults to zero(standard R2 score).
+  Args:
+      multioutput: `string`, the reduce method for scores.
+          Should be one of `["raw_values", "uniform_average", "variance_weighted"]`.
+      name: (Optional) string name of the metric instance.
+      dtype: (Optional) data type of the metric result.
+      num_regressors: (Optional) Number of indepedent regressors used (Adjusted R2).
+          Defaults to zero(standard R2 score).
 
-    Usage:
+  Usage:
 
-    >>> y_true = np.array([1, 4, 3], dtype=np.float32)
-    >>> y_pred = np.array([2, 4, 4], dtype=np.float32)
-    >>> metric = dp.metrics.r_square.RSquare()
-    >>> metric.update_state(y_true, y_pred)
-    >>> result = metric.result()
-    >>> result.numpy()
-    0.57142854
-    """
+  >>> y_true = np.array([1, 4, 3], dtype=np.float32)
+  >>> y_pred = np.array([2, 4, 4], dtype=np.float32)
+  >>> metric = dp.metrics.r_square.RSquare()
+  >>> metric.update_state(y_true, y_pred)
+  >>> result = metric.result()
+  >>> result.numpy()
+  0.57142854
+  """
 
   @typechecked
   def __init__(
-      self,
-      name: str = "r_square",
-      dtype: AcceptableDTypes = None,
-      multioutput: str = "uniform_average",
-      num_regressors: tf.int32 = 0,
-      **kwargs,
+    self,
+    name: str = "r_square",
+    dtype: AcceptableDTypes = None,
+    multioutput: str = "uniform_average",
+    num_regressors: tf.int32 = 0,
+    **kwargs,
   ):
     super().__init__(name=name, dtype=dtype, **kwargs)
 
     if "y_shape" in kwargs:
       warnings.warn(
-          "y_shape has been removed, because it's automatically derived,"
-          "and will be deprecated in Deepray 0.18.",
-          DeprecationWarning,
+        "y_shape has been removed, because it's automatically derived,and will be deprecated in Deepray 0.18.",
+        DeprecationWarning,
       )
 
     if multioutput not in _VALID_MULTIOUTPUT:
       raise ValueError(
-          "The multioutput argument must be one of {}, but was: {}".format(_VALID_MULTIOUTPUT, multioutput)
+        "The multioutput argument must be one of {}, but was: {}".format(_VALID_MULTIOUTPUT, multioutput)
       )
     self.multioutput = multioutput
     self.num_regressors = num_regressors
@@ -107,31 +107,31 @@ class RSquare(Metric):
   def update_state(self, y_true, y_pred, sample_weight=None) -> None:
     if not hasattr(self, "squared_sum"):
       self.squared_sum = self.add_weight(
-          name="squared_sum",
-          shape=y_true.shape[1:],
-          initializer="zeros",
-          dtype=self._dtype,
+        name="squared_sum",
+        shape=y_true.shape[1:],
+        initializer="zeros",
+        dtype=self._dtype,
       )
     if not hasattr(self, "sum"):
       self.sum = self.add_weight(
-          name="sum",
-          shape=y_true.shape[1:],
-          initializer="zeros",
-          dtype=self._dtype,
+        name="sum",
+        shape=y_true.shape[1:],
+        initializer="zeros",
+        dtype=self._dtype,
       )
     if not hasattr(self, "res"):
       self.res = self.add_weight(
-          name="residual",
-          shape=y_true.shape[1:],
-          initializer="zeros",
-          dtype=self._dtype,
+        name="residual",
+        shape=y_true.shape[1:],
+        initializer="zeros",
+        dtype=self._dtype,
       )
     if not hasattr(self, "count"):
       self.count = self.add_weight(
-          name="count",
-          shape=y_true.shape[1:],
-          initializer="zeros",
-          dtype=self._dtype,
+        name="count",
+        shape=y_true.shape[1:],
+        initializer="zeros",
+        dtype=self._dtype,
       )
 
     y_true = tf.cast(y_true, dtype=self._dtype)
@@ -144,7 +144,7 @@ class RSquare(Metric):
     weighted_y_true = y_true * sample_weight
     self.sum.assign_add(tf.reduce_sum(weighted_y_true, axis=0))
     self.squared_sum.assign_add(tf.reduce_sum(y_true * weighted_y_true, axis=0))
-    self.res.assign_add(tf.reduce_sum((y_true - y_pred)**2 * sample_weight, axis=0))
+    self.res.assign_add(tf.reduce_sum((y_true - y_pred) ** 2 * sample_weight, axis=0))
     self.count.assign_add(tf.reduce_sum(sample_weight, axis=0))
     self.num_samples.assign_add(tf.size(y_true))
 
@@ -162,7 +162,7 @@ class RSquare(Metric):
       r2_score = _reduce_average(raw_scores, weights=total)
     else:
       raise RuntimeError(
-          "The multioutput attribute must be one of {}, but was: {}".format(_VALID_MULTIOUTPUT, self.multioutput)
+        "The multioutput attribute must be one of {}, but was: {}".format(_VALID_MULTIOUTPUT, self.multioutput)
       )
 
     if self.num_regressors < 0:
@@ -171,8 +171,7 @@ class RSquare(Metric):
     if self.num_regressors != 0:
       if self.num_regressors > self.num_samples - 1:
         UserWarning(
-            "More independent predictors than datapoints in adjusted r2 score. Falls back to standard r2 "
-            "score."
+          "More independent predictors than datapoints in adjusted r2 score. Falls back to standard r2 score."
         )
       elif self.num_regressors == self.num_samples - 1:
         UserWarning("Division by zero in adjusted r2 score. Falls back to standard r2 score.")
@@ -198,7 +197,7 @@ class RSquare(Metric):
 
   def get_config(self):
     config = {
-        "multioutput": self.multioutput,
+      "multioutput": self.multioutput,
     }
     base_config = super().get_config()
     return {**base_config, **config}

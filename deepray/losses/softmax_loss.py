@@ -19,10 +19,7 @@ class _RankingLoss(tf.keras.losses.Loss):
   """
 
   def __init__(
-      self,
-      reduction: tf.losses.Reduction = tf.losses.Reduction.AUTO,
-      name: Optional[str] = None,
-      ragged: bool = False
+    self, reduction: tf.losses.Reduction = tf.losses.Reduction.AUTO, name: Optional[str] = None, ragged: bool = False
   ):
     super().__init__(reduction, name)
     # An instance of loss in `losses_impl`. Overwrite this in subclasses.
@@ -30,14 +27,11 @@ class _RankingLoss(tf.keras.losses.Loss):
     self._ragged = ragged
 
   def __call__(
-      self,
-      y_true: utils.TensorLike,
-      y_pred: utils.TensorLike,
-      sample_weight: Optional[utils.TensorLike] = None
+    self, y_true: utils.TensorLike, y_pred: utils.TensorLike, sample_weight: Optional[utils.TensorLike] = None
   ) -> tf.Tensor:
     """See tf.keras.losses.Loss."""
     if self._loss is None:
-      raise ValueError('self._loss is not defined. Please use a subclass.')
+      raise ValueError("self._loss is not defined. Please use a subclass.")
     sample_weight = self._loss.normalize_weights(y_true, sample_weight)
     return super().__call__(y_true, y_pred, sample_weight)
 
@@ -49,7 +43,7 @@ class _RankingLoss(tf.keras.losses.Loss):
 
   def get_config(self) -> Dict[str, Any]:
     config = super().get_config()
-    config.update({'ragged': self._ragged})
+    config.update({"ragged": self._ragged})
     return config
 
 
@@ -57,13 +51,13 @@ class _ListwiseLoss(_RankingLoss):
   """Base class for listwise ranking losses."""
 
   def __init__(
-      self,
-      reduction: tf.losses.Reduction = tf.losses.Reduction.AUTO,
-      name: Optional[str] = None,
-      lambda_weight: Optional[losses_impl._LambdaWeight] = None,
-      temperature: float = 1.0,
-      ragged: bool = False,
-      **kwargs
+    self,
+    reduction: tf.losses.Reduction = tf.losses.Reduction.AUTO,
+    name: Optional[str] = None,
+    lambda_weight: Optional[losses_impl._LambdaWeight] = None,
+    temperature: float = 1.0,
+    ragged: bool = False,
+    **kwargs,
   ):
     super().__init__(reduction, name, ragged)
     self._lambda_weight = lambda_weight
@@ -71,19 +65,17 @@ class _ListwiseLoss(_RankingLoss):
 
   def get_config(self) -> Dict[str, Any]:
     config = super().get_config()
-    config.update(
-        {
-            'lambda_weight': utils.serialize_keras_object(self._lambda_weight),
-            'temperature': self._temperature,
-        }
-    )
+    config.update({
+      "lambda_weight": utils.serialize_keras_object(self._lambda_weight),
+      "temperature": self._temperature,
+    })
     return config
 
   @classmethod
   def from_config(cls, config, custom_objects=None):
     config = config.copy()
     config.update({
-        'lambda_weight': utils.deserialize_keras_object(config['lambda_weight']),
+      "lambda_weight": utils.deserialize_keras_object(config["lambda_weight"]),
     })
     return cls(**config)
 
@@ -127,12 +119,12 @@ class SoftmaxLoss(_ListwiseLoss):
   """
 
   def __init__(
-      self,
-      reduction: tf.losses.Reduction = tf.losses.Reduction.AUTO,
-      name: Optional[str] = None,
-      lambda_weight: Optional[losses_impl._LambdaWeight] = None,
-      temperature: float = 1.0,
-      ragged: bool = False
+    self,
+    reduction: tf.losses.Reduction = tf.losses.Reduction.AUTO,
+    name: Optional[str] = None,
+    lambda_weight: Optional[losses_impl._LambdaWeight] = None,
+    temperature: float = 1.0,
+    ragged: bool = False,
   ):
     """Softmax cross-entropy loss.
 
@@ -150,17 +142,11 @@ class SoftmaxLoss(_ListwiseLoss):
     """
     super().__init__(reduction, name, lambda_weight, temperature, ragged)
     self._loss = losses_impl.SoftmaxLoss(
-        name='{}_impl'.format(name) if name else None,
-        lambda_weight=lambda_weight,
-        temperature=temperature,
-        ragged=ragged
+      name="{}_impl".format(name) if name else None, lambda_weight=lambda_weight, temperature=temperature, ragged=ragged
     )
 
   def __call__(
-      self,
-      y_true: utils.TensorLike,
-      y_pred: utils.TensorLike,
-      sample_weight: Optional[utils.TensorLike] = None
+    self, y_true: utils.TensorLike, y_pred: utils.TensorLike, sample_weight: Optional[utils.TensorLike] = None
   ) -> tf.Tensor:
     """See _RankingLoss."""
     losses, sample_weight = self._loss.compute_per_list(y_true, y_pred, sample_weight)

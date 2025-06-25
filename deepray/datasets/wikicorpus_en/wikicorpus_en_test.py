@@ -20,11 +20,11 @@ def runner(argv=None):
   if len(argv) <= 1:
     dir_path = os.path.dirname(os.path.realpath(__file__))
     argv = [
-        sys.argv[0],
-        "--batch_size=128",
-        "-epochs=1",
-        f"--train_data=/workspaces/dataset/wikicorpus_en/data/tfrecord_lower_case_1_seq_len_128_random_seed_12345/wikicorpus_en/train/pretrain_data.*",
-        # "--label=clicked",
+      sys.argv[0],
+      "--batch_size=128",
+      "-epochs=1",
+      f"--train_data=/workspaces/dataset/wikicorpus_en/data/tfrecord_lower_case_1_seq_len_128_random_seed_12345/wikicorpus_en/train/pretrain_data.*",
+      # "--label=clicked",
     ]
   if argv:
     FLAGS(argv, known_only=True)
@@ -44,7 +44,7 @@ def runner(argv=None):
     num_examples += FLAGS.batch_size
     step_throughput = _performance_calculator(1, FLAGS.batch_size)
     if num_examples % 100 == 0:
-      print(f'num_examples {num_examples}, step {step}, Perf {step_throughput} samples/s')
+      print(f"num_examples {num_examples}, step {step}, Perf {step_throughput} samples/s")
 
   print(num_examples)
   results_perf = _performance_calculator.results

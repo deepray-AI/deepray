@@ -109,8 +109,8 @@ def create_tf_while_loop_fn(step_fn):
     """
     if not isinstance(num_steps, tf.Tensor):
       raise ValueError(
-          "`num_steps` should be a `tf.Tensor`. Passing a Python value can "
-          "cause unnecessary retracing when wrapped by `tf.function`."
+        "`num_steps` should be a `tf.Tensor`. Passing a Python value can "
+        "cause unnecessary retracing when wrapped by `tf.function`."
       )
 
     for _ in tf.range(num_steps):
@@ -158,8 +158,8 @@ def create_tf_while_loop_fn_with_state(step_fn):
     """
     if not isinstance(num_steps, tf.Tensor):
       raise ValueError(
-          "`num_steps` should be a `tf.Tensor`. Passing a Python value can "
-          "cause unnecessary retracing when wrapped by `tf.function`."
+        "`num_steps` should be a `tf.Tensor`. Passing a Python value can "
+        "cause unnecessary retracing when wrapped by `tf.function`."
       )
 
     def _get_relaxed_tensor_shape(t):

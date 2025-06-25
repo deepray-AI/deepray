@@ -60,6 +60,6 @@ class HitsMetric(_RankingMetric):
   def get_config(self):
     config = super(HitsMetric, self).get_config()
     config.update({
-        "topn": self._topn,
+      "topn": self._topn,
     })
     return config

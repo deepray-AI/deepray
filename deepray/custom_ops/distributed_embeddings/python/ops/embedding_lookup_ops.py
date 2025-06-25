@@ -20,7 +20,7 @@ from tensorflow.python.ops.ragged import ragged_tensor
 from tensorflow.python.platform import resource_loader
 from tensorflow.python.ops import resource_variable_ops
 
-ops = tf.load_op_library(resource_loader.get_path_to_datafile('_embedding_lookup_ops.so'))
+ops = tf.load_op_library(resource_loader.get_path_to_datafile("_embedding_lookup_ops.so"))
 
 
 def read_var_no_copy(res_var):
@@ -88,12 +88,12 @@ def embedding_lookup(param, ids, combiner=None):
     # since max(row_splits) here is likely ~total hotness, int32 should be ok
     # TODO(Deyu): fuse this cast into above row_to_split function and make always int32
     return ops.embedding_lookup_variable_hotness(
-        read_var_no_copy(param), ids.values, tf.cast(row_splits, dtype=ids.values.dtype), combiner
+      read_var_no_copy(param), ids.values, tf.cast(row_splits, dtype=ids.values.dtype), combiner
     )
   dim1 = tf.shape(ids, out_type=tf.int32)[1] if ids.shape[1] is None else ids.shape[1]
   if dim1 == 1:
     return tf.nn.embedding_lookup(param, tf.squeeze(ids, [1]))
-  if combiner == 'sum':
+  if combiner == "sum":
     return tf.reduce_sum(tf.nn.embedding_lookup(param, ids), axis=1)
   return tf.reduce_mean(tf.nn.embedding_lookup(param, ids), axis=1)
 
@@ -113,7 +113,7 @@ def _embedding_lookup_variable_hotness_grad(op, grad):
   flat_ids = tf.reshape(op.inputs[1], [-1])
   offsets = op.inputs[2]
   unique_ids, unique_grad = ops.embedding_lookup_variable_hotness_grad(
-      flat_ids, offsets, grad, op.inputs[0], combiner=op.get_attr('combiner')
+    flat_ids, offsets, grad, op.inputs[0], combiner=op.get_attr("combiner")
   )
 
   return (tf.IndexedSlices(unique_grad, unique_ids, param_shape), None, None)

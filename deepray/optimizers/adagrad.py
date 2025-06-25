@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Adagrad for Deepray."""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -28,7 +29,6 @@ from .ev_optimizer_patch import add_slot, SlotConfig, _resource_apply_sparse_dup
 
 
 class Adagrad(tf.keras.optimizers.legacy.Adagrad):
-
   def __init__(self, learning_rate=0.001, **kwargs):
     super().__init__(learning_rate=learning_rate, **kwargs)
     self.global_step = None
@@ -48,34 +48,28 @@ class Adagrad(tf.keras.optimizers.legacy.Adagrad):
     if isinstance(var, kv_variable_ops.EmbeddingVariable):
       if indices_counts != None:
         return gen_kv_variable_ops.kv_resource_sparse_apply_adagrad_with_counts(
-            var.handle,
-            acc.handle,
-            coefficients["lr_t"],
-            grad,
-            indices,
-            self.global_step,
-            indices_counts,
-            use_locking=self._use_locking
+          var.handle,
+          acc.handle,
+          coefficients["lr_t"],
+          grad,
+          indices,
+          self.global_step,
+          indices_counts,
+          use_locking=self._use_locking,
         )
       else:
         return gen_kv_variable_ops.kv_resource_sparse_apply_adagrad(
-            var.handle,
-            acc.handle,
-            coefficients["lr_t"],
-            grad,
-            indices,
-            self.global_step,
-            use_locking=self._use_locking
+          var.handle, acc.handle, coefficients["lr_t"], grad, indices, self.global_step, use_locking=self._use_locking
         )
     else:
       return tf.raw_ops.ResourceSparseApplyAdagradV2(
-          var=var.handle,
-          accum=acc.handle,
-          lr=coefficients["lr_t"],
-          epsilon=coefficients["epsilon"],
-          grad=grad,
-          indices=indices,
-          use_locking=self._use_locking,
+        var=var.handle,
+        accum=acc.handle,
+        lr=coefficients["lr_t"],
+        epsilon=coefficients["epsilon"],
+        grad=grad,
+        indices=indices,
+        use_locking=self._use_locking,
       )
 
 

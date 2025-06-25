@@ -7,11 +7,11 @@ import tf_keras as keras
 
 def extend_as_list(x, n):
   """This is a helper function to extend x as list, it will do:
-    1. If x is a list, padding it to specified length n with None, if the length
-    is less than n;
-    2. If x is not a list, create a list with n elements x, please note that,
-    these n elements are the same object, not a copy of x.
-    """
+  1. If x is a list, padding it to specified length n with None, if the length
+  is less than n;
+  2. If x is not a list, create a list with n elements x, please note that,
+  these n elements are the same object, not a copy of x.
+  """
   if isinstance(x, (list, tuple)):
     if len(x) < n:
       return x + [None] * (n - len(x))
@@ -46,20 +46,20 @@ class MLP(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      hidden_units: List[int],
-      name: str = '',
-      activations=None,
-      kernel_initializer=None,
-      kernel_regularizer=None,
-      use_bias=True,
-      bias_regularizer=None,
-      enable_batch_normalization=False,
-      batch_normalization_momentum=0.99,
-      batch_normalization_renorm=False,
-      batch_normalization_renorm_clipping=None,
-      batch_normalization_renorm_momentum=0.99,
-      **kwargs
+    self,
+    hidden_units: List[int],
+    name: str = "",
+    activations=None,
+    kernel_initializer=None,
+    kernel_regularizer=None,
+    use_bias=True,
+    bias_regularizer=None,
+    enable_batch_normalization=False,
+    batch_normalization_momentum=0.99,
+    batch_normalization_renorm=False,
+    batch_normalization_renorm_clipping=None,
+    batch_normalization_renorm_momentum=0.99,
+    **kwargs,
   ):
     super(MLP, self).__init__(**kwargs)
     self.hidden_units = hidden_units
@@ -78,7 +78,7 @@ class MLP(tf.keras.layers.Layer):
     self._initializers = [tf.initializers.get(init) for init in extend_as_list(kernel_initializer, self._n_layers)]
 
     if activations is None:
-      self._activations = [tf.keras.layers.Activation(activation='relu')] * (self._n_layers - 1) + [None]
+      self._activations = [tf.keras.layers.Activation(activation="relu")] * (self._n_layers - 1) + [None]
     elif isinstance(activations, (list, tuple)):
       assert len(activations) == self._n_layers
       for act in activations:
@@ -88,18 +88,18 @@ class MLP(tf.keras.layers.Layer):
           self._activations.append(None)
     else:
       self._activations = [
-          tf.keras.layers.Activation(activation=activations) if i != self._n_layers - 1 else None
-          for i in range(self._n_layers)
+        tf.keras.layers.Activation(activation=activations) if i != self._n_layers - 1 else None
+        for i in range(self._n_layers)
       ]
 
   def build(self, input_shape):
     if self.enable_batch_normalization:
       bn = keras.layers.BatchNormalization(
-          momentum=self.batch_normalization_momentum,
-          renorm=self.batch_normalization_renorm,
-          renorm_clipping=self.batch_normalization_renorm_clipping,
-          renorm_momentum=self.batch_normalization_renorm_momentum,
-          name=f"BatchNorm/in"
+        momentum=self.batch_normalization_momentum,
+        renorm=self.batch_normalization_renorm,
+        renorm_clipping=self.batch_normalization_renorm_clipping,
+        renorm_momentum=self.batch_normalization_renorm_momentum,
+        name=f"BatchNorm/in",
       )
       self.trainable_weights.extend(bn.trainable_weights)
       self.non_trainable_weights.extend(bn.non_trainable_weights)
@@ -107,16 +107,16 @@ class MLP(tf.keras.layers.Layer):
       self._stacked_layers.append(bn)
 
     for layer_id, dim in enumerate(self.hidden_units):
-      is_final_layer = (layer_id == (self._n_layers - 1))
+      is_final_layer = layer_id == (self._n_layers - 1)
       dense = tf.keras.layers.Dense(
-          name=f"dense_{self.prefix}{layer_id}",
-          units=dim,
-          activation=None,
-          use_bias=self.use_bias,
-          kernel_initializer=self._initializers[layer_id],
-          bias_initializer=tf.initializers.zeros(),
-          kernel_regularizer=self.kernel_regularizer,
-          bias_regularizer=self.bias_regularizer
+        name=f"dense_{self.prefix}{layer_id}",
+        units=dim,
+        activation=None,
+        use_bias=self.use_bias,
+        kernel_initializer=self._initializers[layer_id],
+        bias_initializer=tf.initializers.zeros(),
+        kernel_regularizer=self.kernel_regularizer,
+        bias_regularizer=self.bias_regularizer,
       )
       self.trainable_weights.extend(dense.trainable_weights)
       self.non_trainable_weights.extend(dense.non_trainable_weights)
@@ -125,11 +125,11 @@ class MLP(tf.keras.layers.Layer):
 
       if not is_final_layer and self.enable_batch_normalization:
         bn = keras.layers.BatchNormalization(
-            momentum=self.batch_normalization_momentum,
-            renorm=self.batch_normalization_renorm,
-            renorm_clipping=self.batch_normalization_renorm_clipping,
-            renorm_momentum=self.batch_normalization_renorm_momentum,
-            name=f"BatchNorm/out"
+          momentum=self.batch_normalization_momentum,
+          renorm=self.batch_normalization_renorm,
+          renorm_clipping=self.batch_normalization_renorm_clipping,
+          renorm_momentum=self.batch_normalization_renorm_momentum,
+          name=f"BatchNorm/out",
         )
         self.trainable_weights.extend(bn.trainable_weights)
         self.non_trainable_weights.extend(bn.non_trainable_weights)
@@ -150,18 +150,18 @@ class MLP(tf.keras.layers.Layer):
 
   def get_config(self):
     config = {
-        'hidden_units': self.hidden_units,
-        'name': self.prefix,
-        "activations": [tf.keras.layers.Activation(activation=act) for act in self._activations],
-        "initializers": [tf.initializers.serialize(init) for init in self._initializers],
-        "enable_batch_normalization": self.enable_batch_normalization,
-        "batch_normalization_momentum": self.batch_normalization_momentum,
-        "use_bias": self.use_bias,
-        'kernel_regularizer': keras.regularizers.serialize(self.kernel_regularizer),
-        'bias_regularizer': keras.regularizers.serialize(self.bias_regularizer),
-        'batch_normalization_renorm': self.batch_normalization_renorm,
-        'batch_normalization_renorm_clipping': self.batch_normalization_renorm_clipping,
-        'batch_normalization_renorm_momentum': self.batch_normalization_renorm_momentum
+      "hidden_units": self.hidden_units,
+      "name": self.prefix,
+      "activations": [tf.keras.layers.Activation(activation=act) for act in self._activations],
+      "initializers": [tf.initializers.serialize(init) for init in self._initializers],
+      "enable_batch_normalization": self.enable_batch_normalization,
+      "batch_normalization_momentum": self.batch_normalization_momentum,
+      "use_bias": self.use_bias,
+      "kernel_regularizer": keras.regularizers.serialize(self.kernel_regularizer),
+      "bias_regularizer": keras.regularizers.serialize(self.bias_regularizer),
+      "batch_normalization_renorm": self.batch_normalization_renorm,
+      "batch_normalization_renorm_clipping": self.batch_normalization_renorm_clipping,
+      "batch_normalization_renorm_momentum": self.batch_normalization_renorm_momentum,
     }
     base_config = super(MLP, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))

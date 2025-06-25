@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 """Dynamic Embedding layer."""
+
 from collections import defaultdict
 from typing import Dict, List
 from typing import Optional, Literal
@@ -22,7 +23,6 @@ try:
   from tensorflow_recommenders_addons.dynamic_embedding.python.keras.layers import HvdAllToAllEmbedding
 
   class EmbeddingLayerRedis(DynamicEmbedding):
-
     def __init__(self, mini_batch_regularizer=None, mask_value=None, **kwargs):
       self.mini_batch_regularizer = regularizers.get(mini_batch_regularizer)
       self.mask_value = mask_value
@@ -41,15 +41,14 @@ try:
 
     def get_config(self):
       config = {
-          'mini_batch_regularizer': initializers.serialize(self.mini_batch_regularizer),
-          'mask_value': self.mask_value
+        "mini_batch_regularizer": initializers.serialize(self.mini_batch_regularizer),
+        "mask_value": self.mask_value,
       }
       base_config = super(EmbeddingLayerRedis, self).get_config()
 
       return dict(list(base_config.items()) + list(config.items()))
 
   class EmbeddingLayerGPU(DynamicEmbedding):
-
     def __init__(self, mini_batch_regularizer=None, mask_value=None, **kwargs):
       self.mini_batch_regularizer = regularizers.get(mini_batch_regularizer)
       self.mask_value = mask_value
@@ -71,8 +70,8 @@ try:
 
     def get_config(self):
       config = {
-          'mini_batch_regularizer': initializers.serialize(self.mini_batch_regularizer),
-          'mask_value': self.mask_value
+        "mini_batch_regularizer": initializers.serialize(self.mini_batch_regularizer),
+        "mask_value": self.mask_value,
       }
       base_config = super(EmbeddingLayerGPU, self).get_config()
       return dict(list(base_config.items()) + list(config.items()))
@@ -82,7 +81,6 @@ except ImportError as e:
 
 
 class DistributedDynamicEmbedding(tf.keras.layers.Layer):
-
   def get_de_options(self, case, init_capacity, **kwargs):
     redis_creator = None
     cuckoo_creator = None
@@ -97,54 +95,54 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
 
     if case == "HKV":
       hkv_config = tfra.dynamic_embedding.HkvHashTableConfig(
-          init_capacity=init_capacity,
-          max_capacity=kwargs.get("max_capacity", 128 * 1024 * 1024),
-          max_hbm_for_values=kwargs.get("max_hbm_for_values", 4 * 1024 * 1024 * 1024),
+        init_capacity=init_capacity,
+        max_capacity=kwargs.get("max_capacity", 128 * 1024 * 1024),
+        max_hbm_for_values=kwargs.get("max_hbm_for_values", 4 * 1024 * 1024 * 1024),
       )
       if flags.FLAGS.use_horovod:
         hkv_creator = tfra.dynamic_embedding.HkvHashTableCreator(
-            hkv_config, saver=de.FileSystemSaver(proc_size=get_world_size(), proc_rank=get_rank())
+          hkv_config, saver=de.FileSystemSaver(proc_size=get_world_size(), proc_rank=get_rank())
         )
       else:
         hkv_creator = tfra.dynamic_embedding.HkvHashTableCreator(hkv_config, saver=de.FileSystemSaver())
 
     if flags.FLAGS.use_horovod:
       cuckoo_creator = de.CuckooHashTableCreator(
-          saver=de.FileSystemSaver(proc_size=get_world_size(), proc_rank=get_rank())
+        saver=de.FileSystemSaver(proc_size=get_world_size(), proc_rank=get_rank())
       )
     else:
       cuckoo_creator = de.CuckooHashTableCreator(saver=de.FileSystemSaver())
 
     switcher = {
-        "Redis": {
-            "devices": ['/CPU:0'],
-            "kv_creator": redis_creator,
-        },
-        "DRAM": {
-            "devices": ['/CPU:0'],
-            "kv_creator": cuckoo_creator,
-        },
-        "HBM": {
-            "devices": ['/GPU:0'],
-            "kv_creator": cuckoo_creator,
-        },
-        "HKV": {
-            "devices": ['/GPU:0'],
-            "kv_creator": hkv_creator,
-        },
+      "Redis": {
+        "devices": ["/CPU:0"],
+        "kv_creator": redis_creator,
+      },
+      "DRAM": {
+        "devices": ["/CPU:0"],
+        "kv_creator": cuckoo_creator,
+      },
+      "HBM": {
+        "devices": ["/GPU:0"],
+        "kv_creator": cuckoo_creator,
+      },
+      "HKV": {
+        "devices": ["/GPU:0"],
+        "kv_creator": hkv_creator,
+      },
     }
     return switcher.get(case, None)
 
   def __init__(
-      self,
-      embedding_dim: int,
-      key_dtype: str,
-      value_dtype: str,
-      initializer=None,
-      name: str = '',
-      device: Optional[Literal["HBM", "DRAM", "Redis", "HKV", "EV"]] = "DRAM",
-      init_capacity=1 * 1024 * 1024,
-      **kwargs
+    self,
+    embedding_dim: int,
+    key_dtype: str,
+    value_dtype: str,
+    initializer=None,
+    name: str = "",
+    device: Optional[Literal["HBM", "DRAM", "Redis", "HKV", "EV"]] = "DRAM",
+    init_capacity=1 * 1024 * 1024,
+    **kwargs,
   ):
     super(DistributedDynamicEmbedding, self).__init__()
     self.embedding_dim = embedding_dim
@@ -157,14 +155,14 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
     if device == "Redis":
       de_option = self.get_de_options(device, init_capacity, **kwargs)
       self.emb = EmbeddingLayerRedis(
-          embedding_size=embedding_dim,
-          key_dtype=key_dtype,
-          value_dtype=value_dtype,
-          initializer=initializer,
-          name=name,
-          devices=de_option["devices"],
-          kv_creator=de_option["kv_creator"],
-          **kwargs
+        embedding_size=embedding_dim,
+        key_dtype=key_dtype,
+        value_dtype=value_dtype,
+        initializer=initializer,
+        name=name,
+        devices=de_option["devices"],
+        kv_creator=de_option["kv_creator"],
+        **kwargs,
       )
       if is_main_process():
         logger.info(f"Create EmbeddingLayer for {name} on {device} with {embedding_dim} dim")
@@ -173,29 +171,29 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
     de_option = self.get_de_options(device, init_capacity, **kwargs)
     if not flags.FLAGS.use_horovod:
       self.emb = EmbeddingLayerGPU(
-          embedding_size=embedding_dim,
-          key_dtype=key_dtype,
-          value_dtype=value_dtype,
-          initializer=initializer,
-          name=name,
-          devices=de_option["devices"],
-          init_capacity=init_capacity,
-          kv_creator=de_option["kv_creator"],
-          **kwargs
+        embedding_size=embedding_dim,
+        key_dtype=key_dtype,
+        value_dtype=value_dtype,
+        initializer=initializer,
+        name=name,
+        devices=de_option["devices"],
+        init_capacity=init_capacity,
+        kv_creator=de_option["kv_creator"],
+        **kwargs,
       )
       if is_main_process():
         logger.info(f"Create EmbeddingLayer for {name} on {device} with {embedding_dim} dim")
     else:
       self.emb = HvdAllToAllEmbedding(
-          embedding_size=embedding_dim,
-          key_dtype=key_dtype,
-          value_dtype=value_dtype,
-          initializer=initializer,
-          name=name,
-          devices=de_option["devices"],
-          init_capacity=init_capacity,
-          kv_creator=de_option["kv_creator"],
-          **kwargs
+        embedding_size=embedding_dim,
+        key_dtype=key_dtype,
+        value_dtype=value_dtype,
+        initializer=initializer,
+        name=name,
+        devices=de_option["devices"],
+        init_capacity=init_capacity,
+        kv_creator=de_option["kv_creator"],
+        **kwargs,
       )
       if is_main_process():
         logger.info(f"Create HvdAllToAllEmbedding for {name} on {device} with {embedding_dim} dim")
@@ -205,16 +203,14 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
 
   def get_config(self):
     config = super().get_config()
-    config.update(
-        {
-            "embedding_dim": self.embedding_dim,
-            "key_dtype": self.key_dtype,
-            "value_dtype": self.value_dtype,
-            "initializer": self.initializer,
-            "device": self.device,
-            "init_capacity": self.init_capacity
-        }
-    )
+    config.update({
+      "embedding_dim": self.embedding_dim,
+      "key_dtype": self.key_dtype,
+      "value_dtype": self.value_dtype,
+      "initializer": self.initializer,
+      "device": self.device,
+      "init_capacity": self.init_capacity,
+    })
     return config
 
 
@@ -226,17 +222,17 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      embedding_dim: int,
-      key_dtype: str,
-      value_dtype: str,
-      composition_size: int,
-      complementary_strategy: str = "Q-R",
-      operation: str = "add",
-      name: str = '',
-      device: Optional[Literal["HBM", "DRAM", "Redis", "HKV"]] = None,
-      initializer=None,
-      **kwargs
+    self,
+    embedding_dim: int,
+    key_dtype: str,
+    value_dtype: str,
+    composition_size: int,
+    complementary_strategy: str = "Q-R",
+    operation: str = "add",
+    name: str = "",
+    device: Optional[Literal["HBM", "DRAM", "Redis", "HKV"]] = None,
+    initializer=None,
+    **kwargs,
   ):
     super(CompositionalEmbedding, self).__init__()
     self.device = device
@@ -284,9 +280,9 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
 
     res = []
     for i in range(len(result)):
-      binary_str = ''
+      binary_str = ""
       for j in range(len(result)):
-        binary_str += result[j] * ('1' if i == j else '0')
+        binary_str += result[j] * ("1" if i == j else "0")
 
       int_num = int(binary_str, 2) - 2**base if int(binary_str[0]) else int(binary_str, 2)
       res.append(int_num)
@@ -294,12 +290,12 @@ class CompositionalEmbedding(tf.keras.layers.Layer):
 
   def build(self, input_shape=None):
     self.composition_emb = EmbeddingVariable(
-        embedding_dim=self.embedding_dim,
-        key_dtype=self.key_dtype,
-        value_dtype=self.value_dtype,
-        initializer=self.initializer,
-        name=f"embeddings_{self.suffix}/Compositional",
-        device=self.device,
+      embedding_dim=self.embedding_dim,
+      key_dtype=self.key_dtype,
+      value_dtype=self.value_dtype,
+      initializer=self.initializer,
+      name=f"embeddings_{self.suffix}/Compositional",
+      device=self.device,
     )
 
   def call(self, inputs, *args, **kwargs):
@@ -349,16 +345,16 @@ class DiamondEmbedding(tf.keras.layers.Layer):
     for key, group in fold_columns.items():
       dim_values = []
       for name in group:
-        dim_value = df.loc[df['name'] == name]['dim'].values[0]
+        dim_value = df.loc[df["name"] == name]["dim"].values[0]
         dim_values.append(dim_value)
         folder_map[name] = key
       if len(set(dim_values)) != 1:
         raise ValueError(
-            f"Cannot aggregate {group} because dimensions are not equal. Names: {group}, Dims: {dim_values}"
+          f"Cannot aggregate {group} because dimensions are not equal. Names: {group}, Dims: {dim_values}"
         )
 
     # Record the remaining features that do not need to be folded
-    for name in self.feature_map[~(self.feature_map['ftype'].isin(["Label", "Weight"]))]["name"].values:
+    for name in self.feature_map[~(self.feature_map["ftype"].isin(["Label", "Weight"]))]["name"].values:
       if name not in folder_map:
         folder_map[name] = name
     return folder_map
@@ -368,11 +364,29 @@ class DiamondEmbedding(tf.keras.layers.Layer):
     self.hash_long_kernel = {}
     self.numerical_bucket_kernel = {}
     self.split_dims = defaultdict(list)
-    for name, length, dim, voc_size, dtype, hash_size, composition_factor, storage_type, bucket_boundaries in self.feature_map[
-        ~(self.feature_map['ftype'].isin(["Label", "Weight"]))][[
-            "name", "length", "dim", "voc_size", "dtype", "hash_size", "composition_size", "storage_type",
-            "bucket_boundaries"
-        ]].values:
+    for (
+      name,
+      length,
+      dim,
+      voc_size,
+      dtype,
+      hash_size,
+      composition_factor,
+      storage_type,
+      bucket_boundaries,
+    ) in self.feature_map[~(self.feature_map["ftype"].isin(["Label", "Weight"]))][
+      [
+        "name",
+        "length",
+        "dim",
+        "voc_size",
+        "dtype",
+        "hash_size",
+        "composition_size",
+        "storage_type",
+        "bucket_boundaries",
+      ]
+    ].values:
       if self.is_valid_value(bucket_boundaries):
         bucket_boundaries_list = sorted(set(map(float, bucket_boundaries.split(","))))
         self.numerical_bucket_kernel[name] = NumericaBucketIdLayer(bucket_boundaries_list)
@@ -382,29 +396,33 @@ class DiamondEmbedding(tf.keras.layers.Layer):
         voc_size = int(hash_size)
 
       if self.fold_columns[name] not in self.embedding_layers:
-        composition_factor = self.feature_map.loc[self.feature_map['name'] == self.fold_columns[name]
-                                                 ]['composition_size'].values[0] if self.fold_columns[
-                                                     name] in self.feature_map['name'].values else composition_factor
-        storage_type = self.feature_map.loc[
-            self.feature_map['name'] == self.fold_columns[name]
-        ]['storage_type'].values[0] if self.fold_columns[name] in self.feature_map['name'].values else storage_type
+        composition_factor = (
+          self.feature_map.loc[self.feature_map["name"] == self.fold_columns[name]]["composition_size"].values[0]
+          if self.fold_columns[name] in self.feature_map["name"].values
+          else composition_factor
+        )
+        storage_type = (
+          self.feature_map.loc[self.feature_map["name"] == self.fold_columns[name]]["storage_type"].values[0]
+          if self.fold_columns[name] in self.feature_map["name"].values
+          else storage_type
+        )
         if self.is_valid_value(composition_factor):
           self.embedding_layers[self.fold_columns[name]] = CompositionalEmbedding(
-              embedding_dim=dim,
-              key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
-              value_dtype=tf.float32,
-              composition_size=composition_factor,
-              operation="add",
-              name=self.fold_columns[name]
+            embedding_dim=dim,
+            key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
+            value_dtype=tf.float32,
+            composition_size=composition_factor,
+            operation="add",
+            name=self.fold_columns[name],
           )
         else:
           self.embedding_layers[self.fold_columns[name]] = EmbeddingVariable(
-              embedding_dim=dim,
-              key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
-              value_dtype=tf.float32,
-              initializer=tf.keras.initializers.GlorotUniform(),
-              name='embedding_' + self.fold_columns[name],
-              device=storage_type,
+            embedding_dim=dim,
+            key_dtype=tf.int32 if self.is_valid_value(bucket_boundaries) else dtype,
+            value_dtype=tf.float32,
+            initializer=tf.keras.initializers.GlorotUniform(),
+            name="embedding_" + self.fold_columns[name],
+            device=storage_type,
           )
 
       self.split_dims[self.fold_columns[name]].append(length)
@@ -449,9 +467,8 @@ class DiamondEmbedding(tf.keras.layers.Layer):
     result = defaultdict(list)
     id_tensors = defaultdict(list)
     for code, name, hash_size, bucket_boundaries in self.feature_map[
-        ~(self.feature_map['ftype'].isin(["Label", "Weight"]))][["code", "name", "hash_size",
-                                                                 "bucket_boundaries"]].values:
-
+      ~(self.feature_map["ftype"].isin(["Label", "Weight"]))
+    ][["code", "name", "hash_size", "bucket_boundaries"]].values:
       input_tensor = inputs[name]
       id_tensor_prefix_code = code << 47
 

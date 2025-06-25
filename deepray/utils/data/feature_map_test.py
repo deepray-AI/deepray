@@ -34,38 +34,45 @@ _DUMMY_VEC_LEN = 4
 
 _ROWS_PER_CORE = 4
 _TEST_CASES = [
-    # One batch of one
-    dict(row_count=1, cpu_count=1, expected=[[[0]]]),
-    dict(row_count=10, cpu_count=1, expected=[[[0, 1, 2, 3]], [[4, 5, 6, 7]], [[8, 9]]]),
-    dict(
-        row_count=21,
-        cpu_count=1,
-        expected=[[[0, 1, 2, 3]], [[4, 5, 6, 7]], [[8, 9, 10, 11]], [[12, 13, 14, 15]], [[16, 17, 18, 19]], [[20]]]
-    ),
-    dict(row_count=1, cpu_count=4, expected=[[[0]]]),
-    dict(row_count=10, cpu_count=4, expected=[[[0, 1], [2, 3, 4], [5, 6], [7, 8, 9]]]),
-    dict(
-        row_count=21,
-        cpu_count=4,
-        expected=[[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]], [[16], [17], [18], [19, 20]]]
-    ),
-    dict(row_count=10, cpu_count=8, expected=[[[0], [1], [2], [3, 4], [5], [6], [7], [8, 9]]]),
-    dict(
-        row_count=40,
-        cpu_count=8,
-        expected=[
-            [
-                [0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15], [16, 17, 18, 19], [20, 21, 22, 23],
-                [24, 25, 26, 27], [28, 29, 30, 31]
-            ], [[32], [33], [34], [35], [36], [37], [38], [39]]
-        ]
-    ),
+  # One batch of one
+  dict(row_count=1, cpu_count=1, expected=[[[0]]]),
+  dict(row_count=10, cpu_count=1, expected=[[[0, 1, 2, 3]], [[4, 5, 6, 7]], [[8, 9]]]),
+  dict(
+    row_count=21,
+    cpu_count=1,
+    expected=[[[0, 1, 2, 3]], [[4, 5, 6, 7]], [[8, 9, 10, 11]], [[12, 13, 14, 15]], [[16, 17, 18, 19]], [[20]]],
+  ),
+  dict(row_count=1, cpu_count=4, expected=[[[0]]]),
+  dict(row_count=10, cpu_count=4, expected=[[[0, 1], [2, 3, 4], [5, 6], [7, 8, 9]]]),
+  dict(
+    row_count=21,
+    cpu_count=4,
+    expected=[[[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]], [[16], [17], [18], [19, 20]]],
+  ),
+  dict(row_count=10, cpu_count=8, expected=[[[0], [1], [2], [3, 4], [5], [6], [7], [8, 9]]]),
+  dict(
+    row_count=40,
+    cpu_count=8,
+    expected=[
+      [
+        [0, 1, 2, 3],
+        [4, 5, 6, 7],
+        [8, 9, 10, 11],
+        [12, 13, 14, 15],
+        [16, 17, 18, 19],
+        [20, 21, 22, 23],
+        [24, 25, 26, 27],
+        [28, 29, 30, 31],
+      ],
+      [[32], [33], [34], [35], [36], [37], [38], [39]],
+    ],
+  ),
 ]
 
 _FEATURE_MAP = {
-    _RAW_ROW: tf.io.FixedLenFeature([1], dtype=tf.int64),
-    _DUMMY_COL: tf.io.FixedLenFeature([1], dtype=tf.int64),
-    _DUMMY_VEC_COL: tf.io.FixedLenFeature([_DUMMY_VEC_LEN], dtype=tf.float32)
+  _RAW_ROW: tf.io.FixedLenFeature([1], dtype=tf.int64),
+  _DUMMY_COL: tf.io.FixedLenFeature([1], dtype=tf.int64),
+  _DUMMY_VEC_COL: tf.io.FixedLenFeature([_DUMMY_VEC_LEN], dtype=tf.float32),
 }
 
 DATA = {"calories": [420, 380, 390], "duration": [50, 40, 45]}
@@ -92,7 +99,6 @@ def fixed_core_count(cpu_count):
 
 
 class BaseTest(tf.test.TestCase):
-
   def setUp(self):
     super(BaseTest, self).setUp()
     if keras_utils.is_v2_0:
@@ -131,20 +137,16 @@ class BaseTest(tf.test.TestCase):
 
   def _serialize_deserialize(self, num_cores=1, num_rows=20):
     np.random.seed(1)
-    df = pd.DataFrame(
-        {
-            # Serialization order is only deterministic for num_cores=1. raw_row is
-            # used in validation after the deserialization.
-            _RAW_ROW:
-                np.array(range(num_rows), dtype=np.int64),
-            _DUMMY_COL:
-                np.random.randint(0, 35, size=(num_rows,)),
-            _DUMMY_VEC_COL:
-                [
-                    np.array([np.random.random() for _ in range(_DUMMY_VEC_LEN)]) for i in range(num_rows)  # pylint: disable=unused-variable
-                ]
-        }
-    )
+    df = pd.DataFrame({
+      # Serialization order is only deterministic for num_cores=1. raw_row is
+      # used in validation after the deserialization.
+      _RAW_ROW: np.array(range(num_rows), dtype=np.int64),
+      _DUMMY_COL: np.random.randint(0, 35, size=(num_rows,)),
+      _DUMMY_VEC_COL: [
+        np.array([np.random.random() for _ in range(_DUMMY_VEC_LEN)])
+        for i in range(num_rows)  # pylint: disable=unused-variable
+      ],
+    })
 
     with fixed_core_count(num_cores):
       buffer_path = file_io.write_to_temp_buffer(df, self.get_temp_dir(), [_RAW_ROW, _DUMMY_COL, _DUMMY_VEC_COL])

@@ -22,25 +22,25 @@ from typeguard import typechecked
 class Maxout(tf.keras.layers.Layer):
   """Applies Maxout to the input.
 
-    "Maxout Networks" Ian J. Goodfellow, David Warde-Farley, Mehdi Mirza, Aaron
-    Courville, Yoshua Bengio. https://arxiv.org/abs/1302.4389
+  "Maxout Networks" Ian J. Goodfellow, David Warde-Farley, Mehdi Mirza, Aaron
+  Courville, Yoshua Bengio. https://arxiv.org/abs/1302.4389
 
-    Usually the operation is performed in the filter/channel dimension. This
-    can also be used after Dense layers to reduce number of features.
+  Usually the operation is performed in the filter/channel dimension. This
+  can also be used after Dense layers to reduce number of features.
 
-    Args:
-      num_units: Specifies how many features will remain after maxout
-        in the `axis` dimension (usually channel).
-        This must be a factor of number of features.
-      axis: The dimension where max pooling will be performed. Default is the
-        last dimension.
+  Args:
+    num_units: Specifies how many features will remain after maxout
+      in the `axis` dimension (usually channel).
+      This must be a factor of number of features.
+    axis: The dimension where max pooling will be performed. Default is the
+      last dimension.
 
-    Input shape:
-      nD tensor with shape: `(batch_size, ..., axis_dim, ...)`.
+  Input shape:
+    nD tensor with shape: `(batch_size, ..., axis_dim, ...)`.
 
-    Output shape:
-      nD tensor with shape: `(batch_size, ..., num_units, ...)`.
-    """
+  Output shape:
+    nD tensor with shape: `(batch_size, ..., num_units, ...)`.
+  """
 
   @typechecked
   def __init__(self, num_units: int, axis: int = -1, **kwargs):
@@ -58,10 +58,7 @@ class Maxout(tf.keras.layers.Layer):
 
     num_channels = shape[self.axis]
     if not isinstance(num_channels, tf.Tensor) and num_channels % self.num_units:
-      raise ValueError(
-          "number of features({}) is not "
-          "a multiple of num_units({})".format(num_channels, self.num_units)
-      )
+      raise ValueError("number of features({}) is not a multiple of num_units({})".format(num_channels, self.num_units))
 
     if self.axis < 0:
       axis = self.axis + len(shape)

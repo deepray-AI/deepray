@@ -19,13 +19,13 @@ def runner(argv=None):
 
   if len(argv) <= 1:
     argv = [
-        sys.argv[0],
-        "--batch_size=256",
-        "--epochs=1",
-        "--prebatch=1",
-        "--train_data=/workspaces/dataset/*.tfrecord",
-        "--feature_map=feature_map.csv",
-        "--label=label",
+      sys.argv[0],
+      "--batch_size=256",
+      "--epochs=1",
+      "--prebatch=1",
+      "--train_data=/workspaces/dataset/*.tfrecord",
+      "--feature_map=feature_map.csv",
+      "--label=label",
     ]
   if argv:
     FLAGS(argv, known_only=True)
@@ -43,7 +43,7 @@ def runner(argv=None):
     step += 1
     num_examples += FLAGS.batch_size
     step_throughput = _performance_calculator(1, FLAGS.batch_size)
-    print(f'step {step}, Perf {step_throughput} samples/s')
+    print(f"step {step}, Perf {step_throughput} samples/s")
   # print(batch)
 
   print(num_examples)

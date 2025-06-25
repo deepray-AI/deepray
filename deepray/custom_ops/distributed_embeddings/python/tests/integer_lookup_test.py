@@ -27,11 +27,10 @@ from distributed_embeddings.python.layers.embedding import IntegerLookup
 # pylint:disable=missing-docstring, no-self-use
 @test_combinations.run_all_keras_modes(always_skip_v1=True)
 class IntegerLookupLayerTest(test_combinations.TestCase):
-
   # TODO: this test pass not but in theory it depends on atomic
   @parameterized.named_parameters(
-      ("gpu", True),
-      ("cpu", False),
+    ("gpu", True),
+    ("cpu", False),
   )
   def test_layer_with_list_input(self, use_gpu):
     vocab = [12, 36, 1138, 42]
@@ -48,13 +47,12 @@ class IntegerLookupLayerTest(test_combinations.TestCase):
     self.assertEqual(test_output.numpy().tolist(), expected_output.tolist())
 
   @parameterized.named_parameters(
-      ("gpu", True),
-      ("cpu", False),
+    ("gpu", True),
+    ("cpu", False),
   )
   def test_layer_against_native(self, use_gpu):
     for key_max in [100, 200, 500, 1000]:
       for vocab_size in [100, 200, 500, 1000]:
-
         vocab = tf.random.uniform(shape=(vocab_size,), maxval=key_max, dtype=tf.int64)
         unique_vocab = tf.size(tf.unique(vocab)[0])
         # make sure test table is full so we can compare against reference without inserting new

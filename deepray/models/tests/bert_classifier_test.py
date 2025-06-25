@@ -29,7 +29,6 @@ from official.nlp.modeling.networks import bert_classifier
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class BertClassifierTest(keras_parameterized.TestCase):
-
   def test_bert_trainer(self):
     """Validate that the Keras object can be created."""
     # Build a transformer network to use within the BERT trainer.
@@ -81,7 +80,7 @@ class BertClassifierTest(keras_parameterized.TestCase):
     # Create a BERT trainer with the created network. (Note that all the args
     # are different, so we can catch any serialization mismatches.)
     bert_trainer_model = bert_classifier.BertClassifier(
-        test_network, num_classes=4, initializer='zeros', output='predictions'
+      test_network, num_classes=4, initializer="zeros", output="predictions"
     )
 
     # Create another BERT trainer via serialization and deserialization.
@@ -95,5 +94,5 @@ class BertClassifierTest(keras_parameterized.TestCase):
     self.assertAllEqual(bert_trainer_model.get_config(), new_bert_trainer_model.get_config())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

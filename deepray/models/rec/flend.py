@@ -26,12 +26,11 @@ from tensorflow.keras.layers import Dropout
 import deepray as dp
 
 __all__ = [
-    'FLEND',
+  "FLEND",
 ]
 
 
 class FLEND(Model):
-
   def __init__(self, field_info, embedding_dim=16):
     if not field_info or not isinstance(field_info, dict):
       raise ValueError("Must specify field_info")
@@ -41,29 +40,29 @@ class FLEND(Model):
     self.embedding_layers = {}
     self.dice_bn_layer = BatchNormalization(momentum=0.9)
     self.dice_dropout_layer = Dropout(0.7)
-    self.dice_fc_layers = dp.layers.FullyConnect(units=32, name='dice_fc')
+    self.dice_fc_layers = dp.layers.FullyConnect(units=32, name="dice_fc")
     # self.sparse_inputs = {}
     for k, v in field_info.items():
-      self.embedding_layers[k] = dp.layers.FullyConnectv2(units=32, input_shape=(v,), name='fc_' + k)
+      self.embedding_layers[k] = dp.layers.FullyConnectv2(units=32, input_shape=(v,), name="fc_" + k)
       # self.sparse_inputs[k] = tf.keras.Input(name=k, shape=(v,), sparse=True)
 
     # 2. mlp part
-    self.deep_fc_64 = dp.layers.FullyConnect(units=64, activation='relu')
+    self.deep_fc_64 = dp.layers.FullyConnect(units=64, activation="relu")
     self.deep_bn_64 = BatchNormalization(momentum=0.9)
     self.deep_dropout_64 = Dropout(rate=0.2)
-    self.deep_fc_32 = dp.layers.FullyConnect(units=32, activation='relu')
+    self.deep_fc_32 = dp.layers.FullyConnect(units=32, activation="relu")
     self.deep_bn_32 = BatchNormalization(momentum=0.9)
     self.deep_dropout_32 = Dropout(rate=0.2)
 
     # 3. field-weighted embedding
     self.fwbi = dp.layers.FieldWiseBiInteraction(num_fields=3, embedding_size=32)
-    self.fwbi_fc_32 = dp.layers.FullyConnect(units=32, activation='relu')
+    self.fwbi_fc_32 = dp.layers.FullyConnect(units=32, activation="relu")
     self.fwbi_bn = BatchNormalization(momentum=0.9)
     self.fwbi_drop = Dropout(rate=0.2)
 
     self.fwbi_bn2 = BatchNormalization(momentum=0.9)
 
-    self.logits = dp.layers.FullyConnect(units=1, activation='sigmoid')
+    self.logits = dp.layers.FullyConnect(units=1, activation="sigmoid")
     # self._set_inputs(self.sparse_inputs)
 
   def call(self, inputs, training=False):

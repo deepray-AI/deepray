@@ -17,10 +17,9 @@ logger = logging_util.get_logger()
 
 
 def main():
-
   data_pipe = KafkaPipeline(
-      # dataset_name=flags.FLAGS.dataset,
-      # partitions=[{'ds': date} for date in get_dates()],
+    # dataset_name=flags.FLAGS.dataset,
+    # partitions=[{'ds': date} for date in get_dates()],
   )
 
   train_dataset = data_pipe(input_file_pattern=None, batch_size=flags.FLAGS.batch_size)
@@ -38,7 +37,7 @@ def main():
     step_throughput = _performance_calculator(1, flags.FLAGS.batch_size)
 
     if num_examples % 100 == 0:
-      logger.info(f'step {step}, Perf {step_throughput} samples/s')
+      logger.info(f"step {step}, Perf {step_throughput} samples/s")
 
   print(num_examples)
   results_perf = _performance_calculator.results

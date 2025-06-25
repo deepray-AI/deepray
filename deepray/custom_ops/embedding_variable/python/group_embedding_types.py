@@ -34,7 +34,6 @@ _group_lookup_strategy = DistStrategy.LOCALIZED
 
 
 def set_group_lookup_strategy(strategy):
-
   def str_to_strategy(strategy):
     if strategy == "sok":
       return DistStrategy.SOK

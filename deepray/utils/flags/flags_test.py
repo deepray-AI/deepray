@@ -22,17 +22,16 @@ from deepray.utils.flags import core as flags_core  # pylint: disable=g-bad-impo
 
 def define_flags():
   flags_core.define_base(
-      clean=True, num_gpu=False, stop_threshold=True, hooks=True, epochs=True, epochs_between_evals=True
+    clean=True, num_gpu=False, stop_threshold=True, hooks=True, epochs=True, epochs_between_evals=True
   )
   flags_core.define_performance(
-      num_parallel_calls=True, inter_op=True, intra_op=True, loss_scale=True, synthetic_data=True, dtype=True
+    num_parallel_calls=True, inter_op=True, intra_op=True, loss_scale=True, synthetic_data=True, dtype=True
   )
   flags_core.define_image()
   flags_core.define_benchmark()
 
 
 class BaseTester(unittest.TestCase):
-
   @classmethod
   def setUpClass(cls):
     super(BaseTester, cls).setUpClass()
@@ -42,16 +41,16 @@ class BaseTester(unittest.TestCase):
     """Test to ensure fields exist and defaults can be set."""
 
     defaults = dict(
-        data_dir="dfgasf",
-        model_dir="dfsdkjgbs",
-        epochs=534,
-        epochs_between_evals=15,
-        batch_size=256,
-        hooks=["LoggingTensorHook"],
-        num_parallel_calls=18,
-        inter_op_parallelism_threads=5,
-        intra_op_parallelism_threads=10,
-        data_format="channels_first"
+      data_dir="dfgasf",
+      model_dir="dfsdkjgbs",
+      epochs=534,
+      epochs_between_evals=15,
+      batch_size=256,
+      hooks=["LoggingTensorHook"],
+      num_parallel_calls=18,
+      inter_op_parallelism_threads=5,
+      intra_op_parallelism_threads=10,
+      data_format="channels_first",
     )
 
     flags_core.set_defaults(**defaults)
@@ -62,9 +61,9 @@ class BaseTester(unittest.TestCase):
 
   def test_benchmark_setting(self):
     defaults = dict(
-        hooks=["LoggingMetricHook"],
-        benchmark_log_dir="/tmp/12345",
-        gcp_project="project_abc",
+      hooks=["LoggingMetricHook"],
+      benchmark_log_dir="/tmp/12345",
+      gcp_project="project_abc",
     )
 
     flags_core.set_defaults(**defaults)
@@ -106,7 +105,7 @@ class BaseTester(unittest.TestCase):
 
   def test_get_nondefault_flags_as_str(self):
     defaults = dict(
-        clean=True, data_dir="abc", hooks=["LoggingTensorHook"], stop_threshold=1.5, use_synthetic_data=False
+      clean=True, data_dir="abc", hooks=["LoggingTensorHook"], stop_threshold=1.5, use_synthetic_data=False
     )
     flags_core.set_defaults(**defaults)
     flags_core.parse_flags()
@@ -126,7 +125,7 @@ class BaseTester(unittest.TestCase):
     expected_flags += " --hooks=aaa,bbb,ccc"
     self.assertEqual(flags_core.get_nondefault_flags_as_str(), expected_flags)
 
-    flags.FLAGS.stop_threshold = 3.
+    flags.FLAGS.stop_threshold = 3.0
     expected_flags += " --stop_threshold=3.0"
     self.assertEqual(flags_core.get_nondefault_flags_as_str(), expected_flags)
 
@@ -137,7 +136,7 @@ class BaseTester(unittest.TestCase):
     # Assert that explicit setting a flag to its default value does not cause it
     # to appear in the string
     flags.FLAGS.use_synthetic_data = False
-    expected_flags = expected_flags[:-len(" --use_synthetic_data")]
+    expected_flags = expected_flags[: -len(" --use_synthetic_data")]
     self.assertEqual(flags_core.get_nondefault_flags_as_str(), expected_flags)
 
 

@@ -27,7 +27,6 @@ from deepray.custom_ops.seq2seq import sampler as sampler_py
 
 
 class DummyData:
-
   def __init__(self):
     self.batch = 10
     self.timestep = 5
@@ -41,10 +40,10 @@ class DummyData:
 
 
 attention_classes = [
-    wrapper.LuongAttention,
-    wrapper.LuongMonotonicAttention,
-    wrapper.BahdanauAttention,
-    wrapper.BahdanauMonotonicAttention,
+  wrapper.LuongAttention,
+  wrapper.LuongMonotonicAttention,
+  wrapper.BahdanauAttention,
+  wrapper.BahdanauMonotonicAttention,
 ]
 
 
@@ -176,9 +175,7 @@ def test_masking():
 
 @pytest.mark.parametrize("attention_cls", attention_classes)
 def test_memory_re_setup(attention_cls):
-
   class MyModel(tf.keras.models.Model):
-
     def __init__(self, vocab, embedding_dim, memory_size, units):
       super().__init__()
       self.emb = tf.keras.layers.Embedding(vocab, embedding_dim, mask_zero=True)
@@ -234,7 +231,6 @@ def assert_allclose_or_equal(x, y, **kwargs):
 
 
 class DummyData2:
-
   def __init__(self):
     self.batch = 64
     self.units = 128
@@ -258,8 +254,8 @@ def test_custom_attention_layer():
     # initialized.
     attention_wrapper.get_initial_state(batch_size=dummy_data.batch, dtype=tf.float32)
   attention_mechanism.setup_memory(
-      dummy_data.encoder_outputs.astype(np.float32),
-      memory_sequence_length=dummy_data.encoder_sequence_length,
+    dummy_data.encoder_outputs.astype(np.float32),
+    memory_sequence_length=dummy_data.encoder_sequence_length,
   )
   initial_state = attention_wrapper.get_initial_state(batch_size=dummy_data.batch, dtype=tf.float32)
   assert initial_state.attention.shape[-1] == dummy_data.units * 2
@@ -269,19 +265,19 @@ def test_custom_attention_layer():
 
 
 def _test_with_attention(
-    create_attention_mechanism,
-    expected_final_output,
-    expected_final_state,
-    attention_mechanism_depth=3,
-    alignment_history=False,
-    expected_final_alignment_history=None,
-    attention_layer_size=6,
-    attention_layer=None,
-    create_query_layer=False,
-    create_memory_layer=True,
-    create_attention_kwargs=None,
+  create_attention_mechanism,
+  expected_final_output,
+  expected_final_state,
+  attention_mechanism_depth=3,
+  alignment_history=False,
+  expected_final_alignment_history=None,
+  attention_layer_size=6,
+  attention_layer=None,
+  create_query_layer=False,
+  create_memory_layer=True,
+  create_attention_kwargs=None,
 ):
-  attention_layer_sizes = ([attention_layer_size] if attention_layer_size is not None else None)
+  attention_layer_sizes = [attention_layer_size] if attention_layer_size is not None else None
   attention_layers = [attention_layer] if attention_layer is not None else None
   create_attention_mechanisms = [create_attention_mechanism]
   attention_mechanism_depths = [attention_mechanism_depth]
@@ -300,13 +296,13 @@ def _test_with_attention(
     # Compute sum of attention_layer_sizes. Use encoder_output_depth if
     # None.
     attention_depth = sum(
-        attention_layer_size or encoder_output_depth for attention_layer_size in attention_layer_sizes
+      attention_layer_size or encoder_output_depth for attention_layer_size in attention_layer_sizes
     )
   elif attention_layers is not None:
     # Compute sum of attention_layers output depth.
     attention_depth = sum(
-        attention_layer.compute_output_shape([batch_size, cell_depth + encoder_output_depth])[-1]
-        for attention_layer in attention_layers
+      attention_layer.compute_output_shape([batch_size, cell_depth + encoder_output_depth])[-1]
+      for attention_layer in attention_layers
     )
   else:
     attention_depth = encoder_output_depth * len(create_attention_mechanisms)
@@ -324,12 +320,12 @@ def _test_with_attention(
       create_attention_kwargs["memory_layer"] = tf.keras.layers.Dense(depth, kernel_initializer="ones", use_bias=False)
 
     attention_mechanisms.append(
-        creator(
-            units=depth,
-            memory=encoder_outputs,
-            memory_sequence_length=encoder_sequence_length,
-            **create_attention_kwargs,
-        )
+      creator(
+        units=depth,
+        memory=encoder_outputs,
+        memory_sequence_length=encoder_sequence_length,
+        **create_attention_kwargs,
+      )
     )
 
   attention_layer_size = attention_layer_sizes
@@ -339,17 +335,17 @@ def _test_with_attention(
   if attention_layer is not None:
     attention_layer = attention_layer[0]
   cell = tf.keras.layers.LSTMCell(
-      cell_depth,
-      recurrent_activation="sigmoid",
-      kernel_initializer="ones",
-      recurrent_initializer="ones",
+    cell_depth,
+    recurrent_activation="sigmoid",
+    kernel_initializer="ones",
+    recurrent_initializer="ones",
   )
   cell = wrapper.AttentionWrapper(
-      cell,
-      attention_mechanisms[0],
-      attention_layer_size=attention_layer_size,
-      alignment_history=alignment_history,
-      attention_layer=attention_layer,
+    cell,
+    attention_mechanisms[0],
+    attention_layer_size=attention_layer_size,
+    alignment_history=alignment_history,
+    attention_layer=attention_layer,
   )
   if cell._attention_layers is not None:
     for layer in cell._attention_layers:
@@ -360,9 +356,9 @@ def _test_with_attention(
   my_decoder = basic_decoder.BasicDecoder(cell=cell, sampler=sampler)
   initial_state = cell.get_initial_state(batch_size=batch_size, dtype=policy.compute_dtype)
   final_outputs, final_state, _ = my_decoder(
-      decoder_inputs,
-      initial_state=initial_state,
-      sequence_length=decoder_sequence_length,
+    decoder_inputs,
+    initial_state=initial_state,
+    sequence_length=decoder_sequence_length,
   )
 
   assert isinstance(final_outputs, basic_decoder.BasicDecoderOutput)
@@ -380,8 +376,8 @@ def _test_with_attention(
     state_alignment_history = final_state.alignment_history.stack()
     assert (expected_time, batch_size, encoder_max_time) == tuple(state_alignment_history.shape.as_list())
     tf.nest.assert_same_structure(
-        cell.state_size,
-        cell.get_initial_state(batch_size=batch_size, dtype=policy.compute_dtype),
+      cell.state_size,
+      cell.get_initial_state(batch_size=batch_size, dtype=policy.compute_dtype),
     )
     # Remove the history from final_state for purposes of the
     # remainder of the tests.
@@ -402,11 +398,11 @@ def _test_with_attention(
   if alignment_history:
     final_alignment_history_info = tf.nest.map_structure(get_result_summary, state_alignment_history)
     tf.nest.map_structure(
-        assert_allclose_or_equal,
-        # outputs are batch major but the stacked TensorArray is
-        # time major
-        expected_final_alignment_history,
-        final_alignment_history_info,
+      assert_allclose_or_equal,
+      # outputs are batch major but the stacked TensorArray is
+      # time major
+      expected_final_alignment_history,
+      final_alignment_history_info,
     )
 
 
@@ -416,11 +412,11 @@ def test_bahdanau_normalized_dtype(dtype):
   encoder_outputs = dummy_data.encoder_outputs.astype(dtype)
   decoder_inputs = dummy_data.decoder_inputs.astype(dtype)
   attention_mechanism = wrapper.BahdanauAttention(
-      units=dummy_data.units,
-      memory=encoder_outputs,
-      memory_sequence_length=dummy_data.encoder_sequence_length,
-      normalize=True,
-      dtype=dtype,
+    units=dummy_data.units,
+    memory=encoder_outputs,
+    memory_sequence_length=dummy_data.encoder_sequence_length,
+    normalize=True,
+    dtype=dtype,
   )
   cell = tf.keras.layers.LSTMCell(dummy_data.units, recurrent_activation="sigmoid", dtype=dtype)
   cell = wrapper.AttentionWrapper(cell, attention_mechanism, dtype=dtype)
@@ -429,9 +425,9 @@ def test_bahdanau_normalized_dtype(dtype):
   my_decoder = basic_decoder.BasicDecoder(cell=cell, sampler=sampler, dtype=dtype)
 
   final_outputs, final_state, _ = my_decoder(
-      decoder_inputs,
-      initial_state=cell.get_initial_state(batch_size=dummy_data.batch, dtype=dtype),
-      sequence_length=dummy_data.decoder_sequence_length,
+    decoder_inputs,
+    initial_state=cell.get_initial_state(batch_size=dummy_data.batch, dtype=dtype),
+    sequence_length=dummy_data.decoder_sequence_length,
   )
   assert isinstance(final_outputs, basic_decoder.BasicDecoderOutput)
   assert final_outputs.rnn_output.dtype == dtype
@@ -445,11 +441,11 @@ def test_luong_scaled_dtype(dtype):
   encoder_outputs = dummy_data.encoder_outputs.astype(dtype)
   decoder_inputs = dummy_data.decoder_inputs.astype(dtype)
   attention_mechanism = wrapper.LuongAttention(
-      units=dummy_data.units,
-      memory=encoder_outputs,
-      memory_sequence_length=dummy_data.encoder_sequence_length,
-      scale=True,
-      dtype=dtype,
+    units=dummy_data.units,
+    memory=encoder_outputs,
+    memory_sequence_length=dummy_data.encoder_sequence_length,
+    scale=True,
+    dtype=dtype,
   )
   cell = tf.keras.layers.LSTMCell(dummy_data.units, recurrent_activation="sigmoid", dtype=dtype)
   cell = wrapper.AttentionWrapper(cell, attention_mechanism, dtype=dtype)
@@ -458,9 +454,9 @@ def test_luong_scaled_dtype(dtype):
   my_decoder = basic_decoder.BasicDecoder(cell=cell, sampler=sampler, dtype=dtype)
 
   final_outputs, final_state, _ = my_decoder(
-      decoder_inputs,
-      initial_state=cell.get_initial_state(batch_size=dummy_data.batch, dtype=dtype),
-      sequence_length=dummy_data.decoder_sequence_length,
+    decoder_inputs,
+    initial_state=cell.get_initial_state(batch_size=dummy_data.batch, dtype=dtype),
+    sequence_length=dummy_data.decoder_sequence_length,
   )
   assert isinstance(final_outputs, basic_decoder.BasicDecoderOutput)
   assert final_outputs.rnn_output.dtype == dtype
@@ -469,9 +465,9 @@ def test_luong_scaled_dtype(dtype):
 
 def set_random_state_for_tf_and_np():
   """Since the results of the tests have been hardcoded, we need to make sure,
-    when we refactor code that the random state is the same. Meaning that all
-    random functions should be called in the same order.
-    """
+  when we refactor code that the random state is the same. Meaning that all
+  random functions should be called in the same order.
+  """
   tf.random.set_seed(87654321)
   np.random.seed(87654321)
   DummyData2()
@@ -484,29 +480,29 @@ def test_bahdanau_not_normalized():
   create_attention_mechanism = wrapper.BahdanauAttention
   create_attention_kwargs = {"kernel_initializer": "ones"}
   expected_final_output = basic_decoder.BasicDecoderOutput(
-      rnn_output=ResultSummary(shape=(5, 3, 6), dtype=policy.compute_dtype, mean=-0.003204414),
-      sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype(np.int32), mean=3.2),
+    rnn_output=ResultSummary(shape=(5, 3, 6), dtype=policy.compute_dtype, mean=-0.003204414),
+    sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype(np.int32), mean=3.2),
   )
   expected_final_state = wrapper.AttentionWrapperState(
-      cell_state=[
-          ResultSummary(shape=(5, 9), dtype=policy.compute_dtype, mean=0.40868404),
-          ResultSummary(shape=(5, 9), dtype=policy.compute_dtype, mean=0.89017969),
-      ],
-      attention=ResultSummary(shape=(5, 6), dtype=policy.compute_dtype, mean=0.041453815),
-      alignments=ResultSummary(shape=(5, 8), dtype=policy.compute_dtype, mean=0.125),
-      attention_state=ResultSummary(shape=(5, 8), dtype=policy.compute_dtype, mean=0.125),
-      alignment_history=(),
+    cell_state=[
+      ResultSummary(shape=(5, 9), dtype=policy.compute_dtype, mean=0.40868404),
+      ResultSummary(shape=(5, 9), dtype=policy.compute_dtype, mean=0.89017969),
+    ],
+    attention=ResultSummary(shape=(5, 6), dtype=policy.compute_dtype, mean=0.041453815),
+    alignments=ResultSummary(shape=(5, 8), dtype=policy.compute_dtype, mean=0.125),
+    attention_state=ResultSummary(shape=(5, 8), dtype=policy.compute_dtype, mean=0.125),
+    alignment_history=(),
   )
   expected_final_alignment_history = ResultSummary(shape=(3, 5, 8), dtype=policy.compute_dtype, mean=0.125)
 
   _test_with_attention(
-      create_attention_mechanism,
-      expected_final_output,
-      expected_final_state,
-      alignment_history=True,
-      create_query_layer=True,
-      expected_final_alignment_history=expected_final_alignment_history,
-      create_attention_kwargs=create_attention_kwargs,
+    create_attention_mechanism,
+    expected_final_output,
+    expected_final_state,
+    alignment_history=True,
+    create_query_layer=True,
+    expected_final_alignment_history=expected_final_alignment_history,
+    create_attention_kwargs=create_attention_kwargs,
   )
 
 
@@ -516,26 +512,26 @@ def test_bahdanau_normalized():
   create_attention_kwargs = {"kernel_initializer": "ones", "normalize": True}
 
   expected_final_output = basic_decoder.BasicDecoderOutput(
-      rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=-0.008089137),
-      sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=2.8),
+    rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=-0.008089137),
+    sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=2.8),
   )
   expected_final_state = wrapper.AttentionWrapperState(
-      cell_state=[
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.49166861),
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.01068615),
-      ],
-      attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=0.042427111),
-      alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
-      attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
-      alignment_history=(),
+    cell_state=[
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.49166861),
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.01068615),
+    ],
+    attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=0.042427111),
+    alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
+    attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
+    alignment_history=(),
   )
 
   _test_with_attention(
-      create_attention_mechanism,
-      expected_final_output,
-      expected_final_state,
-      create_query_layer=True,
-      create_attention_kwargs=create_attention_kwargs,
+    create_attention_mechanism,
+    expected_final_output,
+    expected_final_state,
+    create_query_layer=True,
+    create_attention_kwargs=create_attention_kwargs,
   )
 
 
@@ -546,25 +542,25 @@ def test_luong_not_normalized():
   create_attention_mechanism = wrapper.LuongAttention
 
   expected_final_output = basic_decoder.BasicDecoderOutput(
-      rnn_output=ResultSummary(shape=(5, 3, 6), dtype=policy.compute_dtype, mean=-0.06124732),
-      sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=2.73333333),
+    rnn_output=ResultSummary(shape=(5, 3, 6), dtype=policy.compute_dtype, mean=-0.06124732),
+    sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=2.73333333),
   )
   expected_final_state = wrapper.AttentionWrapperState(
-      cell_state=[
-          ResultSummary(shape=(5, 9), dtype=policy.compute_dtype, mean=0.52021580),
-          ResultSummary(shape=(5, 9), dtype=policy.compute_dtype, mean=1.0964939),
-      ],
-      attention=ResultSummary(shape=(5, 6), dtype=policy.compute_dtype, mean=-0.0318060),
-      alignments=ResultSummary(shape=(5, 8), dtype=policy.compute_dtype, mean=0.125),
-      attention_state=ResultSummary(shape=(5, 8), dtype=policy.compute_dtype, mean=0.125),
-      alignment_history=(),
+    cell_state=[
+      ResultSummary(shape=(5, 9), dtype=policy.compute_dtype, mean=0.52021580),
+      ResultSummary(shape=(5, 9), dtype=policy.compute_dtype, mean=1.0964939),
+    ],
+    attention=ResultSummary(shape=(5, 6), dtype=policy.compute_dtype, mean=-0.0318060),
+    alignments=ResultSummary(shape=(5, 8), dtype=policy.compute_dtype, mean=0.125),
+    attention_state=ResultSummary(shape=(5, 8), dtype=policy.compute_dtype, mean=0.125),
+    alignment_history=(),
   )
 
   _test_with_attention(
-      create_attention_mechanism,
-      expected_final_output,
-      expected_final_state,
-      attention_mechanism_depth=9,
+    create_attention_mechanism,
+    expected_final_output,
+    expected_final_state,
+    attention_mechanism_depth=9,
   )
 
 
@@ -574,26 +570,26 @@ def test_luong_scaled():
   create_attention_kwargs = {"scale": True}
 
   expected_final_output = basic_decoder.BasicDecoderOutput(
-      rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=-0.06124732),
-      sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=2.73333333),
+    rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=-0.06124732),
+    sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=2.73333333),
   )
   expected_final_state = wrapper.AttentionWrapperState(
-      cell_state=[
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.52021580),
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.0964939),
-      ],
-      attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=-0.0318060),
-      alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
-      attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
-      alignment_history=(),
+    cell_state=[
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.52021580),
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.0964939),
+    ],
+    attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=-0.0318060),
+    alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
+    attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
+    alignment_history=(),
   )
 
   _test_with_attention(
-      create_attention_mechanism,
-      expected_final_output,
-      expected_final_state,
-      attention_mechanism_depth=9,
-      create_attention_kwargs=create_attention_kwargs,
+    create_attention_mechanism,
+    expected_final_output,
+    expected_final_state,
+    attention_mechanism_depth=9,
+    create_attention_kwargs=create_attention_kwargs,
   )
 
 
@@ -603,27 +599,27 @@ def test_not_use_attention_layer():
   create_attention_kwargs = {"kernel_initializer": "ones"}
 
   expected_final_output = basic_decoder.BasicDecoderOutput(
-      rnn_output=ResultSummary(shape=(5, 3, 10), dtype=np.dtype("float32"), mean=0.078317143),
-      sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=4.2),
+    rnn_output=ResultSummary(shape=(5, 3, 10), dtype=np.dtype("float32"), mean=0.078317143),
+    sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=4.2),
   )
   expected_final_state = wrapper.AttentionWrapperState(
-      cell_state=[
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.89382392),
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.722382),
-      ],
-      attention=ResultSummary(shape=(5, 10), dtype=np.dtype("float32"), mean=0.026356646),
-      alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
-      attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
-      alignment_history=(),
+    cell_state=[
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.89382392),
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.722382),
+    ],
+    attention=ResultSummary(shape=(5, 10), dtype=np.dtype("float32"), mean=0.026356646),
+    alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
+    attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.125),
+    alignment_history=(),
   )
 
   _test_with_attention(
-      create_attention_mechanism,
-      expected_final_output,
-      expected_final_state,
-      attention_layer_size=None,
-      create_query_layer=True,
-      create_attention_kwargs=create_attention_kwargs,
+    create_attention_mechanism,
+    expected_final_output,
+    expected_final_state,
+    attention_layer_size=None,
+    create_query_layer=True,
+    create_attention_kwargs=create_attention_kwargs,
   )
 
 
@@ -633,29 +629,29 @@ def test_bahdanau_monotonic_not_normalized():
   create_attention_kwargs = {"kernel_initializer": "ones"}
 
   expected_final_output = basic_decoder.BasicDecoderOutput(
-      rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=-0.009921653),
-      sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=3.13333333),
+    rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=-0.009921653),
+    sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=3.13333333),
   )
   expected_final_state = wrapper.AttentionWrapperState(
-      cell_state=[
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.44612807),
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.95786464),
-      ],
-      attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=0.038682378),
-      alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.09778417),
-      attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.09778417),
-      alignment_history=(),
+    cell_state=[
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.44612807),
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.95786464),
+    ],
+    attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=0.038682378),
+    alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.09778417),
+    attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.09778417),
+    alignment_history=(),
   )
   expected_final_alignment_history = ResultSummary(shape=(3, 5, 8), dtype=np.dtype("float32"), mean=0.10261579603)
 
   _test_with_attention(
-      create_attention_mechanism,
-      expected_final_output,
-      expected_final_state,
-      alignment_history=True,
-      expected_final_alignment_history=expected_final_alignment_history,
-      create_query_layer=True,
-      create_attention_kwargs=create_attention_kwargs,
+    create_attention_mechanism,
+    expected_final_output,
+    expected_final_state,
+    alignment_history=True,
+    expected_final_alignment_history=expected_final_alignment_history,
+    create_query_layer=True,
+    create_attention_kwargs=create_attention_kwargs,
   )
 
 
@@ -664,29 +660,29 @@ def test_bahdanau_monotonic_normalized():
   create_attention_mechanism = wrapper.BahdanauMonotonicAttention
   create_attention_kwargs = {"kernel_initializer": "ones", "normalize": True}
   expected_final_output = basic_decoder.BasicDecoderOutput(
-      rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=0.007140680),
-      sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=3.26666666),
+    rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=0.007140680),
+    sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=3.26666666),
   )
   expected_final_state = wrapper.AttentionWrapperState(
-      cell_state=[
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.47012400),
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.0249618),
-      ],
-      attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=0.068432882),
-      alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.0615656),
-      attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.0615656),
-      alignment_history=(),
+    cell_state=[
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.47012400),
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.0249618),
+    ],
+    attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=0.068432882),
+    alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.0615656),
+    attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.0615656),
+    alignment_history=(),
   )
   expected_final_alignment_history = ResultSummary(shape=(3, 5, 8), dtype=np.dtype("float32"), mean=0.07909643)
 
   _test_with_attention(
-      create_attention_mechanism,
-      expected_final_output,
-      expected_final_state,
-      alignment_history=True,
-      expected_final_alignment_history=expected_final_alignment_history,
-      create_query_layer=True,
-      create_attention_kwargs=create_attention_kwargs,
+    create_attention_mechanism,
+    expected_final_output,
+    expected_final_state,
+    alignment_history=True,
+    expected_final_alignment_history=expected_final_alignment_history,
+    create_query_layer=True,
+    create_attention_kwargs=create_attention_kwargs,
   )
 
 
@@ -695,28 +691,28 @@ def test_luong_monotonic_not_normalized():
   create_attention_mechanism = wrapper.LuongMonotonicAttention
 
   expected_final_output = basic_decoder.BasicDecoderOutput(
-      rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=0.003664831),
-      sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=3.06666666),
+    rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=0.003664831),
+    sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=3.06666666),
   )
   expected_final_state = wrapper.AttentionWrapperState(
-      cell_state=[
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.54318606),
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.12592840),
-      ],
-      attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=0.059128221),
-      alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.05112994),
-      attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.05112994),
-      alignment_history=(),
+    cell_state=[
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.54318606),
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.12592840),
+    ],
+    attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=0.059128221),
+    alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.05112994),
+    attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.05112994),
+    alignment_history=(),
   )
   expected_final_alignment_history = ResultSummary(shape=(3, 5, 8), dtype=np.dtype("float32"), mean=0.06994973868)
 
   _test_with_attention(
-      create_attention_mechanism,
-      expected_final_output,
-      expected_final_state,
-      attention_mechanism_depth=9,
-      alignment_history=True,
-      expected_final_alignment_history=expected_final_alignment_history,
+    create_attention_mechanism,
+    expected_final_output,
+    expected_final_state,
+    attention_mechanism_depth=9,
+    alignment_history=True,
+    expected_final_alignment_history=expected_final_alignment_history,
   )
 
 
@@ -726,29 +722,29 @@ def test_luong_monotonic_scaled():
   create_attention_kwargs = {"scale": True}
 
   expected_final_output = basic_decoder.BasicDecoderOutput(
-      rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=0.003664831),
-      sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=3.06666666),
+    rnn_output=ResultSummary(shape=(5, 3, 6), dtype=np.dtype("float32"), mean=0.003664831),
+    sample_id=ResultSummary(shape=(5, 3), dtype=np.dtype("int32"), mean=3.06666666),
   )
   expected_final_state = wrapper.AttentionWrapperState(
-      cell_state=[
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.54318606),
-          ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.12592840),
-      ],
-      attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=0.059128221),
-      alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.05112994),
-      attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.05112994),
-      alignment_history=(),
+    cell_state=[
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=0.54318606),
+      ResultSummary(shape=(5, 9), dtype=np.dtype("float32"), mean=1.12592840),
+    ],
+    attention=ResultSummary(shape=(5, 6), dtype=np.dtype("float32"), mean=0.059128221),
+    alignments=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.05112994),
+    attention_state=ResultSummary(shape=(5, 8), dtype=np.dtype("float32"), mean=0.05112994),
+    alignment_history=(),
   )
   expected_final_alignment_history = ResultSummary(shape=(3, 5, 8), dtype=np.dtype("float32"), mean=0.06994973868)
 
   _test_with_attention(
-      create_attention_mechanism,
-      expected_final_output,
-      expected_final_state,
-      attention_mechanism_depth=9,
-      alignment_history=True,
-      expected_final_alignment_history=expected_final_alignment_history,
-      create_attention_kwargs=create_attention_kwargs,
+    create_attention_mechanism,
+    expected_final_output,
+    expected_final_state,
+    attention_mechanism_depth=9,
+    alignment_history=True,
+    expected_final_alignment_history=expected_final_alignment_history,
+    create_attention_kwargs=create_attention_kwargs,
   )
 
 
@@ -802,7 +798,7 @@ def test_attention_wrapper_with_multiple_attention_mechanisms():
   # We simply test that the wrapper creation makes no error.
   wrapper.AttentionWrapper(cell, mechanisms, attention_layer_size=[4, 5])
   wrapper.AttentionWrapper(
-      cell,
-      mechanisms,
-      attention_layer=[tf.keras.layers.Dense(4), tf.keras.layers.Dense(5)],
+    cell,
+    mechanisms,
+    attention_layer=[tf.keras.layers.Dense(4), tf.keras.layers.Dense(5)],
   )

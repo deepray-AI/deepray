@@ -114,33 +114,33 @@ class SparseMixer(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      vocab_size: int,
-      hidden_size: int = 512,
-      num_layers: int = 14,
-      moe_layers: Sequence[int] = (5, 6, 7, 8),
-      attention_layers: Sequence[int] = (10, 11, 12, 13),
-      num_experts: int = 16,
-      train_capacity_factor: float = 1.,
-      eval_capacity_factor: float = 1.,
-      examples_per_group: float = 1.,
-      mixing_mechanism: layers.MixingMechanism = layers.MixingMechanism.LINEAR,
-      use_fft: bool = False,
-      num_attention_heads: int = 8,
-      max_sequence_length: int = 512,
-      type_vocab_size: int = 16,
-      inner_dim: int = 2056,
-      inner_activation: _Activation = _approx_gelu,
-      output_dropout: float = 0.1,
-      attention_dropout: float = 0.1,
-      initializer: _Initializer = tf.keras.initializers.TruncatedNormal(stddev=0.02),
-      output_range: Optional[int] = None,
-      embedding_width: Optional[int] = None,
-      embedding_layer: Optional[tf.keras.layers.Layer] = None,
-      norm_first: bool = False,
-      with_dense_inputs: bool = False,
-      export_metrics: bool = True,
-      **kwargs
+    self,
+    vocab_size: int,
+    hidden_size: int = 512,
+    num_layers: int = 14,
+    moe_layers: Sequence[int] = (5, 6, 7, 8),
+    attention_layers: Sequence[int] = (10, 11, 12, 13),
+    num_experts: int = 16,
+    train_capacity_factor: float = 1.0,
+    eval_capacity_factor: float = 1.0,
+    examples_per_group: float = 1.0,
+    mixing_mechanism: layers.MixingMechanism = layers.MixingMechanism.LINEAR,
+    use_fft: bool = False,
+    num_attention_heads: int = 8,
+    max_sequence_length: int = 512,
+    type_vocab_size: int = 16,
+    inner_dim: int = 2056,
+    inner_activation: _Activation = _approx_gelu,
+    output_dropout: float = 0.1,
+    attention_dropout: float = 0.1,
+    initializer: _Initializer = tf.keras.initializers.TruncatedNormal(stddev=0.02),
+    output_range: Optional[int] = None,
+    embedding_width: Optional[int] = None,
+    embedding_layer: Optional[tf.keras.layers.Layer] = None,
+    norm_first: bool = False,
+    with_dense_inputs: bool = False,
+    export_metrics: bool = True,
+    **kwargs,
   ):
     super().__init__(**kwargs)
 
@@ -151,167 +151,167 @@ class SparseMixer(tf.keras.layers.Layer):
       embedding_width = hidden_size
 
     self._config = {
-        'vocab_size': vocab_size,
-        'hidden_size': hidden_size,
-        'num_layers': num_layers,
-        'moe_layers': moe_layers,
-        'num_experts': num_experts,
-        'train_capacity_factor': train_capacity_factor,
-        'eval_capacity_factor': eval_capacity_factor,
-        'examples_per_group': examples_per_group,
-        'mixing_mechanism': mixing_mechanism,
-        'use_fft': use_fft,
-        'attention_layers': attention_layers,
-        'num_attention_heads': num_attention_heads,
-        'max_sequence_length': max_sequence_length,
-        'type_vocab_size': type_vocab_size,
-        'inner_dim': inner_dim,
-        'inner_activation': tf.keras.activations.serialize(activation),
-        'output_dropout': output_dropout,
-        'attention_dropout': attention_dropout,
-        'initializer': tf.keras.initializers.serialize(initializer),
-        'output_range': output_range,
-        'embedding_width': embedding_width,
-        'embedding_layer': embedding_layer,
-        'norm_first': norm_first,
-        'with_dense_inputs': with_dense_inputs,
-        'export_metrics': export_metrics,
+      "vocab_size": vocab_size,
+      "hidden_size": hidden_size,
+      "num_layers": num_layers,
+      "moe_layers": moe_layers,
+      "num_experts": num_experts,
+      "train_capacity_factor": train_capacity_factor,
+      "eval_capacity_factor": eval_capacity_factor,
+      "examples_per_group": examples_per_group,
+      "mixing_mechanism": mixing_mechanism,
+      "use_fft": use_fft,
+      "attention_layers": attention_layers,
+      "num_attention_heads": num_attention_heads,
+      "max_sequence_length": max_sequence_length,
+      "type_vocab_size": type_vocab_size,
+      "inner_dim": inner_dim,
+      "inner_activation": tf.keras.activations.serialize(activation),
+      "output_dropout": output_dropout,
+      "attention_dropout": attention_dropout,
+      "initializer": tf.keras.initializers.serialize(initializer),
+      "output_range": output_range,
+      "embedding_width": embedding_width,
+      "embedding_layer": embedding_layer,
+      "norm_first": norm_first,
+      "with_dense_inputs": with_dense_inputs,
+      "export_metrics": export_metrics,
     }
 
     if embedding_layer is None:
       self._embedding_layer = layers.OnDeviceEmbedding(
-          vocab_size=vocab_size,
-          embedding_width=embedding_width,
-          initializer=tf_utils.clone_initializer(initializer),
-          name='word_embeddings'
+        vocab_size=vocab_size,
+        embedding_width=embedding_width,
+        initializer=tf_utils.clone_initializer(initializer),
+        name="word_embeddings",
       )
     else:
       self._embedding_layer = embedding_layer
 
     self._position_embedding_layer = layers.PositionEmbedding(
-        initializer=tf_utils.clone_initializer(initializer), max_length=max_sequence_length, name='position_embedding'
+      initializer=tf_utils.clone_initializer(initializer), max_length=max_sequence_length, name="position_embedding"
     )
 
     self._type_embedding_layer = layers.OnDeviceEmbedding(
-        vocab_size=type_vocab_size,
-        embedding_width=embedding_width,
-        initializer=tf_utils.clone_initializer(initializer),
-        use_one_hot=True,
-        name='type_embeddings'
+      vocab_size=type_vocab_size,
+      embedding_width=embedding_width,
+      initializer=tf_utils.clone_initializer(initializer),
+      use_one_hot=True,
+      name="type_embeddings",
     )
 
     self._embedding_norm_layer = tf.keras.layers.LayerNormalization(
-        name='embeddings/layer_norm', axis=-1, epsilon=1e-12, dtype=tf.float32
+      name="embeddings/layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
     )
 
-    self._embedding_dropout = tf.keras.layers.Dropout(rate=output_dropout, name='embedding_dropout')
+    self._embedding_dropout = tf.keras.layers.Dropout(rate=output_dropout, name="embedding_dropout")
 
     # We project the 'embedding' output to 'hidden_size' if it is not already
     # 'hidden_size'.
     self._embedding_projection = None
     if embedding_width != hidden_size:
       self._embedding_projection = tf.keras.layers.EinsumDense(
-          '...x,xy->...y',
-          output_shape=hidden_size,
-          bias_axes='y',
-          kernel_initializer=tf_utils.clone_initializer(initializer),
-          name='embedding_projection'
+        "...x,xy->...y",
+        output_shape=hidden_size,
+        bias_axes="y",
+        kernel_initializer=tf_utils.clone_initializer(initializer),
+        name="embedding_projection",
       )
 
     self._transformer_layers = []
     for layer in range(num_layers):
       if layer in attention_layers:
         mixing_layer = layers.MultiHeadAttention(
-            num_heads=num_attention_heads,
-            key_dim=int(hidden_size // num_attention_heads),
-            dropout=attention_dropout,
-            use_bias=True,
-            kernel_initializer=tf_utils.clone_initializer(initializer),
-            name='self_attention',
+          num_heads=num_attention_heads,
+          key_dim=int(hidden_size // num_attention_heads),
+          dropout=attention_dropout,
+          use_bias=True,
+          kernel_initializer=tf_utils.clone_initializer(initializer),
+          name="self_attention",
         )
       else:
         mixing_layer = self._init_mixing_sublayer(layer)
 
       if layer in moe_layers:
         feedforward_layer = layers.MoeLayer(
-            experts=layers.FeedForwardExperts(
-                num_experts=num_experts,
-                d_ff=inner_dim,
-                output_dropout=output_dropout,
-                activation=inner_activation,
-                kernel_initializer=tf_utils.clone_initializer(initializer),
-                name='experts'
-            ),
-            router=layers.ExpertsChooseMaskedRouter(
-                num_experts=num_experts,
-                kernel_initializer=tf_utils.clone_initializer(initializer),
-                export_metrics=export_metrics,
-                name='router'
-            ),
-            train_capacity_factor=train_capacity_factor,
-            eval_capacity_factor=eval_capacity_factor,
-            examples_per_group=examples_per_group,
-            name='moe'
+          experts=layers.FeedForwardExperts(
+            num_experts=num_experts,
+            d_ff=inner_dim,
+            output_dropout=output_dropout,
+            activation=inner_activation,
+            kernel_initializer=tf_utils.clone_initializer(initializer),
+            name="experts",
+          ),
+          router=layers.ExpertsChooseMaskedRouter(
+            num_experts=num_experts,
+            kernel_initializer=tf_utils.clone_initializer(initializer),
+            export_metrics=export_metrics,
+            name="router",
+          ),
+          train_capacity_factor=train_capacity_factor,
+          eval_capacity_factor=eval_capacity_factor,
+          examples_per_group=examples_per_group,
+          name="moe",
         )
       else:
         feedforward_layer = None  # Fallback to default (dense) MLP class
 
       block = layers.TransformerScaffold(
-          num_attention_heads=num_attention_heads,
-          inner_dim=inner_dim,
-          inner_activation=inner_activation,
-          attention_cls=mixing_layer,
-          feedforward_cls=feedforward_layer,
-          output_dropout=output_dropout,
-          attention_dropout=attention_dropout,
-          norm_first=norm_first,
-          output_range=output_range if layer == num_layers - 1 else None,
-          kernel_initializer=tf_utils.clone_initializer(initializer),
-          name='transformer/layer_%d' % layer
+        num_attention_heads=num_attention_heads,
+        inner_dim=inner_dim,
+        inner_activation=inner_activation,
+        attention_cls=mixing_layer,
+        feedforward_cls=feedforward_layer,
+        output_dropout=output_dropout,
+        attention_dropout=attention_dropout,
+        norm_first=norm_first,
+        output_range=output_range if layer == num_layers - 1 else None,
+        kernel_initializer=tf_utils.clone_initializer(initializer),
+        name="transformer/layer_%d" % layer,
       )
       self._transformer_layers.append(block)
 
-    self._attention_mask_layer = layers.SelfAttentionMask(name='self_attention_mask')
+    self._attention_mask_layer = layers.SelfAttentionMask(name="self_attention_mask")
 
     self._pooler_layer = tf.keras.layers.Dense(
-        units=hidden_size,
-        activation='tanh',
-        kernel_initializer=tf_utils.clone_initializer(initializer),
-        name='pooler_transform'
+      units=hidden_size,
+      activation="tanh",
+      kernel_initializer=tf_utils.clone_initializer(initializer),
+      name="pooler_transform",
     )
 
     if with_dense_inputs:
       self.inputs = dict(
-          # The total length of token ids and dense inputs still has to be
-          # max_sequence_length. It is checked in call().
-          input_word_ids=tf.keras.Input(shape=(None,), dtype=tf.int32),
-          input_mask=tf.keras.Input(shape=(None,), dtype=tf.int32),
-          input_type_ids=tf.keras.Input(shape=(None,), dtype=tf.int32),
-          dense_inputs=tf.keras.Input(shape=(None, embedding_width), dtype=tf.float32),
-          dense_mask=tf.keras.Input(shape=(None,), dtype=tf.int32),
-          dense_type_ids=tf.keras.Input(shape=(None,), dtype=tf.int32),
+        # The total length of token ids and dense inputs still has to be
+        # max_sequence_length. It is checked in call().
+        input_word_ids=tf.keras.Input(shape=(None,), dtype=tf.int32),
+        input_mask=tf.keras.Input(shape=(None,), dtype=tf.int32),
+        input_type_ids=tf.keras.Input(shape=(None,), dtype=tf.int32),
+        dense_inputs=tf.keras.Input(shape=(None, embedding_width), dtype=tf.float32),
+        dense_mask=tf.keras.Input(shape=(None,), dtype=tf.int32),
+        dense_type_ids=tf.keras.Input(shape=(None,), dtype=tf.int32),
       )
     else:
       self.inputs = dict(
-          input_word_ids=tf.keras.Input(shape=(max_sequence_length,), dtype=tf.int32),
-          input_mask=tf.keras.Input(shape=(max_sequence_length,), dtype=tf.int32),
-          input_type_ids=tf.keras.Input(shape=(max_sequence_length,), dtype=tf.int32)
+        input_word_ids=tf.keras.Input(shape=(max_sequence_length,), dtype=tf.int32),
+        input_mask=tf.keras.Input(shape=(max_sequence_length,), dtype=tf.int32),
+        input_type_ids=tf.keras.Input(shape=(max_sequence_length,), dtype=tf.int32),
       )
     self._max_sequence_length = max_sequence_length
 
   def call(self, inputs):
     word_embeddings = None
     if isinstance(inputs, dict):
-      word_ids = inputs.get('input_word_ids')
-      mask = inputs.get('input_mask')
-      type_ids = inputs.get('input_type_ids')
-      word_embeddings = inputs.get('input_word_embeddings', None)
+      word_ids = inputs.get("input_word_ids")
+      mask = inputs.get("input_mask")
+      type_ids = inputs.get("input_type_ids")
+      word_embeddings = inputs.get("input_word_embeddings", None)
 
-      dense_inputs = inputs.get('dense_inputs', None)
-      dense_mask = inputs.get('dense_mask', None)
-      dense_type_ids = inputs.get('dense_type_ids', None)
+      dense_inputs = inputs.get("dense_inputs", None)
+      dense_mask = inputs.get("dense_mask", None)
+      dense_type_ids = inputs.get("dense_type_ids", None)
     else:
-      raise ValueError('Unexpected inputs type (%s) to %s.' % (type(inputs), self.__class__))
+      raise ValueError("Unexpected inputs type (%s) to %s." % (type(inputs), self.__class__))
 
     if word_embeddings is None:
       word_embeddings = self._embedding_layer(word_ids)
@@ -372,29 +372,29 @@ class SparseMixer(tf.keras.layers.Layer):
 
   @classmethod
   def from_config(cls, config, custom_objects=None):
-    if 'embedding_layer' in config and config['embedding_layer'] is not None:
+    if "embedding_layer" in config and config["embedding_layer"] is not None:
       warn_string = (
-          'You are reloading a model that was saved with a '
-          'potentially-shared embedding layer object. If you contine to '
-          'train this model, the embedding layer will no longer be shared. '
-          'To work around this, load the model outside of the Keras API.'
+        "You are reloading a model that was saved with a "
+        "potentially-shared embedding layer object. If you contine to "
+        "train this model, the embedding layer will no longer be shared. "
+        "To work around this, load the model outside of the Keras API."
       )
-      print('WARNING: ' + warn_string)
+      print("WARNING: " + warn_string)
       logging.warn(warn_string)
 
     return cls(**config)
 
   def _init_mixing_sublayer(self, layer: int):
     """Initializes config-dependent mixing sublayer."""
-    if self._config['mixing_mechanism'] == layers.MixingMechanism.FOURIER:
-      mixing_sublayer = layers.FourierTransformLayer(use_fft=self._config['use_fft'], name='fourier_transform')
-    elif self._config['mixing_mechanism'] == layers.MixingMechanism.HARTLEY:
-      mixing_sublayer = layers.HartleyTransformLayer(use_fft=self._config['use_fft'], name='hartley_transform')
-    elif self._config['mixing_mechanism'] == layers.MixingMechanism.LINEAR:
+    if self._config["mixing_mechanism"] == layers.MixingMechanism.FOURIER:
+      mixing_sublayer = layers.FourierTransformLayer(use_fft=self._config["use_fft"], name="fourier_transform")
+    elif self._config["mixing_mechanism"] == layers.MixingMechanism.HARTLEY:
+      mixing_sublayer = layers.HartleyTransformLayer(use_fft=self._config["use_fft"], name="hartley_transform")
+    elif self._config["mixing_mechanism"] == layers.MixingMechanism.LINEAR:
       mixing_sublayer = layers.LinearTransformLayer(
-          kernel_initializer=tf_utils.clone_initializer(self._config['initializer']), name='linear_transform'
+        kernel_initializer=tf_utils.clone_initializer(self._config["initializer"]), name="linear_transform"
       )
     else:
-      raise ValueError('Unsupported mixing mechanism: %s' % self._config['mixing_mechanism'])
+      raise ValueError("Unsupported mixing mechanism: %s" % self._config["mixing_mechanism"])
 
     return mixing_sublayer

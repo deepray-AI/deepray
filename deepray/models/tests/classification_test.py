@@ -29,7 +29,6 @@ from official.nlp.modeling.networks import classification
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class ClassificationTest(keras_parameterized.TestCase):
-
   def test_network_creation(self):
     """Validate that the Keras object can be created."""
     input_width = 512
@@ -47,7 +46,7 @@ class ClassificationTest(keras_parameterized.TestCase):
     """Validate that the Keras object can be invoked."""
     input_width = 512
     num_classes = 10
-    test_object = classification.Classification(input_width=input_width, num_classes=num_classes, output='predictions')
+    test_object = classification.Classification(input_width=input_width, num_classes=num_classes, output="predictions")
     # Create a 2-dimensional input (the first dimension is implicit).
     cls_data = tf.keras.Input(shape=(input_width,), dtype=tf.float32)
     output = test_object(cls_data)
@@ -61,7 +60,7 @@ class ClassificationTest(keras_parameterized.TestCase):
     """Validate that the logit outputs are correct."""
     input_width = 512
     num_classes = 10
-    test_object = classification.Classification(input_width=input_width, num_classes=num_classes, output='predictions')
+    test_object = classification.Classification(input_width=input_width, num_classes=num_classes, output="predictions")
 
     # Create a 2-dimensional input (the first dimension is implicit).
     cls_data = tf.keras.Input(shape=(input_width,), dtype=tf.float32)
@@ -91,7 +90,7 @@ class ClassificationTest(keras_parameterized.TestCase):
     """Validate that the logit outputs are correct."""
     input_width = 512
     num_classes = 10
-    test_object = classification.Classification(input_width=input_width, num_classes=num_classes, output='logits')
+    test_object = classification.Classification(input_width=input_width, num_classes=num_classes, output="logits")
 
     # Create a 2-dimensional input (the first dimension is implicit).
     cls_data = tf.keras.Input(shape=(input_width,), dtype=tf.float32)
@@ -115,8 +114,8 @@ class ClassificationTest(keras_parameterized.TestCase):
     """Validate that the logit outputs are correct."""
     input_width = 512
     num_classes = 10
-    test_object = classification.Classification(input_width=input_width, num_classes=num_classes, output='predictions')
-    logit_object = classification.Classification(input_width=input_width, num_classes=num_classes, output='logits')
+    test_object = classification.Classification(input_width=input_width, num_classes=num_classes, output="predictions")
+    logit_object = classification.Classification(input_width=input_width, num_classes=num_classes, output="logits")
     logit_object.set_weights(test_object.get_weights())
 
     # Create a 2-dimensional input (the first dimension is implicit).
@@ -147,7 +146,7 @@ class ClassificationTest(keras_parameterized.TestCase):
 
   def test_serialize_deserialize(self):
     # Create a network object that sets all of its config options.
-    network = classification.Classification(input_width=128, num_classes=10, initializer='zeros', output='predictions')
+    network = classification.Classification(input_width=128, num_classes=10, initializer="zeros", output="predictions")
 
     # Create another network object from the first object's config.
     new_network = classification.Classification.from_config(network.get_config())
@@ -160,8 +159,8 @@ class ClassificationTest(keras_parameterized.TestCase):
 
   def test_unknown_output_type_fails(self):
     with self.assertRaisesRegex(ValueError, 'Unknown `output` value "bad".*'):
-      _ = classification.Classification(input_width=128, num_classes=10, output='bad')
+      _ = classification.Classification(input_width=128, num_classes=10, output="bad")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

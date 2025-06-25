@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Distributed Embedding layers and utils"""
+
 import types
 import math
 import numpy as np
@@ -27,8 +28,7 @@ from .embedding import Embedding
 
 
 class ConcatInitializer(tf.keras.initializers.Initializer):
-  """ initializer wrapper to handle automatic concat table on first dimension
-  """
+  """initializer wrapper to handle automatic concat table on first dimension"""
 
   def __init__(self, initializer, sizes):
     self._initializer = initializer
@@ -107,7 +107,7 @@ def _dp_to_mp_input_ragged(dp_inputs, rank_to_local_features):
   """
 
   if not isinstance(dp_inputs, dict):
-    raise ValueError(f'Expected a dict, got: {type(dp_inputs)}')
+    raise ValueError(f"Expected a dict, got: {type(dp_inputs)}")
 
   if not dp_inputs:
     return {}
@@ -182,7 +182,7 @@ def _dp_to_mp_input_dense(dp_inputs, rank_to_local_features):
     ValueError: in case of incorrect input.
   """
   if not isinstance(dp_inputs, dict):
-    raise ValueError(f'Expected a dict, got: {type(dp_inputs)}')
+    raise ValueError(f"Expected a dict, got: {type(dp_inputs)}")
 
   if not dp_inputs:
     return {}
@@ -205,12 +205,12 @@ def _dp_to_mp_input_dense(dp_inputs, rank_to_local_features):
     flat_inputs += rank_inputs
   dp_inputs = tf.concat(flat_inputs, 0)
 
-  mp_inputs, _ = hvd.alltoall(dp_inputs, splits=global_splits, name='inp_dp_to_mp')
+  mp_inputs, _ = hvd.alltoall(dp_inputs, splits=global_splits, name="inp_dp_to_mp")
 
   mp_inputs = tf.reshape(mp_inputs, [world_size, -1])
   mp_inputs = tf.split(mp_inputs, local_splits[rank], 1)
   mp_inputs = [
-      tf.reshape(inp, [world_size * shape[0]] + shape[1:]) for inp, shape in zip(mp_inputs, local_shapes[rank])
+    tf.reshape(inp, [world_size * shape[0]] + shape[1:]) for inp, shape in zip(mp_inputs, local_shapes[rank])
   ]
 
   mp_inputs = dict(zip(rank_to_local_features[rank], mp_inputs, strict=True))
@@ -258,7 +258,7 @@ def _dp_to_mp_input(dp_inputs, rank_to_local_features):
       ragged_dp_inputs[i] = f
     elif isinstance(f, tf.SparseTensor):
       # TODO(tgrel): support sparse input, possibly by converting to ragged here
-      raise ValueError('Sparse tensor data-parallel input is not supported')
+      raise ValueError("Sparse tensor data-parallel input is not supported")
     else:
       dense_dp_inputs[i] = f
 
@@ -292,7 +292,7 @@ def grouped_reducescatter_unscaled(inputs):
   return outputs, grad
 
 
-class DistEmbeddingStrategy():
+class DistEmbeddingStrategy:
   """Distributed embedding strategy
 
   Args:
@@ -339,15 +339,15 @@ class DistEmbeddingStrategy():
   """
 
   def __init__(
-      self,
-      embeddings,
-      world_size,
-      strategy="basic",
-      input_table_map=None,
-      column_slice_threshold=None,
-      row_slice_threshold=None,
-      data_parallel_threshold=None,
-      gpu_embedding_size=None
+    self,
+    embeddings,
+    world_size,
+    strategy="basic",
+    input_table_map=None,
+    column_slice_threshold=None,
+    row_slice_threshold=None,
+    data_parallel_threshold=None,
+    gpu_embedding_size=None,
   ):
     # code in DMP to skip hvd call in single process case may assume "basic"
     self.strategy = "basic" if world_size == 1 else strategy
@@ -359,7 +359,7 @@ class DistEmbeddingStrategy():
     self.global_configs = [e.get_config() for e in embeddings]
     # Insert layer type information to config dicts
     for config, embedding in zip(self.global_configs, embeddings):
-      config['layer_type'] = type(embedding)
+      config["layer_type"] = type(embedding)
     if input_table_map is None:
       input_table_map = list(range(len(embeddings)))
 
@@ -367,7 +367,7 @@ class DistEmbeddingStrategy():
     self.table_groups = self.init_table_groups(self.global_configs)
     # input ids and map. rev_group_ids here to reverse grouped call back to input order
     self.input_groups, self.map_groups, self.rev_group_ids = self.init_input_and_map_groups(
-        self.table_groups, input_table_map
+      self.table_groups, input_table_map
     )
 
     # 1. handle data parallel
@@ -376,7 +376,7 @@ class DistEmbeddingStrategy():
     # 2. handle row slicing
     if self.table_groups[2]:
       self.row_sliced_configs, self.row_inputs_offsets = self.create_row_sliced_configs(
-          [self.global_configs[idx] for idx in self.table_groups[2]], world_size
+        [self.global_configs[idx] for idx in self.table_groups[2]], world_size
       )
     else:
       self.row_sliced_configs = [[] for _ in range(world_size)]
@@ -387,8 +387,10 @@ class DistEmbeddingStrategy():
 
     # Create (maybe) sliced configs
     sliced_configs, self.sliced_out_ranges = self.create_col_sliced_configs(
-        [self.global_configs[idx] for idx in self.table_groups[1]], world_size, self.column_slice_threshold,
-        self.map_groups[1]
+      [self.global_configs[idx] for idx in self.table_groups[1]],
+      world_size,
+      self.column_slice_threshold,
+      self.map_groups[1],
     )
 
     # Apply strategy and save nested list containing table indices by rank
@@ -422,7 +424,7 @@ class DistEmbeddingStrategy():
 
       # concat eligible tables then adjust local config and map
       rank_configs, rank_input_map, input_offsets, group, weight_offsets = self._create_concat(
-          rank_configs, rank_input_map
+        rank_configs, rank_input_map
       )
 
       # save results to global nested list
@@ -437,7 +439,7 @@ class DistEmbeddingStrategy():
     # This is fast but might switch to not use this to support non-2D output(no local combiner)
     self.widths_list_flat = []
     for config, input_map in zip(self.local_configs, self.local_maps):
-      self.widths_list_flat += [config[m]['output_dim'] for m in input_map]
+      self.widths_list_flat += [config[m]["output_dim"] for m in input_map]
 
     # List of indices to shuffle worker ordered embedding outputs back to original order
     worker_order_input_ids = [item for sublist in self.input_ids_list for item in sublist]
@@ -445,31 +447,31 @@ class DistEmbeddingStrategy():
 
   def _maybe_offload(self, configs):
     """
-      Offloads the largest tables among the "configs" argument,
-      such that the sum of not offloaded tables is smaller than the threshold.
+    Offloads the largest tables among the "configs" argument,
+    such that the sum of not offloaded tables is smaller than the threshold.
 
-      Args:
-        configs (List): a list of configs to process
+    Args:
+      configs (List): a list of configs to process
 
-      Returns:
-        A list of configs in the same order as the "configs" argument,
-        but with the "cpu_offload" field set to either True or False.
+    Returns:
+      A list of configs in the same order as the "configs" argument,
+      but with the "cpu_offload" field set to either True or False.
     """
     configs = configs.copy()
 
     if self.gpu_embedding_size is None:
       for config in configs:
-        config['cpu_offload'] = False
+        config["cpu_offload"] = False
       return configs
 
     current_total_size = 0
 
     # use indices rather than sorting the list directly to maintain the original order
-    _, order = _argsort(configs, key=lambda x: x['input_dim'] * x['output_dim'])
+    _, order = _argsort(configs, key=lambda x: x["input_dim"] * x["output_dim"])
     for index in order:
       config = configs[index]
-      current_total_size += config['input_dim'] * config['output_dim']
-      config['cpu_offload'] = current_total_size > self.gpu_embedding_size
+      current_total_size += config["input_dim"] * config["output_dim"]
+      config["cpu_offload"] = current_total_size > self.gpu_embedding_size
     return configs
 
   # below are the methods to divide table into groups and adjust input and input map accordingly
@@ -480,7 +482,7 @@ class DistEmbeddingStrategy():
     # - currently only apply one of above to any table. it may make sense to mix row/col slice in future
     # - because communication pattern is different, we run 3 separate groups calls
     # - non-symmetric table parallel is only applied to column sliced group
-    num_elems = [config['input_dim'] * config['output_dim'] for config in configs]
+    num_elems = [config["input_dim"] * config["output_dim"] for config in configs]
     dp, col, row = [], [], []
     for i, num_elem in enumerate(num_elems):
       if self.data_parallel_threshold and num_elem <= self.data_parallel_threshold:
@@ -525,23 +527,23 @@ class DistEmbeddingStrategy():
       sliced_config (list): list of embedding layer config that concat into original config
     """
     if column_slice_threshold is None:
-      column_slice_threshold = float('inf')
-    table_size = orig_config['input_dim'] * orig_config['output_dim']
+      column_slice_threshold = float("inf")
+    table_size = orig_config["input_dim"] * orig_config["output_dim"]
     num_slices = 1
     while table_size > column_slice_threshold:
       num_slices *= 2
       table_size /= 2
     if num_slices == 1:
       return [orig_config.copy()]
-    num_slices = min(num_slices, world_size, orig_config['output_dim'])
-    column_per_slice = orig_config['output_dim'] // num_slices
-    remainder = orig_config['output_dim'] % num_slices
+    num_slices = min(num_slices, world_size, orig_config["output_dim"])
+    column_per_slice = orig_config["output_dim"] // num_slices
+    remainder = orig_config["output_dim"] % num_slices
     sliced_config = []
     for i in range(num_slices):
       config = orig_config.copy()
-      config['output_dim'] = column_per_slice
+      config["output_dim"] = column_per_slice
       if i < remainder:
-        config['output_dim'] += 1
+        config["output_dim"] += 1
       sliced_config.append(config)
     return sliced_config
 
@@ -561,7 +563,7 @@ class DistEmbeddingStrategy():
     """
     # less table than worker, we try our best to slice into worker count slices(may go over)
     if column_slice_threshold is None:
-      table_sizes = [config['input_dim'] * config['output_dim'] for config in global_col_configs]
+      table_sizes = [config["input_dim"] * config["output_dim"] for config in global_col_configs]
       while world_size > len(table_sizes):
         table_sizes.sort()
         column_slice_threshold = table_sizes[-1] - 1
@@ -586,16 +588,16 @@ class DistEmbeddingStrategy():
     for orig_config in global_row_configs:
       sliced_config, offset = [], []
       cur_offset = 0
-      row_per_slice = orig_config['input_dim'] // world_size
-      remainder = orig_config['input_dim'] % world_size
+      row_per_slice = orig_config["input_dim"] // world_size
+      remainder = orig_config["input_dim"] % world_size
       for i in range(world_size):
         config = orig_config.copy()
-        config['input_dim'] = row_per_slice
+        config["input_dim"] = row_per_slice
         if i < remainder:
-          config['input_dim'] += 1
+          config["input_dim"] += 1
         sliced_config.append(config)
         offset.append(cur_offset)
-        cur_offset -= config['input_dim']
+        cur_offset -= config["input_dim"]
       sliced_configs.append(sliced_config)
       offsets.append(offset)
     # re-divide lists by rank
@@ -615,21 +617,21 @@ class DistEmbeddingStrategy():
     for i, sliced_config in enumerate(sliced_configs):
       for config in sliced_config:
         global_ids.append(i)
-        table_sizes.append(config['input_dim'] * config['output_dim'])
+        table_sizes.append(config["input_dim"] * config["output_dim"])
 
     # Round-robin distribute tables onto workers
-    if mode == 'basic':
+    if mode == "basic":
       divided_ids = [global_ids[i::world_size] for i in range(world_size)]
     # Distributed table so that memory is balanced while table count remain even
-    elif mode == 'memory_balanced':
+    elif mode == "memory_balanced":
       sorted_ids = [idx for _, idx in sorted(zip(table_sizes, global_ids), reverse=True)]
       divided_ids = [
-          sorted_ids[i::2 * world_size] + sorted_ids[(2 * world_size - 1 - i)::2 * world_size]
-          for i in range(world_size)
+        sorted_ids[i :: 2 * world_size] + sorted_ids[(2 * world_size - 1 - i) :: 2 * world_size]
+        for i in range(world_size)
       ]
     # Try to optimize for total memory first. After sorted by size, table are distributed one by one
     # to worker with lowest total size. Memory usage will be more even but table count may not.
-    elif mode == 'memory_optimized':
+    elif mode == "memory_optimized":
       sorted_pairs = list(sorted(zip(table_sizes, global_ids)))
       res = [[0, []] for _ in range(world_size)]
       while sorted_pairs:
@@ -639,7 +641,7 @@ class DistEmbeddingStrategy():
         res = sorted(res)
       divided_ids = [r[1] for r in res]
     else:
-      raise ValueError(F"Unsupported strategy {strategy}")
+      raise ValueError(f"Unsupported strategy {strategy}")
     return divided_ids
 
   # Concat table so different table now become shared embedding. XLA does rest of optimization.
@@ -648,19 +650,19 @@ class DistEmbeddingStrategy():
     grouped_table_ids, concat_configs = [], []
     for table_id, config in enumerate(table_configs):
       for group, concat_config in zip(grouped_table_ids, concat_configs):
-        same_output_dim = config['output_dim'] == concat_config['output_dim']
-        same_combiner = config.get('combiner') == concat_config.get('combiner')
-        no_offload = not (config['cpu_offload'] or concat_config['cpu_offload'])
+        same_output_dim = config["output_dim"] == concat_config["output_dim"]
+        same_combiner = config.get("combiner") == concat_config.get("combiner")
+        no_offload = not (config["cpu_offload"] or concat_config["cpu_offload"])
         if same_output_dim and same_combiner and no_offload:
           group.append(table_id)
-          concat_config['input_dim'] += config['input_dim']
-          concat_config['input_dims'].append(config['input_dim'])
-          concat_config['offsets'].append(concat_config['offsets'][-1] + config['input_dim'])
+          concat_config["input_dim"] += config["input_dim"]
+          concat_config["input_dims"].append(config["input_dim"])
+          concat_config["offsets"].append(concat_config["offsets"][-1] + config["input_dim"])
           break
       else:  # can't merge with any group, create a new one
         grouped_table_ids.append([table_id])
-        config['input_dims'] = [config['input_dim']]
-        config['offsets'] = [0, config['input_dim']]
+        config["input_dims"] = [config["input_dim"]]
+        config["offsets"] = [0, config["input_dim"]]
         concat_configs.append(config)
 
     # adjust input map and create according offset map
@@ -669,20 +671,20 @@ class DistEmbeddingStrategy():
       for gid, (group, concat_config) in enumerate(zip(grouped_table_ids, concat_configs)):
         if input_map in group:
           new_input_map.append(gid)
-          input_offsets.append(concat_config['offsets'][group.index(input_map)])
+          input_offsets.append(concat_config["offsets"][group.index(input_map)])
           break
 
     # switch to concat initializer to keep behavior associated with shape
     for concat_config in concat_configs:
-      input_dims = concat_config.pop('input_dims')
+      input_dims = concat_config.pop("input_dims")
       if len(input_dims) > 1:
         # TODO(deyuf): we don't really need serialize and can just get from original class
-        if 'embeddings_initializer' in concat_config:
-          orig_initializer = initializers.deserialize(concat_config['embeddings_initializer'])
-          concat_config['embeddings_initializer'] = ConcatInitializer(orig_initializer, input_dims)
+        if "embeddings_initializer" in concat_config:
+          orig_initializer = initializers.deserialize(concat_config["embeddings_initializer"])
+          concat_config["embeddings_initializer"] = ConcatInitializer(orig_initializer, input_dims)
 
     # record weight offsets for get/set.
-    weight_offsets = [concat_config.pop('offsets', None) for concat_config in concat_configs]
+    weight_offsets = [concat_config.pop("offsets", None) for concat_config in concat_configs]
     return concat_configs, new_input_map, input_offsets, grouped_table_ids, weight_offsets
 
   # Helper function to re-merge slices of same table in cases they end up on same workers
@@ -693,7 +695,7 @@ class DistEmbeddingStrategy():
       if table_idx in merged_table_ids:
         config_to_merge = sliced_configs[table_idx].pop(0)
         index_to_merge = merged_table_ids.index(table_idx)
-        rank_configs[index_to_merge]['output_dim'] += config_to_merge['output_dim']
+        rank_configs[index_to_merge]["output_dim"] += config_to_merge["output_dim"]
         # modify output concat ranges
         for out_range in self.sliced_out_ranges:
           if out_range[0] == table_idx:
@@ -735,21 +737,20 @@ class DistributedEmbedding(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      embeddings,
-      strategy="basic",
-      column_slice_threshold=None,
-      row_slice_threshold=None,
-      dp_input=True,
-      input_table_map=None,
-      data_parallel_threshold=None,
-      gpu_embedding_size=None,
-      **kwargs
+    self,
+    embeddings,
+    strategy="basic",
+    column_slice_threshold=None,
+    row_slice_threshold=None,
+    dp_input=True,
+    input_table_map=None,
+    data_parallel_threshold=None,
+    gpu_embedding_size=None,
+    **kwargs,
   ):
-
     super().__init__(**kwargs)
-    if strategy not in ['basic', 'memory_balanced', 'memory_optimized']:
-      raise ValueError(F"Unsupported shard strategy {strategy}")
+    if strategy not in ["basic", "memory_balanced", "memory_optimized"]:
+      raise ValueError(f"Unsupported shard strategy {strategy}")
 
     # Currently assume data parallel ranks == model parallel ranks
     # TODO(deyuf): add more control over this with newly added hvd process_set api
@@ -772,14 +773,14 @@ class DistributedEmbedding(tf.keras.layers.Layer):
 
     # get model parallel distribution strategy
     self.strategy = DistEmbeddingStrategy(
-        embeddings,
-        self.world_size,
-        strategy,
-        input_table_map=input_table_map,
-        column_slice_threshold=column_slice_threshold,
-        row_slice_threshold=self.row_slice_threshold,
-        data_parallel_threshold=self.data_parallel_threshold,
-        gpu_embedding_size=self.gpu_embedding_size
+      embeddings,
+      self.world_size,
+      strategy,
+      input_table_map=input_table_map,
+      column_slice_threshold=column_slice_threshold,
+      row_slice_threshold=self.row_slice_threshold,
+      data_parallel_threshold=self.data_parallel_threshold,
+      gpu_embedding_size=self.gpu_embedding_size,
     )
 
     # Here we make sure empty lists exist
@@ -797,14 +798,14 @@ class DistributedEmbedding(tf.keras.layers.Layer):
       # Column slice still need to expand all gpu, otherwise alltoall fails
       if not all(rank_configs for rank_configs in self.strategy.local_configs):
         raise ValueError(
-            "Not enough table after slicing to run on all worker."
-            "Try decrease column_slice_threshold or decrease worker count"
+          "Not enough table after slicing to run on all worker."
+          "Try decrease column_slice_threshold or decrease worker count"
         )
       for config in self.strategy.local_configs[self.rank]:
         self.local_embedding_layers.append(self._create_layer_from_config(config))
       self.col_inputs_offsets = [
-          None if offset == 0 else tf.constant([offset], dtype=tf.int64)
-          for offset in self.strategy.local_input_offsets[self.rank]
+        None if offset == 0 else tf.constant([offset], dtype=tf.int64)
+        for offset in self.strategy.local_input_offsets[self.rank]
       ]
 
     # create row sliced embeddings.
@@ -814,21 +815,21 @@ class DistributedEmbedding(tf.keras.layers.Layer):
       for config in self.strategy.row_sliced_configs[self.rank]:
         self.row_layers.append(self._create_layer_from_config(config))
       self.row_inputs_offsets = [
-          None if offset == 0 else tf.constant([offset], dtype=tf.int64)
-          for offset in self.strategy.row_inputs_offsets[self.rank]
+        None if offset == 0 else tf.constant([offset], dtype=tf.int64)
+        for offset in self.strategy.row_inputs_offsets[self.rank]
       ]
 
   def _create_layer_from_config(self, config):
     # For stock keras Embedding, we switch underlying layer for better performance
     # If inputs are custom layers, original layer will be used
-    layer_type = config.pop('layer_type')
-    offloaded = config.pop('cpu_offload', False)
+    layer_type = config.pop("layer_type")
+    offloaded = config.pop("cpu_offload", False)
 
     if layer_type == tf.keras.layers.Embedding:
       layer_type = Embedding
 
     if offloaded and layer_type == Embedding:
-      config['use_custom_kernel'] = False
+      config["use_custom_kernel"] = False
 
     layer = layer_type.from_config(config)
     layer.cpu_offloaded = offloaded
@@ -852,12 +853,11 @@ class DistributedEmbedding(tf.keras.layers.Layer):
       inputs = list(inputs.values())
 
     if len(inputs) != len(self.strategy.local_maps[self.rank]):
-      raise ValueError(F"Expect {self.strategy.local_maps[self.rank]} inputs, got {len(inputs)}.")
+      raise ValueError(f"Expect {self.strategy.local_maps[self.rank]} inputs, got {len(inputs)}.")
 
     # offset inputs
     inputs = [
-        inp if offset is None else tf.cast(inp, tf.int64) + offset
-        for inp, offset in zip(inputs, self.col_inputs_offsets)
+      inp if offset is None else tf.cast(inp, tf.int64) + offset for inp, offset in zip(inputs, self.col_inputs_offsets)
     ]
     # do embedding
     mp_outs = [self.local_embedding_layers[m](inp) for m, inp in zip(self.strategy.local_maps[self.rank], inputs)]
@@ -867,7 +867,7 @@ class DistributedEmbedding(tf.keras.layers.Layer):
       # TODO(deyuf): current assume 2D with same batch for all output, ideally should support general case
       mp_outs = [tf.reshape(mp_out, [self.world_size, -1]) for mp_out in mp_outs]
       mp_outs = tf.reshape(tf.concat(mp_outs, axis=1), [-1])
-      dp_outs = hvd.alltoall(mp_outs, name='out_mp_to_dp')
+      dp_outs = hvd.alltoall(mp_outs, name="out_mp_to_dp")
       batch_size = tf.shape(inputs[0], out_type=tf.int32)[0] if inputs[0].shape[0] is None else inputs[0].shape[0]
       local_bs = batch_size // self.world_size
       num_elements = [local_bs * width for width in self.strategy.widths_list_flat]
@@ -890,12 +890,11 @@ class DistributedEmbedding(tf.keras.layers.Layer):
     inputs = hvd.grouped_allgather(inputs)
     # offset inputs
     inputs = [
-        inp if offset is None else tf.cast(inp, tf.int64) + offset
-        for inp, offset in zip(inputs, self.row_inputs_offsets)
+      inp if offset is None else tf.cast(inp, tf.int64) + offset for inp, offset in zip(inputs, self.row_inputs_offsets)
     ]
     # do embedding
     outputs = [self.row_layers[m](inp) for m, inp in zip(self.strategy.map_groups[2], inputs)]
-    outputs = [tf.cast(output, self.compute_dtype, name='row_slice_cast') for output in outputs]
+    outputs = [tf.cast(output, self.compute_dtype, name="row_slice_cast") for output in outputs]
     outputs = grouped_reducescatter_unscaled(outputs)
 
     return outputs
@@ -905,17 +904,15 @@ class DistributedEmbedding(tf.keras.layers.Layer):
       return []
     if self.world_size == 1:
       if isinstance(weights[0], str):
-        weights = [np.load(file=path, mmap_mode='r') for path in weights]
+        weights = [np.load(file=path, mmap_mode="r") for path in weights]
     else:
       slice_info = [
-          [rank_table_id.count(table_id)
-           for rank_table_id in self.strategy.table_ids]
-          for table_id in range(len(weights))
+        [rank_table_id.count(table_id) for rank_table_id in self.strategy.table_ids] for table_id in range(len(weights))
       ]
       local_info = [slice_info[index] for index in self.strategy.table_ids[self.rank]]
       weights = [weights[index] for index in self.strategy.table_ids[self.rank]]
       if isinstance(weights[0], str):
-        weights = [np.load(file=path, mmap_mode='r') for path in weights]
+        weights = [np.load(file=path, mmap_mode="r") for path in weights]
 
       def _slice_weight_for_rank(weight, info, global_rank):
         num_columns = weight.shape[1]
@@ -943,7 +940,7 @@ class DistributedEmbedding(tf.keras.layers.Layer):
     if not weights:
       return []
     if isinstance(weights[0], str):
-      weights = [np.load(file=path, mmap_mode='r') for path in weights]
+      weights = [np.load(file=path, mmap_mode="r") for path in weights]
     local_info = [[1 for _ in range(self.world_size)] for _ in weights]
 
     def _slice_weight_for_rank(weight, info, global_rank):
@@ -990,8 +987,8 @@ class DistributedEmbedding(tf.keras.layers.Layer):
     # super().set_weights(weights)
     if len(self.weights) != len(weights):
       raise ValueError(
-          F"You called `set_weights(weights)` on layer {self.name} with a weight list of "
-          F"length {len(weights)}, but the layer was expecting {len(self.weights)} weights."
+        f"You called `set_weights(weights)` on layer {self.name} with a weight list of "
+        f"length {len(weights)}, but the layer was expecting {len(self.weights)} weights."
       )
     for weight, arr in zip(self.weights, weights):
       if arr.size <= chunk:
@@ -1053,10 +1050,10 @@ class DistributedEmbedding(tf.keras.layers.Layer):
       concat_weights = [w.numpy() for w in local_weights]
       res = [item for sublist in self.strategy.local_group_list[0] for item in sublist]
       for offsets, f_w, group in zip(
-          self.strategy.local_weight_offsets[0], concat_weights, self.strategy.local_group_list[0]
+        self.strategy.local_weight_offsets[0], concat_weights, self.strategy.local_group_list[0]
       ):
         for i in range(len(offsets) - 1):
-          res[group[i]] = f_w[offsets[i]:offsets[i + 1]]
+          res[group[i]] = f_w[offsets[i] : offsets[i + 1]]
       return res
 
     # mpi segfault on over 32bit range index, so we gather weights chunk by chunk here
@@ -1064,10 +1061,10 @@ class DistributedEmbedding(tf.keras.layers.Layer):
     chunking_threshold = 2000000000
     num_chunks = 1
     for local_config in self.strategy.local_configs:
-      total_elements = sum([c['input_dim'] * c['output_dim'] for c in local_config])
+      total_elements = sum([c["input_dim"] * c["output_dim"] for c in local_config])
       num_chunks = max(num_chunks, math.ceil(self.world_size * total_elements / chunking_threshold))
 
-    with tf.device('CPU:0'):
+    with tf.device("CPU:0"):
       local_weights = tf.concat([tf.reshape(w, [-1]) for w in local_weights], axis=0)
       chunk_size = local_weights.shape[0] // num_chunks
       last_size = local_weights.shape[0] - chunk_size * (num_chunks - 1)
@@ -1088,15 +1085,15 @@ class DistributedEmbedding(tf.keras.layers.Layer):
       # re-construct all local weights from chunks
       local_weights = []
       for i in range(self.world_size):
-        local_weights.append(tf.concat(chunks[i::self.world_size], axis=0))
+        local_weights.append(tf.concat(chunks[i :: self.world_size], axis=0))
       del chunks
 
       # split flat local weights into correct sizes
       weights = []
       for local_weight, local_config, weight_offsets, local_groups in zip(
-          local_weights, self.strategy.local_configs, self.strategy.local_weight_offsets, self.strategy.local_group_list
+        local_weights, self.strategy.local_configs, self.strategy.local_weight_offsets, self.strategy.local_group_list
       ):
-        local_shapes = [[c['input_dim'], c['output_dim']] for c in local_config]
+        local_shapes = [[c["input_dim"], c["output_dim"]] for c in local_config]
         local_sizes = [shape[0] * shape[1] for shape in local_shapes]
         flat_weights = self._split_1d(local_weight, local_sizes)
         concat_weights = [tf.reshape(weight, shape) for weight, shape in zip(flat_weights, local_shapes)]
@@ -1104,7 +1101,7 @@ class DistributedEmbedding(tf.keras.layers.Layer):
         res = [item for sublist in local_groups for item in sublist]
         for offsets, f_w, group in zip(weight_offsets, concat_weights, local_groups):
           for i in range(len(offsets) - 1):
-            res[group[i]] = f_w[offsets[i]:offsets[i + 1]]
+            res[group[i]] = f_w[offsets[i] : offsets[i + 1]]
         weights += res
 
       # restore original table order
@@ -1141,8 +1138,8 @@ class DistributedEmbedding(tf.keras.layers.Layer):
     weights = [read_var_no_copy(w) for w in self.weights]
     num_dp, num_col = len(self.dp_layers), len(self.local_embedding_layers)
     dp_weights = weights[:num_dp]
-    col_weights = weights[num_dp:num_dp + num_col]
-    row_weights = weights[num_dp + num_col:]
+    col_weights = weights[num_dp : num_dp + num_col]
+    row_weights = weights[num_dp + num_col :]
 
     col_weights = self.get_col_sliced_weights(col_weights, all_ranks)
     row_weights = self.get_row_sliced_weights(row_weights)
@@ -1161,10 +1158,10 @@ class DistributedEmbedding(tf.keras.layers.Layer):
       batch_sizes = [shape[0] for shape in input_shape]
       batch_sizes = hvd.allgather(batch_sizes).numpy().tolist()
       if len(set(batch_sizes)) > 1:
-        raise ValueError(F"All input need to have same batchsize. got {set(batch_sizes)}.")
+        raise ValueError(f"All input need to have same batchsize. got {set(batch_sizes)}.")
       if not self.dp_input:
         if batch_sizes[0] % self.world_size > 0:
-          raise ValueError(F"Global batchsize {batch_sizes[0]} not divisible workers count {self.world_size}.")
+          raise ValueError(f"Global batchsize {batch_sizes[0]} not divisible workers count {self.world_size}.")
 
     # build both col and row slice tables
     for layer in self.dp_layers:
@@ -1174,7 +1171,7 @@ class DistributedEmbedding(tf.keras.layers.Layer):
 
     # build both col and row slice tables
     for layer in self.local_embedding_layers + self.row_layers:
-      device = 'CPU:0' if layer.cpu_offloaded else 'GPU:0'
+      device = "CPU:0" if layer.cpu_offloaded else "GPU:0"
       with tf.device(device):
         layer.build(input_shape[0] if input_shape else None)
       for var in layer.trainable_weights:
@@ -1216,7 +1213,7 @@ def broadcast_variables(model_vars, root_rank=0):
   dp_vars = []
   mp_vars = []
   for var in model_vars:
-    if hasattr(var, 'de_local'):
+    if hasattr(var, "de_local"):
       mp_vars.append(var)
     else:
       dp_vars.append(var)
@@ -1244,11 +1241,11 @@ def DistributedGradientTape(*args, **kwargs):
     gradients = self.raw_gradient(target, sources, *args, **kwargs)
     return gradients
 
-  if horovod.__version__ < '0.27.0':
+  if horovod.__version__ < "0.27.0":
     raise NotImplementedError("DistributedGradientTape is only compatible with horovod 0.27 or newer.")
   tape = hvd.DistributedGradientTape(sparse_as_dense=True, *args, **kwargs)
   for var in tape.watched_variables():
-    if hasattr(var, 'de_local'):
+    if hasattr(var, "de_local"):
       tape.register_local_source(var)
 
   tape.raw_gradient = tape.gradient
@@ -1268,12 +1265,12 @@ def DistributedOptimizer(*args, **kwargs):
   def _register_then_allreduce(self, grads, model_vars):
     if not self.local_var_registed:
       for var in model_vars:
-        if hasattr(var, 'de_local'):
+        if hasattr(var, "de_local"):
           self.register_local_var(var)
       self.local_var_registed = True
     return self.raw_allreduce(grads, model_vars)
 
-  if horovod.__version__ < '0.27.0':
+  if horovod.__version__ < "0.27.0":
     raise NotImplementedError("Distributed Optimizer is only compatible with horovod 0.27 or newer")
   opt = hvd_keras.DistributedOptimizer(sparse_as_dense=True, *args, **kwargs)
   opt.local_var_registed = False
@@ -1300,12 +1297,12 @@ def BroadcastGlobalVariablesCallback(*args, **kwargs):
   def _on_batch_end(self, batch, logs=None):
     if not self.local_var_registed:
       for var in self.model.variables:
-        if hasattr(var, 'de_local'):
+        if hasattr(var, "de_local"):
           self.register_local_var(var)
       self.local_var_registed = True
     return self.raw_on_batch_end(batch, logs)
 
-  if horovod.__version__ < '0.27.0':
+  if horovod.__version__ < "0.27.0":
     raise NotImplementedError("BroadcastGlobalVariablesCallback is only compatible with horovod 0.27 or newer.")
   bcb = hvd_keras.callbacks.BroadcastGlobalVariablesCallback(*args, **kwargs)
   bcb.local_var_registed = False

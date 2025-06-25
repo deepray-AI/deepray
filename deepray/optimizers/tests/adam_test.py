@@ -34,7 +34,7 @@ from deepray.optimizers import adam
 
 
 def adam_update_numpy(param, g_t, t, m, v, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-7):
-  lr_t = lr * np.sqrt(1 - beta2**(t + 1)) / (1 - beta1**(t + 1))
+  lr_t = lr * np.sqrt(1 - beta2 ** (t + 1)) / (1 - beta1 ** (t + 1))
 
   m_t = beta1 * m + (1 - beta1) * g_t
   v_t = beta2 * v + (1 - beta2) * g_t * g_t
@@ -44,7 +44,7 @@ def adam_update_numpy(param, g_t, t, m, v, lr=0.001, beta1=0.9, beta2=0.999, eps
 
 
 def adam_update_numpy_amsgrad(param, g_t, t, m, v, vhat, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-7):
-  lr_t = lr * np.sqrt(1 - beta2**(t + 1)) / (1 - beta1**(t + 1))
+  lr_t = lr * np.sqrt(1 - beta2 ** (t + 1)) / (1 - beta1 ** (t + 1))
 
   m_t = beta1 * m + (1 - beta1) * g_t
   v_t = beta2 * v + (1 - beta2) * g_t * g_t
@@ -55,10 +55,10 @@ def adam_update_numpy_amsgrad(param, g_t, t, m, v, vhat, lr=0.001, beta1=0.9, be
 
 
 def adam_sparse_update_numpy_amsgrad(
-    param, indices, g_t, t, m, v, vhat, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-7
+  param, indices, g_t, t, m, v, vhat, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-7
 ):
   m_t, v_t, vhat_t, param_t = (np.copy(m), np.copy(v), np.copy(vhat), np.copy(param))
-  lr_t = lr * np.sqrt(1 - beta2**(t + 1)) / (1 - beta1**(t + 1))
+  lr_t = lr * np.sqrt(1 - beta2 ** (t + 1)) / (1 - beta1 ** (t + 1))
   m_t_slice = beta1 * m[indices] + (1 - beta1) * g_t
   v_t_slice = beta2 * v[indices] + (1 - beta2) * g_t * g_t
   m_t[indices] = m_t_slice
@@ -80,7 +80,6 @@ def get_beta_accumulators(opt, dtype):
 
 
 class AdamOptimizerTest(test.TestCase, parameterized.TestCase):
-
   def testSparse(self):
     # TODO(tanzheny, omalleyt): Fix test in eager mode.
     for dtype in [dtypes.half, dtypes.float32, dtypes.float64]:
@@ -96,13 +95,15 @@ class AdamOptimizerTest(test.TestCase, parameterized.TestCase):
         var1 = variables.Variable(var1_np)
         grads0_np_indices = np.array([0, 2], dtype=np.int32)
         grads0 = indexed_slices.IndexedSlices(
-            constant_op.constant(grads0_np[grads0_np_indices]), constant_op.constant(grads0_np_indices),
-            constant_op.constant([3])
+          constant_op.constant(grads0_np[grads0_np_indices]),
+          constant_op.constant(grads0_np_indices),
+          constant_op.constant([3]),
         )
         grads1_np_indices = np.array([0, 2], dtype=np.int32)
         grads1 = indexed_slices.IndexedSlices(
-            constant_op.constant(grads1_np[grads1_np_indices]), constant_op.constant(grads1_np_indices),
-            constant_op.constant([3])
+          constant_op.constant(grads1_np[grads1_np_indices]),
+          constant_op.constant(grads1_np_indices),
+          constant_op.constant([3]),
         )
         opt = adam.Adam()
         update = opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
@@ -115,8 +116,8 @@ class AdamOptimizerTest(test.TestCase, parameterized.TestCase):
         beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
         # Run 3 steps of Adam
         for t in range(3):
-          self.assertAllCloseAccordingToType(0.9**(t + 1), self.evaluate(beta_1_power))
-          self.assertAllCloseAccordingToType(0.999**(t + 1), self.evaluate(beta_2_power))
+          self.assertAllCloseAccordingToType(0.9 ** (t + 1), self.evaluate(beta_1_power))
+          self.assertAllCloseAccordingToType(0.999 ** (t + 1), self.evaluate(beta_2_power))
           update.run()
 
           var0_np, m0, v0 = adam_update_numpy(var0_np, grads0_np, t, m0, v0)
@@ -147,12 +148,14 @@ class AdamOptimizerTest(test.TestCase, parameterized.TestCase):
         repeated_index_update_var = variables.Variable([[1.0], [2.0]], dtype=dtype)
         aggregated_update_var = variables.Variable([[1.0], [2.0]], dtype=dtype)
         grad_repeated_index = indexed_slices.IndexedSlices(
-            constant_op.constant([0.1, 0.1], shape=[2, 1], dtype=dtype), constant_op.constant([1, 1]),
-            constant_op.constant([2, 1])
+          constant_op.constant([0.1, 0.1], shape=[2, 1], dtype=dtype),
+          constant_op.constant([1, 1]),
+          constant_op.constant([2, 1]),
         )
         grad_aggregated = indexed_slices.IndexedSlices(
-            constant_op.constant([0.2], shape=[1, 1], dtype=dtype), constant_op.constant([1]),
-            constant_op.constant([2, 1])
+          constant_op.constant([0.2], shape=[1, 1], dtype=dtype),
+          constant_op.constant([1]),
+          constant_op.constant([2, 1]),
         )
         repeated_update = adam.Adam().apply_gradients([(grad_repeated_index, repeated_index_update_var)])
         aggregated_update = adam.Adam().apply_gradients([(grad_aggregated, aggregated_update_var)])
@@ -196,8 +199,8 @@ class AdamOptimizerTest(test.TestCase, parameterized.TestCase):
         # Run 3 steps of Adam
         for t in range(3):
           beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
-          self.assertAllCloseAccordingToType(0.9**(t + 1), self.evaluate(beta_1_power))
-          self.assertAllCloseAccordingToType(0.999**(t + 1), self.evaluate(beta_2_power))
+          self.assertAllCloseAccordingToType(0.9 ** (t + 1), self.evaluate(beta_1_power))
+          self.assertAllCloseAccordingToType(0.999 ** (t + 1), self.evaluate(beta_2_power))
           if not context.executing_eagerly():
             self.evaluate(update)
           else:
@@ -242,8 +245,8 @@ class AdamOptimizerTest(test.TestCase, parameterized.TestCase):
         # Run 3 steps of Adam
         for t in range(3):
           beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
-          self.assertAllCloseAccordingToType(0.9**(t + 1), self.evaluate(beta_1_power))
-          self.assertAllCloseAccordingToType(0.999**(t + 1), self.evaluate(beta_2_power))
+          self.assertAllCloseAccordingToType(0.9 ** (t + 1), self.evaluate(beta_1_power))
+          self.assertAllCloseAccordingToType(0.999 ** (t + 1), self.evaluate(beta_2_power))
           if not context.executing_eagerly():
             self.evaluate(update)
           else:
@@ -271,8 +274,9 @@ class AdamOptimizerTest(test.TestCase, parameterized.TestCase):
         aggregated_update_var = variables.Variable(var0_np, dtype=dtype)
         grads0_np = np.array([[0.2]], dtype=dtype.as_numpy_dtype)
         grad_repeated_index = indexed_slices.IndexedSlices(
-            constant_op.constant([0.1, 0.1], shape=[2, 1], dtype=dtype), constant_op.constant([1, 1]),
-            constant_op.constant([2, 1])
+          constant_op.constant([0.1, 0.1], shape=[2, 1], dtype=dtype),
+          constant_op.constant([1, 1]),
+          constant_op.constant([2, 1]),
         )
         grad_aggregated = indexed_slices.IndexedSlices(grads0_np, indices, constant_op.constant([2, 1]))
         opt_repeated = adam.Adam(amsgrad=True)
@@ -295,7 +299,7 @@ class AdamOptimizerTest(test.TestCase, parameterized.TestCase):
           # Validate updated params
           self.assertAllCloseAccordingToType(var0_np, self.evaluate(aggregated_update_var))
           self.assertAllCloseAccordingToType(
-              self.evaluate(aggregated_update_var), self.evaluate(repeated_index_update_var)
+            self.evaluate(aggregated_update_var), self.evaluate(repeated_index_update_var)
           )
 
   def testBasicWithLearningRateDecay(self):
@@ -402,8 +406,8 @@ class AdamOptimizerTest(test.TestCase, parameterized.TestCase):
         beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
         # Run 3 steps of Adam
         for t in range(3):
-          self.assertAllCloseAccordingToType(0.9**(t + 1), self.evaluate(beta_1_power))
-          self.assertAllCloseAccordingToType(0.999**(t + 1), self.evaluate(beta_2_power))
+          self.assertAllCloseAccordingToType(0.9 ** (t + 1), self.evaluate(beta_1_power))
+          self.assertAllCloseAccordingToType(0.999 ** (t + 1), self.evaluate(beta_2_power))
           update.run()
 
           var0_np, m0, v0 = adam_update_numpy(var0_np, grads0_np, t, m0, v0)
@@ -441,8 +445,8 @@ class AdamOptimizerTest(test.TestCase, parameterized.TestCase):
 
         # Run 3 steps of intertwined Adam1 and Adam2.
         for t in range(3):
-          self.assertAllCloseAccordingToType(0.9**(t + 1), self.evaluate(beta_1_power))
-          self.assertAllCloseAccordingToType(0.999**(t + 1), self.evaluate(beta_2_power))
+          self.assertAllCloseAccordingToType(0.9 ** (t + 1), self.evaluate(beta_1_power))
+          self.assertAllCloseAccordingToType(0.999 ** (t + 1), self.evaluate(beta_2_power))
           if t % 2 == 0:
             update1.run()
           else:
@@ -457,9 +461,9 @@ class AdamOptimizerTest(test.TestCase, parameterized.TestCase):
 
   @combinations.generate(combinations.combine(mode=["eager"]))
   def testSlotsUniqueEager(self):
-    v1 = variables.Variable(1.)
-    v2 = variables.Variable(1.)
-    opt = adam.Adam(1.)
+    v1 = variables.Variable(1.0)
+    v2 = variables.Variable(1.0)
+    opt = adam.Adam(1.0)
     opt.minimize(lambda: v1 + v2, var_list=[v1, v2])
     # There should be iteration, and two unique slot variables for v1 and v2.
     self.assertLen(set(v.ref() for v in opt.variables()), 5)

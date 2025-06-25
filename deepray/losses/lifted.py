@@ -29,18 +29,18 @@ from deepray.utils.types import FloatTensorLike, TensorLike
 def lifted_struct_loss(labels: TensorLike, embeddings: TensorLike, margin: FloatTensorLike = 1.0) -> tf.Tensor:
   """Computes the lifted structured loss.
 
-    Args:
-      labels: 1-D tf.int32 `Tensor` with shape `[batch_size]` of
-        multiclass integer labels.
-      embeddings: 2-D float `Tensor` of embedding vectors. Embeddings should
-        not be l2 normalized.
-      margin: Float, margin term in the loss definition.
+  Args:
+    labels: 1-D tf.int32 `Tensor` with shape `[batch_size]` of
+      multiclass integer labels.
+    embeddings: 2-D float `Tensor` of embedding vectors. Embeddings should
+      not be l2 normalized.
+    margin: Float, margin term in the loss definition.
 
-    Returns:
-      lifted_loss: float scalar with dtype of embeddings.
-    """
-  convert_to_float32 = (embeddings.dtype == tf.dtypes.float16 or embeddings.dtype == tf.dtypes.bfloat16)
-  precise_embeddings = (tf.cast(embeddings, tf.dtypes.float32) if convert_to_float32 else embeddings)
+  Returns:
+    lifted_loss: float scalar with dtype of embeddings.
+  """
+  convert_to_float32 = embeddings.dtype == tf.dtypes.float16 or embeddings.dtype == tf.dtypes.bfloat16
+  precise_embeddings = tf.cast(embeddings, tf.dtypes.float32) if convert_to_float32 else embeddings
 
   # Reshape [batch_size] label tensor to a [batch_size, 1] label tensor.
   lshape = tf.shape(labels)
@@ -63,7 +63,7 @@ def lifted_struct_loss(labels: TensorLike, embeddings: TensorLike, margin: Float
   #     this is to take the max only among negatives.
   row_minimums = tf.math.reduce_min(diff, 1, keepdims=True)
   row_negative_maximums = (
-      tf.math.reduce_max(tf.math.multiply(diff - row_minimums, mask), 1, keepdims=True) + row_minimums
+    tf.math.reduce_max(tf.math.multiply(diff - row_minimums, mask), 1, keepdims=True) + row_minimums
   )
 
   # Compute the loss.
@@ -78,12 +78,12 @@ def lifted_struct_loss(labels: TensorLike, embeddings: TensorLike, margin: Float
   max_elements_vect = tf.reshape(tf.transpose(max_elements), [-1, 1])
 
   loss_exp_left = tf.reshape(
-      tf.math.reduce_sum(
-          tf.math.multiply(tf.math.exp(diff_tiled - max_elements_vect), mask_tiled),
-          1,
-          keepdims=True,
-      ),
-      [batch_size, batch_size],
+    tf.math.reduce_sum(
+      tf.math.multiply(tf.math.exp(diff_tiled - max_elements_vect), mask_tiled),
+      1,
+      keepdims=True,
+    ),
+    [batch_size, batch_size],
   )
 
   loss_mat = max_elements + tf.math.log(loss_exp_left + tf.transpose(loss_exp_left))
@@ -96,8 +96,8 @@ def lifted_struct_loss(labels: TensorLike, embeddings: TensorLike, margin: Float
   num_positives = tf.math.reduce_sum(mask_positives) / 2.0
 
   lifted_loss = tf.math.truediv(
-      0.25 * tf.math.reduce_sum(tf.math.square(tf.math.maximum(tf.math.multiply(loss_mat, mask_positives), 0.0))),
-      num_positives,
+    0.25 * tf.math.reduce_sum(tf.math.square(tf.math.maximum(tf.math.multiply(loss_mat, mask_positives), 0.0))),
+    num_positives,
   )
 
   if convert_to_float32:
@@ -110,22 +110,22 @@ def lifted_struct_loss(labels: TensorLike, embeddings: TensorLike, margin: Float
 class LiftedStructLoss(losses.LossFunctionWrapper):
   """Computes the lifted structured loss.
 
-    The loss encourages the positive distances (between a pair of embeddings
-    with the same labels) to be smaller than any negative distances (between
-    a pair of embeddings with different labels) in the mini-batch in a way
-    that is differentiable with respect to the embedding vectors.
-    See: https://arxiv.org/abs/1511.06452.
+  The loss encourages the positive distances (between a pair of embeddings
+  with the same labels) to be smaller than any negative distances (between
+  a pair of embeddings with different labels) in the mini-batch in a way
+  that is differentiable with respect to the embedding vectors.
+  See: https://arxiv.org/abs/1511.06452.
 
-    Args:
-      margin: Float, margin term in the loss definition.
-      name: Optional name for the op.
-    """
+  Args:
+    margin: Float, margin term in the loss definition.
+    name: Optional name for the op.
+  """
 
   @typechecked
   def __init__(self, margin: FloatTensorLike = 1.0, name: Optional[str] = None, **kwargs):
     super().__init__(
-        lifted_struct_loss,
-        name=name,
-        reduction=tf.keras.losses.Reduction.NONE,
-        margin=margin,
+      lifted_struct_loss,
+      name=name,
+      reduction=tf.keras.losses.Reduction.NONE,
+      margin=margin,
     )

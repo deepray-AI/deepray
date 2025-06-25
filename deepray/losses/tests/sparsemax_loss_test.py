@@ -97,8 +97,9 @@ def test_gradient_against_estimate(dtype):
   q = np.zeros((test_obs, 10)).astype(dtype)
   q[np.arange(0, test_obs), np.random.randint(0, 10, size=test_obs)] = 1
 
-  (jacob_sym,), (jacob_num,
-                ) = tf.test.compute_gradient(lambda logits: sparsemax_loss(logits, sparsemax(logits), q), [z])
+  (jacob_sym,), (jacob_num,) = tf.test.compute_gradient(
+    lambda logits: sparsemax_loss(logits, sparsemax(logits), q), [z]
+  )
   test_utils.assert_allclose_according_to_type(jacob_sym, jacob_num)
 
 
@@ -166,22 +167,22 @@ def test_sparsemax_loss_of_inf(dtype):
   """check sparsemax-loss is infinity safe."""
   q = np.asarray([[0, 0, 1], [0, 0, 1], [0, 0, 1], [0, 0, 1]])
   z_neg = np.asarray([
-      [0, -np.inf, 0],
-      [0, -np.inf, -np.inf],
-      [-np.inf, -np.inf, 0],
-      [-np.inf, -np.inf, -np.inf],
+    [0, -np.inf, 0],
+    [0, -np.inf, -np.inf],
+    [-np.inf, -np.inf, 0],
+    [-np.inf, -np.inf, -np.inf],
   ]).astype(dtype)
   z_pos = np.asarray([
-      [0, np.inf, 0],
-      [0, np.inf, np.inf],
-      [np.inf, np.inf, 0],
-      [np.inf, np.inf, np.inf],
+    [0, np.inf, 0],
+    [0, np.inf, np.inf],
+    [np.inf, np.inf, 0],
+    [np.inf, np.inf, np.inf],
   ]).astype(dtype)
   z_mix = np.asarray([
-      [0, np.inf, 0],
-      [0, np.inf, -np.inf],
-      [-np.inf, np.inf, 0],
-      [-np.inf, np.inf, -np.inf],
+    [0, np.inf, 0],
+    [0, np.inf, -np.inf],
+    [-np.inf, np.inf, 0],
+    [-np.inf, np.inf, -np.inf],
   ]).astype(dtype)
 
   _, tf_loss_neg = _tf_sparsemax_loss(z_neg, q, dtype)

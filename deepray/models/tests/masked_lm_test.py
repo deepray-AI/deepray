@@ -31,19 +31,18 @@ from official.nlp.modeling.networks import transformer_encoder
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class MaskedLMTest(keras_parameterized.TestCase):
-
   def create_network(
-      self, vocab_size, sequence_length, hidden_size, num_predictions, output='predictions', xformer_stack=None
+    self, vocab_size, sequence_length, hidden_size, num_predictions, output="predictions", xformer_stack=None
   ):
     # First, create a transformer stack that we can use to get the LM's
     # vocabulary weight.
     if xformer_stack is None:
       xformer_stack = transformer_encoder.TransformerEncoder(
-          vocab_size=vocab_size,
-          num_layers=1,
-          sequence_length=sequence_length,
-          hidden_size=hidden_size,
-          num_attention_heads=4,
+        vocab_size=vocab_size,
+        num_layers=1,
+        sequence_length=sequence_length,
+        hidden_size=hidden_size,
+        num_attention_heads=4,
       )
     word_ids = tf.keras.Input(shape=(sequence_length,), dtype=tf.int32)
     mask = tf.keras.Input(shape=(sequence_length,), dtype=tf.int32)
@@ -52,7 +51,7 @@ class MaskedLMTest(keras_parameterized.TestCase):
 
     # Create a maskedLM from the transformer stack.
     test_network = masked_lm.MaskedLM(
-        num_predictions=num_predictions, input_width=lm_outputs.shape[-1], source_network=xformer_stack, output=output
+      num_predictions=num_predictions, input_width=lm_outputs.shape[-1], source_network=xformer_stack, output=output
     )
     return test_network
 
@@ -62,10 +61,7 @@ class MaskedLMTest(keras_parameterized.TestCase):
     hidden_size = 64
     num_predictions = 21
     test_network = self.create_network(
-        vocab_size=vocab_size,
-        sequence_length=sequence_length,
-        hidden_size=hidden_size,
-        num_predictions=num_predictions
+      vocab_size=vocab_size, sequence_length=sequence_length, hidden_size=hidden_size, num_predictions=num_predictions
     )
 
     # Make sure that the output tensor of the masked LM is the right shape.
@@ -82,10 +78,7 @@ class MaskedLMTest(keras_parameterized.TestCase):
     hidden_size = 64
     num_predictions = 21
     test_network = self.create_network(
-        vocab_size=vocab_size,
-        sequence_length=sequence_length,
-        hidden_size=hidden_size,
-        num_predictions=num_predictions
+      vocab_size=vocab_size, sequence_length=sequence_length, hidden_size=hidden_size, num_predictions=num_predictions
     )
 
     # Create a model from the masked LM layer.
@@ -122,27 +115,27 @@ class MaskedLMTest(keras_parameterized.TestCase):
     hidden_size = 64
     num_predictions = 21
     xformer_stack = transformer_encoder.TransformerEncoder(
-        vocab_size=vocab_size,
-        num_layers=1,
-        sequence_length=sequence_length,
-        hidden_size=hidden_size,
-        num_attention_heads=4,
+      vocab_size=vocab_size,
+      num_layers=1,
+      sequence_length=sequence_length,
+      hidden_size=hidden_size,
+      num_attention_heads=4,
     )
     test_network = self.create_network(
-        vocab_size=vocab_size,
-        sequence_length=sequence_length,
-        hidden_size=hidden_size,
-        num_predictions=num_predictions,
-        xformer_stack=xformer_stack,
-        output='predictions'
+      vocab_size=vocab_size,
+      sequence_length=sequence_length,
+      hidden_size=hidden_size,
+      num_predictions=num_predictions,
+      xformer_stack=xformer_stack,
+      output="predictions",
     )
     logit_network = self.create_network(
-        vocab_size=vocab_size,
-        sequence_length=sequence_length,
-        hidden_size=hidden_size,
-        num_predictions=num_predictions,
-        xformer_stack=xformer_stack,
-        output='logits'
+      vocab_size=vocab_size,
+      sequence_length=sequence_length,
+      hidden_size=hidden_size,
+      num_predictions=num_predictions,
+      xformer_stack=xformer_stack,
+      output="logits",
     )
     logit_network.set_weights(test_network.get_weights())
 
@@ -182,10 +175,7 @@ class MaskedLMTest(keras_parameterized.TestCase):
     hidden_size = 64
     num_predictions = 21
     test_network = self.create_network(
-        vocab_size=vocab_size,
-        sequence_length=sequence_length,
-        hidden_size=hidden_size,
-        num_predictions=num_predictions
+      vocab_size=vocab_size, sequence_length=sequence_length, hidden_size=hidden_size, num_predictions=num_predictions
     )
 
     # Create a model from the masked LM layer.
@@ -203,8 +193,8 @@ class MaskedLMTest(keras_parameterized.TestCase):
 
   def test_unknown_output_type_fails(self):
     with self.assertRaisesRegex(ValueError, 'Unknown `output` value "bad".*'):
-      _ = self.create_network(vocab_size=8, sequence_length=8, hidden_size=8, num_predictions=8, output='bad')
+      _ = self.create_network(vocab_size=8, sequence_length=8, hidden_size=8, num_predictions=8, output="bad")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

@@ -14,8 +14,7 @@ import html2text
 from glob import glob
 
 
-class ContainerParser():
-
+class ContainerParser:
   def __init__(self, xmlcontent=None):
     self.rootfile = ""
     self.xml = xmlcontent
@@ -32,8 +31,7 @@ class ContainerParser():
     return self.rootfile
 
 
-class BookParser():
-
+class BookParser:
   def __init__(self, xmlcontent=None):
     self.xml = xmlcontent
     self.title = ""
@@ -78,8 +76,7 @@ class BookParser():
     return self.title, self.author, self.ncx
 
 
-class NavPoint():
-
+class NavPoint:
   def __init__(self, id=None, playorder=None, level=0, content=None, text=None):
     self.id = id
     self.content = content
@@ -88,8 +85,7 @@ class NavPoint():
     self.text = text
 
 
-class TocParser():
-
+class TocParser:
   def __init__(self, xmlcontent=None):
     self.xml = xmlcontent
     self.currentNP = None
@@ -130,8 +126,7 @@ class TocParser():
     return self.toc
 
 
-class epub2txt():
-
+class epub2txt:
   def __init__(self, epubfile=None):
     self.epub = epubfile
 
@@ -160,7 +155,7 @@ class epub2txt():
 
     # fo.close()
     file.close()
-    return ''.join(content)
+    return "".join(content)
 
 
 if __name__ == "__main__":

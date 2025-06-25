@@ -66,7 +66,6 @@ class LossLayer(tf.keras.layers.Layer):
 
 
 class NCFModel(tf.keras.Model):
-
   def __init__(self, params, *args, **kwargs):
     super(NCFModel, self).__init__(*args, **kwargs)
     self._params = params

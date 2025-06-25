@@ -26,18 +26,18 @@ DIEN_ITEM_SEQ_INTERACTION_SIZE = 6  # Value taken from TF1 original code
 
 def compute_auxiliary_probs(auxiliary_net, rnn_states, items_hist, training=False):
   """
-    Given h(1),..,h(T) GRU sequence outputs and e(1),..,e(T) encoded user
-    sequence or negative user sequence behaviours, compute probabilities
-    for auxiliary loss term.
+  Given h(1),..,h(T) GRU sequence outputs and e(1),..,e(T) encoded user
+  sequence or negative user sequence behaviours, compute probabilities
+  for auxiliary loss term.
 
-    Args:
-        auxiliary_net: model that computes a probability of interaction
-        rnn_states: sequence of GRU outputs
-        items_hist: sequence of user behaviours or negative user behaviours
+  Args:
+      auxiliary_net: model that computes a probability of interaction
+      rnn_states: sequence of GRU outputs
+      items_hist: sequence of user behaviours or negative user behaviours
 
-    Returns:
-        click_prob: clicking probability for each timestep
-    """
+  Returns:
+      click_prob: clicking probability for each timestep
+  """
   # for rnn_states, select h(1),..,h(T-1)
   rnn_states = rnn_states[:, :-1, :]
   # for items_hist, select e(2),..,e(T)
@@ -51,22 +51,21 @@ def compute_auxiliary_probs(auxiliary_net, rnn_states, items_hist, training=Fals
 
 
 class DIENModel(SequentialRecommenderModel):
-
   def __init__(self, feature_spec, mlp_hidden_dims, embedding_dim=4):
     super(DIENModel, self).__init__(feature_spec, embedding_dim, mlp_hidden_dims["classifier"])
     # DIEN block
     self.dien_block = DIENItemSequenceInteractionBlock(hidden_size=embedding_dim * DIEN_ITEM_SEQ_INTERACTION_SIZE)
     # aux_loss uses an MLP in TF1 code
     self.auxiliary_net = CTRClassificationMLP(
-        mlp_hidden_dims["aux"],
-        activation_function=partial(tf.keras.layers.Activation, activation="sigmoid"),
+      mlp_hidden_dims["aux"],
+      activation_function=partial(tf.keras.layers.Activation, activation="sigmoid"),
     )
 
   def call(
-      self,
-      inputs,
-      compute_aux_loss=True,
-      training=False,
+    self,
+    inputs,
+    compute_aux_loss=True,
+    training=False,
   ):
     user_features = inputs["user_features"]
     target_item_features = inputs["target_item_features"]
@@ -83,13 +82,11 @@ class DIENModel(SequentialRecommenderModel):
 
     # Pass sequence_embeddings and target_item_embedding to a DIEN block
     # it needs to output h'(T) for concatenation and h(1),...,h(T) for aux_loss
-    final_seq_repr, features_layer_1 = self.dien_block(
-        (
-            target_item_embedding,  # shape=(B, 32)
-            short_sequence_embeddings,  # shape=(B, 10, 32)
-            short_sequence_mask  # shape=(B, 10)
-        )
-    )
+    final_seq_repr, features_layer_1 = self.dien_block((
+      target_item_embedding,  # shape=(B, 32)
+      short_sequence_embeddings,  # shape=(B, 10, 32)
+      short_sequence_mask,  # shape=(B, 10)
+    ))
 
     # short_features_layer_1 = features_layer_1[:, -short_seq_len:, :]
 
@@ -100,24 +97,24 @@ class DIENModel(SequentialRecommenderModel):
 
       # compute auxiliary logits
       aux_click_probs = compute_auxiliary_probs(
-          self.auxiliary_net,
-          features_layer_1,
-          short_sequence_embeddings,
-          training=training,
+        self.auxiliary_net,
+        features_layer_1,
+        short_sequence_embeddings,
+        training=training,
       )
 
       aux_noclick_probs = compute_auxiliary_probs(
-          self.auxiliary_net,
-          features_layer_1,
-          short_neg_sequence_embeddings,
-          training=training,
+        self.auxiliary_net,
+        features_layer_1,
+        short_neg_sequence_embeddings,
+        training=training,
       )
 
       mask_for_aux_loss = inputs["short_sequence_mask"][:, 1:]
       dien_aux_loss = dien_auxiliary_loss_fn(
-          aux_click_probs,
-          aux_noclick_probs,
-          mask=mask_for_aux_loss,
+        aux_click_probs,
+        aux_noclick_probs,
+        mask=mask_for_aux_loss,
       )
       output_dict["auxiliary_logits"] = dien_aux_loss
 

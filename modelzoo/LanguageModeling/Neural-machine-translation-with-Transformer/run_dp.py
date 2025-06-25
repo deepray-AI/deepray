@@ -16,7 +16,6 @@ BATCH_SIZE = 64
 
 
 class CustomSchedule(tf.keras.optimizers.schedules.LearningRateSchedule):
-
   def __init__(self, d_model, warmup_steps=4000):
     super().__init__()
 
@@ -42,7 +41,7 @@ dropout_rate = 0.1
 
 def masked_loss(label, pred):
   mask = label != 0
-  loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction='none')
+  loss_object = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction="none")
   loss = loss_object(label, pred)
 
   mask = tf.cast(mask, dtype=loss.dtype)
@@ -85,7 +84,7 @@ def main():
     pt = pt.to_tensor()  # Convert to 0-padded dense Tensor
 
     en = tokenizers.en.tokenize(en)
-    en = en[:, :(MAX_TOKENS + 1)]
+    en = en[:, : (MAX_TOKENS + 1)]
     en_inputs = en[:, :-1].to_tensor()  # Drop the [END] tokens
     en_labels = en[:, 1:].to_tensor()  # Drop the [START] tokens
 
@@ -93,18 +92,20 @@ def main():
 
   def make_batches(ds):
     return (
-        ds.shuffle(BUFFER_SIZE).batch(BATCH_SIZE).map(prepare_batch,
-                                                      tf.data.AUTOTUNE).prefetch(buffer_size=tf.data.AUTOTUNE)
+      ds.shuffle(BUFFER_SIZE)
+      .batch(BATCH_SIZE)
+      .map(prepare_batch, tf.data.AUTOTUNE)
+      .prefetch(buffer_size=tf.data.AUTOTUNE)
     )
 
   transformer = Transformer(
-      num_layers=num_layers,
-      d_model=d_model,
-      num_heads=num_heads,
-      dff=dff,
-      input_vocab_size=tokenizers.pt.get_vocab_size().numpy(),
-      target_vocab_size=tokenizers.en.get_vocab_size().numpy(),
-      dropout_rate=dropout_rate
+    num_layers=num_layers,
+    d_model=d_model,
+    num_heads=num_heads,
+    dff=dff,
+    input_vocab_size=tokenizers.pt.get_vocab_size().numpy(),
+    target_vocab_size=tokenizers.en.get_vocab_size().numpy(),
+    dropout_rate=dropout_rate,
   )
 
   learning_rate = CustomSchedule(d_model)
@@ -112,26 +113,26 @@ def main():
   optimizer = lamb.LAMB(learning_rate=learning_rate, beta_1=0.9, beta_2=0.98, epsilon=1e-9)
 
   trainer = Trainer(
-      model=transformer,
-      loss=masked_loss,
-      optimizer=optimizer,
-      metrics=[masked_accuracy],
-      # jit_compile=True
+    model=transformer,
+    loss=masked_loss,
+    optimizer=optimizer,
+    metrics=[masked_accuracy],
+    # jit_compile=True
   )
 
-  examples, metadata = tfds.load('ted_hrlr_translate/pt_to_en', with_info=True, as_supervised=True)
+  examples, metadata = tfds.load("ted_hrlr_translate/pt_to_en", with_info=True, as_supervised=True)
 
-  train_examples, val_examples = examples['train'], examples['validation']
+  train_examples, val_examples = examples["train"], examples["validation"]
   # Create training and validation set batches.
   train_batches = make_batches(train_examples)
   val_batches = make_batches(val_examples)
 
   trainer.fit(
-      train_input=train_batches,
-      # steps_per_epoch=811,
-      # eval_input=val_batches,
-      # eval_steps=valid_steps,
-      # callbacks=[ModelCheckpoint()],
+    train_input=train_batches,
+    # steps_per_epoch=811,
+    # eval_input=val_batches,
+    # eval_steps=valid_steps,
+    # callbacks=[ModelCheckpoint()],
   )
 
 

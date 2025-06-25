@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Embedding layer."""
+
 import math
 import os
 from typing import Dict
@@ -56,11 +57,11 @@ from deepray.layers.bucketize import Hash
 
 
 def get_variable_path(checkpoint_path, name, i=0):
-  tokens = name.split('/')
-  tokens = [t for t in tokens if 'model_parallel' not in t and 'data_parallel' not in t]
-  name = '_'.join(tokens)
-  name = name.replace(':', '_')
-  filename = name + f'_part{i}' + '.npy'
+  tokens = name.split("/")
+  tokens = [t for t in tokens if "model_parallel" not in t and "data_parallel" not in t]
+  name = "_".join(tokens)
+  name = name.replace(":", "_")
+  filename = name + f"_part{i}" + ".npy"
   return os.path.join(checkpoint_path, filename)
 
 
@@ -68,99 +69,99 @@ def get_variable_path(checkpoint_path, name, i=0):
 class Embedding(Layer):
   """Turns positive integers (indexes) into dense vectors of fixed size.
 
-    e.g. `[[4], [20]] -> [[0.25, 0.1], [0.6, -0.2]]`
+  e.g. `[[4], [20]] -> [[0.25, 0.1], [0.6, -0.2]]`
 
-    This layer can only be used on positive integer inputs of a fixed range. The
-    `tf.keras.layers.TextVectorization`, `keras.layers.StringLookup`,
-    and `tf.keras.layers.IntegerLookup` preprocessing layers can help prepare
-    inputs for an `Embedding` layer.
+  This layer can only be used on positive integer inputs of a fixed range. The
+  `tf.keras.layers.TextVectorization`, `keras.layers.StringLookup`,
+  and `tf.keras.layers.IntegerLookup` preprocessing layers can help prepare
+  inputs for an `Embedding` layer.
 
-    This layer accepts `tf.Tensor`, `tf.RaggedTensor` and `tf.SparseTensor`
-    input.
+  This layer accepts `tf.Tensor`, `tf.RaggedTensor` and `tf.SparseTensor`
+  input.
 
-    Example:
+  Example:
 
-    >>> model = tf.keras.Sequential()
-    >>> model.add(dp.layers.Embedding(1000, 64, input_length=10))
-    >>> # The model will take as input an integer matrix of size (batch,
-    >>> # input_length), and the largest integer (i.e. word index) in the input
-    >>> # should be no larger than 999 (vocabulary size).
-    >>> # Now model.output_shape is (None, 10, 64), where `None` is the batch
-    >>> # dimension.
-    >>> input_array = np.random.randint(1000, size=(32, 10))
-    >>> model.compile('rmsprop', 'mse')
-    >>> output_array = model.predict(input_array)
-    >>> print(output_array.shape)
-    (32, 10, 64)
+  >>> model = tf.keras.Sequential()
+  >>> model.add(dp.layers.Embedding(1000, 64, input_length=10))
+  >>> # The model will take as input an integer matrix of size (batch,
+  >>> # input_length), and the largest integer (i.e. word index) in the input
+  >>> # should be no larger than 999 (vocabulary size).
+  >>> # Now model.output_shape is (None, 10, 64), where `None` is the batch
+  >>> # dimension.
+  >>> input_array = np.random.randint(1000, size=(32, 10))
+  >>> model.compile('rmsprop', 'mse')
+  >>> output_array = model.predict(input_array)
+  >>> print(output_array.shape)
+  (32, 10, 64)
 
-    Args:
-      vocabulary_size: Integer. Size of the vocabulary,
-        i.e. maximum integer index + 1.
-      embedding_dim: Integer. Dimension of the dense embedding.
-      embeddings_initializer: Initializer for the `embeddings`
-        matrix (see `keras.initializers`).
-      embeddings_regularizer: Regularizer function applied to
-        the `embeddings` matrix (see `keras.regularizers`).
-      embeddings_constraint: Constraint function applied to
-        the `embeddings` matrix (see `keras.constraints`).
-      mask_zero: Boolean, whether or not the input value 0 is a special
-        "padding" value that should be masked out. This is useful when using
-        recurrent layers which may take variable length input. If this is
-        `True`, then all subsequent layers in the model need to support masking
-        or an exception will be raised. If mask_zero is set to True, as a
-        consequence, index 0 cannot be used in the vocabulary (input_dim should
-        equal size of vocabulary + 1).
-      input_length: Length of input sequences, when it is constant.
-        This argument is required if you are going to connect
-        `Flatten` then `Dense` layers upstream
-        (without it, the shape of the dense outputs cannot be computed).
-      sparse: If True, calling this layer returns a `tf.SparseTensor`. If False,
-        the layer returns a dense `tf.Tensor`. For an entry with no features in
-        a sparse tensor (entry with value 0), the embedding vector of index 0 is
-        returned by default.
+  Args:
+    vocabulary_size: Integer. Size of the vocabulary,
+      i.e. maximum integer index + 1.
+    embedding_dim: Integer. Dimension of the dense embedding.
+    embeddings_initializer: Initializer for the `embeddings`
+      matrix (see `keras.initializers`).
+    embeddings_regularizer: Regularizer function applied to
+      the `embeddings` matrix (see `keras.regularizers`).
+    embeddings_constraint: Constraint function applied to
+      the `embeddings` matrix (see `keras.constraints`).
+    mask_zero: Boolean, whether or not the input value 0 is a special
+      "padding" value that should be masked out. This is useful when using
+      recurrent layers which may take variable length input. If this is
+      `True`, then all subsequent layers in the model need to support masking
+      or an exception will be raised. If mask_zero is set to True, as a
+      consequence, index 0 cannot be used in the vocabulary (input_dim should
+      equal size of vocabulary + 1).
+    input_length: Length of input sequences, when it is constant.
+      This argument is required if you are going to connect
+      `Flatten` then `Dense` layers upstream
+      (without it, the shape of the dense outputs cannot be computed).
+    sparse: If True, calling this layer returns a `tf.SparseTensor`. If False,
+      the layer returns a dense `tf.Tensor`. For an entry with no features in
+      a sparse tensor (entry with value 0), the embedding vector of index 0 is
+      returned by default.
 
-    Input shape:
-      2D tensor with shape: `(batch_size, input_length)`.
+  Input shape:
+    2D tensor with shape: `(batch_size, input_length)`.
 
-    Output shape:
-      3D tensor with shape: `(batch_size, input_length, output_dim)`.
+  Output shape:
+    3D tensor with shape: `(batch_size, input_length, output_dim)`.
 
-    **Note on variable placement:**
-    By default, if a GPU is available, the embedding matrix will be placed on
-    the GPU. This achieves the best performance, but it might cause issues:
+  **Note on variable placement:**
+  By default, if a GPU is available, the embedding matrix will be placed on
+  the GPU. This achieves the best performance, but it might cause issues:
 
-    - You may be using an optimizer that does not support sparse GPU kernels.
-    In this case you will see an error upon training your model.
-    - Your embedding matrix may be too large to fit on your GPU. In this case
-    you will see an Out Of Memory (OOM) error.
+  - You may be using an optimizer that does not support sparse GPU kernels.
+  In this case you will see an error upon training your model.
+  - Your embedding matrix may be too large to fit on your GPU. In this case
+  you will see an Out Of Memory (OOM) error.
 
-    In such cases, you should place the embedding matrix on the CPU memory.
-    You can do so with a device scope, as such:
+  In such cases, you should place the embedding matrix on the CPU memory.
+  You can do so with a device scope, as such:
 
-    ```python
-    with tf.device('cpu:0'):
-      embedding_layer = Embedding(...)
-      embedding_layer.build()
-    ```
+  ```python
+  with tf.device('cpu:0'):
+    embedding_layer = Embedding(...)
+    embedding_layer.build()
+  ```
 
-    The pre-built `embedding_layer` instance can then be added to a `Sequential`
-    model (e.g. `model.add(embedding_layer)`), called in a Functional model
-    (e.g. `x = embedding_layer(x)`), or used in a subclassed model.
-    """
+  The pre-built `embedding_layer` instance can then be added to a `Sequential`
+  model (e.g. `model.add(embedding_layer)`), called in a Functional model
+  (e.g. `x = embedding_layer(x)`), or used in a subclassed model.
+  """
 
   @utils.allow_initializer_layout
   def __init__(
-      self,
-      vocabulary_size,
-      embedding_dim,
-      embeddings_initializer="uniform",
-      embeddings_regularizer=None,
-      activity_regularizer=None,
-      embeddings_constraint=None,
-      mask_zero=False,
-      input_length=None,
-      sparse=False,
-      **kwargs,
+    self,
+    vocabulary_size,
+    embedding_dim,
+    embeddings_initializer="uniform",
+    embeddings_regularizer=None,
+    activity_regularizer=None,
+    embeddings_constraint=None,
+    mask_zero=False,
+    input_length=None,
+    sparse=False,
+    **kwargs,
   ):
     if "input_shape" not in kwargs:
       if input_length:
@@ -169,11 +170,11 @@ class Embedding(Layer):
         kwargs["input_shape"] = (None,)
     if vocabulary_size <= 0 or embedding_dim <= 0:
       raise ValueError(
-          "Both `vocabulary_size` and `embedding_dim` should be positive, "
-          f"Received vocabulary_size = {vocabulary_size} "
-          f"and embedding_dim = {embedding_dim}"
+        "Both `vocabulary_size` and `embedding_dim` should be positive, "
+        f"Received vocabulary_size = {vocabulary_size} "
+        f"and embedding_dim = {embedding_dim}"
       )
-    if (not base_layer_utils.v2_dtype_behavior_enabled() and "dtype" not in kwargs):
+    if not base_layer_utils.v2_dtype_behavior_enabled() and "dtype" not in kwargs:
       # In TF1, the dtype defaults to the input dtype which is typically
       # int32, so explicitly set it to floatx
       kwargs["dtype"] = backend.floatx()
@@ -197,9 +198,7 @@ class Embedding(Layer):
     self.sparse = sparse
     if self.sparse and self.mask_zero:
       raise ValueError(
-          "`mask_zero` cannot be enabled when "
-          "`tf.keras.layers.Embedding` is used with `tf.SparseTensor` "
-          "input."
+        "`mask_zero` cannot be enabled when `tf.keras.layers.Embedding` is used with `tf.SparseTensor` input."
       )
     # Make this flag private and do not serialize it for now.
     # It will be part of the public API after further testing.
@@ -208,12 +207,12 @@ class Embedding(Layer):
   @tf_utils.shape_type_conversion
   def build(self, input_shape=None):
     self.embeddings = self.add_weight(
-        shape=(self.input_dim, self.output_dim),
-        initializer=self.embeddings_initializer,
-        name="embeddings",
-        regularizer=self.embeddings_regularizer,
-        constraint=self.embeddings_constraint,
-        experimental_autocast=False,
+      shape=(self.input_dim, self.output_dim),
+      initializer=self.embeddings_initializer,
+      name="embeddings",
+      regularizer=self.embeddings_regularizer,
+      constraint=self.embeddings_constraint,
+      experimental_autocast=False,
     )
     self.built = True
 
@@ -233,13 +232,11 @@ class Embedding(Layer):
       else:
         in_lens = [self.input_length]
       if len(in_lens) != len(input_shape) - 1:
-        raise ValueError(f'"input_length" is {self.input_length}, but received '
-                         f"input has shape {input_shape}")
+        raise ValueError(f'"input_length" is {self.input_length}, but received input has shape {input_shape}')
       else:
         for i, (s1, s2) in enumerate(zip(in_lens, input_shape[1:])):
           if s1 is not None and s2 is not None and s1 != s2:
-            raise ValueError(f'"input_length" is {self.input_length}, but '
-                             f"received input has shape {input_shape}")
+            raise ValueError(f'"input_length" is {self.input_length}, but received input has shape {input_shape}')
           elif s1 is None:
             in_lens[i] = s2
       return (input_shape[0],) + tuple(in_lens) + (self.output_dim,)
@@ -261,20 +258,20 @@ class Embedding(Layer):
         current_indices = tf.repeat(inputs.indices, [self.output_dim], axis=0)
         new_indices = tf.concat([current_indices, indices_values_embed_axis], 1)
         new_shape = tf.concat(
-            [tf.cast(inputs.shape, dtype=tf.int64), [self.output_dim]],
-            axis=-1,
+          [tf.cast(inputs.shape, dtype=tf.int64), [self.output_dim]],
+          axis=-1,
         )
         out = tf.SparseTensor(
-            indices=new_indices,
-            values=embedding_values,
-            dense_shape=new_shape,
+          indices=new_indices,
+          values=embedding_values,
+          dense_shape=new_shape,
         )
       else:
         sparse_inputs_expanded = tf.sparse.expand_dims(inputs, axis=-1)
         out = tf.nn.safe_embedding_lookup_sparse(
-            embedding_weights=self.embeddings,
-            sparse_ids=sparse_inputs_expanded,
-            default_id=0,
+          embedding_weights=self.embeddings,
+          sparse_ids=sparse_inputs_expanded,
+          default_id=0,
         )
     elif self._use_one_hot_matmul:
       # Note that we change the dtype of the one_hot to be same as the
@@ -289,7 +286,7 @@ class Embedding(Layer):
     if self.sparse and not isinstance(out, tf.SparseTensor):
       out = tf.sparse.from_dense(out)
 
-    if (self._dtype_policy.compute_dtype != self._dtype_policy.variable_dtype):
+    if self._dtype_policy.compute_dtype != self._dtype_policy.variable_dtype:
       # Instead of casting the variable as in most layers, cast the
       # output, as this is mathematically equivalent but is faster.
       out = tf.cast(out, self._dtype_policy.compute_dtype)
@@ -297,38 +294,37 @@ class Embedding(Layer):
 
   def get_config(self):
     config = {
-        "vocabulary_size": self.input_dim,
-        "embedding_dim": self.output_dim,
-        "embeddings_initializer": initializers.serialize(self.embeddings_initializer),
-        "embeddings_regularizer": regularizers.serialize(self.embeddings_regularizer),
-        "activity_regularizer": regularizers.serialize(self.activity_regularizer),
-        "embeddings_constraint": constraints.serialize(self.embeddings_constraint),
-        "mask_zero": self.mask_zero,
-        "input_length": self.input_length,
+      "vocabulary_size": self.input_dim,
+      "embedding_dim": self.output_dim,
+      "embeddings_initializer": initializers.serialize(self.embeddings_initializer),
+      "embeddings_regularizer": regularizers.serialize(self.embeddings_regularizer),
+      "activity_regularizer": regularizers.serialize(self.activity_regularizer),
+      "embeddings_constraint": constraints.serialize(self.embeddings_constraint),
+      "mask_zero": self.mask_zero,
+      "input_length": self.input_length,
     }
     base_config = super().get_config()
     return dict(list(base_config.items()) + list(config.items()))
 
 
 class EmbeddingGroup(tf.keras.layers.Layer):
-
   def __init__(self, feature_map: pd.DataFrame, trainable=True, **kwargs):
     super().__init__(trainable, **kwargs)
     self.feature_map = feature_map
     self.embedding_layers = {}
     self.hash_long_kernel = {}
-    for name, dim, voc_size, hash_size in self.feature_map[(self.feature_map['ftype'] == "Categorical")][[
-        "name", "dim", "voc_size", "hash_size"
-    ]].values:
+    for name, dim, voc_size, hash_size in self.feature_map[(self.feature_map["ftype"] == "Categorical")][
+      ["name", "dim", "voc_size", "hash_size"]
+    ].values:
       if not math.isnan(hash_size):
         self.hash_long_kernel[name] = Hash(int(hash_size))
         voc_size = int(hash_size)
 
-      self.embedding_layers[name] = Embedding(embedding_dim=dim, vocabulary_size=voc_size, name='embedding_' + name)
+      self.embedding_layers[name] = Embedding(embedding_dim=dim, vocabulary_size=voc_size, name="embedding_" + name)
 
   def call(self, inputs: Dict[str, tf.Tensor], *args, **kwargs) -> Dict[str, tf.Tensor]:
     embedding_out = {}
-    for name, hash_size in self.feature_map[(self.feature_map['ftype'] == "Categorical")][["name", "hash_size"]].values:
+    for name, hash_size in self.feature_map[(self.feature_map["ftype"] == "Categorical")][["name", "hash_size"]].values:
       input_tensor = inputs[name]
       if not math.isnan(hash_size):
         input_tensor = self.hash_long_kernel[name](input_tensor)
@@ -346,14 +342,13 @@ class EmbeddingGroup(tf.keras.layers.Layer):
 
 
 class JointEmbeddingInitializer(tf.keras.initializers.Initializer):
-
   def __init__(self, table_sizes, embedding_dim, wrapped):
     self.table_sizes = table_sizes
     self.wrapped = wrapped
     self.embedding_dim = embedding_dim
 
   def __call__(self, shape, dtype=tf.float32):
-    with tf.device('/CPU:0'):
+    with tf.device("/CPU:0"):
       subtables = []
       for table_size in self.table_sizes:
         subtable = self.wrapped()(shape=[table_size, self.embedding_dim], dtype=dtype)
@@ -366,10 +361,9 @@ class JointEmbeddingInitializer(tf.keras.initializers.Initializer):
 
 
 class EmbeddingInitializer(tf.keras.initializers.Initializer):
-
   def __call__(self, shape, dtype=tf.float32):
-    with tf.device('/CPU:0'):
-      maxval = tf.sqrt(tf.constant(1.) / tf.cast(shape[0], tf.float32))
+    with tf.device("/CPU:0"):
+      maxval = tf.sqrt(tf.constant(1.0) / tf.cast(shape[0], tf.float32))
       maxval = tf.cast(maxval, dtype=dtype)
       minval = -maxval
 
@@ -382,7 +376,6 @@ class EmbeddingInitializer(tf.keras.initializers.Initializer):
 
 
 class JointEmbedding(tf.keras.layers.Layer):
-
   def __init__(self, table_sizes, output_dim, dtype, feature_names=None, trainable=True):
     super(JointEmbedding, self).__init__(dtype=dtype)
     self.table_sizes = table_sizes
@@ -393,20 +386,20 @@ class JointEmbedding(tf.keras.layers.Layer):
     self.offsets = tf.constant(self.offsets, dtype=tf.int32)
     self.feature_names = feature_names
     if not self.feature_names:
-      self.feature_names = ['feature_{i}' for i in range(len(table_sizes))]
+      self.feature_names = ["feature_{i}" for i in range(len(table_sizes))]
     self.trainable = trainable
 
   def build(self, input_shape):
     initializer = JointEmbeddingInitializer(
-        table_sizes=self.table_sizes, embedding_dim=self.output_dim, wrapped=EmbeddingInitializer
+      table_sizes=self.table_sizes, embedding_dim=self.output_dim, wrapped=EmbeddingInitializer
     )
 
     self.embedding_table = self.add_weight(
-        "embedding_table",
-        shape=[self.offsets[-1], self.output_dim],
-        dtype=self.dtype,
-        initializer=initializer,
-        trainable=self.trainable
+      "embedding_table",
+      shape=[self.offsets[-1], self.output_dim],
+      dtype=self.dtype,
+      initializer=initializer,
+      trainable=self.trainable,
     )
 
   def call(self, indices):
@@ -443,26 +436,25 @@ class DualEmbeddingGroup(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      cardinalities,
-      output_dim,
-      memory_threshold,
-      cpu_embedding='multitable',
-      gpu_embedding='fused',
-      dtype=tf.float32,
-      feature_names=None,
-      trainable=True
+    self,
+    cardinalities,
+    output_dim,
+    memory_threshold,
+    cpu_embedding="multitable",
+    gpu_embedding="fused",
+    dtype=tf.float32,
+    feature_names=None,
+    trainable=True,
   ):
-
     # TODO: throw an exception if the features are not sorted by cardinality in reversed order
 
     super(DualEmbeddingGroup, self).__init__(dtype=dtype)
 
     if dtype not in [tf.float32, tf.float16]:
-      raise ValueError(f'Only float32 and float16 embedding dtypes are currently supported. Got {dtype}.')
+      raise ValueError(f"Only float32 and float16 embedding dtypes are currently supported. Got {dtype}.")
 
-    cpu_embedding_class = EmbeddingGroup if cpu_embedding == 'multitable' else JointEmbedding
-    gpu_embedding_class = EmbeddingGroup if gpu_embedding == 'multitable' else JointEmbedding
+    cpu_embedding_class = EmbeddingGroup if cpu_embedding == "multitable" else JointEmbedding
+    gpu_embedding_class = EmbeddingGroup if gpu_embedding == "multitable" else JointEmbedding
 
     cardinalities = np.array(cardinalities)
 
@@ -472,29 +464,29 @@ class DualEmbeddingGroup(tf.keras.layers.Layer):
 
     self.table_sizes = cardinalities * output_dim * self.bytes_per_element
     self._find_first_gpu_index()
-    self.cpu_cardinalities = cardinalities[:self.first_gpu_index]
-    self.gpu_cardinalities = cardinalities[self.first_gpu_index:]
+    self.cpu_cardinalities = cardinalities[: self.first_gpu_index]
+    self.gpu_cardinalities = cardinalities[self.first_gpu_index :]
 
     if not feature_names:
-      feature_names = [f'feature_{i}' for i in range(len(self.table_sizes))]
+      feature_names = [f"feature_{i}" for i in range(len(self.table_sizes))]
 
     self.feature_names = feature_names
 
     self.gpu_embedding = gpu_embedding_class(
-        table_sizes=self.gpu_cardinalities.tolist(),
-        output_dim=output_dim,
-        dtype=self.dtype,
-        feature_names=feature_names[self.first_gpu_index:],
-        trainable=trainable
+      table_sizes=self.gpu_cardinalities.tolist(),
+      output_dim=output_dim,
+      dtype=self.dtype,
+      feature_names=feature_names[self.first_gpu_index :],
+      trainable=trainable,
     )
 
     # Force using FP32 for CPU embeddings, FP16 performance is much worse
     self.cpu_embeddings = cpu_embedding_class(
-        table_sizes=self.cpu_cardinalities,
-        output_dim=output_dim,
-        dtype=tf.float32,
-        feature_names=feature_names[:self.first_gpu_index],
-        trainable=trainable
+      table_sizes=self.cpu_cardinalities,
+      output_dim=output_dim,
+      dtype=tf.float32,
+      feature_names=feature_names[: self.first_gpu_index],
+      trainable=trainable,
     )
 
   def _find_first_gpu_index(self):
@@ -517,15 +509,15 @@ class DualEmbeddingGroup(tf.keras.layers.Layer):
     to_concat = []
     if self.first_gpu_index > 0:
       # at least one cpu-based embedding
-      cpu_indices = indices[:, :self.first_gpu_index]
-      with tf.device('/CPU:0'):
+      cpu_indices = indices[:, : self.first_gpu_index]
+      with tf.device("/CPU:0"):
         cpu_results = self.cpu_embeddings(cpu_indices)
         cpu_results = tf.cast(cpu_results, dtype=self.dtype)
         to_concat.append(cpu_results)
 
     if self.first_gpu_index < len(self.table_sizes):
       # at least one gpu-based embedding
-      gpu_indices = indices[:, self.first_gpu_index:]
+      gpu_indices = indices[:, self.first_gpu_index :]
       gpu_results = self.gpu_embedding(gpu_indices)
       to_concat.append(gpu_results)
 
@@ -545,11 +537,10 @@ class DualEmbeddingGroup(tf.keras.layers.Layer):
 
 
 class MaskedEmbeddingMean(tf.keras.layers.Layer):
-
   def __init__(self, hash_bucket_size, embedding_dim):
     self.embedding_dim = embedding_dim
     self.embedding = tf.keras.layers.Embedding(
-        input_dim=hash_bucket_size, output_dim=embedding_dim, embeddings_initializer='glorot_uniform'
+      input_dim=hash_bucket_size, output_dim=embedding_dim, embeddings_initializer="glorot_uniform"
     )
     super(MaskedEmbeddingMean, self).__init__()
 
@@ -557,11 +548,10 @@ class MaskedEmbeddingMean(tf.keras.layers.Layer):
     original_embedding = self.embedding(inputs)
     mask_tensor = 1 - tf.cast(inputs == 0, tf.float32)  # batch, len
     embedding_mask_tensor = tf.repeat(
-        tf.expand_dims(mask_tensor, axis=-1), self.embedding_dim, axis=-1
+      tf.expand_dims(mask_tensor, axis=-1), self.embedding_dim, axis=-1
     )  # batch, len, dim
     mean_tensor = tf.math.divide_no_nan(
-        tf.reduce_sum(original_embedding * embedding_mask_tensor, axis=[1]),
-        tf.reduce_sum(embedding_mask_tensor, axis=1)
+      tf.reduce_sum(original_embedding * embedding_mask_tensor, axis=[1]), tf.reduce_sum(embedding_mask_tensor, axis=1)
     )
     return tf.expand_dims(mean_tensor, axis=1)
 
@@ -594,12 +584,12 @@ class QREmbedding(tf.keras.layers.Layer):
 
     self.index_lookup = keras.layers.StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=0)
     self.q_embeddings = keras.layers.Embedding(
-        num_buckets,
-        embedding_dim,
+      num_buckets,
+      embedding_dim,
     )
     self.r_embeddings = keras.layers.Embedding(
-        num_buckets,
-        embedding_dim,
+      num_buckets,
+      embedding_dim,
     )
 
   def call(self, inputs):
@@ -673,11 +663,11 @@ class MDEmbedding(keras.layers.Layer):
 
   def embedding_encoder(self, vocabulary, embedding_dim, num_oov_indices=0, name=None):
     return keras.Sequential(
-        [
-            keras.layers.StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=num_oov_indices),
-            keras.layers.Embedding(input_dim=len(vocabulary) + num_oov_indices, output_dim=embedding_dim),
-        ],
-        name=f"{name}_embedding" if name else None,
+      [
+        keras.layers.StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=num_oov_indices),
+        keras.layers.Embedding(input_dim=len(vocabulary) + num_oov_indices, output_dim=embedding_dim),
+      ],
+      name=f"{name}_embedding" if name else None,
     )
 
   def call(self, inputs):

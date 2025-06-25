@@ -26,35 +26,32 @@ from deepray.utils import test_utils
 
 def test_basic():
   test_utils.layer_test(
-      wrappers.WeightNormalization,
-      kwargs={"layer": tf.keras.layers.Conv2D(5, (2, 2))},
-      input_shape=(2, 4, 4, 3),
+    wrappers.WeightNormalization,
+    kwargs={"layer": tf.keras.layers.Conv2D(5, (2, 2))},
+    input_shape=(2, 4, 4, 3),
   )
 
 
 def test_no_bias():
   test_utils.layer_test(
-      wrappers.WeightNormalization,
-      kwargs={"layer": tf.keras.layers.Dense(5, use_bias=False)},
-      input_shape=(2, 4),
+    wrappers.WeightNormalization,
+    kwargs={"layer": tf.keras.layers.Dense(5, use_bias=False)},
+    input_shape=(2, 4),
   )
 
 
 def _check_data_init(data_init, input_data, expected_output):
   layer = tf.keras.layers.Dense(
-      input_data.shape[-1],
-      activation=None,
-      kernel_initializer="identity",
-      bias_initializer="zeros",
+    input_data.shape[-1],
+    activation=None,
+    kernel_initializer="identity",
+    bias_initializer="zeros",
   )
   test_utils.layer_test(
-      wrappers.WeightNormalization,
-      kwargs={
-          "layer": layer,
-          "data_init": data_init
-      },
-      input_data=input_data,
-      expected_output=expected_output,
+    wrappers.WeightNormalization,
+    kwargs={"layer": layer, "data_init": data_init},
+    input_data=input_data,
+    expected_output=expected_output,
   )
 
 
@@ -96,13 +93,13 @@ def test_with_time_dist():
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize(
-    "base_layer, rnn",
-    [
-        (lambda: tf.keras.layers.Dense(1), False),
-        (lambda: tf.keras.layers.SimpleRNN(1), True),
-        (lambda: tf.keras.layers.Conv2D(3, 1), False),
-        (lambda: tf.keras.layers.LSTM(1), True),
-    ],
+  "base_layer, rnn",
+  [
+    (lambda: tf.keras.layers.Dense(1), False),
+    (lambda: tf.keras.layers.SimpleRNN(1), True),
+    (lambda: tf.keras.layers.Conv2D(3, 1), False),
+    (lambda: tf.keras.layers.LSTM(1), True),
+  ],
 )
 def test_serialization(base_layer, rnn):
   base_layer = base_layer()
@@ -121,13 +118,13 @@ def test_serialization(base_layer, rnn):
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize("data_init", [True, False])
 @pytest.mark.parametrize(
-    "base_layer_fn, input_shape",
-    [
-        (lambda: tf.keras.layers.Dense(1), [1]),
-        (lambda: tf.keras.layers.SimpleRNN(1), [None, 10]),
-        (lambda: tf.keras.layers.Conv2D(3, 1), [3, 3, 1]),
-        (lambda: tf.keras.layers.LSTM(1), [10, 10]),
-    ],
+  "base_layer_fn, input_shape",
+  [
+    (lambda: tf.keras.layers.Dense(1), [1]),
+    (lambda: tf.keras.layers.SimpleRNN(1), [None, 10]),
+    (lambda: tf.keras.layers.Conv2D(3, 1), [3, 3, 1]),
+    (lambda: tf.keras.layers.LSTM(1), [10, 10]),
+  ],
 )
 def test_model_build(base_layer_fn, input_shape, data_init):
   inputs = tf.keras.layers.Input(shape=input_shape)
@@ -139,13 +136,13 @@ def test_model_build(base_layer_fn, input_shape, data_init):
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize(
-    "base_layer, input_shape",
-    [
-        (lambda: tf.keras.layers.Dense(1), [1]),
-        (lambda: tf.keras.layers.SimpleRNN(1), [10, 10]),
-        (lambda: tf.keras.layers.Conv2D(3, 1), [3, 3, 1]),
-        (lambda: tf.keras.layers.LSTM(1), [10, 10]),
-    ],
+  "base_layer, input_shape",
+  [
+    (lambda: tf.keras.layers.Dense(1), [1]),
+    (lambda: tf.keras.layers.SimpleRNN(1), [10, 10]),
+    (lambda: tf.keras.layers.Conv2D(3, 1), [3, 3, 1]),
+    (lambda: tf.keras.layers.LSTM(1), [10, 10]),
+  ],
 )
 def test_save_file_h5(base_layer, input_shape):
   base_layer = base_layer()
@@ -158,13 +155,13 @@ def test_save_file_h5(base_layer, input_shape):
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize(
-    "base_layer, input_shape",
-    [
-        (lambda: tf.keras.layers.Dense(1), [1]),
-        (lambda: tf.keras.layers.SimpleRNN(1), [10, 10]),
-        (lambda: tf.keras.layers.Conv2D(3, 1), [3, 3, 1]),
-        (lambda: tf.keras.layers.LSTM(1), [10, 10]),
-    ],
+  "base_layer, input_shape",
+  [
+    (lambda: tf.keras.layers.Dense(1), [1]),
+    (lambda: tf.keras.layers.SimpleRNN(1), [10, 10]),
+    (lambda: tf.keras.layers.Conv2D(3, 1), [3, 3, 1]),
+    (lambda: tf.keras.layers.LSTM(1), [10, 10]),
+  ],
 )
 def test_forward_pass(base_layer, input_shape):
   sample_data = np.ones([1] + input_shape, dtype=np.float32)
@@ -178,13 +175,13 @@ def test_forward_pass(base_layer, input_shape):
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize("data_init", [True, False])
 @pytest.mark.parametrize(
-    "base_layer_fn, input_shape",
-    [
-        (lambda: tf.keras.layers.Dense(1), [1]),
-        (lambda: tf.keras.layers.SimpleRNN(1), [10, 10]),
-        (lambda: tf.keras.layers.Conv2D(3, 1), [3, 3, 1]),
-        (lambda: tf.keras.layers.LSTM(1), [10, 10]),
-    ],
+  "base_layer_fn, input_shape",
+  [
+    (lambda: tf.keras.layers.Dense(1), [1]),
+    (lambda: tf.keras.layers.SimpleRNN(1), [10, 10]),
+    (lambda: tf.keras.layers.Conv2D(3, 1), [3, 3, 1]),
+    (lambda: tf.keras.layers.LSTM(1), [10, 10]),
+  ],
 )
 def test_removal(base_layer_fn, input_shape, data_init):
   sample_data = np.ones([1] + input_shape, dtype=np.float32)

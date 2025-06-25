@@ -20,7 +20,6 @@ from official.nlp.transformer import beam_search_v1 as beam_search
 
 
 class BeamSearchHelperTests(tf.test.TestCase):
-
   def setUp(self):
     super(BeamSearchHelperTests, self).setUp()
     tf.compat.v1.disable_eager_execution()
@@ -45,8 +44,7 @@ class BeamSearchHelperTests(tf.test.TestCase):
     y = tf.constant(4.0)
     x = tf.ones([7, tf.cast(tf.sqrt(y), tf.int32), 2, 5])
     shape = beam_search._get_shape_keep_last_dim(x)
-    self.assertAllEqual([None, None, None, 5],
-                        shape.as_list())
+    self.assertAllEqual([None, None, None, 5], shape.as_list())
 
   def test_flatten_beam_dim(self):
     x = tf.ones([7, 4, 2, 5])
@@ -76,11 +74,7 @@ class BeamSearchHelperTests(tf.test.TestCase):
     with self.session() as sess:
       y = sess.run(y)
 
-    self.assertAllEqual([[[4, 5, 6, 7],
-                          [8, 9, 10, 11]],
-                         [[12, 13, 14, 15],
-                          [20, 21, 22, 23]]],
-                        y)
+    self.assertAllEqual([[[4, 5, 6, 7], [8, 9, 10, 11]], [[12, 13, 14, 15], [20, 21, 22, 23]]], y)
 
   def test_gather_topk_beams(self):
     x = tf.reshape(tf.range(24), [2, 3, 4])
@@ -90,11 +84,7 @@ class BeamSearchHelperTests(tf.test.TestCase):
     with self.session() as sess:
       y = sess.run(y)
 
-    self.assertAllEqual([[[4, 5, 6, 7],
-                          [8, 9, 10, 11]],
-                         [[12, 13, 14, 15],
-                          [20, 21, 22, 23]]],
-                        y)
+    self.assertAllEqual([[[4, 5, 6, 7], [8, 9, 10, 11]], [[12, 13, 14, 15], [20, 21, 22, 23]]], y)
 
 
 if __name__ == "__main__":

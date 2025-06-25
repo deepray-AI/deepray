@@ -29,7 +29,6 @@ from official.nlp.modeling.networks import bert_span_labeler
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class BertSpanLabelerTest(keras_parameterized.TestCase):
-
   def test_bert_trainer(self):
     """Validate that the Keras object can be created."""
     # Build a transformer network to use within the BERT trainer.
@@ -67,7 +66,7 @@ class BertSpanLabelerTest(keras_parameterized.TestCase):
     # Attempt to compile the model using a string-keyed dict of output names to
     # loss functions. This will validate that the outputs are named as we
     # expect.
-    bert_trainer_model.compile(optimizer='sgd', loss={'start_positions': 'mse', 'end_positions': 'mse'})
+    bert_trainer_model.compile(optimizer="sgd", loss={"start_positions": "mse", "end_positions": "mse"})
 
   def test_bert_trainer_tensor_call(self):
     """Validate that the Keras object can be invoked."""
@@ -109,5 +108,5 @@ class BertSpanLabelerTest(keras_parameterized.TestCase):
     self.assertAllEqual(bert_trainer_model.get_config(), new_bert_trainer_model.get_config())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

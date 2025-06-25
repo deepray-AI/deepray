@@ -29,9 +29,9 @@ logging.getLogger("numba").setLevel(logging.WARNING)
 def list_slice(seq_col, start: int, end: Optional[int] = None):
   """Slices a list column
 
-    This is an nvtabular.ops.ListSlice wrapper that can be used with cuDF or dask-cuDF.
+  This is an nvtabular.ops.ListSlice wrapper that can be used with cuDF or dask-cuDF.
 
-    """
+  """
   df = cudf.DataFrame(seq_col)
   col_selector = ops.ColumnSelector(seq_col.name)
   slicer = ops.ListSlice(start, end)
@@ -104,19 +104,19 @@ def slice_and_pad_left(seq_col, max_elements, pad_value=0):
 
 class ExplodeSequence:
   """
-    For each row create a new one with a subsequence of the original list columns.
+  For each row create a new one with a subsequence of the original list columns.
 
-    Keep at most `max_elements` of elements of a list.
+  Keep at most `max_elements` of elements of a list.
 
-    WARNING: All lists in the same row must have equal lengths!
+  WARNING: All lists in the same row must have equal lengths!
 
-    """
+  """
 
   def __init__(
-      self,
-      col_names: List[str],
-      keep_cols: List[str],
-      max_elements: int,
+    self,
+    col_names: List[str],
+    keep_cols: List[str],
+    max_elements: int,
   ):
     self.col_names = col_names
     self.keep_cols = keep_cols

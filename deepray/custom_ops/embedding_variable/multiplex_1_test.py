@@ -18,6 +18,7 @@ import numpy as np
 import tensorflow as tf
 
 from deepray.custom_ops.embedding_variable import gen_kv_variable_ops
+
 # This pylint disable is only needed for internal google users
 from tensorflow.python.framework import errors_impl  # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.framework import test_util  # pylint: disable=g-direct-tensorflow-import
@@ -25,7 +26,6 @@ from tensorflow.python.framework import test_util  # pylint: disable=g-direct-te
 
 @test_util.with_eager_op_as_function
 class MultiplexOpRank1Test(tf.test.TestCase):
-
   @test_util.run_in_graph_and_eager_modes
   def test_multiplex_int(self):
     print(gen_kv_variable_ops)
@@ -46,5 +46,5 @@ class MultiplexOpRank1Test(tf.test.TestCase):
   #                                               container=container)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

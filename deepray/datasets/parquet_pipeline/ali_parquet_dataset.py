@@ -35,26 +35,25 @@ def parquet_filenames(filenames, lower=False):
   elif isinstance(filenames, (tuple, list)):
     for f in filenames:
       if not isinstance(f, string_types):
-        raise ValueError(f'{f} in `filenames` must be a string')
+        raise ValueError(f"{f} in `filenames` must be a string")
   elif isinstance(filenames, dataset_ops.Dataset):
     if filenames.output_types != dtypes.string:
-      raise TypeError('`filenames` must be a `tf.data.Dataset` of `tf.string` elements.')
+      raise TypeError("`filenames` must be a `tf.data.Dataset` of `tf.string` elements.")
     if not filenames.output_shapes.is_compatible_with(tensor_shape.TensorShape([])):
-      raise ValueError('`filenames` must be a `tf.data.Dataset` of scalar `tf.string` '
-                       'elements.')
+      raise ValueError("`filenames` must be a `tf.data.Dataset` of scalar `tf.string` elements.")
   elif isinstance(filenames, ops.Tensor):
     if filenames.dtype != dtypes.string:
-      raise TypeError('`filenames` must be a `tf.Tensor` of `tf.string`.')
+      raise TypeError("`filenames` must be a `tf.Tensor` of `tf.string`.")
   else:
     raise ValueError(
-        f'`filenames` {filenames} must be a `tf.data.Dataset` of scalar '
-        '`tf.string` elements or can be converted to a `tf.Tensor` of '
-        '`tf.string`.'
+      f"`filenames` {filenames} must be a `tf.data.Dataset` of scalar "
+      "`tf.string` elements or can be converted to a `tf.Tensor` of "
+      "`tf.string`."
     )
 
   if not isinstance(filenames, dataset_ops.Dataset):
     filenames = ops.convert_to_tensor(filenames, dtype=dtypes.string)
-    filenames = array_ops.reshape(filenames, [-1], name='filenames')
+    filenames = array_ops.reshape(filenames, [-1], name="filenames")
     filenames = dataset_ops.Dataset.from_tensor_slices(filenames)
   return filenames
 
@@ -65,7 +64,7 @@ class ParquetDataset(dataset_ops.DatasetV2):  # pylint: disable=abstract-method
   VERSION = 2002
 
   def __init__(
-      self, filenames, column_names=None, batch_size=1, num_parallel_reads=None, num_sequential_reads=2, parser=None
+    self, filenames, column_names=None, batch_size=1, num_parallel_reads=None, num_sequential_reads=2, parser=None
   ):
     """Create a `ParquetDataset`.
 
@@ -93,16 +92,16 @@ class ParquetDataset(dataset_ops.DatasetV2):  # pylint: disable=abstract-method
 
     def _create_dataset(f):
       dataset = parquet_dataset_ops.ParquetDataset(
-          filenames=f,
-          fields=fields,
-          batch_size=self._batch_size,
+        filenames=f,
+        fields=fields,
+        batch_size=self._batch_size,
       )
       if self._parser:
         dataset = dataset.map(self._parser, num_parallel_calls=tf.data.AUTOTUNE)
       return dataset
 
     self._impl = self._build_dataset(
-        _create_dataset, filenames, num_parallel_reads=num_parallel_reads, num_sequential_reads=num_sequential_reads
+      _create_dataset, filenames, num_parallel_reads=num_parallel_reads, num_sequential_reads=num_sequential_reads
     )
     super().__init__(self._impl._variant_tensor)  # pylint: disable=protected-access
 
@@ -120,18 +119,17 @@ class ParquetDataset(dataset_ops.DatasetV2):  # pylint: disable=abstract-method
     if num_parallel_reads == dataset_ops.AUTOTUNE:
       return filenames.interleave(dataset_creator, num_parallel_calls=2, deterministic=False)
     return readers.ParallelInterleaveDataset(
-        filenames,
-        dataset_creator,
-        cycle_length=num_parallel_reads,
-        block_length=num_sequential_reads,
-        sloppy=True,
-        buffer_output_elements=None,
-        prefetch_input_elements=1
+      filenames,
+      dataset_creator,
+      cycle_length=num_parallel_reads,
+      block_length=num_sequential_reads,
+      sloppy=True,
+      buffer_output_elements=None,
+      prefetch_input_elements=1,
     )
 
 
 class ParquetPipeline(DataPipeline):
-
   def __init__(self, column_names=[], **kwargs):
     super().__init__(**kwargs)
     self.column_names = column_names
@@ -151,14 +149,7 @@ class ParquetPipeline(DataPipeline):
     return record, label_map
 
   def build_dataset(
-      self,
-      input_file_pattern,
-      batch_size,
-      is_training=True,
-      epochs=1,
-      shuffle=False,
-      *args,
-      **kwargs
+    self, input_file_pattern, batch_size, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ) -> tf.data.Dataset:
     if isinstance(input_file_pattern, str):
       data_file_list = self.read_list_from_file(input_file_pattern)
@@ -176,9 +167,9 @@ class ParquetPipeline(DataPipeline):
       logger.info(f"Shuffling {len(data_file_list)} parquet files.")
     if isinstance(data_file_list, str) or len(data_file_list) < get_world_size():
       dataset = parquet_dataset_ops.ParquetDataset(
-          filenames=data_file_list,
-          fields=self.column_names if self.column_names else None,
-          batch_size=batch_size,
+        filenames=data_file_list,
+        fields=self.column_names if self.column_names else None,
+        batch_size=batch_size,
       )
       if self.use_horovod:
         # For multi-host training, we want each hosts to always process the same
@@ -196,11 +187,11 @@ class ParquetPipeline(DataPipeline):
         data_file_list = [data_file_list[i] for i in range(len(data_file_list)) if i % get_world_size() == get_rank()]
         logger.info("Using files distributing strategy ❤")
       dataset = ParquetDataset(
-          filenames=data_file_list,
-          column_names=self.column_names if self.column_names else None,
-          batch_size=batch_size,
-          num_parallel_reads=dataset_ops.AUTOTUNE,
-          parser=None if hasattr(self.parser, "__isabstractmethod__") else self.parser
+        filenames=data_file_list,
+        column_names=self.column_names if self.column_names else None,
+        batch_size=batch_size,
+        num_parallel_reads=dataset_ops.AUTOTUNE,
+        parser=None if hasattr(self.parser, "__isabstractmethod__") else self.parser,
       )
 
     # if not hasattr(self.parser, "__isabstractmethod__"):
@@ -216,8 +207,10 @@ class ParquetPipeline(DataPipeline):
       shuffle_buffer = kwargs.get("shuffle_buffer", 10)
       logger.debug(f"kwargs = {kwargs}")
       logger.info(f"The shuffle_buffer is {shuffle_buffer}")
-      dataset = dataset.unbatch().shuffle(
-          buffer_size=shuffle_buffer, seed=flags.FLAGS.random_seed, reshuffle_each_iteration=False
-      ).batch(batch_size)
+      dataset = (
+        dataset.unbatch()
+        .shuffle(buffer_size=shuffle_buffer, seed=flags.FLAGS.random_seed, reshuffle_each_iteration=False)
+        .batch(batch_size)
+      )
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
     return dataset

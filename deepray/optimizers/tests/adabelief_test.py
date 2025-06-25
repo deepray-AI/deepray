@@ -58,9 +58,9 @@ def run_sparse_sample(iterations, expected, optimizer):
 def test_dense_sample():
   # Expected values are obtained from the previous implementation
   run_dense_sample(
-      iterations=100,
-      expected=[[0.66723955, 1.6672393], [2.6672382, 3.6672382]],
-      optimizer=AdaBelief(lr=1e-3, rectify=False),
+    iterations=100,
+    expected=[[0.66723955, 1.6672393], [2.6672382, 3.6672382]],
+    optimizer=AdaBelief(lr=1e-3, rectify=False),
   )
 
 
@@ -68,9 +68,9 @@ def test_dense_sample():
 def test_sparse_sample():
   # Expected values are obtained from the previous implementation
   run_sparse_sample(
-      iterations=200,
-      expected=[[0.0538936, 2.0], [3.0, 3.0538926]],
-      optimizer=AdaBelief(lr=1e-3, rectify=False),
+    iterations=200,
+    expected=[[0.0538936, 2.0], [3.0, 3.0538926]],
+    optimizer=AdaBelief(lr=1e-3, rectify=False),
   )
 
 
@@ -79,9 +79,9 @@ def test_dense_sample_with_amsgrad():
   # Expected values are obtained from the official implementation
   # `amsgrad` has no effect because the gradient is fixed
   run_dense_sample(
-      iterations=100,
-      expected=[[0.67249274, 1.6724932], [2.6724923, 3.6724923]],
-      optimizer=AdaBelief(lr=1e-3, amsgrad=True, rectify=False),
+    iterations=100,
+    expected=[[0.67249274, 1.6724932], [2.6724923, 3.6724923]],
+    optimizer=AdaBelief(lr=1e-3, amsgrad=True, rectify=False),
   )
 
 
@@ -90,9 +90,9 @@ def test_sparse_sample_with_amsgrad():
   # Expected values are obtained from the official implementation
   # `amsgrad` has no effect because the gradient is fixed
   run_sparse_sample(
-      iterations=200,
-      expected=[[0.09575394, 2.0], [3.0, 3.0957537]],
-      optimizer=AdaBelief(lr=1e-3, amsgrad=True, rectify=False),
+    iterations=200,
+    expected=[[0.09575394, 2.0], [3.0, 3.0957537]],
+    optimizer=AdaBelief(lr=1e-3, amsgrad=True, rectify=False),
   )
 
 
@@ -100,9 +100,9 @@ def test_sparse_sample_with_amsgrad():
 def test_dense_sample_with_weight_decay():
   # Expected values are obtained from the previous implementation
   run_dense_sample(
-      iterations=100,
-      expected=[[0.66637343, 1.6653734], [2.6643748, 3.6633751]],
-      optimizer=AdaBelief(lr=1e-3, weight_decay=0.01, rectify=False),
+    iterations=100,
+    expected=[[0.66637343, 1.6653734], [2.6643748, 3.6633751]],
+    optimizer=AdaBelief(lr=1e-3, weight_decay=0.01, rectify=False),
   )
 
 
@@ -110,18 +110,18 @@ def test_dense_sample_with_weight_decay():
 def test_sparse_sample_with_weight_decay():
   # Expected values are obtained from the previous implementation
   run_sparse_sample(
-      iterations=200,
-      expected=[[0.05264655, 2.0], [3.0, 3.0466535]],
-      optimizer=AdaBelief(lr=1e-3, weight_decay=0.01, rectify=False),
+    iterations=200,
+    expected=[[0.05264655, 2.0], [3.0, 3.0466535]],
+    optimizer=AdaBelief(lr=1e-3, weight_decay=0.01, rectify=False),
   )
 
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def test_dense_sample_with_warmup():
   run_dense_sample(
-      iterations=100,
-      expected=[[0.85635465, 1.8563547], [2.8563545, 3.8563545]],
-      optimizer=AdaBelief(lr=1e-3, total_steps=100, warmup_proportion=0.1, min_lr=1e-5, rectify=False),
+    iterations=100,
+    expected=[[0.85635465, 1.8563547], [2.8563545, 3.8563545]],
+    optimizer=AdaBelief(lr=1e-3, total_steps=100, warmup_proportion=0.1, min_lr=1e-5, rectify=False),
   )
 
 
@@ -129,27 +129,27 @@ def test_dense_sample_with_warmup():
 def test_sparse_sample_with_warmup():
   # Expected values are obtained from the previous implementation
   run_sparse_sample(
-      iterations=200,
-      expected=[[0.8502214, 2.0], [3.0, 3.85022]],
-      optimizer=AdaBelief(lr=1e-3, total_steps=100, warmup_proportion=0.1, min_lr=1e-5, rectify=False),
+    iterations=200,
+    expected=[[0.8502214, 2.0], [3.0, 3.85022]],
+    optimizer=AdaBelief(lr=1e-3, total_steps=100, warmup_proportion=0.1, min_lr=1e-5, rectify=False),
   )
 
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def test_dense_sample_with_rectify():
   run_sparse_sample(
-      iterations=200,
-      expected=[[0.7836679, 2.0], [3.0, 3.7839665]],
-      optimizer=AdaBelief(lr=1e-3, rectify=True),
+    iterations=200,
+    expected=[[0.7836679, 2.0], [3.0, 3.7839665]],
+    optimizer=AdaBelief(lr=1e-3, rectify=True),
   )
 
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def test_sparse_sample_with_rectify():
   run_sparse_sample(
-      iterations=200,
-      expected=[[0.7836679, 2.0], [3.0, 3.7839665]],
-      optimizer=AdaBelief(lr=1e-3, rectify=True),
+    iterations=200,
+    expected=[[0.7836679, 2.0], [3.0, 3.7839665]],
+    optimizer=AdaBelief(lr=1e-3, rectify=True),
   )
 
 
@@ -158,13 +158,13 @@ def test_dense_sample_with_lookahead():
   # Expected values are obtained from the original implementation
   # of Ranger
   run_dense_sample(
-      iterations=100,
-      expected=[[0.88910455, 1.889104], [2.8891046, 3.8891046]],
-      optimizer=Lookahead(
-          AdaBelief(lr=1e-3, beta_1=0.95, rectify=False),
-          sync_period=6,
-          slow_step_size=0.45,
-      ),
+    iterations=100,
+    expected=[[0.88910455, 1.889104], [2.8891046, 3.8891046]],
+    optimizer=Lookahead(
+      AdaBelief(lr=1e-3, beta_1=0.95, rectify=False),
+      sync_period=6,
+      slow_step_size=0.45,
+    ),
   )
 
 
@@ -173,13 +173,13 @@ def test_sparse_sample_with_lookahead():
   # Expected values are obtained from the previous implementation
   # of Ranger.
   run_sparse_sample(
-      iterations=150,
-      expected=[[0.8114481, 2.0], [3.0, 3.8114486]],
-      optimizer=Lookahead(
-          AdaBelief(lr=1e-3, beta_1=0.95, rectify=False),
-          sync_period=6,
-          slow_step_size=0.45,
-      ),
+    iterations=150,
+    expected=[[0.8114481, 2.0], [3.0, 3.8114486]],
+    optimizer=Lookahead(
+      AdaBelief(lr=1e-3, beta_1=0.95, rectify=False),
+      sync_period=6,
+      slow_step_size=0.45,
+    ),
   )
 
 
@@ -203,9 +203,9 @@ def test_schedulers():
   wd_scheduler = tf.keras.optimizers.schedules.InverseTimeDecay(2e-3, 25, 0.25)
 
   run_dense_sample(
-      iterations=100,
-      expected=[[0.84216374, 1.8420818], [2.8420012, 3.841918]],
-      optimizer=AdaBelief(learning_rate=lr_scheduler, weight_decay=wd_scheduler, rectify=False),
+    iterations=100,
+    expected=[[0.84216374, 1.8420818], [2.8420012, 3.841918]],
+    optimizer=AdaBelief(learning_rate=lr_scheduler, weight_decay=wd_scheduler, rectify=False),
   )
 
 
@@ -221,27 +221,27 @@ def test_scheduler_serialization():
   # TODO: Remove after 2.13 is oldest version supported due to new serialization
   if Version(tf.__version__) >= Version("2.13"):
     assert new_optimizer.get_config()["learning_rate"] == {
-        "class_name": "ExponentialDecay",
-        "config": lr_scheduler.get_config(),
-        "module": "keras.optimizers.schedules",
-        "registered_name": None,
+      "class_name": "ExponentialDecay",
+      "config": lr_scheduler.get_config(),
+      "module": "keras.optimizers.schedules",
+      "registered_name": None,
     }
     assert new_optimizer.get_config()["weight_decay"] == {
-        "class_name": "InverseTimeDecay",
-        "config": wd_scheduler.get_config(),
-        "module": "keras.optimizers.schedules",
-        "registered_name": None,
+      "class_name": "InverseTimeDecay",
+      "config": wd_scheduler.get_config(),
+      "module": "keras.optimizers.schedules",
+      "registered_name": None,
     }
 
   else:
     assert new_optimizer.get_config()["learning_rate"] == {
-        "class_name": "ExponentialDecay",
-        "config": lr_scheduler.get_config(),
+      "class_name": "ExponentialDecay",
+      "config": lr_scheduler.get_config(),
     }
 
     assert new_optimizer.get_config()["weight_decay"] == {
-        "class_name": "InverseTimeDecay",
-        "config": wd_scheduler.get_config(),
+      "class_name": "InverseTimeDecay",
+      "config": wd_scheduler.get_config(),
     }
 
 

@@ -39,26 +39,20 @@ def test_spp_output_2d():
   inputs = np.reshape(inputs, (1, 4, 4, 1))
   output = np.array([[[7.5], [2.5], [4.5], [10.5], [12.5]]]).astype(np.float32)
   test_utils.layer_test(
-      SpatialPyramidPooling2D,
-      kwargs={
-          "bins": [[1, 1], [2, 2]],
-          "data_format": "channels_last"
-      },
-      input_data=inputs,
-      expected_output=output,
+    SpatialPyramidPooling2D,
+    kwargs={"bins": [[1, 1], [2, 2]], "data_format": "channels_last"},
+    input_data=inputs,
+    expected_output=output,
   )
 
   inputs = np.arange(start=0.0, stop=16.0, step=1.0).astype(np.float32)
   inputs = np.reshape(inputs, (1, 1, 4, 4))
   output = np.array([[[7.5, 2.5, 4.5, 10.5, 12.5]]]).astype(np.float32)
   test_utils.layer_test(
-      SpatialPyramidPooling2D,
-      kwargs={
-          "bins": [[1, 1], [2, 2]],
-          "data_format": "channels_first"
-      },
-      input_data=inputs,
-      expected_output=output,
+    SpatialPyramidPooling2D,
+    kwargs={"bins": [[1, 1], [2, 2]], "data_format": "channels_first"},
+    input_data=inputs,
+    expected_output=output,
   )
 
 

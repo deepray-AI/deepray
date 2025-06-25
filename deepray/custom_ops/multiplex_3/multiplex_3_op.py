@@ -66,15 +66,15 @@ def multiplex_sparse(cond: tf.SparseTensor, a: tf.SparseTensor, b: tf.SparseTens
     from `b` elsewhere.
   """
   (indices, values, shape) = examples_multiplex_sparse(
-      cond_indices=cond.indices,
-      cond_values=cond.values,
-      cond_shape=cond.dense_shape,
-      a_indices=a.indices,
-      a_values=a.values,
-      a_shape=a.dense_shape,
-      b_indices=b.indices,
-      b_values=b.values,
-      b_shape=b.dense_shape,
-      name=name
+    cond_indices=cond.indices,
+    cond_values=cond.values,
+    cond_shape=cond.dense_shape,
+    a_indices=a.indices,
+    a_values=a.values,
+    a_shape=a.dense_shape,
+    b_indices=b.indices,
+    b_values=b.values,
+    b_shape=b.dense_shape,
+    name=name,
   )
   return tf.SparseTensor(indices, values, shape)

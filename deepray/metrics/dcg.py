@@ -61,15 +61,15 @@ class DCGMetric(_RankingMetric):
     self._gain_fn = gain_fn or utils.pow_minus_1
     self._rank_discount_fn = rank_discount_fn or utils.log2_inverse
     self._metric = metrics_impl.DCGMetric(
-        name=name, topn=topn, gain_fn=self._gain_fn, rank_discount_fn=self._rank_discount_fn, ragged=ragged
+      name=name, topn=topn, gain_fn=self._gain_fn, rank_discount_fn=self._rank_discount_fn, ragged=ragged
     )
 
   def get_config(self):
     base_config = super(DCGMetric, self).get_config()
     config = {
-        "topn": self._topn,
-        "gain_fn": self._gain_fn,
-        "rank_discount_fn": self._rank_discount_fn,
+      "topn": self._topn,
+      "gain_fn": self._gain_fn,
+      "rank_discount_fn": self._rank_discount_fn,
     }
     config.update(base_config)
     return config

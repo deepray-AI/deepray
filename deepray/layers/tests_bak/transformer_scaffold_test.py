@@ -34,7 +34,6 @@ from deepray.layers import transformer_scaffold
 # test serialization below.
 # @tf.keras.utils.register_keras_serializable(package='TestOnly')
 class ValidatedAttentionLayer(attention.Attention):
-
   def __init__(self, call_list, **kwargs):
     super(ValidatedAttentionLayer, self).__init__(**kwargs)
     self.list = call_list
@@ -45,7 +44,7 @@ class ValidatedAttentionLayer(attention.Attention):
 
   def get_config(self):
     config = super(ValidatedAttentionLayer, self).get_config()
-    config['call_list'] = []
+    config["call_list"] = []
     return config
 
 
@@ -53,23 +52,22 @@ class ValidatedAttentionLayer(attention.Attention):
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class TransformerLayerTest(keras_parameterized.TestCase):
-
   def test_layer_creation(self):
     sequence_length = 21
     width = 80
 
     call_list = []
     attention_layer_cfg = {
-        'num_heads': 10,
-        'head_size': 8,
-        'call_list': call_list,
+      "num_heads": 10,
+      "head_size": 8,
+      "call_list": call_list,
     }
     test_layer = transformer_scaffold.TransformerScaffold(
-        attention_cls=ValidatedAttentionLayer,
-        attention_cfg=attention_layer_cfg,
-        num_attention_heads=10,
-        intermediate_size=2048,
-        intermediate_activation='relu'
+      attention_cls=ValidatedAttentionLayer,
+      attention_cfg=attention_layer_cfg,
+      num_attention_heads=10,
+      intermediate_size=2048,
+      intermediate_activation="relu",
     )
 
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -89,16 +87,16 @@ class TransformerLayerTest(keras_parameterized.TestCase):
 
     call_list = []
     attention_layer_cfg = {
-        'num_heads': 10,
-        'head_size': 8,
-        'call_list': call_list,
+      "num_heads": 10,
+      "head_size": 8,
+      "call_list": call_list,
     }
     test_layer = transformer_scaffold.TransformerScaffold(
-        attention_cls=ValidatedAttentionLayer,
-        attention_cfg=attention_layer_cfg,
-        num_attention_heads=10,
-        intermediate_size=2048,
-        intermediate_activation='relu'
+      attention_cls=ValidatedAttentionLayer,
+      attention_cfg=attention_layer_cfg,
+      num_attention_heads=10,
+      intermediate_size=2048,
+      intermediate_activation="relu",
     )
 
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -119,23 +117,23 @@ class TransformerLayerTest(keras_parameterized.TestCase):
 
     call_list = []
     attention_layer_cfg = {
-        'num_heads': 10,
-        'head_size': 8,
-        'call_list': call_list,
+      "num_heads": 10,
+      "head_size": 8,
+      "call_list": call_list,
     }
     test_layer = transformer_scaffold.TransformerScaffold(
-        attention_cls=ValidatedAttentionLayer,
-        attention_cfg=attention_layer_cfg,
-        num_attention_heads=10,
-        intermediate_size=2048,
-        intermediate_activation='relu'
+      attention_cls=ValidatedAttentionLayer,
+      attention_cfg=attention_layer_cfg,
+      num_attention_heads=10,
+      intermediate_size=2048,
+      intermediate_activation="relu",
     )
 
     # Create a 3-dimensional input (the first dimension is implicit).
     data_tensor = tf.keras.Input(shape=(sequence_length, width))
     # Create a 2-dimensional input (the first dimension is implicit).
     mask_tensor = tf.keras.Input(shape=(sequence_length, sequence_length - 3))
-    with self.assertRaisesRegex(ValueError, 'When passing a mask tensor.*'):
+    with self.assertRaisesRegex(ValueError, "When passing a mask tensor.*"):
       _ = test_layer([data_tensor, mask_tensor])
 
   def test_layer_invocation(self):
@@ -144,16 +142,16 @@ class TransformerLayerTest(keras_parameterized.TestCase):
 
     call_list = []
     attention_layer_cfg = {
-        'num_heads': 10,
-        'head_size': 8,
-        'call_list': call_list,
+      "num_heads": 10,
+      "head_size": 8,
+      "call_list": call_list,
     }
     test_layer = transformer_scaffold.TransformerScaffold(
-        attention_cls=ValidatedAttentionLayer,
-        attention_cfg=attention_layer_cfg,
-        num_attention_heads=10,
-        intermediate_size=2048,
-        intermediate_activation='relu'
+      attention_cls=ValidatedAttentionLayer,
+      attention_cfg=attention_layer_cfg,
+      num_attention_heads=10,
+      intermediate_size=2048,
+      intermediate_activation="relu",
     )
 
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -179,16 +177,16 @@ class TransformerLayerTest(keras_parameterized.TestCase):
 
     call_list = []
     attention_layer_cfg = {
-        'num_heads': 10,
-        'head_size': 8,
-        'call_list': call_list,
+      "num_heads": 10,
+      "head_size": 8,
+      "call_list": call_list,
     }
     test_layer = transformer_scaffold.TransformerScaffold(
-        attention_cls=ValidatedAttentionLayer,
-        attention_cfg=attention_layer_cfg,
-        num_attention_heads=10,
-        intermediate_size=2048,
-        intermediate_activation='relu'
+      attention_cls=ValidatedAttentionLayer,
+      attention_cfg=attention_layer_cfg,
+      num_attention_heads=10,
+      intermediate_size=2048,
+      intermediate_activation="relu",
     )
 
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -219,17 +217,17 @@ class TransformerLayerTest(keras_parameterized.TestCase):
 
     call_list = []
     attention_layer_cfg = {
-        'num_heads': 10,
-        'head_size': 8,
-        'call_list': call_list,
+      "num_heads": 10,
+      "head_size": 8,
+      "call_list": call_list,
     }
     test_layer = transformer_scaffold.TransformerScaffold(
-        attention_cls=ValidatedAttentionLayer,
-        attention_cfg=attention_layer_cfg,
-        num_attention_heads=10,
-        intermediate_size=2048,
-        intermediate_activation='relu',
-        dtype='float16'
+      attention_cls=ValidatedAttentionLayer,
+      attention_cfg=attention_layer_cfg,
+      num_attention_heads=10,
+      intermediate_size=2048,
+      intermediate_activation="relu",
+      dtype="float16",
     )
 
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -260,17 +258,17 @@ class TransformerLayerTest(keras_parameterized.TestCase):
 
     call_list = []
     attention_layer_cfg = {
-        'num_heads': 10,
-        'head_size': 8,
-        'call_list': call_list,
+      "num_heads": 10,
+      "head_size": 8,
+      "call_list": call_list,
     }
     test_layer = transformer_scaffold.TransformerScaffold(
-        attention_cls=ValidatedAttentionLayer,
-        attention_cfg=attention_layer_cfg,
-        num_attention_heads=10,
-        intermediate_size=2048,
-        intermediate_activation='relu',
-        kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02)
+      attention_cls=ValidatedAttentionLayer,
+      attention_cfg=attention_layer_cfg,
+      num_attention_heads=10,
+      intermediate_size=2048,
+      intermediate_activation="relu",
+      kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02),
     )
 
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -289,17 +287,17 @@ class TransformerLayerTest(keras_parameterized.TestCase):
 
     call_list = []
     attention_layer_cfg = {
-        'num_heads': 10,
-        'head_size': 8,
-        'call_list': call_list,
-        'name': 'test_layer',
+      "num_heads": 10,
+      "head_size": 8,
+      "call_list": call_list,
+      "name": "test_layer",
     }
     test_layer = transformer_scaffold.TransformerScaffold(
-        attention_cls=ValidatedAttentionLayer,
-        attention_cfg=attention_layer_cfg,
-        num_attention_heads=10,
-        intermediate_size=2048,
-        intermediate_activation='relu'
+      attention_cls=ValidatedAttentionLayer,
+      attention_cfg=attention_layer_cfg,
+      num_attention_heads=10,
+      intermediate_size=2048,
+      intermediate_activation="relu",
     )
 
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -336,10 +334,10 @@ class TransformerLayerTest(keras_parameterized.TestCase):
     # If the layer was configured correctly, it should have a list attribute
     # (since it should have the custom class and config passed to it).
     new_model.summary()
-    new_call_list = new_model.get_layer(name='transformer_scaffold')._attention_layer.list
+    new_call_list = new_model.get_layer(name="transformer_scaffold")._attention_layer.list
     self.assertNotEmpty(new_call_list)
     self.assertTrue(new_call_list[0], "The passed layer class wasn't instantiated.")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

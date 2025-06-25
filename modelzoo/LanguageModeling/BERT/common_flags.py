@@ -22,46 +22,38 @@ from deepray.utils.flags import core as flags_core
 
 def define_common_bert_flags():
   """Define common flags for BERT tasks."""
-  flags.DEFINE_string('bert_config_file', None,
-                      'Bert configuration file to define core bert layers.')
-  flags.DEFINE_string(
-      'model_export_path', None,
-      'Path to the directory, where trainined model will be '
-      'exported.')
-  flags.DEFINE_string('tpu', '', 'TPU address to connect to.')
-  flags.DEFINE_integer('num_train_epochs', 3,
-                       'Total number of training epochs to perform.')
+  flags.DEFINE_string("bert_config_file", None, "Bert configuration file to define core bert layers.")
+  flags.DEFINE_string("model_export_path", None, "Path to the directory, where trainined model will be exported.")
+  flags.DEFINE_string("tpu", "", "TPU address to connect to.")
+  flags.DEFINE_integer("num_train_epochs", 3, "Total number of training epochs to perform.")
   flags.DEFINE_integer(
-      'steps_per_loop', 200,
-      'Number of steps per graph-mode loop. Only training step '
-      'happens inside the loop. Callbacks will not be called '
-      'inside.')
+    "steps_per_loop",
+    200,
+    "Number of steps per graph-mode loop. Only training step "
+    "happens inside the loop. Callbacks will not be called "
+    "inside.",
+  )
   flags.DEFINE_boolean(
-      'scale_loss', False,
-      'Whether to divide the loss by number of replica inside the per-replica '
-      'loss function.')
+    "scale_loss", False, "Whether to divide the loss by number of replica inside the per-replica loss function."
+  )
   flags.DEFINE_boolean(
-    'use_keras_compile_fit', False,
-    'If True, uses Keras compile/fit() API for training logic. Otherwise '
-    'use custom training loop.')
+    "use_keras_compile_fit",
+    False,
+    "If True, uses Keras compile/fit() API for training logic. Otherwise use custom training loop.",
+  )
   flags.DEFINE_string(
-    'hub_module_url', None, 'TF-Hub path/url to Bert module. '
-    'If specified, init_checkpoint flag should not be used.')
+    "hub_module_url", None, "TF-Hub path/url to Bert module. If specified, init_checkpoint flag should not be used."
+  )
   flags.DEFINE_enum(
-    'model_type', 'bert', ['bert', 'albert'],
-    'Specifies the type of the model. '
-    'If "bert", will use canonical BERT; if "albert", will use ALBERT model.')
-  flags.DEFINE_boolean(
-      'use_fp16', False,
-      'Whether to use fp32 or fp16 arithmetic on GPU.')
-  flags.DEFINE_integer(
-    'save_checkpoint_steps', 1000,
-    'save checkpoint for every n steps')
-  flags.DEFINE_string(
-    'dllog_path', 'bert_dllogger.json', 'filename where dllogger writes to')
-  flags.DEFINE_boolean(
-      'benchmark', False,
-      'Benchmark mode.')
+    "model_type",
+    "bert",
+    ["bert", "albert"],
+    'Specifies the type of the model. If "bert", will use canonical BERT; if "albert", will use ALBERT model.',
+  )
+  flags.DEFINE_boolean("use_fp16", False, "Whether to use fp32 or fp16 arithmetic on GPU.")
+  flags.DEFINE_integer("save_checkpoint_steps", 1000, "save checkpoint for every n steps")
+  flags.DEFINE_string("dllog_path", "bert_dllogger.json", "filename where dllogger writes to")
+  flags.DEFINE_boolean("benchmark", False, "Benchmark mode.")
 
 
 def use_float16():
@@ -69,4 +61,4 @@ def use_float16():
 
 
 def get_loss_scale():
-  return flags_core.get_loss_scale(flags.FLAGS, default_for_fp16='dynamic')
+  return flags_core.get_loss_scale(flags.FLAGS, default_for_fp16="dynamic")

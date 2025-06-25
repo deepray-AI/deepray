@@ -89,7 +89,7 @@ def sample_top_p(logits, top_p):
   # Shift the indices to the right to keep the first token above threshold.
   sorted_indices_to_remove = tf.roll(sorted_indices_to_remove, 1, axis=-1)
   sorted_indices_to_remove = tf.concat(
-      [tf.zeros_like(sorted_indices_to_remove[:, :1]), sorted_indices_to_remove[:, 1:]], -1
+    [tf.zeros_like(sorted_indices_to_remove[:, :1]), sorted_indices_to_remove[:, 1:]], -1
   )
 
   # Scatter sorted indices to original indexes.
@@ -113,7 +113,7 @@ def scatter_values_on_batch_indices(values, batch_indices):
   """
   tensor_shape = decoding_module.shape_list(batch_indices)
   broad_casted_batch_dims = tf.reshape(
-      tf.broadcast_to(tf.expand_dims(tf.range(tensor_shape[0]), axis=-1), tensor_shape), [1, -1]
+    tf.broadcast_to(tf.expand_dims(tf.range(tensor_shape[0]), axis=-1), tensor_shape), [1, -1]
   )
   pair_indices = tf.transpose(tf.concat([broad_casted_batch_dims, tf.reshape(batch_indices, [1, -1])], 0))
   return tf.scatter_nd(pair_indices, tf.reshape(values, [-1]), tensor_shape)
@@ -139,20 +139,20 @@ class SamplingModule(decoding_module.DecodingModule, metaclass=abc.ABCMeta):
   """Implementation for sampling strategies (go/decoding-tf-nlp)."""
 
   def __init__(
-      self,
-      symbols_to_logits_fn,
-      vocab_size: int,
-      max_decode_length: int,
-      eos_id: int,
-      padded_decode: bool,
-      length_normalization_fn: Optional[Callable[[int, tf.DType], float]] = None,
-      top_k=0,
-      top_p=1.0,
-      sample_temperature=0.0,
-      enable_greedy: bool = True,
-      dtype: tf.DType = tf.float32,
-      decoding_name: Optional[str] = None,
-      extra_cache_output: bool = False
+    self,
+    symbols_to_logits_fn,
+    vocab_size: int,
+    max_decode_length: int,
+    eos_id: int,
+    padded_decode: bool,
+    length_normalization_fn: Optional[Callable[[int, tf.DType], float]] = None,
+    top_k=0,
+    top_p=1.0,
+    sample_temperature=0.0,
+    enable_greedy: bool = True,
+    dtype: tf.DType = tf.float32,
+    decoding_name: Optional[str] = None,
+    extra_cache_output: bool = False,
   ):
     """Initialize sampling module."""
     self.symbols_to_logits_fn = symbols_to_logits_fn
@@ -169,10 +169,10 @@ class SamplingModule(decoding_module.DecodingModule, metaclass=abc.ABCMeta):
     self.decoding_name = decoding_name
     self.extra_cache_output = extra_cache_output
     super(SamplingModule, self).__init__(
-        length_normalization_fn=length_normalization_fn,
-        dtype=dtype,
-        decoding_name=decoding_name,
-        extra_cache_output=extra_cache_output
+      length_normalization_fn=length_normalization_fn,
+      dtype=dtype,
+      decoding_name=decoding_name,
+      extra_cache_output=extra_cache_output,
     )
 
   def _grow_alive_seq(self, state: Dict[str, Any], batch_size: int) -> decoding_module.InternalState:
@@ -212,7 +212,7 @@ class SamplingModule(decoding_module.DecodingModule, metaclass=abc.ABCMeta):
     else:
       temperature_fn = sample_logits_with_temperature
       sampled_logits = tf.cond(
-          self.sample_temperature > 0.0, lambda: temperature_fn(new_logits, self.sample_temperature), lambda: new_logits
+        self.sample_temperature > 0.0, lambda: temperature_fn(new_logits, self.sample_temperature), lambda: new_logits
       )
       sampled_logits = tf.cond(self.top_k > 0, lambda: sample_top_k(sampled_logits, self.top_k), lambda: sampled_logits)
       sampled_logits = tf.cond(self.top_p < 1, lambda: sample_top_p(sampled_logits, self.top_p), lambda: sampled_logits)
@@ -227,19 +227,19 @@ class SamplingModule(decoding_module.DecodingModule, metaclass=abc.ABCMeta):
     return topk_seq, topk_log_probs, topk_ids, new_cache
 
   def _create_initial_state(
-      self,
-      initial_ids: tf.Tensor,
-      initial_cache: Dict[str, tf.Tensor],
-      batch_size: int,
-      initial_log_probs: Optional[tf.Tensor] = None
+    self,
+    initial_ids: tf.Tensor,
+    initial_cache: Dict[str, tf.Tensor],
+    batch_size: int,
+    initial_log_probs: Optional[tf.Tensor] = None,
   ) -> decoding_module.InitialState:
     """Return initial state dictionary and its shape invariants."""
     for key, value in initial_cache.items():
       for inner_value in tf.nest.flatten(value):
         if inner_value.dtype != self.dtype:
           raise TypeError(
-              "initial_cache element for key '%s' has dtype %s that does not "
-              "match sampling_module's dtype of %s. Value: %s" % (key, value.dtype.name, self.dtype.name, inner_value)
+            "initial_cache element for key '%s' has dtype %s that does not "
+            "match sampling_module's dtype of %s. Value: %s" % (key, value.dtype.name, self.dtype.name, inner_value)
           )
 
     # Current loop index (starts at 0)
@@ -253,7 +253,7 @@ class SamplingModule(decoding_module.DecodingModule, metaclass=abc.ABCMeta):
 
     # Initial log probabilities with shape [batch_size, 1].
     if initial_log_probs is None:
-      initial_log_probs = tf.constant([[0.]], dtype=self.dtype)
+      initial_log_probs = tf.constant([[0.0]], dtype=self.dtype)
       alive_log_probs = tf.tile(initial_log_probs, [batch_size, 1])
     else:
       alive_log_probs = initial_log_probs
@@ -271,64 +271,57 @@ class SamplingModule(decoding_module.DecodingModule, metaclass=abc.ABCMeta):
 
     # Create state dictionary and state shapes.
     state = {
-        decoding_module.StateKeys.CUR_INDEX: cur_index,
-        decoding_module.StateKeys.ALIVE_SEQ: alive_seq,
-        decoding_module.StateKeys.ALIVE_LOG_PROBS: alive_log_probs,
-        decoding_module.StateKeys.ALIVE_CACHE: alive_cache,
-        decoding_module.StateKeys.FINISHED_SEQ: finished_seq,
-        decoding_module.StateKeys.FINISHED_SCORES: finished_scores,
-        decoding_module.StateKeys.FINISHED_FLAGS: finished_flags
+      decoding_module.StateKeys.CUR_INDEX: cur_index,
+      decoding_module.StateKeys.ALIVE_SEQ: alive_seq,
+      decoding_module.StateKeys.ALIVE_LOG_PROBS: alive_log_probs,
+      decoding_module.StateKeys.ALIVE_CACHE: alive_cache,
+      decoding_module.StateKeys.FINISHED_SEQ: finished_seq,
+      decoding_module.StateKeys.FINISHED_SCORES: finished_scores,
+      decoding_module.StateKeys.FINISHED_FLAGS: finished_flags,
     }
 
     if self.padded_decode:
       state_shape_invariants = {
-          decoding_module.StateKeys.CUR_INDEX: tf.TensorShape([]),
-          decoding_module.StateKeys.ALIVE_SEQ: tf.TensorShape([batch_size, self.max_decode_length + 1]),
-          decoding_module.StateKeys.ALIVE_LOG_PROBS: tf.TensorShape([batch_size, 1]),
-          decoding_module.StateKeys.ALIVE_CACHE: tf.nest.map_structure(lambda state: state.get_shape(), alive_cache),
-          decoding_module.StateKeys.FINISHED_SEQ: tf.TensorShape([batch_size, self.max_decode_length + 1]),
-          decoding_module.StateKeys.FINISHED_SCORES: tf.TensorShape([batch_size, 1]),
-          decoding_module.StateKeys.FINISHED_FLAGS: tf.TensorShape([batch_size, 1])
+        decoding_module.StateKeys.CUR_INDEX: tf.TensorShape([]),
+        decoding_module.StateKeys.ALIVE_SEQ: tf.TensorShape([batch_size, self.max_decode_length + 1]),
+        decoding_module.StateKeys.ALIVE_LOG_PROBS: tf.TensorShape([batch_size, 1]),
+        decoding_module.StateKeys.ALIVE_CACHE: tf.nest.map_structure(lambda state: state.get_shape(), alive_cache),
+        decoding_module.StateKeys.FINISHED_SEQ: tf.TensorShape([batch_size, self.max_decode_length + 1]),
+        decoding_module.StateKeys.FINISHED_SCORES: tf.TensorShape([batch_size, 1]),
+        decoding_module.StateKeys.FINISHED_FLAGS: tf.TensorShape([batch_size, 1]),
       }
     else:
       state_shape_invariants = {
-          decoding_module.StateKeys.CUR_INDEX:
-              tf.TensorShape([]),
-          decoding_module.StateKeys.ALIVE_SEQ:
-              tf.TensorShape([None, None]),
-          decoding_module.StateKeys.ALIVE_LOG_PROBS:
-              tf.TensorShape([None, 1]),
-          decoding_module.StateKeys.ALIVE_CACHE:
-              tf.nest.map_structure(decoding_module.get_shape_keep_last_dim, alive_cache),
-          decoding_module.StateKeys.FINISHED_SEQ:
-              tf.TensorShape([None, None]),
-          decoding_module.StateKeys.FINISHED_SCORES:
-              tf.TensorShape([None, 1]),
-          decoding_module.StateKeys.FINISHED_FLAGS:
-              tf.TensorShape([None, 1])
+        decoding_module.StateKeys.CUR_INDEX: tf.TensorShape([]),
+        decoding_module.StateKeys.ALIVE_SEQ: tf.TensorShape([None, None]),
+        decoding_module.StateKeys.ALIVE_LOG_PROBS: tf.TensorShape([None, 1]),
+        decoding_module.StateKeys.ALIVE_CACHE: tf.nest.map_structure(
+          decoding_module.get_shape_keep_last_dim, alive_cache
+        ),
+        decoding_module.StateKeys.FINISHED_SEQ: tf.TensorShape([None, None]),
+        decoding_module.StateKeys.FINISHED_SCORES: tf.TensorShape([None, 1]),
+        decoding_module.StateKeys.FINISHED_FLAGS: tf.TensorShape([None, 1]),
       }
 
     if self.extra_cache_output:
       state.update({decoding_module.StateKeys.INITIAL_OUTPUT_CACHE: alive_cache})
       if self.padded_decode:
-        state_shape_invariants.update(
-            {
-                decoding_module.StateKeys.INITIAL_OUTPUT_CACHE:
-                    tf.nest.map_structure(lambda state: state.get_shape(), alive_cache)
-            }
-        )
+        state_shape_invariants.update({
+          decoding_module.StateKeys.INITIAL_OUTPUT_CACHE: tf.nest.map_structure(
+            lambda state: state.get_shape(), alive_cache
+          )
+        })
       else:
-        state_shape_invariants.update(
-            {
-                decoding_module.StateKeys.INITIAL_OUTPUT_CACHE:
-                    tf.nest.map_structure(decoding_module.get_shape_keep_last_dim, alive_cache),
-            }
-        )
+        state_shape_invariants.update({
+          decoding_module.StateKeys.INITIAL_OUTPUT_CACHE: tf.nest.map_structure(
+            decoding_module.get_shape_keep_last_dim, alive_cache
+          ),
+        })
 
     return state, state_shape_invariants
 
   def _get_new_alive_state(
-      self, new_seq: tf.Tensor, new_log_probs: tf.Tensor, new_finished_flags: tf.Tensor, new_cache: Dict[str, tf.Tensor]
+    self, new_seq: tf.Tensor, new_log_probs: tf.Tensor, new_finished_flags: tf.Tensor, new_cache: Dict[str, tf.Tensor]
   ) -> Dict[str, Any]:
     """Gather the sequences that are still alive.
 
@@ -348,14 +341,18 @@ class SamplingModule(decoding_module.DecodingModule, metaclass=abc.ABCMeta):
     """
     new_seq = tf.multiply(new_seq, tf.cast(tf.logical_not(new_finished_flags), new_seq.dtype))
     return {
-        decoding_module.StateKeys.ALIVE_SEQ: new_seq,
-        decoding_module.StateKeys.ALIVE_LOG_PROBS: new_log_probs,
-        decoding_module.StateKeys.ALIVE_CACHE: new_cache
+      decoding_module.StateKeys.ALIVE_SEQ: new_seq,
+      decoding_module.StateKeys.ALIVE_LOG_PROBS: new_log_probs,
+      decoding_module.StateKeys.ALIVE_CACHE: new_cache,
     }
 
   def _get_new_finished_state(
-      self, state: Dict[str, Any], new_seq: tf.Tensor, new_log_probs: tf.Tensor, new_finished_flags: tf.Tensor,
-      batch_size: int
+    self,
+    state: Dict[str, Any],
+    new_seq: tf.Tensor,
+    new_log_probs: tf.Tensor,
+    new_finished_flags: tf.Tensor,
+    batch_size: int,
   ) -> Dict[str, tf.Tensor]:
     """Combine new and old finished sequences.
 
@@ -389,9 +386,9 @@ class SamplingModule(decoding_module.DecodingModule, metaclass=abc.ABCMeta):
     finished_scores += tf.multiply(new_scores, tf.cast(new_finished_flags, new_scores.dtype))
     new_finished_flags = tf.logical_or(new_finished_flags, finished_flags)
     return {
-        decoding_module.StateKeys.FINISHED_SEQ: finished_seq,
-        decoding_module.StateKeys.FINISHED_SCORES: finished_scores,
-        decoding_module.StateKeys.FINISHED_FLAGS: new_finished_flags
+      decoding_module.StateKeys.FINISHED_SEQ: finished_seq,
+      decoding_module.StateKeys.FINISHED_SCORES: finished_scores,
+      decoding_module.StateKeys.FINISHED_FLAGS: new_finished_flags,
     }
 
   def _process_finished_state(self, finished_state: Dict[str, Any]) -> decoding_module.Output:

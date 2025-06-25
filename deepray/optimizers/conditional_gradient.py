@@ -26,64 +26,64 @@ from typing import Union, Callable
 class ConditionalGradient(KerasLegacyOptimizer):
   """Optimizer that implements the Conditional Gradient optimization.
 
-    This optimizer helps handle constraints well.
+  This optimizer helps handle constraints well.
 
-    Currently only supports frobenius norm constraint or nuclear norm
-    constraint.
-    See https://arxiv.org/pdf/1803.06453.pdf
+  Currently only supports frobenius norm constraint or nuclear norm
+  constraint.
+  See https://arxiv.org/pdf/1803.06453.pdf
 
-    ```
-    variable -= (1-learning_rate) * (variable + lambda_ * gradient
-        / (frobenius_norm(gradient) + epsilon))
-    ```
+  ```
+  variable -= (1-learning_rate) * (variable + lambda_ * gradient
+      / (frobenius_norm(gradient) + epsilon))
+  ```
 
-    Note that `lambda_` here refers to the constraint "lambda" in
-    the paper. `epsilon` is constant with tiny value as compared to
-    the value of frobenius norm of gradient. The purpose of `epsilon`
-    here is to avoid the case that the value of frobenius norm of
-    gradient is 0.
+  Note that `lambda_` here refers to the constraint "lambda" in
+  the paper. `epsilon` is constant with tiny value as compared to
+  the value of frobenius norm of gradient. The purpose of `epsilon`
+  here is to avoid the case that the value of frobenius norm of
+  gradient is 0.
 
-    In this implementation, `epsilon` defaults to $10^{-7}$.
+  In this implementation, `epsilon` defaults to $10^{-7}$.
 
-    For nucler norm constraint, the formula is as following:
+  For nucler norm constraint, the formula is as following:
 
-    ```
-    variable -= (1-learning_rate) * (variable
-        + lambda_ * top_singular_vector(gradient))
-    ```
-    """
+  ```
+  variable -= (1-learning_rate) * (variable
+      + lambda_ * top_singular_vector(gradient))
+  ```
+  """
 
   @typechecked
   def __init__(
-      self,
-      learning_rate: Union[FloatTensorLike, Callable],
-      lambda_: Union[FloatTensorLike, Callable] = 0.01,
-      epsilon: FloatTensorLike = 1e-7,
-      ord: str = "fro",
-      name: str = "ConditionalGradient",
-      **kwargs,
+    self,
+    learning_rate: Union[FloatTensorLike, Callable],
+    lambda_: Union[FloatTensorLike, Callable] = 0.01,
+    epsilon: FloatTensorLike = 1e-7,
+    ord: str = "fro",
+    name: str = "ConditionalGradient",
+    **kwargs,
   ):
     """Construct a new conditional gradient optimizer.
 
-        Args:
-            learning_rate: A `Tensor` or a floating point value. or a schedule
-                that is a `tf.keras.optimizers.schedules.LearningRateSchedule`
-                The learning rate.
-            lambda_: A `Tensor` or a floating point value. The constraint.
-            epsilon: A `Tensor` or a floating point value. A small constant
-                for numerical stability when handling the case of norm of
-                gradient to be zero.
-            ord: Order of the norm. Supported values are `'fro'`
-                and `'nuclear'`. Default is `'fro'`, which is frobenius norm.
-            name: Optional name prefix for the operations created when
-                applying gradients. Defaults to 'ConditionalGradient'.
-            **kwargs: keyword arguments. Allowed to be {`clipnorm`,
-                `clipvalue`, `lr`, `decay`}. `clipnorm` is clip gradients
-                by norm; `clipvalue` is clip gradients by value, `decay` is
-                included for backward compatibility to allow time inverse
-                decay of learning rate. `lr` is included for backward
-                compatibility, recommended to use `learning_rate` instead.
-        """
+    Args:
+        learning_rate: A `Tensor` or a floating point value. or a schedule
+            that is a `tf.keras.optimizers.schedules.LearningRateSchedule`
+            The learning rate.
+        lambda_: A `Tensor` or a floating point value. The constraint.
+        epsilon: A `Tensor` or a floating point value. A small constant
+            for numerical stability when handling the case of norm of
+            gradient to be zero.
+        ord: Order of the norm. Supported values are `'fro'`
+            and `'nuclear'`. Default is `'fro'`, which is frobenius norm.
+        name: Optional name prefix for the operations created when
+            applying gradients. Defaults to 'ConditionalGradient'.
+        **kwargs: keyword arguments. Allowed to be {`clipnorm`,
+            `clipvalue`, `lr`, `decay`}. `clipnorm` is clip gradients
+            by norm; `clipvalue` is clip gradients by value, `decay` is
+            included for backward compatibility to allow time inverse
+            decay of learning rate. `lr` is included for backward
+            compatibility, recommended to use `learning_rate` instead.
+    """
     super().__init__(name=name, **kwargs)
     self._set_hyper("learning_rate", kwargs.get("lr", learning_rate))
     self._set_hyper("lambda_", lambda_)
@@ -95,10 +95,10 @@ class ConditionalGradient(KerasLegacyOptimizer):
 
   def get_config(self):
     config = {
-        "learning_rate": self._serialize_hyperparameter("learning_rate"),
-        "lambda_": self._serialize_hyperparameter("lambda_"),
-        "epsilon": self.epsilon,
-        "ord": self.ord,
+      "learning_rate": self._serialize_hyperparameter("learning_rate"),
+      "lambda_": self._serialize_hyperparameter("lambda_"),
+      "epsilon": self.epsilon,
+      "ord": self.ord,
     }
     base_config = super().get_config()
     return {**base_config, **config}
@@ -115,7 +115,7 @@ class ConditionalGradient(KerasLegacyOptimizer):
 
   @staticmethod
   def _frobenius_norm(m):
-    return tf.reduce_sum(m**2)**0.5
+    return tf.reduce_sum(m**2) ** 0.5
 
   @staticmethod
   def _top_singular_vector(m):
@@ -128,12 +128,12 @@ class ConditionalGradient(KerasLegacyOptimizer):
     first_pad = tf.cast(tf.less(original_rank, 2), dtype=tf.int32)
     second_pad = tf.cast(tf.equal(original_rank, 0), dtype=tf.int32)
     new_shape = tf.concat(
-        [
-            tf.ones(shape=first_pad, dtype=tf.int32),
-            tf.ones(shape=second_pad, dtype=tf.int32),
-            shape,
-        ],
-        axis=0,
+      [
+        tf.ones(shape=first_pad, dtype=tf.int32),
+        tf.ones(shape=second_pad, dtype=tf.int32),
+        shape,
+      ],
+      axis=0,
     )
     n = tf.reshape(m, new_shape)
     st, ut, vt = tf.linalg.svd(n, full_matrices=False)
@@ -160,9 +160,9 @@ class ConditionalGradient(KerasLegacyOptimizer):
       s = grad / (norm + epsilon)
     else:
       top_singular_vector = tf.convert_to_tensor(
-          self._top_singular_vector(grad),
-          name="top_singular_vector",
-          dtype=var.dtype.base_dtype,
+        self._top_singular_vector(grad),
+        name="top_singular_vector",
+        dtype=var.dtype.base_dtype,
       )
       s = top_singular_vector
 
@@ -181,9 +181,9 @@ class ConditionalGradient(KerasLegacyOptimizer):
       s = grad / (norm + epsilon)
     else:
       top_singular_vector = tf.convert_to_tensor(
-          self._top_singular_vector(grad),
-          name="top_singular_vector",
-          dtype=var.dtype.base_dtype,
+        self._top_singular_vector(grad),
+        name="top_singular_vector",
+        dtype=var.dtype.base_dtype,
       )
       s = top_singular_vector
 

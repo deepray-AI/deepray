@@ -2,7 +2,6 @@ import tensorflow as tf
 
 
 class Bucketize(tf.keras.layers.Layer):
-
   def __init__(self, boundaries, **kwargs):
     self.boundaries = boundaries
     super(Bucketize, self).__init__(**kwargs)
@@ -14,19 +13,20 @@ class Bucketize(tf.keras.layers.Layer):
   def call(self, x, **kwargs):
     return tf.raw_ops.Bucketize(input=x, boundaries=self.boundaries)
 
-  def get_config(self,):
-    config = {'boundaries': self.boundaries}
+  def get_config(
+    self,
+  ):
+    config = {"boundaries": self.boundaries}
     base_config = super(Bucketize, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))
 
 
 class CategoryToIdLayer(tf.keras.layers.Layer):
-
   def __init__(self, vocabulary_list, values):
     self.vocabulary_list = vocabulary_list
     self.values = values
     init = tf.lookup.KeyValueTensorInitializer(
-        keys=tf.constant(self.vocabulary_list, dtype=tf.int64), values=tf.constant(self.values, dtype=tf.int64)
+      keys=tf.constant(self.vocabulary_list, dtype=tf.int64), values=tf.constant(self.values, dtype=tf.int64)
     )
     self.table = tf.lookup.StaticVocabularyTable(init, 1)
     super(CategoryToIdLayer, self).__init__()
@@ -37,7 +37,6 @@ class CategoryToIdLayer(tf.keras.layers.Layer):
 
 
 class HashLongToIdLayer(tf.keras.layers.Layer):
-
   def __init__(self, hash_bucket_size, mask=False):
     super(HashLongToIdLayer, self).__init__()
     self.hash_bucket_size = hash_bucket_size
@@ -54,7 +53,6 @@ class HashLongToIdLayer(tf.keras.layers.Layer):
 
 
 class Hash(tf.keras.layers.Layer):
-
   def __init__(self, hash_size: int, mask: bool = False, **kwargs):
     """
     Initializes the Hash object with a hash_size and an optional mask argument.
@@ -82,7 +80,6 @@ class Hash(tf.keras.layers.Layer):
 
 
 class NumericaBucketIdLayer(tf.keras.layers.Layer):
-
   def __init__(self, bucket_boundaries):
     self.bucket_boundaries = bucket_boundaries
     super(NumericaBucketIdLayer, self).__init__()

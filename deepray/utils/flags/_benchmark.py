@@ -20,7 +20,7 @@ from deepray.utils.flags._conventions import help_wrap
 
 def define_log_steps():
   flags.DEFINE_integer(
-      name="log_steps", default=100, help="Frequency with which to log timing information with TimeHistory."
+    name="log_steps", default=100, help="Frequency with which to log timing information with TimeHistory."
   )
 
   return []
@@ -38,60 +38,57 @@ def define_benchmark(bigquery_uploader=False):
 
   key_flags = []
   flags.DEFINE_enum(
-      name="benchmark_logger_type",
-      default="BaseBenchmarkLogger",
-      enum_values=["BaseBenchmarkLogger", "BenchmarkFileLogger"],
-      help=help_wrap(
-          "The type of benchmark logger to use. Defaults to using "
-          "BaseBenchmarkLogger which logs to STDOUT. Different "
-          "loggers will require other flags to be able to work."
-      )
+    name="benchmark_logger_type",
+    default="BaseBenchmarkLogger",
+    enum_values=["BaseBenchmarkLogger", "BenchmarkFileLogger"],
+    help=help_wrap(
+      "The type of benchmark logger to use. Defaults to using "
+      "BaseBenchmarkLogger which logs to STDOUT. Different "
+      "loggers will require other flags to be able to work."
+    ),
   )
   flags.DEFINE_string(
-      name="benchmark_test_id",
-      default=None,
-      help=help_wrap(
-          "The unique test ID of the benchmark run. It could be the "
-          "combination of key parameters. It is hardware "
-          "independent and could be used compare the performance "
-          "between different test runs. This flag is designed for "
-          "human consumption, and does not have any impact within "
-          "the system."
-      )
+    name="benchmark_test_id",
+    default=None,
+    help=help_wrap(
+      "The unique test ID of the benchmark run. It could be the "
+      "combination of key parameters. It is hardware "
+      "independent and could be used compare the performance "
+      "between different test runs. This flag is designed for "
+      "human consumption, and does not have any impact within "
+      "the system."
+    ),
   )
 
   define_log_steps()
 
   if bigquery_uploader:
     flags.DEFINE_string(
-        name="gcp_project", default=None, help=help_wrap("The GCP project name where the benchmark will be uploaded.")
+      name="gcp_project", default=None, help=help_wrap("The GCP project name where the benchmark will be uploaded.")
     )
 
     flags.DEFINE_string(
-        name="bigquery_data_set",
-        default="test_benchmark",
-        help=help_wrap("The Bigquery dataset name where the benchmark will be uploaded.")
+      name="bigquery_data_set",
+      default="test_benchmark",
+      help=help_wrap("The Bigquery dataset name where the benchmark will be uploaded."),
     )
 
     flags.DEFINE_string(
-        name="bigquery_run_table",
-        default="benchmark_run",
-        help=help_wrap("The Bigquery table name where the benchmark run "
-                       "information will be uploaded.")
+      name="bigquery_run_table",
+      default="benchmark_run",
+      help=help_wrap("The Bigquery table name where the benchmark run information will be uploaded."),
     )
 
     flags.DEFINE_string(
-        name="bigquery_run_status_table",
-        default="benchmark_run_status",
-        help=help_wrap("The Bigquery table name where the benchmark run "
-                       "status information will be uploaded.")
+      name="bigquery_run_status_table",
+      default="benchmark_run_status",
+      help=help_wrap("The Bigquery table name where the benchmark run status information will be uploaded."),
     )
 
     flags.DEFINE_string(
-        name="bigquery_metric_table",
-        default="benchmark_metric",
-        help=help_wrap("The Bigquery table name where the benchmark metric "
-                       "information will be uploaded.")
+      name="bigquery_metric_table",
+      default="benchmark_metric",
+      help=help_wrap("The Bigquery table name where the benchmark metric information will be uploaded."),
     )
 
   return key_flags

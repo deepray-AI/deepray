@@ -17,43 +17,40 @@ import urllib.request
 import sys
 import subprocess
 
+
 class WikiDownloader:
-    def __init__(self, language, save_path):
-        self.save_path = save_path + '/wikicorpus_' + language
+  def __init__(self, language, save_path):
+    self.save_path = save_path + "/wikicorpus_" + language
 
-        if not os.path.exists(self.save_path):
-            os.makedirs(self.save_path)
+    if not os.path.exists(self.save_path):
+      os.makedirs(self.save_path)
 
-        self.language = language
-        self.download_urls = {
-            'en' : 'https://dumps.wikimedia.your.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2',
-            'zh' : 'https://dumps.wikimedia.your.org/zhwiki/latest/zhwiki-latest-pages-articles.xml.bz2'        }
+    self.language = language
+    self.download_urls = {
+      "en": "https://dumps.wikimedia.your.org/enwiki/latest/enwiki-latest-pages-articles.xml.bz2",
+      "zh": "https://dumps.wikimedia.your.org/zhwiki/latest/zhwiki-latest-pages-articles.xml.bz2",
+    }
 
-        self.output_files = {
-            'en' : 'wikicorpus_en.xml.bz2',
-            'zh' : 'wikicorpus_zh.xml.bz2'
-        }
+    self.output_files = {"en": "wikicorpus_en.xml.bz2", "zh": "wikicorpus_zh.xml.bz2"}
 
+  def download(self):
+    if self.language in self.download_urls:
+      url = self.download_urls[self.language]
+      filename = self.output_files[self.language]
 
-    def download(self):
-        if self.language in self.download_urls:
-            url = self.download_urls[self.language]
-            filename = self.output_files[self.language]
+      print("Downloading:", url)
+      if os.path.isfile(self.save_path + "/" + filename):
+        print("** Download file already exists, skipping download")
+      else:
+        cmd = ["wget", url, "--output-document={}".format(self.save_path + "/" + filename), "--no-check-certificate"]
+        print("Running:", cmd)
+        status = subprocess.run(cmd)
+        if status.returncode != 0:
+          raise RuntimeError("Wiki download not successful")
 
-            print('Downloading:', url)
-            if os.path.isfile(self.save_path + '/' + filename):
-                print('** Download file already exists, skipping download')
-            else:
-                cmd = ['wget', url, '--output-document={}'.format(self.save_path + '/' + filename), '--no-check-certificate']
-                print('Running:', cmd)
-                status = subprocess.run(cmd)
-                if status.returncode != 0:
-                    raise RuntimeError('Wiki download not successful')
+      # Always unzipping since this is relatively fast and will overwrite
+      print("Unzipping:", self.output_files[self.language])
+      subprocess.run("bzip2 -dk " + self.save_path + "/" + filename, shell=True, check=True)
 
-            # Always unzipping since this is relatively fast and will overwrite
-            print('Unzipping:', self.output_files[self.language])
-            subprocess.run('bzip2 -dk ' + self.save_path + '/' + filename, shell=True, check=True)
-
-        else:
-            assert False, 'WikiDownloader not implemented for this language yet.'
-
+    else:
+      assert False, "WikiDownloader not implemented for this language yet."

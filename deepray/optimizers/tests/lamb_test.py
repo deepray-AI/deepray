@@ -35,12 +35,11 @@ def _dtypes_to_test(use_gpu):
 
 
 def lamb_update_numpy(param, g_t, t, m, v, lr=0.001, lamb_wd=0.0, beta1=0.9, beta2=0.999, epsilon=1e-6):
-
   m_t = beta1 * m + (1 - beta1) * g_t
   v_t = beta2 * v + (1 - beta2) * g_t * g_t
 
-  m_t_hat = m_t / (1 - beta1**(t + 1))
-  v_t_hat = v_t / (1 - beta2**(t + 1))
+  m_t_hat = m_t / (1 - beta1 ** (t + 1))
+  v_t_hat = v_t / (1 - beta2 ** (t + 1))
   update = m_t_hat / (np.sqrt(v_t_hat) + epsilon)
 
   update += lamb_wd * param
@@ -76,15 +75,15 @@ def test_sparse():
     var1 = tf.Variable(var1_np)
     grads0_np_indices = np.array([0, 2], dtype=np.int32)
     grads0 = tf.IndexedSlices(
-        tf.constant(grads0_np[grads0_np_indices]),
-        tf.constant(grads0_np_indices),
-        tf.constant([3]),
+      tf.constant(grads0_np[grads0_np_indices]),
+      tf.constant(grads0_np_indices),
+      tf.constant([3]),
     )
     grads1_np_indices = np.array([0, 2], dtype=np.int32)
     grads1 = tf.IndexedSlices(
-        tf.constant(grads1_np[grads1_np_indices]),
-        tf.constant(grads1_np_indices),
-        tf.constant([3]),
+      tf.constant(grads1_np[grads1_np_indices]),
+      tf.constant(grads1_np_indices),
+      tf.constant([3]),
     )
     opt = lamb.LAMB()
 
@@ -95,8 +94,8 @@ def test_sparse():
     # Run 3 steps of LAMB
     for t in range(3):
       beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
-      test_utils.assert_allclose_according_to_type(0.9**(t + 1), beta_1_power)
-      test_utils.assert_allclose_according_to_type(0.999**(t + 1), beta_2_power)
+      test_utils.assert_allclose_according_to_type(0.9 ** (t + 1), beta_1_power)
+      test_utils.assert_allclose_according_to_type(0.999 ** (t + 1), beta_2_power)
 
       opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
 
@@ -131,12 +130,12 @@ def test_basic_with_learning_rate_decay():
     lamb_wd = 0.01
 
     opt = lamb.LAMB(
-        learning_rate=learning_rate,
-        beta_1=beta_1,
-        beta_2=beta_2,
-        epsilon=epsilon,
-        weight_decay=lamb_wd,
-        decay=decay,
+      learning_rate=learning_rate,
+      beta_1=beta_1,
+      beta_2=beta_2,
+      epsilon=epsilon,
+      weight_decay=lamb_wd,
+      decay=decay,
     )
 
     # Run 3 steps of LAMB
@@ -214,8 +213,8 @@ def test_tensor_learning_rate():
     # Run 3 steps of LAMB
     for t in range(3):
       beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
-      test_utils.assert_allclose_according_to_type(0.9**(t + 1), beta_1_power)
-      test_utils.assert_allclose_according_to_type(0.999**(t + 1), beta_2_power)
+      test_utils.assert_allclose_according_to_type(0.9 ** (t + 1), beta_1_power)
+      test_utils.assert_allclose_according_to_type(0.999 ** (t + 1), beta_2_power)
       opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
 
       var0_np, m0, v0 = lamb_update_numpy(var0_np, grads0_np, t, m0, v0)
@@ -249,8 +248,8 @@ def test_sharing():
     # Run 3 steps of intertwined LAMB1 and LAMB2.
     for t in range(3):
       beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
-      test_utils.assert_allclose_according_to_type(0.9**(t + 1), beta_1_power)
-      test_utils.assert_allclose_according_to_type(0.999**(t + 1), beta_2_power)
+      test_utils.assert_allclose_according_to_type(0.9 ** (t + 1), beta_1_power)
+      test_utils.assert_allclose_according_to_type(0.999 ** (t + 1), beta_2_power)
 
       opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
 
@@ -301,8 +300,8 @@ def test_resource():
     # Run 3 steps of LAMB
     for t in range(3):
       beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
-      test_utils.assert_allclose_according_to_type(0.9**(t + 1), beta_1_power)
-      test_utils.assert_allclose_according_to_type(0.999**(t + 1), beta_2_power)
+      test_utils.assert_allclose_according_to_type(0.9 ** (t + 1), beta_1_power)
+      test_utils.assert_allclose_according_to_type(0.999 ** (t + 1), beta_2_power)
 
       opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
 

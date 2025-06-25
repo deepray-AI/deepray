@@ -35,7 +35,6 @@ from deepray.custom_ops.unique_ops import gen_array_ops
 
 
 class UniqueTest(test.TestCase):
-
   def testInt32(self):
     x = np.random.randint(0, high=1000, size=700000)
     with self.cached_session(use_gpu=True) as sess:
@@ -92,7 +91,7 @@ class UniqueTest(test.TestCase):
     self.assertEqual(len(x), len(tf_idx))
     self.assertEqual(len(tf_y), len(np.unique(x)))
     for i in range(len(x)):
-      self.assertEqual(x[i], tf_y[tf_idx[i]].decode('ascii'))
+      self.assertEqual(x[i], tf_y[tf_idx[i]].decode("ascii"))
 
   def testInt32Axis(self):
     for dtype in [np.int32, np.int64]:
@@ -122,31 +121,31 @@ class UniqueTest(test.TestCase):
 
   def IllegalIdForMultMapUnique(self):
     recover_env = False
-    if 'DEEPREC_UNIQUE_OP_PARTITION_SIZE' in os.environ:
+    if "DEEPREC_UNIQUE_OP_PARTITION_SIZE" in os.environ:
       recover_env = True
-      old_env = os.environ['DEEPREC_UNIQUE_OP_PARTITION_SIZE']
-    os.environ['DEEPREC_UNIQUE_OP_PARTITION_SIZE'] = '2'
+      old_env = os.environ["DEEPREC_UNIQUE_OP_PARTITION_SIZE"]
+    os.environ["DEEPREC_UNIQUE_OP_PARTITION_SIZE"] = "2"
 
     with self.cached_session() as sess:
       x = np.array([-1, 0, 1, PreservedKey], dtype=np.int64)
       y, idx = gen_array_ops.deepray_unique(x, out_idx=dtypes.int64)
       with self.assertRaisesRegexp(
-          errors_impl.InvalidArgumentError, "Input id is preserved key of dense_hash_map, "
-          "not supported: " + str(PreservedKey)
+        errors_impl.InvalidArgumentError,
+        "Input id is preserved key of dense_hash_map, not supported: " + str(PreservedKey),
       ):
         tf_y, tf_idx = sess.run([y, idx])
 
-    del os.environ['DEEPREC_UNIQUE_OP_PARTITION_SIZE']
+    del os.environ["DEEPREC_UNIQUE_OP_PARTITION_SIZE"]
     if recover_env:
-      os.environ['DEEPREC_UNIQUE_OP_PARTITION_SIZE'] = old_env
+      os.environ["DEEPREC_UNIQUE_OP_PARTITION_SIZE"] = old_env
 
   def RunUniqueWithDifferentMaps(self, map_type, test_illegal_key=False):
     recover_env = False
-    if 'DEEPREC_UNIQUE_OP_HASH_MAP' in os.environ:
+    if "DEEPREC_UNIQUE_OP_HASH_MAP" in os.environ:
       recover_env = True
-      old_env = os.environ['DEEPREC_UNIQUE_OP_HASH_MAP']
+      old_env = os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"]
 
-    os.environ['DEEPREC_UNIQUE_OP_HASH_MAP'] = map_type
+    os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"] = map_type
     self.testInt32()
     self.testInt32OutIdxInt64()
     self.testInt64OutIdxInt64()
@@ -156,25 +155,24 @@ class UniqueTest(test.TestCase):
     if test_illegal_key:
       self.IllegalIdForMultMapUnique()
 
-    del os.environ['DEEPREC_UNIQUE_OP_HASH_MAP']
+    del os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"]
     if recover_env:
-      os.environ['DEEPREC_UNIQUE_OP_HASH_MAP'] = old_env
+      os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"] = old_env
 
   def testUniqueMultiMap(self):
-    self.RunUniqueWithDifferentMaps('MULTIMAP', True)
+    self.RunUniqueWithDifferentMaps("MULTIMAP", True)
 
   def testUniqueStlMap(self):
-    self.RunUniqueWithDifferentMaps('STL')
+    self.RunUniqueWithDifferentMaps("STL")
 
   def testUniqueAbslMap(self):
-    self.RunUniqueWithDifferentMaps('ABSL')
+    self.RunUniqueWithDifferentMaps("ABSL")
 
   def testUniqueDenseHashMap(self):
-    self.RunUniqueWithDifferentMaps('GOOGLE')
+    self.RunUniqueWithDifferentMaps("GOOGLE")
 
 
 class UniqueWithCountsTest(test.TestCase):
-
   def testInt32(self):
     x = np.random.randint(2, high=1000, size=700000)
     with self.cached_session() as sess:
@@ -212,9 +210,9 @@ class UniqueWithCountsTest(test.TestCase):
     self.assertEqual(len(x), len(tf_idx))
     self.assertEqual(len(tf_y), len(np.unique(x)))
     for i in range(len(x)):
-      self.assertEqual(x[i], tf_y[tf_idx[i]].decode('ascii'))
+      self.assertEqual(x[i], tf_y[tf_idx[i]].decode("ascii"))
     for value, count in zip(tf_y, tf_count):
-      v = [1 if x[i] == value.decode('ascii') else 0 for i in range(7000)]
+      v = [1 if x[i] == value.decode("ascii") else 0 for i in range(7000)]
       self.assertEqual(count, sum(v))
 
   def testInt32Axis(self):
@@ -249,35 +247,34 @@ class UniqueWithCountsTest(test.TestCase):
 
   def RunUniqueWithCountsWithDifferentMaps(self, map_type):
     recover_env = False
-    if 'DEEPREC_UNIQUE_OP_HASH_MAP' in os.environ:
+    if "DEEPREC_UNIQUE_OP_HASH_MAP" in os.environ:
       recover_env = True
-      old_env = os.environ['DEEPREC_UNIQUE_OP_HASH_MAP']
+      old_env = os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"]
 
-    os.environ['DEEPREC_UNIQUE_OP_HASH_MAP'] = map_type
+    os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"] = map_type
     self.testInt32()
     self.testInt32OutIdxInt64()
     self.testInt32Axis()
     self.testInt32V2()
 
-    del os.environ['DEEPREC_UNIQUE_OP_HASH_MAP']
+    del os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"]
     if recover_env:
-      os.environ['DEEPREC_UNIQUE_OP_HASH_MAP'] = old_env
+      os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"] = old_env
 
   def testUniqueWithCountsMultiMap(self):
-    self.RunUniqueWithCountsWithDifferentMaps('MULTIMAP')
+    self.RunUniqueWithCountsWithDifferentMaps("MULTIMAP")
 
   def testUniqueWithCountsStlMap(self):
-    self.RunUniqueWithCountsWithDifferentMaps('STL')
+    self.RunUniqueWithCountsWithDifferentMaps("STL")
 
   def testUniqueWithCountsAbslMap(self):
-    self.RunUniqueWithCountsWithDifferentMaps('ABSL')
+    self.RunUniqueWithCountsWithDifferentMaps("ABSL")
 
   def testUniqueWithCountsDenseHashMap(self):
-    self.RunUniqueWithCountsWithDifferentMaps('GOOGLE')
+    self.RunUniqueWithCountsWithDifferentMaps("GOOGLE")
 
 
 class UniqueWithExtraCountsTest(test.TestCase):
-
   def testInt32(self):
     x = np.random.randint(2, high=1000, size=700000)
     extra_x = x[:5].tolist()
@@ -320,30 +317,30 @@ class UniqueWithExtraCountsTest(test.TestCase):
 
   def RunUniqueWithCountsWithDifferentMaps(self, map_type):
     recover_env = False
-    if 'DEEPREC_UNIQUE_OP_HASH_MAP' in os.environ:
+    if "DEEPREC_UNIQUE_OP_HASH_MAP" in os.environ:
       recover_env = True
-      old_env = os.environ['DEEPREC_UNIQUE_OP_HASH_MAP']
+      old_env = os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"]
 
-    os.environ['DEEPREC_UNIQUE_OP_HASH_MAP'] = map_type
+    os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"] = map_type
     self.testInt32()
     self.testInt32OutIdxInt64()
 
-    del os.environ['DEEPREC_UNIQUE_OP_HASH_MAP']
+    del os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"]
     if recover_env:
-      os.environ['DEEPREC_UNIQUE_OP_HASH_MAP'] = old_env
+      os.environ["DEEPREC_UNIQUE_OP_HASH_MAP"] = old_env
 
   def testUniqueWithCountsMultiMap(self):
-    self.RunUniqueWithCountsWithDifferentMaps('MULTIMAP')
+    self.RunUniqueWithCountsWithDifferentMaps("MULTIMAP")
 
   def testUniqueWithCountsStlMap(self):
-    self.RunUniqueWithCountsWithDifferentMaps('STL')
+    self.RunUniqueWithCountsWithDifferentMaps("STL")
 
   def testUniqueWithCountsAbslMap(self):
-    self.RunUniqueWithCountsWithDifferentMaps('ABSL')
+    self.RunUniqueWithCountsWithDifferentMaps("ABSL")
 
   def testUniqueWithCountsDenseHashMap(self):
-    self.RunUniqueWithCountsWithDifferentMaps('GOOGLE')
+    self.RunUniqueWithCountsWithDifferentMaps("GOOGLE")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.main()

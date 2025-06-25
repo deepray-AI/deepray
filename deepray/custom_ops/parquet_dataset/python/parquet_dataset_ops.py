@@ -49,7 +49,7 @@ class DataFrameValueSpec(type_spec.BatchableTypeSpec):
       field: The field definition.
     """
     if field.incomplete:
-      raise ValueError(f'Field {field} is incomplete, please specify dtype and ragged_rank')
+      raise ValueError(f"Field {field} is incomplete, please specify dtype and ragged_rank")
     self._field = field
 
   def _serialize(self):
@@ -72,10 +72,10 @@ class DataFrameValueSpec(type_spec.BatchableTypeSpec):
     return DataFrame.Value(tensor_list[0], tensor_list[1:])
 
   def _batch(self, batch_size):
-    raise NotImplementedError('batching of a bacthed tensor not supported')
+    raise NotImplementedError("batching of a bacthed tensor not supported")
 
   def _unbatch(self):
-    raise NotImplementedError('unbatching of a bacthed tensor not supported')
+    raise NotImplementedError("unbatching of a bacthed tensor not supported")
 
   def _to_legacy_output_types(self):
     return self._field.output_types
@@ -102,8 +102,8 @@ class _ParquetDataset(dataset_ops.DatasetSource):  # pylint: disable=abstract-me
       drop_remainder: (Optional.) If True, only keep batches with exactly
         `batch_size` samples.
     """
-    self._filename = ops.convert_to_tensor(filename, dtype=dtypes.string, name='filename')
-    self._batch_size = ops.convert_to_tensor(batch_size, dtype=dtypes.int64, name='batch_size')
+    self._filename = ops.convert_to_tensor(filename, dtype=dtypes.string, name="filename")
+    self._batch_size = ops.convert_to_tensor(batch_size, dtype=dtypes.int64, name="batch_size")
     self._fields = fields
     self._output_specs = {}
     for f in self._fields:
@@ -125,14 +125,14 @@ class _ParquetDataset(dataset_ops.DatasetSource):  # pylint: disable=abstract-me
     self._drop_remainder = drop_remainder
 
     variant_tensor = gen_parquet_ops.parquet_tabular_dataset_v1(
-        self._filename,
-        self._batch_size,
-        field_names=self._field_names,
-        field_dtypes=self._field_dtypes,
-        field_ragged_ranks=self._field_ragged_ranks,
-        partition_count=self._partition_count,
-        partition_index=self._partition_index,
-        drop_remainder=self._drop_remainder
+      self._filename,
+      self._batch_size,
+      field_names=self._field_names,
+      field_dtypes=self._field_dtypes,
+      field_ragged_ranks=self._field_ragged_ranks,
+      partition_count=self._partition_count,
+      partition_index=self._partition_index,
+      drop_remainder=self._drop_remainder,
     )
     super().__init__(variant_tensor)
 
@@ -161,15 +161,15 @@ class ParquetDataset(dataset_ops.DatasetV2):  # pylint: disable=abstract-method
     return parquet_fields(filename, fields, lower=lower)
 
   def __init__(
-      self,
-      filenames,
-      batch_size=1,
-      fields=None,
-      partition_count=1,
-      partition_index=0,
-      drop_remainder=False,
-      num_parallel_reads=None,
-      num_sequential_reads=1
+    self,
+    filenames,
+    batch_size=1,
+    fields=None,
+    partition_count=1,
+    partition_index=0,
+    drop_remainder=False,
+    num_parallel_reads=None,
+    num_sequential_reads=1,
   ):
     """Create a `ParquetDataset`.
 
@@ -194,16 +194,18 @@ class ParquetDataset(dataset_ops.DatasetV2):  # pylint: disable=abstract-method
     self._drop_remainder = drop_remainder
 
     def _create_dataset(f):
-      f = ops.convert_to_tensor(f, dtypes.string, name='filename')
+      f = ops.convert_to_tensor(f, dtypes.string, name="filename")
       return _ParquetDataset(  # pylint: disable=abstract-class-instantiated
-        f, batch_size,
+        f,
+        batch_size,
         fields=self._fields,
         partition_count=self._partition_count,
         partition_index=self._partition_index,
-        drop_remainder=self._drop_remainder)
+        drop_remainder=self._drop_remainder,
+      )
 
     self._impl = self._build_dataset(
-        _create_dataset, filenames, num_parallel_reads=num_parallel_reads, num_sequential_reads=num_sequential_reads
+      _create_dataset, filenames, num_parallel_reads=num_parallel_reads, num_sequential_reads=num_sequential_reads
     )
     super().__init__(self._impl._variant_tensor)  # pylint: disable=protected-access
 
@@ -240,51 +242,51 @@ class ParquetDataset(dataset_ops.DatasetV2):  # pylint: disable=abstract-method
       return filenames.interleave(dataset_creator, num_parallel_calls=num_parallel_reads)
     # Specified Parallel Reading
     return readers.ParallelInterleaveDataset(
-        filenames,
-        dataset_creator,
-        cycle_length=num_parallel_reads,
-        block_length=num_sequential_reads,
-        sloppy=True,
-        buffer_output_elements=None,
-        prefetch_input_elements=1
+      filenames,
+      dataset_creator,
+      cycle_length=num_parallel_reads,
+      block_length=num_sequential_reads,
+      sloppy=True,
+      buffer_output_elements=None,
+      prefetch_input_elements=1,
     )
 
 
 def read_parquet(
-    batch_size,
-    fields=None,
-    partition_count=1,
-    partition_index=0,
-    drop_remainder=False,
-    num_parallel_reads=None,
-    num_sequential_reads=1
+  batch_size,
+  fields=None,
+  partition_count=1,
+  partition_index=0,
+  drop_remainder=False,
+  num_parallel_reads=None,
+  num_sequential_reads=1,
 ):
   """Create a `ParquetDataset` from filenames dataset.
 
-    Args:
-      batch_size: Maxium number of samples in an output batch.
-      fields: (Optional.) List of DataFrame fields.
-      partition_count: (Optional.) Count of row group partitions.
-      partition_index: (Optional.) Index of row group partitions.
-      drop_remainder: (Optional.) If True, only keep batches with exactly
-        `batch_size` samples.
-      num_parallel_reads: (Optional.) A `tf.int64` scalar representing the
-        number of files to read in parallel. Defaults to reading files
-        sequentially.
-      num_sequential_reads: (Optional.) A `tf.int64` scalar representing the
-        number of batches to read in sequential. Defaults to 1.
-    """
+  Args:
+    batch_size: Maxium number of samples in an output batch.
+    fields: (Optional.) List of DataFrame fields.
+    partition_count: (Optional.) Count of row group partitions.
+    partition_index: (Optional.) Index of row group partitions.
+    drop_remainder: (Optional.) If True, only keep batches with exactly
+      `batch_size` samples.
+    num_parallel_reads: (Optional.) A `tf.int64` scalar representing the
+      number of files to read in parallel. Defaults to reading files
+      sequentially.
+    num_sequential_reads: (Optional.) A `tf.int64` scalar representing the
+      number of batches to read in sequential. Defaults to 1.
+  """
 
   def _apply_fn(filenames):
     return ParquetDataset(
-        filenames,
-        batch_size=batch_size,
-        fields=fields,
-        partition_count=partition_count,
-        partition_index=partition_index,
-        drop_remainder=drop_remainder,
-        num_parallel_reads=num_parallel_reads,
-        num_sequential_reads=num_sequential_reads
+      filenames,
+      batch_size=batch_size,
+      fields=fields,
+      partition_count=partition_count,
+      partition_index=partition_index,
+      drop_remainder=drop_remainder,
+      num_parallel_reads=num_parallel_reads,
+      num_sequential_reads=num_sequential_reads,
     )
 
   return _apply_fn

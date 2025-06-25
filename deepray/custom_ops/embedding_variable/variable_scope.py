@@ -56,18 +56,18 @@ class VariableScope(object):
   """
 
   def __init__(
-      self,
-      reuse,
-      name="",
-      initializer=None,
-      regularizer=None,
-      caching_device=None,
-      partitioner=None,
-      custom_getter=None,
-      name_scope="",
-      dtype=dtypes.float32,
-      use_resource=None,
-      constraint=None
+    self,
+    reuse,
+    name="",
+    initializer=None,
+    regularizer=None,
+    caching_device=None,
+    partitioner=None,
+    custom_getter=None,
+    name_scope="",
+    dtype=dtypes.float32,
+    use_resource=None,
+    constraint=None,
   ):
     """Creates a new VariableScope with the given properties."""
     self._name = name
@@ -83,8 +83,7 @@ class VariableScope(object):
     self._constraint = constraint
     if context.executing_eagerly():
       if self._caching_device is not None:
-        raise NotImplementedError("Caching devices is not yet supported "
-                                  "when eager execution is enabled.")
+        raise NotImplementedError("Caching devices is not yet supported when eager execution is enabled.")
       self._reuse = AUTO_REUSE
       self._use_resource = True
 
@@ -147,8 +146,7 @@ class VariableScope(object):
   def set_use_resource(self, use_resource):
     """Sets whether to use ResourceVariables for this scope."""
     if context.executing_eagerly() and not use_resource:
-      raise ValueError("When eager execution is enabled, "
-                       "use_resource cannot be set to false.")
+      raise ValueError("When eager execution is enabled, use_resource cannot be set to false.")
     self._use_resource = use_resource
 
   def set_regularizer(self, regularizer):
@@ -158,8 +156,7 @@ class VariableScope(object):
   def set_caching_device(self, caching_device):
     """Set caching_device for this scope."""
     if context.executing_eagerly():
-      raise NotImplementedError("Caching devices are not yet supported "
-                                "when eager execution is enabled.")
+      raise NotImplementedError("Caching devices are not yet supported when eager execution is enabled.")
     self._caching_device = caching_device
 
   def set_partitioner(self, partitioner):
@@ -188,22 +185,22 @@ class VariableScope(object):
     return self.get_collection(ops.GraphKeys.LOCAL_VARIABLES)
 
   def get_variable(
-      self,
-      var_store,
-      name,
-      shape=None,
-      dtype=None,
-      initializer=None,
-      regularizer=None,
-      reuse=None,
-      trainable=None,
-      collections=None,
-      caching_device=None,
-      partitioner=None,
-      validate_shape=True,
-      use_resource=None,
-      custom_getter=None,
-      constraint=None,
+    self,
+    var_store,
+    name,
+    shape=None,
+    dtype=None,
+    initializer=None,
+    regularizer=None,
+    reuse=None,
+    trainable=None,
+    collections=None,
+    caching_device=None,
+    partitioner=None,
+    validate_shape=True,
+    use_resource=None,
+    custom_getter=None,
+    constraint=None,
   ):
     """Gets an existing variable with this name or create a new one."""
     if regularizer is None:
@@ -232,8 +229,7 @@ class VariableScope(object):
       if dtype is not None and initializer is not None and not callable(initializer):
         init_dtype = ops.convert_to_tensor(initializer).dtype.base_dtype
         if init_dtype != dtype:
-          raise ValueError("Initializer type '%s' and explicit dtype '%s' "
-                           "don't match." % (init_dtype, dtype))
+          raise ValueError("Initializer type '%s' and explicit dtype '%s' don't match." % (init_dtype, dtype))
       if initializer is None:
         initializer = self._initializer
       if constraint is None:
@@ -241,41 +237,41 @@ class VariableScope(object):
       if dtype is None:
         dtype = self._dtype
       return var_store.get_variable(
-          full_name,
-          shape=shape,
-          dtype=dtype,
-          initializer=initializer,
-          regularizer=regularizer,
-          reuse=reuse,
-          trainable=trainable,
-          collections=collections,
-          caching_device=caching_device,
-          partitioner=partitioner,
-          validate_shape=validate_shape,
-          use_resource=use_resource,
-          custom_getter=custom_getter,
-          constraint=constraint,
+        full_name,
+        shape=shape,
+        dtype=dtype,
+        initializer=initializer,
+        regularizer=regularizer,
+        reuse=reuse,
+        trainable=trainable,
+        collections=collections,
+        caching_device=caching_device,
+        partitioner=partitioner,
+        validate_shape=validate_shape,
+        use_resource=use_resource,
+        custom_getter=custom_getter,
+        constraint=constraint,
       )
 
   def get_embedding_variable(
-      self,
-      name,
-      shape=None,
-      dtype=None,
-      initializer=None,
-      regularizer=None,
-      reuse=None,
-      trainable=True,
-      collections=None,
-      caching_device=None,
-      partitioner=None,
-      validate_shape=True,
-      use_resource=None,
-      custom_getter=None,
-      constraint=None,
-      invalid_key=None,
-      evconfig=ev_variables.EmbeddingVariableConfig(),
-      ht_partition_num=1000
+    self,
+    name,
+    shape=None,
+    dtype=None,
+    initializer=None,
+    regularizer=None,
+    reuse=None,
+    trainable=True,
+    collections=None,
+    caching_device=None,
+    partitioner=None,
+    validate_shape=True,
+    use_resource=None,
+    custom_getter=None,
+    constraint=None,
+    invalid_key=None,
+    evconfig=ev_variables.EmbeddingVariableConfig(),
+    ht_partition_num=1000,
   ):
     """Gets an existing variable with this name or create a new one."""
     if regularizer is None:
@@ -304,8 +300,7 @@ class VariableScope(object):
       if dtype is not None and initializer is not None and not callable(initializer):
         init_dtype = ops.convert_to_tensor(initializer).dtype.base_dtype
         if init_dtype != dtype:
-          raise ValueError("Initializer type '%s' and explicit dtype '%s' "
-                           "don't match." % (init_dtype, dtype))
+          raise ValueError("Initializer type '%s' and explicit dtype '%s' don't match." % (init_dtype, dtype))
       if initializer is None:
         initializer = self._initializer
       if constraint is None:
@@ -315,46 +310,46 @@ class VariableScope(object):
       if invalid_key is None:
         invalid_key = -1
       return _VariableStore().get_variable(
-          full_name,
-          shape=shape,
-          dtype=dtype,
-          initializer=initializer,
-          regularizer=regularizer,
-          reuse=reuse,
-          trainable=trainable,
-          collections=collections,
-          caching_device=caching_device,
-          partitioner=partitioner,
-          validate_shape=validate_shape,
-          use_resource=use_resource,
-          custom_getter=custom_getter,
-          constraint=constraint,
-          invalid_key=invalid_key,
-          evconfig=evconfig,
-          ht_partition_num=ht_partition_num
+        full_name,
+        shape=shape,
+        dtype=dtype,
+        initializer=initializer,
+        regularizer=regularizer,
+        reuse=reuse,
+        trainable=trainable,
+        collections=collections,
+        caching_device=caching_device,
+        partitioner=partitioner,
+        validate_shape=validate_shape,
+        use_resource=use_resource,
+        custom_getter=custom_getter,
+        constraint=constraint,
+        invalid_key=invalid_key,
+        evconfig=evconfig,
+        ht_partition_num=ht_partition_num,
       )
 
   def get_dynamic_dimension_embedding_variable(
-      self,
-      var_store,
-      name,
-      shape=None,
-      embedding_block_num=None,
-      dtype=None,
-      initializer=None,
-      regularizer=None,
-      reuse=None,
-      trainable=True,
-      collections=None,
-      caching_device=None,
-      partitioner=None,
-      validate_shape=True,
-      use_resource=None,
-      custom_getter=None,
-      constraint=None,
-      invalid_key=None,
-      evconfig=ev_variables.EmbeddingVariableConfig(),
-      ht_partition_num=1000
+    self,
+    var_store,
+    name,
+    shape=None,
+    embedding_block_num=None,
+    dtype=None,
+    initializer=None,
+    regularizer=None,
+    reuse=None,
+    trainable=True,
+    collections=None,
+    caching_device=None,
+    partitioner=None,
+    validate_shape=True,
+    use_resource=None,
+    custom_getter=None,
+    constraint=None,
+    invalid_key=None,
+    evconfig=ev_variables.EmbeddingVariableConfig(),
+    ht_partition_num=1000,
   ):
     """Gets an existing variable with this name or create a new one."""
     if regularizer is None:
@@ -383,8 +378,7 @@ class VariableScope(object):
       if dtype is not None and initializer is not None and not callable(initializer):
         init_dtype = ops.convert_to_tensor(initializer).dtype.base_dtype
         if init_dtype != dtype:
-          raise ValueError("Initializer type '%s' and explicit dtype '%s' "
-                           "don't match." % (init_dtype, dtype))
+          raise ValueError("Initializer type '%s' and explicit dtype '%s' don't match." % (init_dtype, dtype))
       if initializer is None:
         initializer = self._initializer
       if constraint is None:
@@ -394,41 +388,41 @@ class VariableScope(object):
       if invalid_key is None:
         invalid_key = -1
       return var_store.get_variable(
-          full_name,
-          shape=shape,
-          embedding_block_num=embedding_block_num,
-          dtype=dtype,
-          initializer=initializer,
-          regularizer=regularizer,
-          reuse=reuse,
-          trainable=trainable,
-          collections=collections,
-          caching_device=caching_device,
-          partitioner=partitioner,
-          validate_shape=validate_shape,
-          use_resource=use_resource,
-          custom_getter=custom_getter,
-          constraint=constraint,
-          invalid_key=invalid_key,
-          evconfig=evconfig,
-          ht_partition_num=ht_partition_num
+        full_name,
+        shape=shape,
+        embedding_block_num=embedding_block_num,
+        dtype=dtype,
+        initializer=initializer,
+        regularizer=regularizer,
+        reuse=reuse,
+        trainable=trainable,
+        collections=collections,
+        caching_device=caching_device,
+        partitioner=partitioner,
+        validate_shape=validate_shape,
+        use_resource=use_resource,
+        custom_getter=custom_getter,
+        constraint=constraint,
+        invalid_key=invalid_key,
+        evconfig=evconfig,
+        ht_partition_num=ht_partition_num,
       )
 
   def _get_partitioned_variable(
-      self,
-      var_store,
-      name,
-      shape=None,
-      dtype=None,
-      initializer=None,
-      regularizer=None,
-      trainable=None,
-      collections=None,
-      caching_device=None,
-      partitioner=None,
-      validate_shape=True,
-      use_resource=None,
-      constraint=None,
+    self,
+    var_store,
+    name,
+    shape=None,
+    dtype=None,
+    initializer=None,
+    regularizer=None,
+    trainable=None,
+    collections=None,
+    caching_device=None,
+    partitioner=None,
+    validate_shape=True,
+    use_resource=None,
+    constraint=None,
   ):
     """Gets an existing variable with this name or create a new one."""
     if initializer is None:
@@ -448,11 +442,11 @@ class VariableScope(object):
 
     if self._custom_getter is not None:
       raise ValueError(
-          "Private access to _get_partitioned_variable is not allowed when "
-          "a custom getter is set.  Current custom getter: %s.  "
-          "It is likely that you're using create_partitioned_variables.  "
-          "If so, consider instead using get_variable with a non-empty "
-          "partitioner parameter instead." % self._custom_getter
+        "Private access to _get_partitioned_variable is not allowed when "
+        "a custom getter is set.  Current custom getter: %s.  "
+        "It is likely that you're using create_partitioned_variables.  "
+        "If so, consider instead using get_variable with a non-empty "
+        "partitioner parameter instead." % self._custom_getter
       )
 
     if partitioner is None:
@@ -473,19 +467,19 @@ class VariableScope(object):
     with ops.name_scope(None):
       # pylint: disable=protected-access
       return var_store._get_partitioned_variable(
-          full_name,
-          shape=shape,
-          dtype=dtype,
-          initializer=initializer,
-          regularizer=regularizer,
-          reuse=self.reuse,
-          trainable=trainable,
-          collections=collections,
-          caching_device=caching_device,
-          partitioner=partitioner,
-          validate_shape=validate_shape,
-          use_resource=use_resource,
-          constraint=constraint,
+        full_name,
+        shape=shape,
+        dtype=dtype,
+        initializer=initializer,
+        regularizer=regularizer,
+        reuse=self.reuse,
+        trainable=trainable,
+        collections=collections,
+        caching_device=caching_device,
+        partitioner=partitioner,
+        validate_shape=validate_shape,
+        use_resource=use_resource,
+        constraint=constraint,
       )
       # pylint: enable=protected-access
 
@@ -508,25 +502,25 @@ class _VariableStore(object):
     self._store_eager_variables = False
 
   def get_variable(
-      self,
-      name,
-      shape=None,
-      embedding_block_num=None,
-      dtype=dtypes.float32,
-      initializer=None,
-      regularizer=None,
-      reuse=None,
-      trainable=None,
-      collections=None,
-      caching_device=None,
-      partitioner=None,
-      validate_shape=True,
-      use_resource=None,
-      custom_getter=None,
-      constraint=None,
-      invalid_key=None,
-      evconfig=ev_variables.EmbeddingVariableConfig(),
-      ht_partition_num=1000
+    self,
+    name,
+    shape=None,
+    embedding_block_num=None,
+    dtype=dtypes.float32,
+    initializer=None,
+    regularizer=None,
+    reuse=None,
+    trainable=None,
+    collections=None,
+    caching_device=None,
+    partitioner=None,
+    validate_shape=True,
+    use_resource=None,
+    custom_getter=None,
+    constraint=None,
+    invalid_key=None,
+    evconfig=ev_variables.EmbeddingVariableConfig(),
+    ht_partition_num=1000,
   ):
     """Gets an existing variable with these parameters or create a new one.
 
@@ -632,53 +626,31 @@ class _VariableStore(object):
     # Note: the parameters of _true_getter, and their documentation, match
     # *exactly* item-for-item with the docstring of this method.
     def _true_getter(  # pylint: disable=missing-docstring
-        name,
-        shape=None,
-        embedding_block_num=None,
-        dtype=dtypes.float32,
-        initializer=None,
-        regularizer=None,
-        reuse=None,
-        trainable=None,
-        collections=None,
-        caching_device=None,
-        partitioner=None,
-        validate_shape=True,
-        use_resource=None,
-        constraint=None,
-        invalid_key=None,
-        evconfig=ev_variables.EmbeddingVariableConfig(),
-        ht_partition_num=1000):
-      is_scalar = (shape is not None and isinstance(shape, collections_lib.abc.Sequence) and not shape)
+      name,
+      shape=None,
+      embedding_block_num=None,
+      dtype=dtypes.float32,
+      initializer=None,
+      regularizer=None,
+      reuse=None,
+      trainable=None,
+      collections=None,
+      caching_device=None,
+      partitioner=None,
+      validate_shape=True,
+      use_resource=None,
+      constraint=None,
+      invalid_key=None,
+      evconfig=ev_variables.EmbeddingVariableConfig(),
+      ht_partition_num=1000,
+    ):
+      is_scalar = shape is not None and isinstance(shape, collections_lib.abc.Sequence) and not shape
       # Partitioned variable case
       if partitioner is not None and not is_scalar:
         if not callable(partitioner):
           raise ValueError("Partitioner must be callable, but received: %s" % partitioner)
         with ops.name_scope(None):
           return self._get_partitioned_variable(
-              name=name,
-              shape=shape,
-              embedding_block_num=embedding_block_num,
-              dtype=dtype,
-              initializer=initializer,
-              regularizer=regularizer,
-              reuse=reuse,
-              trainable=trainable,
-              collections=collections,
-              caching_device=caching_device,
-              partitioner=partitioner,
-              validate_shape=validate_shape,
-              use_resource=use_resource,
-              constraint=constraint,
-              invalid_key=invalid_key,
-              evconfig=evconfig,
-              ht_partition_num=ht_partition_num
-          )
-
-      # Special case for partitioned variable to allow reuse without having to
-      # specify partitioner.
-      if reuse is True and partitioner is None and name in self._partitioned_vars:
-        return self._get_partitioned_variable(
             name=name,
             shape=shape,
             embedding_block_num=embedding_block_num,
@@ -689,24 +661,19 @@ class _VariableStore(object):
             trainable=trainable,
             collections=collections,
             caching_device=caching_device,
-            partitioner=None,
+            partitioner=partitioner,
             validate_shape=validate_shape,
             use_resource=use_resource,
             constraint=constraint,
             invalid_key=invalid_key,
             evconfig=evconfig,
-            ht_partition_num=ht_partition_num
-        )
+            ht_partition_num=ht_partition_num,
+          )
 
-      # Single variable case
-      if "%s/part_0" % name in self._vars:
-        raise ValueError(
-            "No partitioner was provided, but a partitioned version of the "
-            "variable was found: %s/part_0. Perhaps a variable of the same "
-            "name was already created with partitioning?" % name
-        )
-
-      return self._get_single_variable(
+      # Special case for partitioned variable to allow reuse without having to
+      # specify partitioner.
+      if reuse is True and partitioner is None and name in self._partitioned_vars:
+        return self._get_partitioned_variable(
           name=name,
           shape=shape,
           embedding_block_num=embedding_block_num,
@@ -717,35 +684,63 @@ class _VariableStore(object):
           trainable=trainable,
           collections=collections,
           caching_device=caching_device,
+          partitioner=None,
           validate_shape=validate_shape,
           use_resource=use_resource,
           constraint=constraint,
           invalid_key=invalid_key,
           evconfig=evconfig,
-          ht_partition_num=ht_partition_num
+          ht_partition_num=ht_partition_num,
+        )
+
+      # Single variable case
+      if "%s/part_0" % name in self._vars:
+        raise ValueError(
+          "No partitioner was provided, but a partitioned version of the "
+          "variable was found: %s/part_0. Perhaps a variable of the same "
+          "name was already created with partitioning?" % name
+        )
+
+      return self._get_single_variable(
+        name=name,
+        shape=shape,
+        embedding_block_num=embedding_block_num,
+        dtype=dtype,
+        initializer=initializer,
+        regularizer=regularizer,
+        reuse=reuse,
+        trainable=trainable,
+        collections=collections,
+        caching_device=caching_device,
+        validate_shape=validate_shape,
+        use_resource=use_resource,
+        constraint=constraint,
+        invalid_key=invalid_key,
+        evconfig=evconfig,
+        ht_partition_num=ht_partition_num,
       )
 
     if custom_getter is not None:
       # Handle backwards compatibility with getter arguments that were added
       # to the API after users started writing custom getters.
       custom_getter_kwargs = {
-          "getter": _true_getter,
-          "name": name,
-          "shape": shape,
-          "embedding_block_num": embedding_block_num,
-          "dtype": dtype,
-          "initializer": initializer,
-          "regularizer": regularizer,
-          "reuse": reuse,
-          "trainable": trainable,
-          "collections": collections,
-          "caching_device": caching_device,
-          "partitioner": partitioner,
-          "validate_shape": validate_shape,
-          "use_resource": use_resource,
-          "invalid_key": invalid_key,
-          "evconfig": evconfig,
-          "ht_partition_num": ht_partition_num,
+        "getter": _true_getter,
+        "name": name,
+        "shape": shape,
+        "embedding_block_num": embedding_block_num,
+        "dtype": dtype,
+        "initializer": initializer,
+        "regularizer": regularizer,
+        "reuse": reuse,
+        "trainable": trainable,
+        "collections": collections,
+        "caching_device": caching_device,
+        "partitioner": partitioner,
+        "validate_shape": validate_shape,
+        "use_resource": use_resource,
+        "invalid_key": invalid_key,
+        "evconfig": evconfig,
+        "ht_partition_num": ht_partition_num,
       }
       # `fn_args` and `has_kwargs` can handle functions, `functools.partial`,
       # `lambda`.
@@ -754,44 +749,44 @@ class _VariableStore(object):
       return custom_getter(**custom_getter_kwargs)
     else:
       return _true_getter(
-          name,
-          shape=shape,
-          embedding_block_num=embedding_block_num,
-          dtype=dtype,
-          initializer=initializer,
-          regularizer=regularizer,
-          reuse=reuse,
-          trainable=trainable,
-          collections=collections,
-          caching_device=caching_device,
-          partitioner=partitioner,
-          validate_shape=validate_shape,
-          use_resource=use_resource,
-          constraint=constraint,
-          invalid_key=invalid_key,
-          evconfig=evconfig,
-          ht_partition_num=ht_partition_num
+        name,
+        shape=shape,
+        embedding_block_num=embedding_block_num,
+        dtype=dtype,
+        initializer=initializer,
+        regularizer=regularizer,
+        reuse=reuse,
+        trainable=trainable,
+        collections=collections,
+        caching_device=caching_device,
+        partitioner=partitioner,
+        validate_shape=validate_shape,
+        use_resource=use_resource,
+        constraint=constraint,
+        invalid_key=invalid_key,
+        evconfig=evconfig,
+        ht_partition_num=ht_partition_num,
       )
 
   def _get_single_variable(
-      self,
-      name,
-      shape=None,
-      embedding_block_num=None,
-      dtype=dtypes.float32,
-      initializer=None,
-      regularizer=None,
-      partition_info=None,
-      reuse=None,
-      trainable=None,
-      collections=None,
-      caching_device=None,
-      validate_shape=True,
-      use_resource=None,
-      constraint=None,
-      invalid_key=None,
-      evconfig=ev_variables.EmbeddingVariableConfig(),
-      ht_partition_num=1000
+    self,
+    name,
+    shape=None,
+    embedding_block_num=None,
+    dtype=dtypes.float32,
+    initializer=None,
+    regularizer=None,
+    partition_info=None,
+    reuse=None,
+    trainable=None,
+    collections=None,
+    caching_device=None,
+    validate_shape=True,
+    use_resource=None,
+    constraint=None,
+    invalid_key=None,
+    evconfig=ev_variables.EmbeddingVariableConfig(),
+    ht_partition_num=1000,
   ):
     """Get or create a single Variable (e.g.
 
@@ -836,9 +831,9 @@ class _VariableStore(object):
       if reuse is False:
         var = self._vars[name]
         err_msg = (
-            "Variable %s already exists, disallowed."
-            " Did you mean to set reuse=True or "
-            "reuse=tf.AUTO_REUSE in VarScope?" % name
+          "Variable %s already exists, disallowed."
+          " Did you mean to set reuse=True or "
+          "reuse=tf.AUTO_REUSE in VarScope?" % name
         )
         # ResourceVariables don't have an op associated with so no traceback
         if isinstance(var, resource_variable_ops.ResourceVariable):
@@ -852,22 +847,22 @@ class _VariableStore(object):
         raise ValueError("%s Originally defined at:\n\n%s" % (err_msg, "".join(traceback.format_list(tb))))
       found_var = self._vars[name]
       from tensorflow.python.ops.hash_table import hash_table
+
       if isinstance(found_var, (hash_table.HashTable, hash_table.DistributedHashTable)):
         raise ValueError(
-            "Trying to reuse variable %s, but an existing variable is a"
-            " HashTable or DistributedHashTable, can not reuse it." % (name)
+          "Trying to reuse variable %s, but an existing variable is a"
+          " HashTable or DistributedHashTable, can not reuse it." % (name)
         )
       if not shape.is_compatible_with(found_var.get_shape()):
         raise ValueError(
-            "Trying to share variable %s, but specified shape %s"
-            " and found shape %s." % (name, shape, found_var.get_shape())
+          "Trying to share variable %s, but specified shape %s"
+          " and found shape %s." % (name, shape, found_var.get_shape())
         )
       if not dtype.is_compatible_with(found_var.dtype):
         dtype_str = dtype.name
         found_type_str = found_var.dtype.name
         raise ValueError(
-            "Trying to share variable %s, but specified dtype %s"
-            " and found dtype %s." % (name, dtype_str, found_type_str)
+          "Trying to share variable %s, but specified dtype %s and found dtype %s." % (name, dtype_str, found_type_str)
         )
       return found_var
 
@@ -896,27 +891,27 @@ class _VariableStore(object):
           variable_dtype = None
         else:
           raise ValueError(
-              "The initializer passed is not valid. It should "
-              "be a callable with no arguments and the "
-              "shape should not be provided or an instance of "
-              "`tf.keras.initializers.*' and `shape` should be "
-              "fully defined."
+            "The initializer passed is not valid. It should "
+            "be a callable with no arguments and the "
+            "shape should not be provided or an instance of "
+            "`tf.keras.initializers.*' and `shape` should be "
+            "fully defined."
           )
 
     v = default_variable_creator(
-        initial_value=init_val,
-        name=name,
-        trainable=trainable,
-        collections=collections,
-        caching_device=caching_device,
-        embedding_block_num=embedding_block_num,
-        dtype=variable_dtype,
-        validate_shape=validate_shape,
-        constraint=constraint,
-        invalid_key=invalid_key,
-        evconfig=evconfig,
-        initializer=initializer,
-        ht_partition_num=ht_partition_num
+      initial_value=init_val,
+      name=name,
+      trainable=trainable,
+      collections=collections,
+      caching_device=caching_device,
+      embedding_block_num=embedding_block_num,
+      dtype=variable_dtype,
+      validate_shape=validate_shape,
+      constraint=constraint,
+      invalid_key=invalid_key,
+      evconfig=evconfig,
+      initializer=initializer,
+      ht_partition_num=ht_partition_num,
     )
     if not context.executing_eagerly() or self._store_eager_variables:
       # In eager mode we do not want to keep default references to Variable
@@ -938,8 +933,7 @@ class _VariableStore(object):
             v_name = v.name
             loss_name = loss.name
           logging.vlog(
-              1, "Applied regularizer to %s and added the result %s "
-              "to REGULARIZATION_LOSSES.", v_name, loss_name
+            1, "Applied regularizer to %s and added the result %s to REGULARIZATION_LOSSES.", v_name, loss_name
           )
           ops.add_to_collection(ops.GraphKeys.REGULARIZATION_LOSSES, loss)
     return v
@@ -978,22 +972,22 @@ class _VariableStore(object):
 
 # @tf_export(v1=["get_embedding_variable"])
 def get_embedding_variable_internal(
-    name,
-    embedding_dim,
-    key_dtype=dtypes.int64,
-    value_dtype=None,
-    initializer=None,
-    regularizer=None,
-    trainable=True,
-    collections=None,
-    caching_device=None,
-    partitioner=None,
-    validate_shape=True,
-    custom_getter=None,
-    constraint=None,
-    steps_to_live=None,
-    init_data_source=None,
-    ev_option=ev_variables.EmbeddingVariableOption()
+  name,
+  embedding_dim,
+  key_dtype=dtypes.int64,
+  value_dtype=None,
+  initializer=None,
+  regularizer=None,
+  trainable=True,
+  collections=None,
+  caching_device=None,
+  partitioner=None,
+  validate_shape=True,
+  custom_getter=None,
+  constraint=None,
+  steps_to_live=None,
+  init_data_source=None,
+  ev_option=ev_variables.EmbeddingVariableOption(),
 ):
   if key_dtype == dtypes.int64:
     invalid_key = 9223372036854775807
@@ -1022,55 +1016,55 @@ def get_embedding_variable_internal(
   if steps_to_live is not None and l2_weight_threshold > 0:
     raise ValueError("step_to_live and l2_weight_threshold can't be enabled at same time.")
   return VariableScope(reuse=False).get_embedding_variable(
-      name,
-      shape=embedding_dim,
-      dtype=value_dtype,
-      initializer=initializer,
-      regularizer=regularizer,
-      trainable=trainable,
-      collections=collections,
-      caching_device=caching_device,
-      partitioner=partitioner,
-      validate_shape=validate_shape,
-      use_resource=True,
-      custom_getter=custom_getter,
-      constraint=constraint,
-      invalid_key=invalid_key,
-      evconfig=ev_variables.EmbeddingVariableConfig(
-          steps_to_live=steps_to_live,
-          init_data_source=init_data_source,
-          ht_type=ev_option.ht_type,
-          l2_weight_threshold=l2_weight_threshold,
-          filter_strategy=ev_option.filter_strategy,
-          storage_type=ev_option.storage_option.storage_type,
-          storage_path=ev_option.storage_option.storage_path,
-          storage_size=ev_option.storage_option.storage_size,
-          storage_cache_strategy=ev_option.storage_option.cache_strategy,
-          layout=ev_option.storage_option.layout,
-          default_value_dim=ev_option.init.default_value_dim,
-          default_value_no_permission=ev_option.init.default_value_no_permission
-      ),
-      ht_partition_num=ev_option.ht_partition_num
+    name,
+    shape=embedding_dim,
+    dtype=value_dtype,
+    initializer=initializer,
+    regularizer=regularizer,
+    trainable=trainable,
+    collections=collections,
+    caching_device=caching_device,
+    partitioner=partitioner,
+    validate_shape=validate_shape,
+    use_resource=True,
+    custom_getter=custom_getter,
+    constraint=constraint,
+    invalid_key=invalid_key,
+    evconfig=ev_variables.EmbeddingVariableConfig(
+      steps_to_live=steps_to_live,
+      init_data_source=init_data_source,
+      ht_type=ev_option.ht_type,
+      l2_weight_threshold=l2_weight_threshold,
+      filter_strategy=ev_option.filter_strategy,
+      storage_type=ev_option.storage_option.storage_type,
+      storage_path=ev_option.storage_option.storage_path,
+      storage_size=ev_option.storage_option.storage_size,
+      storage_cache_strategy=ev_option.storage_option.cache_strategy,
+      layout=ev_option.storage_option.layout,
+      default_value_dim=ev_option.init.default_value_dim,
+      default_value_no_permission=ev_option.init.default_value_no_permission,
+    ),
+    ht_partition_num=ev_option.ht_partition_num,
   )
 
 
 # @tf_export(v1=["get_embedding_variable_v2"])
 def get_embedding_variable_v2_internal(
-    name,
-    embedding_dim,
-    key_dtype=dtypes.int64,
-    value_dtype=None,
-    initializer=None,
-    regularizer=None,
-    trainable=True,
-    collections=None,
-    caching_device=None,
-    partitioner=None,
-    validate_shape=True,
-    custom_getter=None,
-    constraint=None,
-    evconfig=ev_variables.EmbeddingVariableConfig(),
-    ht_partition_num=1000
+  name,
+  embedding_dim,
+  key_dtype=dtypes.int64,
+  value_dtype=None,
+  initializer=None,
+  regularizer=None,
+  trainable=True,
+  collections=None,
+  caching_device=None,
+  partitioner=None,
+  validate_shape=True,
+  custom_getter=None,
+  constraint=None,
+  evconfig=ev_variables.EmbeddingVariableConfig(),
+  ht_partition_num=1000,
 ):
   if key_dtype == dtypes.int64:
     invalid_key = 9223372036854775807
@@ -1083,43 +1077,43 @@ def get_embedding_variable_v2_internal(
   if initializer is None:
     initializer = init_ops.truncated_normal_initializer()
   return VariableScope(reuse=False).get_embedding_variable(
-      name,
-      shape=embedding_dim,
-      dtype=value_dtype,
-      initializer=initializer,
-      regularizer=regularizer,
-      trainable=trainable,
-      collections=collections,
-      caching_device=caching_device,
-      partitioner=partitioner,
-      validate_shape=validate_shape,
-      use_resource=True,
-      custom_getter=custom_getter,
-      constraint=constraint,
-      invalid_key=invalid_key,
-      evconfig=evconfig,
-      ht_partition_num=ht_partition_num
+    name,
+    shape=embedding_dim,
+    dtype=value_dtype,
+    initializer=initializer,
+    regularizer=regularizer,
+    trainable=trainable,
+    collections=collections,
+    caching_device=caching_device,
+    partitioner=partitioner,
+    validate_shape=validate_shape,
+    use_resource=True,
+    custom_getter=custom_getter,
+    constraint=constraint,
+    invalid_key=invalid_key,
+    evconfig=evconfig,
+    ht_partition_num=ht_partition_num,
   )
 
 
 @tf_export(v1=["get_embedding_variable"])
 def get_embedding_variable(
-    name,
-    embedding_dim,
-    key_dtype=dtypes.int64,
-    value_dtype=None,
-    initializer=None,
-    regularizer=None,
-    trainable=True,
-    collections=None,
-    caching_device=None,
-    partitioner=None,
-    validate_shape=True,
-    custom_getter=None,
-    constraint=None,
-    steps_to_live=None,
-    init_data_source=None,
-    ev_option=ev_variables.EmbeddingVariableOption()
+  name,
+  embedding_dim,
+  key_dtype=dtypes.int64,
+  value_dtype=None,
+  initializer=None,
+  regularizer=None,
+  trainable=True,
+  collections=None,
+  caching_device=None,
+  partitioner=None,
+  validate_shape=True,
+  custom_getter=None,
+  constraint=None,
+  steps_to_live=None,
+  init_data_source=None,
+  ev_option=ev_variables.EmbeddingVariableOption(),
 ):
   if key_dtype == dtypes.int64:
     invalid_key = 9223372036854775807
@@ -1137,8 +1131,7 @@ def get_embedding_variable(
       print("use initializer give in InitializerOption.")
     initializer = ev_option.init.initializer
   if steps_to_live is not None:
-    logger.warning("steps_to_live is deprecated,"
-                   " use tf.GlobaStepEvcit(steps_to_live)")
+    logger.warning("steps_to_live is deprecated, use tf.GlobaStepEvcit(steps_to_live)")
   if ev_option.evict is not None:
     if isinstance(ev_option.evict, ev_variables.GlobalStepEvict):
       if steps_to_live is not None:
@@ -1151,73 +1144,73 @@ def get_embedding_variable(
   if steps_to_live is not None and l2_weight_threshold > 0:
     raise ValueError("step_to_live and l2_weight_threshold can't be enabled at same time.")
   return VariableScope(reuse=False).get_embedding_variable(
-      name,
-      shape=embedding_dim,
-      dtype=value_dtype,
-      initializer=initializer,
-      regularizer=regularizer,
-      trainable=trainable,
-      collections=collections,
-      caching_device=caching_device,
-      partitioner=partitioner,
-      validate_shape=validate_shape,
-      use_resource=True,
-      custom_getter=custom_getter,
-      constraint=constraint,
-      invalid_key=invalid_key,
-      evconfig=ev_variables.EmbeddingVariableConfig(
-          steps_to_live=steps_to_live,
-          init_data_source=init_data_source,
-          ht_type=ev_option.ht_type,
-          l2_weight_threshold=l2_weight_threshold,
-          filter_strategy=ev_option.filter_strategy,
-          storage_type=ev_option.storage_option.storage_type,
-          storage_path=ev_option.storage_option.storage_path,
-          storage_size=ev_option.storage_option.storage_size,
-          storage_cache_strategy=ev_option.storage_option.cache_strategy,
-          layout=ev_option.storage_option.layout,
-          default_value_dim=ev_option.init.default_value_dim,
-          default_value_no_permission=ev_option.init.default_value_no_permission
-      ),
-      ht_partition_num=ev_option.ht_partition_num
+    name,
+    shape=embedding_dim,
+    dtype=value_dtype,
+    initializer=initializer,
+    regularizer=regularizer,
+    trainable=trainable,
+    collections=collections,
+    caching_device=caching_device,
+    partitioner=partitioner,
+    validate_shape=validate_shape,
+    use_resource=True,
+    custom_getter=custom_getter,
+    constraint=constraint,
+    invalid_key=invalid_key,
+    evconfig=ev_variables.EmbeddingVariableConfig(
+      steps_to_live=steps_to_live,
+      init_data_source=init_data_source,
+      ht_type=ev_option.ht_type,
+      l2_weight_threshold=l2_weight_threshold,
+      filter_strategy=ev_option.filter_strategy,
+      storage_type=ev_option.storage_option.storage_type,
+      storage_path=ev_option.storage_option.storage_path,
+      storage_size=ev_option.storage_option.storage_size,
+      storage_cache_strategy=ev_option.storage_option.cache_strategy,
+      layout=ev_option.storage_option.layout,
+      default_value_dim=ev_option.init.default_value_dim,
+      default_value_no_permission=ev_option.init.default_value_no_permission,
+    ),
+    ht_partition_num=ev_option.ht_partition_num,
   )
 
 
 def default_variable_creator(
-    initial_value=None,
-    trainable=None,
-    collections=None,
-    validate_shape=True,
-    caching_device=None,
-    name=None,
-    variable_def=None,
-    dtype=None,
-    embedding_block_num=None,
-    import_scope=None,
-    constraint=None,
-    invalid_key=None,
-    evconfig=ev_variables.EmbeddingVariableConfig(),
-    initializer=None,
-    ht_partition_num=1000
+  initial_value=None,
+  trainable=None,
+  collections=None,
+  validate_shape=True,
+  caching_device=None,
+  name=None,
+  variable_def=None,
+  dtype=None,
+  embedding_block_num=None,
+  import_scope=None,
+  constraint=None,
+  invalid_key=None,
+  evconfig=ev_variables.EmbeddingVariableConfig(),
+  initializer=None,
+  ht_partition_num=1000,
 ):
   if invalid_key is not None:
     emb_blocknum = embedding_block_num
     if emb_blocknum is None:
       ev = kv_variable_ops.EmbeddingVariable(
-          initial_value=initial_value,
-          trainable=trainable,
-          collections=collections,
-          validate_shape=validate_shape,
-          caching_device=caching_device,
-          name=name,
-          dtype=dtype,
-          constraint=constraint,
-          variable_def=variable_def,
-          import_scope=import_scope,
-          invalid_key=invalid_key,
-          evconfig=evconfig,
-          # initializer=initializer,
-          ht_partition_num=ht_partition_num
+        initial_value=initial_value,
+        trainable=trainable,
+        collections=collections,
+        validate_shape=validate_shape,
+        caching_device=caching_device,
+        name=name,
+        dtype=dtype,
+        constraint=constraint,
+        variable_def=variable_def,
+        import_scope=import_scope,
+        invalid_key=invalid_key,
+        evconfig=evconfig,
+        # initializer=initializer,
+        ht_partition_num=ht_partition_num,
       )
       if evconfig.init_data_source is not None:
         ev.set_init_data_source_initializer(evconfig.init_data_source)
@@ -1229,20 +1222,20 @@ def default_variable_creator(
       block_evconfig.handle_name = name
       block_evconfig.emb_index = 0
       primary_ev = kv_variable_ops.EmbeddingVariable(
-          initial_value=initial_value,
-          trainable=trainable,
-          collections=collections,
-          validate_shape=validate_shape,
-          caching_device=caching_device,
-          name=name + "/block0",
-          dtype=dtype,
-          constraint=constraint,
-          variable_def=variable_def,
-          import_scope=import_scope,
-          invalid_key=invalid_key,
-          evconfig=block_evconfig,
-          initializer=initializer,
-          ht_partition_num=ht_partition_num
+        initial_value=initial_value,
+        trainable=trainable,
+        collections=collections,
+        validate_shape=validate_shape,
+        caching_device=caching_device,
+        name=name + "/block0",
+        dtype=dtype,
+        constraint=constraint,
+        variable_def=variable_def,
+        import_scope=import_scope,
+        invalid_key=invalid_key,
+        evconfig=block_evconfig,
+        initializer=initializer,
+        ht_partition_num=ht_partition_num,
       )
       if evconfig.init_data_source is not None:
         primary_ev.set_init_data_source_initializer(evconfig.init_data_source)
@@ -1255,20 +1248,20 @@ def default_variable_creator(
           slave_evconfig.emb_index = i + 1
           slave_evconfig._slot_num = primary_ev._slot_num
           slave_ev = kv_variable_ops.EmbeddingVariable(
-              initial_value=initial_value,
-              trainable=trainable,
-              collections=collections,
-              validate_shape=validate_shape,
-              caching_device=caching_device,
-              name=name + "/block" + str(i + 1),
-              dtype=dtype,
-              constraint=constraint,
-              variable_def=variable_def,
-              import_scope=import_scope,
-              invalid_key=invalid_key,
-              evconfig=slave_evconfig,
-              initializer=initializer,
-              ht_partition_num=ht_partition_num
+            initial_value=initial_value,
+            trainable=trainable,
+            collections=collections,
+            validate_shape=validate_shape,
+            caching_device=caching_device,
+            name=name + "/block" + str(i + 1),
+            dtype=dtype,
+            constraint=constraint,
+            variable_def=variable_def,
+            import_scope=import_scope,
+            invalid_key=invalid_key,
+            evconfig=slave_evconfig,
+            initializer=initializer,
+            ht_partition_num=ht_partition_num,
           )
           if evconfig.init_data_source is not None:
             slave_ev._set_init_data_source_initializer(evconfig.init_data_source)

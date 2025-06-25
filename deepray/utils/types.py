@@ -26,7 +26,7 @@ from packaging.version import Version
 # Find KerasTensor.
 if Version(tf.__version__).release >= Version("2.16").release:
   # Determine if loading keras 2 or 3.
-  if (hasattr(tf.keras, "version") and Version(tf.keras.version()).release >= Version("3.0").release):
+  if hasattr(tf.keras, "version") and Version(tf.keras.version()).release >= Version("3.0").release:
     from keras import KerasTensor
   else:
     from tf_keras.src.engine.keras_tensor import KerasTensor
@@ -37,8 +37,21 @@ elif Version(tf.__version__).release >= Version("2.5").release:
 else:
   from tensorflow.python.keras.engine.keras_tensor import KerasTensor
 
-Number = Union[float, int, np.float16, np.float32, np.float64, np.int8, np.int16, np.int32, np.int64, np.uint8,
-               np.uint16, np.uint32, np.uint64,]
+Number = Union[
+  float,
+  int,
+  np.float16,
+  np.float32,
+  np.float64,
+  np.int8,
+  np.int16,
+  np.int32,
+  np.int64,
+  np.uint8,
+  np.uint16,
+  np.uint32,
+  np.uint64,
+]
 
 Initializer = Union[None, dict, str, Callable, keras.initializers.Initializer]
 Regularizer = Union[None, dict, str, Callable, keras.regularizers.Regularizer]
@@ -49,7 +62,15 @@ if importlib.util.find_spec("tf_keras.optimizers.legacy") is not None:
 else:
   Optimizer = Union[keras.optimizers.Optimizer, str]
 
-TensorLike = Union[List[Union[Number, list]], tuple, Number, np.ndarray, tf.Tensor, tf.SparseTensor, tf.Variable,
-                   KerasTensor,]
+TensorLike = Union[
+  List[Union[Number, list]],
+  tuple,
+  Number,
+  np.ndarray,
+  tf.Tensor,
+  tf.SparseTensor,
+  tf.Variable,
+  KerasTensor,
+]
 FloatTensorLike = Union[tf.Tensor, float, np.float16, np.float32, np.float64]
 AcceptableDTypes = Union[tf.DType, np.dtype, type, int, str, None]

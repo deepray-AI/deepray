@@ -39,7 +39,12 @@ from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import handle_data_util
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import variables
-from tensorflow.python.ops.resource_variable_ops import get_eager_safe_handle_data, _combine_handle_data, _set_handle_shapes_and_types, ResourceVariable
+from tensorflow.python.ops.resource_variable_ops import (
+  get_eager_safe_handle_data,
+  _combine_handle_data,
+  _set_handle_shapes_and_types,
+  ResourceVariable,
+)
 from tensorflow.python.platform import resource_loader
 from tensorflow.python.saved_model import registration
 from tensorflow.python.trackable import base as trackable
@@ -67,13 +72,13 @@ def _variable_handle_from_shape_and_dtype(shape, dtype, key_type, shared_name, n
   key_type = dtypes.as_dtype(key_type)
 
   handle = gen_kv_variable_ops.kv_var_handle_op(
-      shape=shape,
-      dtype=dtype,
-      Tkeys=key_type,
-      shared_name=shared_name,
-      # debug_name=name,
-      name=name,
-      container=container
+    shape=shape,
+    dtype=dtype,
+    Tkeys=key_type,
+    shared_name=shared_name,
+    # debug_name=name,
+    name=name,
+    container=container,
   )
   if initial_value is None:
     initial_value = handle
@@ -86,9 +91,8 @@ def _variable_handle_from_shape_and_dtype(shape, dtype, key_type, shared_name, n
     if initial_value is not None and initial_value.dtype == dtypes.variant:
       extra_handle_data = get_eager_safe_handle_data(initial_value)
       if extra_handle_data is not None and extra_handle_data.is_set:
-        if (not handle_data.is_set or len(handle_data.shape_and_type) != 1):
-          raise RuntimeError("Expected VarHandleOp to return a length==1 shape_and_type, "
-                             f"but saw: '{handle_data}'")
+        if not handle_data.is_set or len(handle_data.shape_and_type) != 1:
+          raise RuntimeError(f"Expected VarHandleOp to return a length==1 shape_and_type, but saw: '{handle_data}'")
         handle_data.shape_and_type.extend(extra_handle_data.shape_and_type)
 
     _set_handle_shapes_and_types(handle, handle_data, graph_mode)
@@ -195,26 +199,26 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
   """
 
   def __init__(
-      self,  # pylint: disable=super-init-not-called
-      initial_value=None,
-      trainable=None,
-      collections=None,
-      validate_shape=True,  # pylint: disable=unused-argument
-      caching_device=None,
-      name=None,
-      dtype=None,
-      variable_def=None,
-      import_scope=None,
-      constraint=None,
-      distribute_strategy=None,
-      synchronization=None,
-      aggregation=None,
-      shape=None,
-      handle=None,
-      experimental_enable_variable_lifting=None,
-      invalid_key=None,
-      evconfig=ev_variables.EmbeddingVariableConfig(),
-      ht_partition_num=1000
+    self,  # pylint: disable=super-init-not-called
+    initial_value=None,
+    trainable=None,
+    collections=None,
+    validate_shape=True,  # pylint: disable=unused-argument
+    caching_device=None,
+    name=None,
+    dtype=None,
+    variable_def=None,
+    import_scope=None,
+    constraint=None,
+    distribute_strategy=None,
+    synchronization=None,
+    aggregation=None,
+    shape=None,
+    handle=None,
+    experimental_enable_variable_lifting=None,
+    invalid_key=None,
+    evconfig=ev_variables.EmbeddingVariableConfig(),
+    ht_partition_num=1000,
   ):
     """Creates a variable.
 
@@ -296,16 +300,16 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
     if variable_def:
       if initial_value is not None:
         raise ValueError(
-            f"The variable_def and initial_value args to "
-            f"`tf.Variable` are mutually exclusive, but got both: "
-            f"variable_def={variable_def},\n"
-            f"initial_value={initial_value}"
+          f"The variable_def and initial_value args to "
+          f"`tf.Variable` are mutually exclusive, but got both: "
+          f"variable_def={variable_def},\n"
+          f"initial_value={initial_value}"
         )
       if context.executing_eagerly():
         raise ValueError(
-            f"Creating a `tf.Variable` with a `variable_def` arg "
-            f"is not supported when eager execution is enabled. "
-            f"Got: variable_def={variable_def}"
+          f"Creating a `tf.Variable` with a `variable_def` arg "
+          f"is not supported when eager execution is enabled. "
+          f"Got: variable_def={variable_def}"
         )
       self._init_from_proto(variable_def, import_scope=import_scope, validate_shape=validate_shape)
     elif handle is not None:
@@ -313,45 +317,45 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
     else:
       evconfig.reveal()
       self._init_from_args(
-          initial_value=initial_value,
-          trainable=trainable,
-          collections=collections,
-          caching_device=caching_device,
-          name=name,
-          dtype=dtype,
-          constraint=constraint,
-          synchronization=synchronization,
-          aggregation=aggregation,
-          shape=shape,
-          distribute_strategy=distribute_strategy,
-          validate_shape=validate_shape,
-          experimental_enable_variable_lifting=experimental_enable_variable_lifting,
-          invalid_key=invalid_key,
-          evconfig=evconfig,
-          ht_partition_num=ht_partition_num
+        initial_value=initial_value,
+        trainable=trainable,
+        collections=collections,
+        caching_device=caching_device,
+        name=name,
+        dtype=dtype,
+        constraint=constraint,
+        synchronization=synchronization,
+        aggregation=aggregation,
+        shape=shape,
+        distribute_strategy=distribute_strategy,
+        validate_shape=validate_shape,
+        experimental_enable_variable_lifting=experimental_enable_variable_lifting,
+        invalid_key=invalid_key,
+        evconfig=evconfig,
+        ht_partition_num=ht_partition_num,
       )
 
   def __repr__(self):
     return "<tf.EmbeddingVariable '%s' embedding dim=%s dtype=%s>" % (self.name, self.shape, self.dtype.name)
 
   def _init_from_args(
-      self,
-      initial_value=None,
-      trainable=None,
-      collections=None,
-      caching_device=None,
-      name=None,
-      dtype=None,
-      constraint=None,
-      synchronization=None,
-      aggregation=None,
-      distribute_strategy=None,
-      shape=None,
-      validate_shape=True,
-      experimental_enable_variable_lifting=None,
-      invalid_key=-1,
-      evconfig=ev_variables.EmbeddingVariableConfig(),
-      ht_partition_num=1000
+    self,
+    initial_value=None,
+    trainable=None,
+    collections=None,
+    caching_device=None,
+    name=None,
+    dtype=None,
+    constraint=None,
+    synchronization=None,
+    aggregation=None,
+    distribute_strategy=None,
+    shape=None,
+    validate_shape=True,
+    experimental_enable_variable_lifting=None,
+    invalid_key=-1,
+    evconfig=ev_variables.EmbeddingVariableConfig(),
+    ht_partition_num=1000,
   ):
     """Creates a variable.
 
@@ -424,46 +428,48 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
     ignored.
     @end_compatibility
     """
-    synchronization, aggregation, trainable = (
-        variables.validate_synchronization_aggregation_trainable(synchronization, aggregation, trainable, name)
+    synchronization, aggregation, trainable = variables.validate_synchronization_aggregation_trainable(
+      synchronization, aggregation, trainable, name
     )
     if experimental_enable_variable_lifting is None:
       experimental_enable_variable_lifting = True
     if initial_value is None:
       raise ValueError(
-          "The `initial_value` arg to `tf.Variable` must "
-          "be specified except when you are not providing a "
-          "`variable_def`. You provided neither."
+        "The `initial_value` arg to `tf.Variable` must "
+        "be specified except when you are not providing a "
+        "`variable_def`. You provided neither."
       )
     init_from_fn = callable(initial_value)
 
-    if isinstance(initial_value,
-                  tensor_module.Tensor) and hasattr(initial_value, "graph") and initial_value.graph.building_function:
+    if (
+      isinstance(initial_value, tensor_module.Tensor)
+      and hasattr(initial_value, "graph")
+      and initial_value.graph.building_function
+    ):
       raise ValueError(
-          f"Argument `initial_value` ({initial_value}) could not "
-          "be lifted out of a `tf.function`. "
-          f"(Tried to create variable with name='{name}'). "
-          "To avoid this error, when constructing `tf.Variable`s "
-          "inside of `tf.function` you can create the "
-          "`initial_value` tensor in a "
-          "`tf.init_scope` or pass a callable `initial_value` "
-          "(e.g., `tf.Variable(lambda : "
-          "tf.truncated_normal([10, 40]))`). "
-          "Please file a feature request if this "
-          "restriction inconveniences you."
+        f"Argument `initial_value` ({initial_value}) could not "
+        "be lifted out of a `tf.function`. "
+        f"(Tried to create variable with name='{name}'). "
+        "To avoid this error, when constructing `tf.Variable`s "
+        "inside of `tf.function` you can create the "
+        "`initial_value` tensor in a "
+        "`tf.init_scope` or pass a callable `initial_value` "
+        "(e.g., `tf.Variable(lambda : "
+        "tf.truncated_normal([10, 40]))`). "
+        "Please file a feature request if this "
+        "restriction inconveniences you."
       )
 
     if collections is None:
       collections = [ops.GraphKeys.GLOBAL_VARIABLES]
     if not isinstance(collections, (list, tuple, set)):
       raise ValueError(
-          f"collections argument to Variable constructor must be a list, "
-          f"tuple, or set. Got {collections} of type {type(collections)}"
+        f"collections argument to Variable constructor must be a list, "
+        f"tuple, or set. Got {collections} of type {type(collections)}"
       )
     if constraint is not None and not callable(constraint):
       raise ValueError(
-          f"Argument `constraint` must be None or a callable. "
-          f"a callable. Got a {type(constraint)}:  {constraint}"
+        f"Argument `constraint` must be None or a callable. a callable. Got a {type(constraint)}:  {constraint}"
       )
 
     if trainable and ops.GraphKeys.TRAINABLE_VARIABLES not in collections:
@@ -499,8 +505,8 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
       self._false_positive_probability = -1.0
       self._counter_type = dtypes.uint64
 
-    self._record_freq = (os.environ.get("TF_RECORD_FREQ", "0") == "1")
-    self._record_version = (os.environ.get("TF_RECORD_VERSION", "0") == "1")
+    self._record_freq = os.environ.get("TF_RECORD_FREQ", "0") == "1"
+    self._record_version = os.environ.get("TF_RECORD_VERSION", "0") == "1"
     self._l2_weight_threshold = evconfig.l2_weight_threshold
     self._storage_type = evconfig.storage_type
     self._storage_path = evconfig.storage_path
@@ -541,9 +547,9 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
         # Use attr_scope and device(None) to simulate the behavior of
         # colocate_with when the variable we want to colocate with doesn't
         # yet exist.
-        device_context_manager = (ops.device if self._in_graph_mode else ops.NullContextmanager)
+        device_context_manager = ops.device if self._in_graph_mode else ops.NullContextmanager
         attr = attr_value_pb2.AttrValue(
-            list=attr_value_pb2.AttrValue.ListValue(s=[compat.as_bytes("loc:@%s" % handle_name)])
+          list=attr_value_pb2.AttrValue.ListValue(s=[compat.as_bytes("loc:@%s" % handle_name)])
         )
         with ops.get_default_graph()._attr_scope({"_class": attr}):
           with ops.name_scope("Initializer"), device_context_manager(None):
@@ -558,23 +564,26 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
           if shape is not None:
             if not initial_value.shape.is_compatible_with(shape):
               raise ValueError(
-                  f"In this `tf.Variable` creation, the initial value's shape "
-                  f"({initial_value.shape}) is not compatible with "
-                  f"the explicitly supplied `shape` argument ({shape})."
+                f"In this `tf.Variable` creation, the initial value's shape "
+                f"({initial_value.shape}) is not compatible with "
+                f"the explicitly supplied `shape` argument ({shape})."
               )
           else:
             shape = initial_value.get_shape()[rank:]
-          _device = "GPU" if self._storage_type in [
-              config_pb2.StorageType.HBM, config_pb2.StorageType.HBM_DRAM, config_pb2.StorageType.HBM_DRAM_SSDHASH
-          ] else "CPU"
+          _device = (
+            "GPU"
+            if self._storage_type
+            in [config_pb2.StorageType.HBM, config_pb2.StorageType.HBM_DRAM, config_pb2.StorageType.HBM_DRAM_SSDHASH]
+            else "CPU"
+          )
           with ops.device(_device):
             handle = eager_safe_variable_handle(
-                initial_value=initial_value,
-                shape=shape,
-                key_type=self._invalid_key_type,
-                shared_name=shared_name,
-                name=name,
-                graph_mode=self._in_graph_mode
+              initial_value=initial_value,
+              shape=shape,
+              key_type=self._invalid_key_type,
+              shared_name=shared_name,
+              name=name,
+              graph_mode=self._in_graph_mode,
             )
           handle._parent_trackable = weakref.ref(self)
           handle._name = handle_name + ":0"
@@ -582,15 +591,14 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
           self._handle = handle
         # pylint: disable=protected-access
         if (
-            self._in_graph_mode and initial_value is not None and
-            initial_value.op._get_control_flow_context() is not None
+          self._in_graph_mode and initial_value is not None and initial_value.op._get_control_flow_context() is not None
         ):
           raise ValueError(
-              f"The `initial_value` passed to `tf.Variable` {name} is from "
-              f"inside a control-flow  construct, such as a loop or "
-              f"conditional. When creating a "
-              f"`tf.Variable` inside a loop or conditional, use a lambda as "
-              f"the `initial_value`. Got: initial_value=({initial_value})"
+            f"The `initial_value` passed to `tf.Variable` {name} is from "
+            f"inside a control-flow  construct, such as a loop or "
+            f"conditional. When creating a "
+            f"`tf.Variable` inside a loop or conditional, use a lambda as "
+            f"the `initial_value`. Got: initial_value=({initial_value})"
           )
         # pylint: enable=protected-access
         dtype = initial_value.dtype.base_dtype
@@ -606,54 +614,53 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
 
         if self._in_graph_mode:
           with ops.name_scope("IsInitialized"):
-            self._is_initialized_op = (
-                gen_kv_variable_ops.kv_var_is_initialized_op(handle, Tkeys=self._invalid_key_type, dtype=self._dtype)
+            self._is_initialized_op = gen_kv_variable_ops.kv_var_is_initialized_op(
+              handle, Tkeys=self._invalid_key_type, dtype=self._dtype
             )
           if initial_value is not None:
             # pylint: disable=g-backslash-continuation
-            with ops.name_scope("Assign") as n, \
-                 ops.colocate_with(None, ignore_existing=True), \
-                 ops.device(handle.device):
+            with (
+              ops.name_scope("Assign") as n,
+              ops.colocate_with(None, ignore_existing=True),
+              ops.device(handle.device),
+            ):
               with ops.control_dependencies(None if self._is_primary else [self._primary.initializer]):
                 self._init_op = gen_kv_variable_ops.initialize_kv_variable_v2_op(
-                    handle,
-                    self._primary._handle,
-                    variables._try_guard_against_uninitialized_dependencies(name, initial_value),
-                    ops.convert_to_tensor(invalid_key),
-                    slot_num=self._slot_num,
-                    shape=initial_value.get_shape()[rank:],
-                    steps_to_live=self._steps_to_live,
-                    emb_index=self._emb_index,
-                    block_num=self.block_num,
-                    slot_index=self._slot_index,
-                    ht_type=self._ht_type,
-                    ht_partition_num=self._ht_partition_num,
-                    filter_freq=self._filter_freq,
-                    l2_weight_threshold=self._l2_weight_threshold,
-                    max_element_size=self._max_element_size,
-                    false_positive_probability=self._false_positive_probability,
-                    counter_type=self._counter_type,
-                    max_freq=99999,
-                    layout=self._layout,
-                    storage_type=self._storage_type,
-                    storage_path=self._storage_path,
-                    storage_size=self._storage_size,
-                    default_value_dim=self._default_value_dim,
-                    default_value_no_permission=self._default_value_no_permission,
-                    record_freq=self._record_freq,
-                    record_version=self._record_version,
-                    embedding_variable_type=config_pb2.EmbeddingVariableType.IMMUTABLE,
-                    name=n
+                  handle,
+                  self._primary._handle,
+                  variables._try_guard_against_uninitialized_dependencies(name, initial_value),
+                  ops.convert_to_tensor(invalid_key),
+                  slot_num=self._slot_num,
+                  shape=initial_value.get_shape()[rank:],
+                  steps_to_live=self._steps_to_live,
+                  emb_index=self._emb_index,
+                  block_num=self.block_num,
+                  slot_index=self._slot_index,
+                  ht_type=self._ht_type,
+                  ht_partition_num=self._ht_partition_num,
+                  filter_freq=self._filter_freq,
+                  l2_weight_threshold=self._l2_weight_threshold,
+                  max_element_size=self._max_element_size,
+                  false_positive_probability=self._false_positive_probability,
+                  counter_type=self._counter_type,
+                  max_freq=99999,
+                  layout=self._layout,
+                  storage_type=self._storage_type,
+                  storage_path=self._storage_path,
+                  storage_size=self._storage_size,
+                  default_value_dim=self._default_value_dim,
+                  default_value_no_permission=self._default_value_no_permission,
+                  record_freq=self._record_freq,
+                  record_version=self._record_version,
+                  embedding_variable_type=config_pb2.EmbeddingVariableType.IMMUTABLE,
+                  name=n,
                 )
               set_attr_ops = []
 
               if self._is_primary and self._is_multi_tier:
                 with ops.control_dependencies([self._init_op]):
                   set_cache_strategy_op = gen_kv_variable_ops.kv_resource_init_cache_strategy_op(
-                      self._handle,
-                      cache_strategy=self._storage_cache_strategy,
-                      Tkeys=self._invalid_key_type,
-                      dtype=dtype
+                    self._handle, cache_strategy=self._storage_cache_strategy, Tkeys=self._invalid_key_type, dtype=dtype
                   )
                 set_attr_ops.append(set_cache_strategy_op)
               with ops.control_dependencies(set_attr_ops + [self._init_op]):
@@ -662,38 +669,38 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
               self.create_init_op_for_restore(name, initial_value, invalid_key, rank)
         else:
           self._init_op = gen_kv_variable_ops.initialize_kv_variable_v2_op(
-              handle,
-              self._primary._handle,
-              initial_value,
-              ops.convert_to_tensor(invalid_key),
-              slot_num=self._slot_num,
-              shape=shape,
-              steps_to_live=self._steps_to_live,
-              emb_index=self._emb_index,
-              block_num=self.block_num,
-              slot_index=self._slot_index,
-              ht_type=self._ht_type,
-              ht_partition_num=self._ht_partition_num,
-              filter_freq=self._filter_freq,
-              l2_weight_threshold=self._l2_weight_threshold,
-              max_element_size=self._max_element_size,
-              false_positive_probability=self._false_positive_probability,
-              counter_type=self._counter_type,
-              max_freq=99999,
-              layout=self._layout,
-              storage_type=self._storage_type,
-              storage_path=self._storage_path,
-              storage_size=self._storage_size,
-              default_value_dim=self._default_value_dim,
-              default_value_no_permission=self._default_value_no_permission,
-              record_freq=self._record_freq,
-              record_version=self._record_version,
-              embedding_variable_type=config_pb2.EmbeddingVariableType.IMMUTABLE
+            handle,
+            self._primary._handle,
+            initial_value,
+            ops.convert_to_tensor(invalid_key),
+            slot_num=self._slot_num,
+            shape=shape,
+            steps_to_live=self._steps_to_live,
+            emb_index=self._emb_index,
+            block_num=self.block_num,
+            slot_index=self._slot_index,
+            ht_type=self._ht_type,
+            ht_partition_num=self._ht_partition_num,
+            filter_freq=self._filter_freq,
+            l2_weight_threshold=self._l2_weight_threshold,
+            max_element_size=self._max_element_size,
+            false_positive_probability=self._false_positive_probability,
+            counter_type=self._counter_type,
+            max_freq=99999,
+            layout=self._layout,
+            storage_type=self._storage_type,
+            storage_path=self._storage_path,
+            storage_size=self._storage_size,
+            default_value_dim=self._default_value_dim,
+            default_value_no_permission=self._default_value_no_permission,
+            record_freq=self._record_freq,
+            record_version=self._record_version,
+            embedding_variable_type=config_pb2.EmbeddingVariableType.IMMUTABLE,
           )
           if self._is_primary and self._is_multi_tier:
             with ops.control_dependencies([self._init_op]):
               set_cache_strategy_op = gen_kv_variable_ops.kv_resource_init_cache_strategy_op(
-                  self._handle, cache_strategy=self._storage_cache_strategy, Tkeys=self._invalid_key_type, dtype=dtype
+                self._handle, cache_strategy=self._storage_cache_strategy, Tkeys=self._invalid_key_type, dtype=dtype
               )
 
         if self._in_graph_mode:
@@ -705,65 +712,70 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
           ops.add_to_collections(ops.GraphKeys.GLOBAL_STEP, self)
       initial_value = initial_value if self._in_graph_mode else None
       super(EmbeddingVariable, self).__init__(
-          trainable=trainable,
-          shape=shape,
-          dtype=dtype,
-          handle=handle,
-          synchronization=synchronization,
-          constraint=constraint,
-          aggregation=aggregation,
-          distribute_strategy=distribute_strategy,
-          name=name,
-          initial_value=initial_value,
-          caching_device=caching_device,
-          validate_shape=validate_shape,
+        trainable=trainable,
+        shape=shape,
+        dtype=dtype,
+        handle=handle,
+        synchronization=synchronization,
+        constraint=constraint,
+        aggregation=aggregation,
+        distribute_strategy=distribute_strategy,
+        name=name,
+        initial_value=initial_value,
+        caching_device=caching_device,
+        validate_shape=validate_shape,
       )
 
   def is_multi_tier(self, storage_type):
     multi_level_list = [
-        config_pb2.StorageType.LEVELDB, config_pb2.StorageType.SSDHASH, config_pb2.StorageType.DRAM_PMEM,
-        config_pb2.StorageType.DRAM_LEVELDB, config_pb2.StorageType.DRAM_SSDHASH, config_pb2.StorageType.HBM_DRAM,
-        config_pb2.StorageType.DRAM_PMEM_SSDHASH, config_pb2.StorageType.HBM_DRAM_SSDHASH
+      config_pb2.StorageType.LEVELDB,
+      config_pb2.StorageType.SSDHASH,
+      config_pb2.StorageType.DRAM_PMEM,
+      config_pb2.StorageType.DRAM_LEVELDB,
+      config_pb2.StorageType.DRAM_SSDHASH,
+      config_pb2.StorageType.HBM_DRAM,
+      config_pb2.StorageType.DRAM_PMEM_SSDHASH,
+      config_pb2.StorageType.HBM_DRAM_SSDHASH,
     ]
     return storage_type in multi_level_list
 
   def create_init_op_for_restore(self, name, initial_value, invalid_key, rank):
     with ops.control_dependencies(None if self._is_primary else [self._primary._init_op_for_restore]):
       self._initializer_for_restore = gen_kv_variable_ops.initialize_kv_variable_v2_op(
-          self._handle,
-          self._primary._handle,
-          variables._try_guard_against_uninitialized_dependencies(name, initial_value),
-          ops.convert_to_tensor(invalid_key),
-          initial_num_buckets=config_pb2.IsSetInitialized.NOT_SET_INITAILIZED,
-          slot_num=self._slot_num,
-          shape=initial_value.get_shape()[rank:],
-          steps_to_live=self._steps_to_live,
-          emb_index=self._emb_index,
-          block_num=self.block_num,
-          slot_index=self._slot_index,
-          ht_type=self._ht_type,
-          ht_partition_num=self._ht_partition_num,
-          filter_freq=self._filter_freq,
-          l2_weight_threshold=self._l2_weight_threshold,
-          max_element_size=self._max_element_size,
-          false_positive_probability=self._false_positive_probability,
-          counter_type=self._counter_type,
-          max_freq=99999,
-          layout=self._layout,
-          storage_type=self._storage_type,
-          storage_path=self._storage_path,
-          storage_size=self._storage_size,
-          default_value_dim=self._default_value_dim,
-          default_value_no_permission=self._default_value_no_permission,
-          record_freq=self._record_freq,
-          record_version=self._record_version,
-          embedding_variable_type=config_pb2.EmbeddingVariableType.IMMUTABLE
+        self._handle,
+        self._primary._handle,
+        variables._try_guard_against_uninitialized_dependencies(name, initial_value),
+        ops.convert_to_tensor(invalid_key),
+        initial_num_buckets=config_pb2.IsSetInitialized.NOT_SET_INITAILIZED,
+        slot_num=self._slot_num,
+        shape=initial_value.get_shape()[rank:],
+        steps_to_live=self._steps_to_live,
+        emb_index=self._emb_index,
+        block_num=self.block_num,
+        slot_index=self._slot_index,
+        ht_type=self._ht_type,
+        ht_partition_num=self._ht_partition_num,
+        filter_freq=self._filter_freq,
+        l2_weight_threshold=self._l2_weight_threshold,
+        max_element_size=self._max_element_size,
+        false_positive_probability=self._false_positive_probability,
+        counter_type=self._counter_type,
+        max_freq=99999,
+        layout=self._layout,
+        storage_type=self._storage_type,
+        storage_path=self._storage_path,
+        storage_size=self._storage_size,
+        default_value_dim=self._default_value_dim,
+        default_value_no_permission=self._default_value_no_permission,
+        record_freq=self._record_freq,
+        record_version=self._record_version,
+        embedding_variable_type=config_pb2.EmbeddingVariableType.IMMUTABLE,
       )
     set_attr_ops = []
     if self._is_primary and self._is_multi_tier:
       with ops.control_dependencies([self._initializer_for_restore]):
         set_cache_op = gen_kv_variable_ops.kv_resource_init_cache_strategy_op(
-            self._handle, cache_strategy=self._storage_cache_strategy, Tkeys=self._invalid_key_type, dtype=self._dtype
+          self._handle, cache_strategy=self._storage_cache_strategy, Tkeys=self._invalid_key_type, dtype=self._dtype
         )
       set_attr_ops.append(set_cache_op)
     with ops.control_dependencies(set_attr_ops + [self._initializer_for_restore]):
@@ -783,12 +795,12 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
         is_use_default_value_tensor = False
       if counts is not None:
         value = gen_kv_variable_ops.kv_resource_gather_v1(
-            self._handle, indices, default_value, counts, is_inference=True, name=name
+          self._handle, indices, default_value, counts, is_inference=True, name=name
         )
         self._counts_tensor[indices] = counts
       else:
         value = gen_kv_variable_ops.kv_resource_gather(
-            self._handle, indices, default_value, is_use_default_value_tensor, is_inference=True, name=name
+          self._handle, indices, default_value, is_use_default_value_tensor, is_inference=True, name=name
         )
     return value
 
@@ -809,7 +821,7 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
 
   def is_all_slot_initialized(self):
     return gen_kv_variable_ops.kv_var_is_all_slot_initialized_op(
-        self._handle, Tkeys=self._invalid_key_type, dtype=self._dtype
+      self._handle, Tkeys=self._invalid_key_type, dtype=self._dtype
     )
 
   @property
@@ -873,10 +885,10 @@ def get_tensor_slices(trackables):
 def save_fn(trackables, file_prefix):
   """Save stack and part objects to a checkpoint shard."""
   tensor_names, shapes_and_slices, tensors, _, ev_names, ev_resources, ev_key_types, has_ev = get_tensor_slices(
-      trackables
+    trackables
   )
   gen_kv_variable_ops.save_v3(
-      file_prefix, tensor_names, shapes_and_slices, ev_names, ev_resources, tensors, ev_key_types, has_ev
+    file_prefix, tensor_names, shapes_and_slices, ev_names, ev_resources, tensors, ev_key_types, has_ev
   )
   return file_prefix
 
@@ -893,22 +905,22 @@ def restore_fn(trackables, merged_prefix):
     if obj.is_all_slot_initialized():
       for ev in restore_queue[obj._primary.name]:
         gen_kv_variable_ops.kv_resource_import_v3(
-            merged_prefix,
-            ev.handle,
-            ev.name,
-            ops.convert_to_tensor(ev._invalid_key),
-            shape=ev.shape,
-            partition_id=0,
-            partition_num=1,
-            dtype=ev.dtype
+          merged_prefix,
+          ev.handle,
+          ev.name,
+          ops.convert_to_tensor(ev._invalid_key),
+          shape=ev.shape,
+          partition_id=0,
+          partition_num=1,
+          dtype=ev.dtype,
         )
 
 
 registration.register_checkpoint_saver(
-    name="EmbeddingVariable",
-    predicate=lambda x: isinstance(x, (EmbeddingVariable)),
-    save_fn=save_fn,
-    restore_fn=restore_fn
+  name="EmbeddingVariable",
+  predicate=lambda x: isinstance(x, (EmbeddingVariable)),
+  save_fn=save_fn,
+  restore_fn=restore_fn,
 )
 
 
@@ -965,7 +977,6 @@ class EmbeddingVariableSaveable(saveable_object.SaveableObject):
       self.partition_num = self.var._save_slice_info.full_shape[0] if is_partitioned_ev else 1
 
     def _read_variable_closure(v):
-
       def f():
         with ops.device(v.device):
           x = v.read_value()
@@ -1000,14 +1011,14 @@ class EmbeddingVariableSaveable(saveable_object.SaveableObject):
         with ops.control_dependencies(restore_dependency[self.var._primary_handle]):
           rank = self.op.initial_value.get_shape().rank - 1
           restore_op = gen_kv_variable_ops.kv_resource_import_v3(
-              restored_tensors[0],
-              self.handle_op,
-              name_tensor,
-              ops.convert_to_tensor(self.invalid_key),
-              shape=self.op.initial_value.get_shape()[rank:],
-              partition_id=self.partition_id,
-              partition_num=self.partition_num,
-              dtype=self.var._dtype
+            restored_tensors[0],
+            self.handle_op,
+            name_tensor,
+            ops.convert_to_tensor(self.invalid_key),
+            shape=self.op.initial_value.get_shape()[rank:],
+            partition_id=self.partition_id,
+            partition_num=self.partition_num,
+            dtype=self.var._dtype,
           )
         return restore_op
 
@@ -1017,11 +1028,11 @@ class EmbeddingVariableSaveable(saveable_object.SaveableObject):
     with ops.colocate_with(self.handle_op):
       handle_name = ops.name_from_scope_name(self.name)
       return gen_kv_variable_ops.kv_resource_incr_import(
-          restored_tensors[0],
-          self.handle_op,
-          name_tensor,
-          ops.convert_to_tensor(self.invalid_key),
-          variables._try_guard_against_uninitialized_dependencies(self.name, self.op.initial_value),
-          partition_id=self.partition_id,
-          partition_num=self.partition_num
+        restored_tensors[0],
+        self.handle_op,
+        name_tensor,
+        ops.convert_to_tensor(self.invalid_key),
+        variables._try_guard_against_uninitialized_dependencies(self.name, self.op.initial_value),
+        partition_id=self.partition_id,
+        partition_num=self.partition_num,
       )

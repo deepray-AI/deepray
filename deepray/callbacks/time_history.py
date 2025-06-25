@@ -8,13 +8,13 @@ from deepray.utils import logging_util
 
 logger = logging_util.get_logger()
 
-global_batch_size_gauge = monitoring.IntGauge('/tensorflow/training/global_batch_size', 'TF training global batch size')
+global_batch_size_gauge = monitoring.IntGauge("/tensorflow/training/global_batch_size", "TF training global batch size")
 first_batch_time_gauge = monitoring.IntGauge(
-    '/tensorflow/training/first_batch', 'TF training start/end time for first batch (unix epoch time in us.', 'type'
+  "/tensorflow/training/first_batch", "TF training start/end time for first batch (unix epoch time in us.", "type"
 )
 
-first_batch_start_time = first_batch_time_gauge.get_cell('start')
-first_batch_end_time = first_batch_time_gauge.get_cell('end')
+first_batch_start_time = first_batch_time_gauge.get_cell("start")
+first_batch_end_time = first_batch_time_gauge.get_cell("end")
 
 
 class BatchTimestamp(object):
@@ -123,14 +123,17 @@ class TimeHistory(Callback):
 
       self.timestamp_log.append(BatchTimestamp(self.global_steps, now))
       logger.info(
-          'TimeHistory: %.2f seconds, %.2f examples/second between steps %d '
-          'and %d', elapsed_time, examples_per_second, self.last_log_step, self.global_steps
+        "TimeHistory: %.2f seconds, %.2f examples/second between steps %d and %d",
+        elapsed_time,
+        examples_per_second,
+        self.last_log_step,
+        self.global_steps,
       )
 
       if self.summary_writer:
         with self.summary_writer.as_default():
-          tf.summary.scalar('steps_per_second', steps_per_second, self.global_steps)
-          tf.summary.scalar('examples_per_second', examples_per_second, self.global_steps)
+          tf.summary.scalar("steps_per_second", steps_per_second, self.global_steps)
+          tf.summary.scalar("examples_per_second", examples_per_second, self.global_steps)
 
       self.last_log_step = self.global_steps
       self.start_time = None

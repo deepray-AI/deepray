@@ -17,12 +17,12 @@
 import pytest
 import numpy as np
 from deepray.layers.adaptive_pooling import (
-    AdaptiveAveragePooling1D,
-    AdaptiveMaxPooling1D,
-    AdaptiveAveragePooling2D,
-    AdaptiveMaxPooling2D,
-    AdaptiveAveragePooling3D,
-    AdaptiveMaxPooling3D,
+  AdaptiveAveragePooling1D,
+  AdaptiveMaxPooling1D,
+  AdaptiveAveragePooling2D,
+  AdaptiveMaxPooling2D,
+  AdaptiveAveragePooling3D,
+  AdaptiveMaxPooling3D,
 )
 
 from deepray.utils import test_utils
@@ -35,13 +35,10 @@ def test_avg_1d():
   output = np.array([1.0, 4.0, 7.0, 10.0]).astype(np.float32)
   output = np.reshape(output, (1, 4, 1))
   test_utils.layer_test(
-      AdaptiveAveragePooling1D,
-      kwargs={
-          "output_size": 4,
-          "data_format": "channels_last"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveAveragePooling1D,
+    kwargs={"output_size": 4, "data_format": "channels_last"},
+    input_data=valid_input,
+    expected_output=output,
   )
 
   valid_input = np.arange(start=0.0, stop=12.0, step=1.0).astype(np.float32)
@@ -49,13 +46,10 @@ def test_avg_1d():
   output = np.array([1.0, 4.0, 7.0, 10.0]).astype(np.float32)
   output = np.reshape(output, (1, 1, 4))
   test_utils.layer_test(
-      AdaptiveAveragePooling1D,
-      kwargs={
-          "output_size": 4,
-          "data_format": "channels_first"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveAveragePooling1D,
+    kwargs={"output_size": 4, "data_format": "channels_first"},
+    input_data=valid_input,
+    expected_output=output,
   )
 
 
@@ -66,13 +60,10 @@ def test_avg_2d():
   output = np.array([[7.0, 12.0], [27.0, 32.0]]).astype(np.float32)
   output = np.reshape(output, (1, 2, 2, 1))
   test_utils.layer_test(
-      AdaptiveAveragePooling2D,
-      kwargs={
-          "output_size": (2, 2),
-          "data_format": "channels_last"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveAveragePooling2D,
+    kwargs={"output_size": (2, 2), "data_format": "channels_last"},
+    input_data=valid_input,
+    expected_output=output,
   )
 
   valid_input = np.arange(start=0.0, stop=40.0, step=1.0).astype(np.float32)
@@ -80,13 +71,10 @@ def test_avg_2d():
   output = np.array([[7.0, 12.0], [27.0, 32.0]]).astype(np.float32)
   output = np.reshape(output, (1, 1, 2, 2))
   test_utils.layer_test(
-      AdaptiveAveragePooling2D,
-      kwargs={
-          "output_size": (2, 2),
-          "data_format": "channels_first"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveAveragePooling2D,
+    kwargs={"output_size": (2, 2), "data_format": "channels_first"},
+    input_data=valid_input,
+    expected_output=output,
   )
 
 
@@ -97,13 +85,10 @@ def test_avg_3d():
   output = np.array([[[14.0, 15.0], [24.0, 25.0]], [[54.0, 55.0], [64.0, 65.0]]]).astype(np.float32)
   output = np.reshape(output, (1, 2, 2, 2, 1))
   test_utils.layer_test(
-      AdaptiveAveragePooling3D,
-      kwargs={
-          "output_size": (2, 2, 2),
-          "data_format": "channels_last"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveAveragePooling3D,
+    kwargs={"output_size": (2, 2, 2), "data_format": "channels_last"},
+    input_data=valid_input,
+    expected_output=output,
   )
 
   valid_input = np.arange(start=0.0, stop=80.0, step=1.0).astype(np.float32)
@@ -111,13 +96,10 @@ def test_avg_3d():
   output = np.array([[[14.0, 15.0], [24.0, 25.0]], [[54.0, 55.0], [64.0, 65.0]]]).astype(np.float32)
   output = np.reshape(output, (1, 1, 2, 2, 2))
   test_utils.layer_test(
-      AdaptiveAveragePooling3D,
-      kwargs={
-          "output_size": (2, 2, 2),
-          "data_format": "channels_first"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveAveragePooling3D,
+    kwargs={"output_size": (2, 2, 2), "data_format": "channels_first"},
+    input_data=valid_input,
+    expected_output=output,
   )
 
 
@@ -128,13 +110,10 @@ def test_max_1d():
   output = np.array([2.0, 5.0, 8.0, 11.0]).astype(np.float32)
   output = np.reshape(output, (1, 4, 1))
   test_utils.layer_test(
-      AdaptiveMaxPooling1D,
-      kwargs={
-          "output_size": 4,
-          "data_format": "channels_last"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveMaxPooling1D,
+    kwargs={"output_size": 4, "data_format": "channels_last"},
+    input_data=valid_input,
+    expected_output=output,
   )
 
   valid_input = np.arange(start=0.0, stop=12.0, step=1.0).astype(np.float32)
@@ -142,13 +121,10 @@ def test_max_1d():
   output = np.array([2.0, 5.0, 8.0, 11.0]).astype(np.float32)
   output = np.reshape(output, (1, 1, 4))
   test_utils.layer_test(
-      AdaptiveMaxPooling1D,
-      kwargs={
-          "output_size": 4,
-          "data_format": "channels_first"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveMaxPooling1D,
+    kwargs={"output_size": 4, "data_format": "channels_first"},
+    input_data=valid_input,
+    expected_output=output,
   )
 
 
@@ -159,13 +135,10 @@ def test_max_2d():
   output = np.array([[14.0, 19.0], [34.0, 39.0]]).astype(np.float32)
   output = np.reshape(output, (1, 2, 2, 1))
   test_utils.layer_test(
-      AdaptiveMaxPooling2D,
-      kwargs={
-          "output_size": (2, 2),
-          "data_format": "channels_last"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveMaxPooling2D,
+    kwargs={"output_size": (2, 2), "data_format": "channels_last"},
+    input_data=valid_input,
+    expected_output=output,
   )
 
   valid_input = np.arange(start=0.0, stop=40.0, step=1.0).astype(np.float32)
@@ -173,13 +146,10 @@ def test_max_2d():
   output = np.array([[14.0, 19.0], [34.0, 39.0]]).astype(np.float32)
   output = np.reshape(output, (1, 1, 2, 2))
   test_utils.layer_test(
-      AdaptiveMaxPooling2D,
-      kwargs={
-          "output_size": (2, 2),
-          "data_format": "channels_first"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveMaxPooling2D,
+    kwargs={"output_size": (2, 2), "data_format": "channels_first"},
+    input_data=valid_input,
+    expected_output=output,
   )
 
 
@@ -190,13 +160,10 @@ def test_max_3d():
   output = np.array([[[28.0, 29.0], [38.0, 39.0]], [[68.0, 69.0], [78.0, 79.0]]]).astype(np.float32)
   output = np.reshape(output, (1, 2, 2, 2, 1))
   test_utils.layer_test(
-      AdaptiveMaxPooling3D,
-      kwargs={
-          "output_size": (2, 2, 2),
-          "data_format": "channels_last"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveMaxPooling3D,
+    kwargs={"output_size": (2, 2, 2), "data_format": "channels_last"},
+    input_data=valid_input,
+    expected_output=output,
   )
 
   valid_input = np.arange(start=0.0, stop=80.0, step=1.0).astype(np.float32)
@@ -204,11 +171,8 @@ def test_max_3d():
   output = np.array([[[28.0, 29.0], [38.0, 39.0]], [[68.0, 69.0], [78.0, 79.0]]]).astype(np.float32)
   output = np.reshape(output, (1, 1, 2, 2, 2))
   test_utils.layer_test(
-      AdaptiveMaxPooling3D,
-      kwargs={
-          "output_size": (2, 2, 2),
-          "data_format": "channels_first"
-      },
-      input_data=valid_input,
-      expected_output=output,
+    AdaptiveMaxPooling3D,
+    kwargs={"output_size": (2, 2, 2), "data_format": "channels_first"},
+    input_data=valid_input,
+    expected_output=output,
   )

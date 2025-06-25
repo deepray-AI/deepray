@@ -19,12 +19,12 @@ def runner(argv=None):
 
   if len(argv) <= 1:
     argv = [
-        sys.argv[0],
-        "--batch_size=128",
-        "--epochs=1",
-        "--train_data=/workspaces/dataset/avazu/output/train.parquet",
-        f"--feature_map={dir_path}/feature_map.csv",
-        "--label=label",
+      sys.argv[0],
+      "--batch_size=128",
+      "--epochs=1",
+      "--train_data=/workspaces/dataset/avazu/output/train.parquet",
+      f"--feature_map={dir_path}/feature_map.csv",
+      "--label=label",
     ]
   if argv:
     FLAGS(argv, known_only=True)
@@ -42,7 +42,7 @@ def runner(argv=None):
     step += 1
     num_examples += FLAGS.batch_size
     step_throughput = _performance_calculator(1, FLAGS.batch_size)
-    print(f'step {step}, Perf {step_throughput} samples/s')
+    print(f"step {step}, Perf {step_throughput} samples/s")
 
   print(num_examples)
   results_perf = _performance_calculator.results

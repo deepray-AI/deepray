@@ -21,12 +21,12 @@ from typing import List
 
 def fit_bn(model, *args, **kwargs):
   """Resets batch normalization layers of model, and recalculates the
-    statistics for each batchnorm layer by running a pass on the data.
+  statistics for each batchnorm layer by running a pass on the data.
 
-    Args:
-        model: An instance of tf.keras.Model
-        *args, **kwargs: Params that'll be passed to `.fit` method of model
-    """
+  Args:
+      model: An instance of tf.keras.Model
+      *args, **kwargs: Params that'll be passed to `.fit` method of model
+  """
   kwargs["epochs"] = 1
   if not isinstance(model, tf.keras.Model):
     raise TypeError("model must be an instance of tf.keras.Model")
@@ -37,12 +37,10 @@ def fit_bn(model, *args, **kwargs):
   assign_ops = []
   for layer in model.layers:
     if isinstance(layer, tf.keras.layers.BatchNormalization):
-      assign_ops.extend(
-          [
-              layer.moving_mean.assign(tf.zeros_like(layer.moving_mean)),
-              layer.moving_variance.assign(tf.ones_like(layer.moving_variance)),
-          ]
-      )
+      assign_ops.extend([
+        layer.moving_mean.assign(tf.zeros_like(layer.moving_mean)),
+        layer.moving_variance.assign(tf.ones_like(layer.moving_variance)),
+      ])
 
   _trainable = model.trainable
   _metrics = model._metrics

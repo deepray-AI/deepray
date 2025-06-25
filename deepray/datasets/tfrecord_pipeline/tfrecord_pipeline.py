@@ -29,7 +29,7 @@ class TFRecordPipeline(DataPipeline):
   def parser(self, record):
     self.context_features, self.sequence_features = self.features
     tensor, sparse_tensor, ragged_tensor = tf.io.parse_sequence_example(
-        serialized=record, context_features=self.context_features, sequence_features=self.sequence_features
+      serialized=record, context_features=self.context_features, sequence_features=self.sequence_features
     )
 
     tensor.update(sparse_tensor)
@@ -46,7 +46,7 @@ class TFRecordPipeline(DataPipeline):
     # same input file is sent to all workers.
     if isinstance(input_files, str) or len(input_files) < get_world_size():
       dataset = tf.data.TFRecordDataset(
-          input_files, compression_type=self.compression_type, num_parallel_reads=tf.data.AUTOTUNE
+        input_files, compression_type=self.compression_type, num_parallel_reads=tf.data.AUTOTUNE
       )
       if self.use_horovod:
         # For multi-host training, we want each hosts to always process the same
@@ -72,7 +72,7 @@ class TFRecordPipeline(DataPipeline):
       # CPU cores.
       cycle_length = min(multiprocessing.cpu_count(), len(input_files))
       dataset = dataset.interleave(
-          mfunc, cycle_length=cycle_length, block_length=4, num_parallel_calls=tf.data.AUTOTUNE, deterministic=True
+        mfunc, cycle_length=cycle_length, block_length=4, num_parallel_calls=tf.data.AUTOTUNE, deterministic=True
       )
 
     dataset = dataset.batch(batch_size).map(self.parser, multiprocessing.cpu_count())

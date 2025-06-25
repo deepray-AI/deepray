@@ -55,8 +55,8 @@ def test_forward(input_shape, input_dim, dtype, indices_dtype, combiner):
   if weights is not None:
     weights = tf.convert_to_tensor(weights)
   output = embedding_bag(
-      indices,
-      weights,
+    indices,
+    weights,
   )
   test_utils.assert_allclose_according_to_type(expected, output, half_rtol=1e-2, half_atol=1e-2)
 
@@ -93,10 +93,10 @@ def test_backward(input_shape, input_dim, dtype, indices_dtype, combiner):
     expected_grads = tape.gradient(expected, [params, weights])
     # Gather returns sparse IndexedSlices so we have to sum them together.
     test_utils.assert_allclose_according_to_type(
-        tf.convert_to_tensor(expected_grads[0]),
-        tf.convert_to_tensor(grads[0]),
-        half_rtol=1e-2,
-        half_atol=1e-2,
+      tf.convert_to_tensor(expected_grads[0]),
+      tf.convert_to_tensor(grads[0]),
+      half_rtol=1e-2,
+      half_atol=1e-2,
     )
     test_utils.assert_allclose_according_to_type(expected_grads[1], grads[1], half_rtol=1e-2, half_atol=1e-2)
   else:
@@ -109,8 +109,8 @@ def test_backward(input_shape, input_dim, dtype, indices_dtype, combiner):
     expected_grads = tape.gradient(expected, [params])
     # Gather returns sparse IndexedSlices so we have to sum them together.
     test_utils.assert_allclose_according_to_type(
-        tf.convert_to_tensor(expected_grads[0]),
-        tf.convert_to_tensor(grads[0]),
-        half_rtol=1e-2,
-        half_atol=1e-2,
+      tf.convert_to_tensor(expected_grads[0]),
+      tf.convert_to_tensor(grads[0]),
+      half_rtol=1e-2,
+      half_atol=1e-2,
     )

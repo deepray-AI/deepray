@@ -20,14 +20,14 @@ from absl import logging
 
 class PerformanceCalculator:
   """
-    PerformanceCalculator for throughput and latency statistics.
+  PerformanceCalculator for throughput and latency statistics.
 
-    Computes the statistics over a given number of steps. Timers should be initialized by the user by
-    calling init() at the right moment -- just before running consecutive iterations of training.
+  Computes the statistics over a given number of steps. Timers should be initialized by the user by
+  calling init() at the right moment -- just before running consecutive iterations of training.
 
-    Attributes:
-        warmup_steps (int): Number of initial steps to ignore for computing results.
-        total_steps (int): Number of steps to collect data for (excluding warmup_steps); use <= 0 for unbounded horizon.
+  Attributes:
+      warmup_steps (int): Number of initial steps to ignore for computing results.
+      total_steps (int): Number of steps to collect data for (excluding warmup_steps); use <= 0 for unbounded horizon.
   """
 
   def __init__(self, warmup_steps=0, total_steps=0):

@@ -70,16 +70,17 @@ class ExampleBuilder(object):
       # empty, (2) the sentence doesn't put the first segment over length or
       # (3) 50% of the time when it does put the first segment over length
       if (
-          len(first_segment) == 0 or len(first_segment) + len(sentence) < first_segment_target_length or
-          (len(second_segment) == 0 and len(first_segment) < first_segment_target_length and random.random() < 0.5)
+        len(first_segment) == 0
+        or len(first_segment) + len(sentence) < first_segment_target_length
+        or (len(second_segment) == 0 and len(first_segment) < first_segment_target_length and random.random() < 0.5)
       ):
         first_segment += sentence
       else:
         second_segment += sentence
 
     # trim to max_length while accounting for not-yet-added [CLS]/[SEP] tokens
-    first_segment = first_segment[:self._max_length - 2]
-    second_segment = second_segment[:max(0, self._max_length - len(first_segment) - 3)]
+    first_segment = first_segment[: self._max_length - 2]
+    second_segment = second_segment[: max(0, self._max_length - len(first_segment) - 3)]
 
     # prepare to start building the next example
     self._current_sentences = []
@@ -105,13 +106,13 @@ class ExampleBuilder(object):
     input_mask += [0] * (self._max_length - len(input_mask))
     segment_ids += [0] * (self._max_length - len(segment_ids))
     tf_example = tf.train.Example(
-        features=tf.train.Features(
-            feature={
-                "input_ids": create_int_feature(input_ids),
-                "input_mask": create_int_feature(input_mask),
-                "segment_ids": create_int_feature(segment_ids)
-            }
-        )
+      features=tf.train.Features(
+        feature={
+          "input_ids": create_int_feature(input_ids),
+          "input_mask": create_int_feature(input_mask),
+          "segment_ids": create_int_feature(segment_ids),
+        }
+      )
     )
     return tf_example
 
@@ -120,15 +121,15 @@ class ExampleWriter(object):
   """Writes pre-training examples to disk."""
 
   def __init__(
-      self,
-      job_id,
-      vocab_file,
-      output_dir,
-      max_seq_length,
-      num_jobs,
-      blanks_separate_docs,
-      do_lower_case,
-      num_out_files=1000
+    self,
+    job_id,
+    vocab_file,
+    output_dir,
+    max_seq_length,
+    num_jobs,
+    blanks_separate_docs,
+    do_lower_case,
+    num_out_files=1000,
   ):
     self._blanks_separate_docs = blanks_separate_docs
     tokenizer = ElectraTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
@@ -169,14 +170,14 @@ def write_examples(job_id, args):
 
   log("Creating example writer")
   example_writer = ExampleWriter(
-      job_id=job_id,
-      vocab_file=args.vocab_file,
-      output_dir=args.output_dir,
-      max_seq_length=args.max_seq_length,
-      num_jobs=args.num_processes,
-      blanks_separate_docs=args.blanks_separate_docs,
-      do_lower_case=args.do_lower_case,
-      num_out_files=args.num_out_files,
+    job_id=job_id,
+    vocab_file=args.vocab_file,
+    output_dir=args.output_dir,
+    max_seq_length=args.max_seq_length,
+    num_jobs=args.num_processes,
+    blanks_separate_docs=args.blanks_separate_docs,
+    do_lower_case=args.do_lower_case,
+    num_out_files=args.num_out_files,
   )
   log("Writing tf examples")
   fnames = sorted(tf.io.gfile.listdir(args.corpus_dir))
@@ -187,11 +188,14 @@ def write_examples(job_id, args):
     if file_no > 0:
       elapsed = time.time() - start_time
       log(
-          "processed {:}/{:} files ({:.1f}%), ELAPSED: {:}s, ETA: {:}s, "
-          "{:} examples written".format(
-              file_no, len(fnames), 100.0 * file_no / len(fnames), int(elapsed),
-              int((len(fnames) - file_no) / (file_no / elapsed)), example_writer.n_written
-          )
+        "processed {:}/{:} files ({:.1f}%), ELAPSED: {:}s, ETA: {:}s, {:} examples written".format(
+          file_no,
+          len(fnames),
+          100.0 * file_no / len(fnames),
+          int(elapsed),
+          int((len(fnames) - file_no) / (file_no / elapsed)),
+          example_writer.n_written,
+        )
       )
     example_writer.write_examples(os.path.join(args.corpus_dir, fname))
   example_writer.finish()
@@ -207,11 +211,11 @@ def main():
   parser.add_argument("--max-seq-length", default=128, type=int, help="Number of tokens per example.")
   parser.add_argument("--num-processes", default=1, type=int, help="Parallelize across multiple processes.")
   parser.add_argument(
-      "--blanks-separate-docs", default=True, type=bool, help="Whether blank lines indicate document boundaries."
+    "--blanks-separate-docs", default=True, type=bool, help="Whether blank lines indicate document boundaries."
   )
-  parser.add_argument("--do-lower-case", dest='do_lower_case', action='store_true', help="Lower case input text.")
+  parser.add_argument("--do-lower-case", dest="do_lower_case", action="store_true", help="Lower case input text.")
   parser.add_argument(
-      "--no-lower-case", dest='do_lower_case', action='store_false', help="Don't lower case input text."
+    "--no-lower-case", dest="do_lower_case", action="store_false", help="Don't lower case input text."
   )
   parser.add_argument("--num-out-files", default=1000, type=int, help="Number of output files.")
   parser.add_argument("--seed", default=1314, type=int)

@@ -62,6 +62,7 @@ class StandardTrainerOptions:
       (one with summary calls, and one without). The program with summaries runs
       only for one step when summaries should be recorded.
   """
+
   use_tf_function: bool = True
   use_tf_while_loop: bool = True
   use_tpu_summary_optimization: bool = False
@@ -92,11 +93,9 @@ class StandardTrainer(runner.AbstractTrainer, metaclass=abc.ABCMeta):
     """
     options = options or StandardTrainerOptions()
     if options.use_tf_while_loop and not options.use_tf_function:
-      raise ValueError("`use_tf_while_loop=True` and `use_tf_function=False` "
-                       "is not supported")
+      raise ValueError("`use_tf_while_loop=True` and `use_tf_function=False` is not supported")
     if options.use_tpu_summary_optimization and not options.use_tf_while_loop:
-      raise ValueError("`use_tpu_summary_optimization=True` and "
-                       "`use_tf_while_loop=False` is not supported")
+      raise ValueError("`use_tpu_summary_optimization=True` and `use_tf_while_loop=False` is not supported")
 
     self._train_options = options
     self._train_dataset = train_dataset
@@ -227,6 +226,7 @@ class StandardEvaluatorOptions:
       data to be evaluated is [1, 2] every time. If `False`, the iterator
       state is maintained between calls to `StandardEvaluator.evaluate()`.
   """
+
   use_tf_function: bool = True
   use_tf_while_loop: bool = False
   recreate_iterator_for_each_eval: bool = True
@@ -268,8 +268,7 @@ class StandardEvaluator(runner.AbstractEvaluator, metaclass=abc.ABCMeta):
     """
     options = options or StandardEvaluatorOptions()
     if options.use_tf_while_loop and not options.use_tf_function:
-      raise ValueError("`use_tf_while_loop=True` and `use_tf_function=False` "
-                       "is not supported")
+      raise ValueError("`use_tf_while_loop=True` and `use_tf_function=False` is not supported")
 
     self._eval_options = options
     self._eval_dataset = eval_dataset
@@ -317,8 +316,7 @@ class StandardEvaluator(runner.AbstractEvaluator, metaclass=abc.ABCMeta):
         unspecified.
     """
     if self._eval_options.use_tf_while_loop and num_steps == -1:
-      raise ValueError("Looping until exhausted is not supported if "
-                       "`options.use_tf_while_loop` is `True`")
+      raise ValueError("Looping until exhausted is not supported if `options.use_tf_while_loop` is `True`")
 
     outputs = self.eval_begin()  # pylint: disable=assignment-from-no-return
 

@@ -23,32 +23,32 @@ _embedding_bag_so = LazySO("custom_ops/embedding_bag/_embedding_bag_ops.so")
 
 
 def _embedding_bag(
-    indices,
-    params,
-    weights=None,
-    combiner="sum",
-    name=None,
+  indices,
+  params,
+  weights=None,
+  combiner="sum",
+  name=None,
 ):
   """EmbeddingBag computation.
 
-    See [PyTorch op](https://pytorch.org/docs/stable/generated/torch.nn.EmbeddingBag.html).
+  See [PyTorch op](https://pytorch.org/docs/stable/generated/torch.nn.EmbeddingBag.html).
 
-    Equivalent to tf.gather() followed by tf.reduce_{sum,mean}() across the last dimension, with optional
-    weights. Fusing these into a single op has massive benefits for execution speed and particularly
-    memory usage, as the intermediate output of the gather never needs to be materialized.
+  Equivalent to tf.gather() followed by tf.reduce_{sum,mean}() across the last dimension, with optional
+  weights. Fusing these into a single op has massive benefits for execution speed and particularly
+  memory usage, as the intermediate output of the gather never needs to be materialized.
 
-    Args:
-      indices: An int32 or int64 `Tensor` of the indices to gather from
-          `params`. Must be at least 2-dimensional, as the last dimension
-          will be summed out. Maximum value must be less than params.shape[0].
-      params: A float32 `Tensor` from which to gather params. Must be rank 2.
-      weights: A float32 `Tensor` of weights which will be applied to each of
-          the gathered embedding vectors before the sum step.
-      name: A name for the operation (optional).
+  Args:
+    indices: An int32 or int64 `Tensor` of the indices to gather from
+        `params`. Must be at least 2-dimensional, as the last dimension
+        will be summed out. Maximum value must be less than params.shape[0].
+    params: A float32 `Tensor` from which to gather params. Must be rank 2.
+    weights: A float32 `Tensor` of weights which will be applied to each of
+        the gathered embedding vectors before the sum step.
+    name: A name for the operation (optional).
 
-    Returns:
-      A `Tensor` of the format specified by `data_format`.
-    """
+  Returns:
+    A `Tensor` of the format specified by `data_format`.
+  """
   if weights is None:
     weights = tf.ones_like(indices, dtype=params.dtype)
   elif combiner != "sum":
@@ -62,7 +62,7 @@ def _embedding_bag_grad(op, grads):
   indices, params, weights = op.inputs[:3]
   combiner = op.get_attr("combiner")
   value_grads, weight_grads = _embedding_bag_so.ops.deepray_embedding_bag_grad(
-      indices, params, weights, grads, combiner=combiner
+    indices, params, weights, grads, combiner=combiner
   )
   return [None, value_grads, weight_grads]
 
@@ -71,41 +71,42 @@ def _embedding_bag_grad(op, grads):
 class EmbeddingBag(tf.keras.layers.Layer):
   """EmbeddingBag Layer.
 
-    See [PyTorch op](https://pytorch.org/docs/stable/generated/torch.nn.EmbeddingBag.html).
+  See [PyTorch op](https://pytorch.org/docs/stable/generated/torch.nn.EmbeddingBag.html).
 
-    Equivalent to tf.gather() followed by tf.reduce_sum() across the last dimension, with optional
-    weights. Fusing these into a single op has massive benefits for execution speed and particularly
-    memory usage, as the intermediate output of the gather never needs to be materialized.
+  Equivalent to tf.gather() followed by tf.reduce_sum() across the last dimension, with optional
+  weights. Fusing these into a single op has massive benefits for execution speed and particularly
+  memory usage, as the intermediate output of the gather never needs to be materialized.
 
-    Input Shapes:
-      indices: An int32 or int64 `Tensor` of the indices to gather from
-          `params`. Must be at least 2-dimensional, as the last dimension
-          will be summed out. Maximum value must be less than params.shape[0].
-      params: A float32 `Tensor` from which to gather params. Must be rank 2.
-      weights: A float32 `Tensor` of weights which will be applied to each of
-          the gathered embedding vectors before the sum step.
+  Input Shapes:
+    indices: An int32 or int64 `Tensor` of the indices to gather from
+        `params`. Must be at least 2-dimensional, as the last dimension
+        will be summed out. Maximum value must be less than params.shape[0].
+    params: A float32 `Tensor` from which to gather params. Must be rank 2.
+    weights: A float32 `Tensor` of weights which will be applied to each of
+        the gathered embedding vectors before the sum step.
 
-    Output shape:
-        indices.shape[:-1], params.shape[-1]
-    """
+  Output shape:
+      indices.shape[:-1], params.shape[-1]
+  """
 
   @typechecked
   def __init__(
-      self,
-      input_dim: int,
-      output_dim: int,
-      embeddings_initializer: Initializer = "uniform",
-      embeddings_regularizer: Regularizer = None,
-      embeddings_constraint: Constraint = None,
-      mask_zero: bool = False,
-      combiner: str = "sum",
-      **kwargs,
+    self,
+    input_dim: int,
+    output_dim: int,
+    embeddings_initializer: Initializer = "uniform",
+    embeddings_regularizer: Regularizer = None,
+    embeddings_constraint: Constraint = None,
+    mask_zero: bool = False,
+    combiner: str = "sum",
+    **kwargs,
   ):
     super(EmbeddingBag, self).__init__(**kwargs)
     if input_dim <= 0 or output_dim <= 0:
       raise ValueError(
-          "Both `input_dim` and `output_dim` should be positive, "
-          "found input_dim {} and output_dim {}".format(input_dim, output_dim)
+        "Both `input_dim` and `output_dim` should be positive, found input_dim {} and output_dim {}".format(
+          input_dim, output_dim
+        )
       )
     self.input_dim = input_dim
     self.output_dim = output_dim
@@ -118,11 +119,11 @@ class EmbeddingBag(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     self.embeddings = self.add_weight(
-        shape=(self.input_dim, self.output_dim),
-        name="embeddings",
-        initializer=self.embeddings_initializer,
-        regularizer=self.embeddings_regularizer,
-        constraint=self.embeddings_constraint,
+      shape=(self.input_dim, self.output_dim),
+      name="embeddings",
+      initializer=self.embeddings_initializer,
+      regularizer=self.embeddings_regularizer,
+      constraint=self.embeddings_constraint,
     )
     self.built = True
 
@@ -131,13 +132,13 @@ class EmbeddingBag(tf.keras.layers.Layer):
 
   def get_config(self):
     config = {
-        "input_dim": self.input_dim,
-        "output_dim": self.output_dim,
-        "embeddings_initializer": tf.keras.initializers.serialize(self.embeddings_initializer),
-        "embeddings_regularizer": tf.keras.regularizers.serialize(self.embeddings_regularizer),
-        "embeddings_constraint": tf.keras.constraints.serialize(self.embeddings_constraint),
-        "mask_zero": self.mask_zero,
-        "combiner": self.combiner,
+      "input_dim": self.input_dim,
+      "output_dim": self.output_dim,
+      "embeddings_initializer": tf.keras.initializers.serialize(self.embeddings_initializer),
+      "embeddings_regularizer": tf.keras.regularizers.serialize(self.embeddings_regularizer),
+      "embeddings_constraint": tf.keras.constraints.serialize(self.embeddings_constraint),
+      "mask_zero": self.mask_zero,
+      "combiner": self.combiner,
     }
     base_config = super(EmbeddingBag, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))

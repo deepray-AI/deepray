@@ -27,19 +27,18 @@ USER_FEATURES = ["user_feat_0"]
 
 
 class AmazonBooks2014(TFRecordPipeline):
-
   def __init__(self, max_seq_length, **kwargs):
     super().__init__(**kwargs)
     self._max_seq_length = max_seq_length
-    FLAGS([
-        sys.argv[0],
-        "--num_train_examples=11932672",
+    flags.FLAGS([
+      sys.argv[0],
+      "--num_train_examples=11932672",
     ])
 
   def parser(self, record):
     tf_feature_spec = {
-        name: tf.io.FixedLenFeature([length] if length > 1 else [], tf.int64)
-        for name, dtype, length in self.feature_map[["name", "dtype", "length"]].values
+      name: tf.io.FixedLenFeature([length] if length > 1 else [], tf.int64)
+      for name, dtype, length in self.feature_map[["name", "dtype", "length"]].values
     }
 
     sample = tf.io.parse_example(serialized=record, features=tf_feature_spec)
@@ -49,41 +48,43 @@ class AmazonBooks2014(TFRecordPipeline):
     target_item_features = {f_name: tf.reshape(sample[f_name], [-1]) for f_name in TARGET_ITEM_FEATURES}
 
     padded_positive = {
-        f_name:
-        tf.reshape(sample[f_name], [-1, self.feature_map.loc[self.feature_map['name'] == f_name, 'length'].values[0]])
-        for f_name in POSITIVE_HISTORY
+      f_name: tf.reshape(
+        sample[f_name], [-1, self.feature_map.loc[self.feature_map["name"] == f_name, "length"].values[0]]
+      )
+      for f_name in POSITIVE_HISTORY
     }
 
     padded_negative = {
-        f_name:
-        tf.reshape(sample[f_name], [-1, self.feature_map.loc[self.feature_map['name'] == f_name, 'length'].values[0]])
-        for f_name in NEGATIVE_HISTORY
+      f_name: tf.reshape(
+        sample[f_name], [-1, self.feature_map.loc[self.feature_map["name"] == f_name, "length"].values[0]]
+      )
+      for f_name in NEGATIVE_HISTORY
     }
 
-    long_sequence_features = {f_name: val[:, :self._max_seq_length] for f_name, val in padded_positive.items()}
+    long_sequence_features = {f_name: val[:, : self._max_seq_length] for f_name, val in padded_positive.items()}
 
-    short_sequence_features = {f_name: val[:, self._max_seq_length:] for f_name, val in padded_positive.items()}
+    short_sequence_features = {f_name: val[:, self._max_seq_length :] for f_name, val in padded_positive.items()}
 
-    short_neg_sequence_features = {f_name: val[:, self._max_seq_length:] for f_name, val in padded_negative.items()}
+    short_neg_sequence_features = {f_name: val[:, self._max_seq_length :] for f_name, val in padded_negative.items()}
 
     first_positive_feature_name = POSITIVE_HISTORY[0]
     first_positive_feature = padded_positive[first_positive_feature_name]
 
     history_mask = tf.cast(tf.greater(first_positive_feature, 0), tf.float32)
 
-    long_sequence_mask = history_mask[:, :self._max_seq_length]
-    short_sequence_mask = history_mask[:, self._max_seq_length:]
+    long_sequence_mask = history_mask[:, : self._max_seq_length]
+    short_sequence_mask = history_mask[:, self._max_seq_length :]
 
     label_name = LABEL[0]
     target = tf.reshape(sample[label_name], [-1])
 
     return {
-        "user_features": user_features,
-        "target_item_features": target_item_features,
-        "long_sequence_features": long_sequence_features,
-        "short_sequence_features": short_sequence_features,
-        "short_neg_sequence_features": short_neg_sequence_features,
-        "long_sequence_mask": long_sequence_mask,
-        "short_sequence_mask": short_sequence_mask,
-        "other_features": None
+      "user_features": user_features,
+      "target_item_features": target_item_features,
+      "long_sequence_features": long_sequence_features,
+      "short_sequence_features": short_sequence_features,
+      "short_neg_sequence_features": short_neg_sequence_features,
+      "long_sequence_mask": long_sequence_mask,
+      "short_sequence_mask": short_sequence_mask,
+      "other_features": None,
     }, target

@@ -15,8 +15,8 @@
 import tensorflow as tf
 
 if (
-    hasattr(tf.keras.optimizers, "experimental") and
-    tf.keras.optimizers.Optimizer.__module__ == tf.keras.optimizers.experimental.Optimizer.__module__
+  hasattr(tf.keras.optimizers, "experimental")
+  and tf.keras.optimizers.Optimizer.__module__ == tf.keras.optimizers.experimental.Optimizer.__module__
 ):
   # If the default optimizer points to new Keras optimizer, deepray optimizers
   # should use the legacy path.

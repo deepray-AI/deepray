@@ -64,7 +64,7 @@ def build_tensor_serving_input_receiver_fn(shape, dtype=tf.float32, batch_size=1
 
   def serving_input_receiver_fn():
     # Prep a placeholder where the input example will be fed in
-    features = tf.compat.v1.placeholder(dtype=dtype, shape=[batch_size] + shape, name='input_tensor')
+    features = tf.compat.v1.placeholder(dtype=dtype, shape=[batch_size] + shape, name="input_tensor")
 
     return tf.estimator.export.TensorServingInputReceiver(features=features, receiver_tensors=features)
 
@@ -72,16 +72,15 @@ def build_tensor_serving_input_receiver_fn(shape, dtype=tf.float32, batch_size=1
 
 
 def export_to_checkpoint(saver: Union[tf.train.Checkpoint, tf.train.CheckpointManager], checkpoint_number=None):
-
   def helper(name, _saver):
     """Saves model to with provided checkpoint prefix."""
-    latest_checkpoint_file = tf.train.latest_checkpoint(os.path.join(flags.FLAGS.model_dir, 'ckpt_' + name))
+    latest_checkpoint_file = tf.train.latest_checkpoint(os.path.join(flags.FLAGS.model_dir, "ckpt_" + name))
     match = re.search(r"(?<=ckpt-)\d+", latest_checkpoint_file) if latest_checkpoint_file else None
     latest_step_ckpt = int(match.group()) if match else -1
 
     if latest_step_ckpt != checkpoint_number:
       save_path = _saver.save(checkpoint_number)
-      logger.info('Saved checkpoint to {}'.format(save_path))
+      logger.info("Saved checkpoint to {}".format(save_path))
 
   def _save_fn():
     if isinstance(saver, dict):
@@ -97,12 +96,12 @@ def export_to_checkpoint(saver: Union[tf.train.Checkpoint, tf.train.CheckpointMa
 
 
 def export_to_savedmodel(
-    model: Union[tf.keras.Model, Dict[Text, tf.keras.Model]],
-    savedmodel_dir: Optional[Text] = None,
-    checkpoint_dir: Optional[Union[Text, Dict[Text, Text]]] = None,
-    restore_model_using_load_weights: bool = False,
-    include_optimizer: bool = False,
-    signatures=None
+  model: Union[tf.keras.Model, Dict[Text, tf.keras.Model]],
+  savedmodel_dir: Optional[Text] = None,
+  checkpoint_dir: Optional[Union[Text, Dict[Text, Text]]] = None,
+  restore_model_using_load_weights: bool = False,
+  include_optimizer: bool = False,
+  signatures=None,
 ) -> Text:
   """Export keras model for serving which does not include the optimizer.
 
@@ -126,13 +125,13 @@ def export_to_savedmodel(
 
   if flags.FLAGS.use_dynamic_embedding and flags.FLAGS.use_horovod:
     try:
-      rank_array = hvd.allgather_object(get_rank(), name='check_tfra_ranks')
+      rank_array = hvd.allgather_object(get_rank(), name="check_tfra_ranks")
       assert len(set(rank_array)) == get_world_size()
     except:
       raise ValueError(f"Shouldn't place {inspect.stack()[0][3]} only in the main_process when use TFRA and Horovod.")
 
   def helper(name, _model: tf.keras.Model, _checkpoint_dir):
-    _savedmodel_dir = os.path.join(flags.FLAGS.model_dir, 'export') if savedmodel_dir is None else savedmodel_dir
+    _savedmodel_dir = os.path.join(flags.FLAGS.model_dir, "export") if savedmodel_dir is None else savedmodel_dir
     if get_world_size() > 1:
       _savedmodel_dir = f"{_savedmodel_dir}_{name}_{get_rank()}"
     else:
@@ -143,7 +142,7 @@ def export_to_savedmodel(
       # Keras compile/fit() was used to save checkpoint using
       # model.save_weights().
       if restore_model_using_load_weights:
-        model_weight_path = os.path.join(_checkpoint_dir, 'checkpoint')
+        model_weight_path = os.path.join(_checkpoint_dir, "checkpoint")
         assert tf.io.gfile.exists(model_weight_path)
         _model.load_weights(model_weight_path)
 
@@ -154,37 +153,40 @@ def export_to_savedmodel(
         # Restores the model from latest checkpoint.
         latest_checkpoint_file = tf.train.latest_checkpoint(_checkpoint_dir)
         assert latest_checkpoint_file
-        logger.info('Checkpoint file %s found and restoring from '
-                    'checkpoint', latest_checkpoint_file)
+        logger.info("Checkpoint file %s found and restoring from checkpoint", latest_checkpoint_file)
         checkpoint.restore(latest_checkpoint_file).assert_existing_objects_matched()
 
     if flags.FLAGS.use_dynamic_embedding:
       try:
         from tensorflow_recommenders_addons import dynamic_embedding as de
+
         de.keras.models.de_save_model(
-            _model, _savedmodel_dir, overwrite=True, include_optimizer=include_optimizer, signatures=signatures
+          _model, _savedmodel_dir, overwrite=True, include_optimizer=include_optimizer, signatures=signatures
         )
       except:
         # Compatible with TFRA version before commit 460b50847d459ebbf91b30ea0f9499fbc7ed9da0
         def _check_de_var_with_fs_saver(_var):
           try:
             from tensorflow_recommenders_addons import dynamic_embedding as de
+
             # This function only serves FileSystemSaver.
-            return hasattr(_var, "params") and \
-              hasattr(_var.params, "_created_in_class") and \
-              _var.params._saveable_object_creator is not None and \
-              isinstance(_var.params.kv_creator.saver, de.FileSystemSaver)
+            return (
+              hasattr(_var, "params")
+              and hasattr(_var.params, "_created_in_class")
+              and _var.params._saveable_object_creator is not None
+              and isinstance(_var.params.kv_creator.saver, de.FileSystemSaver)
+            )
           except:
             return False
 
         de_dir = os.path.join(_savedmodel_dir, "variables", "TFRADynamicEmbedding")
-        options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
+        options = tf.saved_model.SaveOptions(namespace_whitelist=["TFRA"])
         if is_main_process():
           for var in _model.variables:
             _is_dump = _check_de_var_with_fs_saver(var)
             if _is_dump:
               de_var = var.params
-              if hasattr(de_var, 'saveable'):
+              if hasattr(de_var, "saveable"):
                 de_var.saveable._saver_config.save_path = de_dir
           tf.saved_model.save(_model, export_dir=_savedmodel_dir, signatures=signatures, options=options)
         else:
@@ -197,8 +199,11 @@ def export_to_savedmodel(
               var.params.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
               # save opt weights
               if include_optimizer:
-                de_opt_vars = a2a_emb.optimizer_vars.as_list(
-                ) if hasattr(a2a_emb.optimizer_vars, "as_list") else a2a_emb.optimizer_vars
+                de_opt_vars = (
+                  a2a_emb.optimizer_vars.as_list()
+                  if hasattr(a2a_emb.optimizer_vars, "as_list")
+                  else a2a_emb.optimizer_vars
+                )
                 for de_opt_var in de_opt_vars:
                   de_opt_var.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
     else:
@@ -223,10 +228,10 @@ def export_to_savedmodel(
 
 
 def optimize_for_inference(
-    model: Union[tf.keras.Model, Dict[Text, tf.keras.Model]],
-    savedmodel_dir: Text,
-    dataset: tf.data.Dataset = None,
-    signatures=None,
+  model: Union[tf.keras.Model, Dict[Text, tf.keras.Model]],
+  savedmodel_dir: Text,
+  dataset: tf.data.Dataset = None,
+  signatures=None,
 ) -> None:
   x = None
   if dataset:
@@ -241,7 +246,7 @@ def optimize_for_inference(
       logger.debug(preds)
 
   def helper(_model, path):
-    tmp_path = tempfile.mkdtemp(dir='/tmp/')
+    tmp_path = tempfile.mkdtemp(dir="/tmp/")
     export_to_savedmodel(_model, savedmodel_dir=tmp_path, signatures=signatures)
     file = os.path.join(path, "saved_model.pb")
     if tf.io.gfile.exists(file):
@@ -267,10 +272,10 @@ def optimize_for_inference(
 
 
 class SavedModel:
-
   def __init__(self, model_dir, precision):
     if flags.FLAGS.use_dynamic_embedding:
       from tensorflow_recommenders_addons import dynamic_embedding as de
+
       de.enable_inference_mode()
 
     self.saved_model_loaded = tf.saved_model.load(model_dir, tags=[tag_constants.SERVING])
@@ -291,10 +296,9 @@ class SavedModel:
 
 
 class TFTRTModel:
-
   def export_model(self, model_dir, prec, tf_trt_model_dir=None):
     loaded_model = tf.saved_model.load(model_dir)
-    signature = loaded_model.signatures['serving_default']
+    signature = loaded_model.signatures["serving_default"]
     logger.info(signature)
     # input_shape = [1, 384]
     # dummy_input = tf.constant(tf.zeros(input_shape, dtype=tf.int32))
@@ -307,11 +311,11 @@ class TFTRTModel:
 
     trt_prec = trt.TrtPrecisionMode.FP32 if prec == "fp32" else trt.TrtPrecisionMode.FP16
     converter = trt.TrtGraphConverterV2(
-        input_saved_model_dir=model_dir,
-        conversion_params=trt.TrtConversionParams(precision_mode=trt_prec),
+      input_saved_model_dir=model_dir,
+      conversion_params=trt.TrtConversionParams(precision_mode=trt_prec),
     )
     converter.convert()
-    tf_trt_model_dir = tf_trt_model_dir or f'/tmp/tf-trt_model_{prec}'
+    tf_trt_model_dir = tf_trt_model_dir or f"/tmp/tf-trt_model_{prec}"
     converter.save(tf_trt_model_dir)
     logger.info(f"TF-TRT model saved at {tf_trt_model_dir}")
 

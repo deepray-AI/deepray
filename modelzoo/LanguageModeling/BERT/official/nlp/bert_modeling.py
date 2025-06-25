@@ -28,23 +28,24 @@ from tensorflow.python.util import deprecation
 from deepray.layers import tf_utils
 
 
-
 class BertConfig(object):
   """Configuration for `BertModel`."""
 
-  def __init__(self,
-               vocab_size,
-               hidden_size=768,
-               num_hidden_layers=12,
-               num_attention_heads=12,
-               intermediate_size=3072,
-               hidden_act="gelu",
-               hidden_dropout_prob=0.1,
-               attention_probs_dropout_prob=0.1,
-               max_position_embeddings=512,
-               type_vocab_size=16,
-               initializer_range=0.02,
-               backward_compatible=True):
+  def __init__(
+    self,
+    vocab_size,
+    hidden_size=768,
+    num_hidden_layers=12,
+    num_attention_heads=12,
+    intermediate_size=3072,
+    hidden_act="gelu",
+    hidden_dropout_prob=0.1,
+    attention_probs_dropout_prob=0.1,
+    max_position_embeddings=512,
+    type_vocab_size=16,
+    initializer_range=0.02,
+    backward_compatible=True,
+  ):
     """Constructs BertConfig.
 
     Args:
@@ -88,7 +89,7 @@ class BertConfig(object):
   def from_dict(cls, json_object):
     """Constructs a `BertConfig` from a Python dictionary of parameters."""
     config = BertConfig(vocab_size=None)
-    for (key, value) in six.iteritems(json_object):
+    for key, value in six.iteritems(json_object):
       config.__dict__[key] = value
     return config
 
@@ -112,11 +113,7 @@ class BertConfig(object):
 class AlbertConfig(BertConfig):
   """Configuration for `ALBERT`."""
 
-  def __init__(self,
-               embedding_size,
-               num_hidden_groups=1,
-               inner_group_num=1,
-               **kwargs):
+  def __init__(self, embedding_size, num_hidden_groups=1, inner_group_num=1, **kwargs):
     """Constructs AlbertConfig.
 
     Args:
@@ -135,32 +132,25 @@ class AlbertConfig(BertConfig):
     # in the released ALBERT. Support other values in AlbertTransformerEncoder
     # if needed.
     if inner_group_num != 1 or num_hidden_groups != 1:
-      raise ValueError("We only support 'inner_group_num' and "
-                       "'num_hidden_groups' as 1.")
+      raise ValueError("We only support 'inner_group_num' and 'num_hidden_groups' as 1.")
 
   @classmethod
   def from_dict(cls, json_object):
     """Constructs a `AlbertConfig` from a Python dictionary of parameters."""
     config = AlbertConfig(embedding_size=None, vocab_size=None)
-    for (key, value) in six.iteritems(json_object):
+    for key, value in six.iteritems(json_object):
       config.__dict__[key] = value
     return config
 
 
 @deprecation.deprecated(None, "The function should not be used any more.")
-def get_bert_model(input_word_ids,
-                   input_mask,
-                   input_type_ids,
-                   config=None,
-                   name=None,
-                   float_type=tf.float32):
+def get_bert_model(input_word_ids, input_mask, input_type_ids, config=None, name=None, float_type=tf.float32):
   """Wraps the core BERT model as a keras.Model."""
   bert_model_layer = BertModel(config=config, float_type=float_type, name=name)
-  pooled_output, sequence_output = bert_model_layer(input_word_ids, input_mask,
-                                                    input_type_ids)
+  pooled_output, sequence_output = bert_model_layer(input_word_ids, input_mask, input_type_ids)
   bert_model = tf.keras.Model(
-      inputs=[input_word_ids, input_mask, input_type_ids],
-      outputs=[pooled_output, sequence_output])
+    inputs=[input_word_ids, input_mask, input_type_ids], outputs=[pooled_output, sequence_output]
+  )
   return bert_model
 
 
@@ -186,56 +176,53 @@ class BertModel(tf.keras.layers.Layer):
   ```
   """
 
-  @deprecation.deprecated(
-      None, "Please use `nlp.modeling.networks.TransformerEncoder` instead.")
+  @deprecation.deprecated(None, "Please use `nlp.modeling.networks.TransformerEncoder` instead.")
   def __init__(self, config, float_type=tf.float32, **kwargs):
     super(BertModel, self).__init__(**kwargs)
-    self.config = (
-        BertConfig.from_dict(config)
-        if isinstance(config, dict) else copy.deepcopy(config))
+    self.config = BertConfig.from_dict(config) if isinstance(config, dict) else copy.deepcopy(config)
     self.float_type = float_type
 
   def build(self, unused_input_shapes):
     """Implements build() for the layer."""
     self.embedding_lookup = EmbeddingLookup(
-        vocab_size=self.config.vocab_size,
-        embedding_size=self.config.hidden_size,
-        initializer_range=self.config.initializer_range,
-        dtype=tf.float32,
-        name="word_embeddings")
+      vocab_size=self.config.vocab_size,
+      embedding_size=self.config.hidden_size,
+      initializer_range=self.config.initializer_range,
+      dtype=tf.float32,
+      name="word_embeddings",
+    )
     self.embedding_postprocessor = EmbeddingPostprocessor(
-        use_type_embeddings=True,
-        token_type_vocab_size=self.config.type_vocab_size,
-        use_position_embeddings=True,
-        max_position_embeddings=self.config.max_position_embeddings,
-        dropout_prob=self.config.hidden_dropout_prob,
-        initializer_range=self.config.initializer_range,
-        dtype=tf.float32,
-        name="embedding_postprocessor")
+      use_type_embeddings=True,
+      token_type_vocab_size=self.config.type_vocab_size,
+      use_position_embeddings=True,
+      max_position_embeddings=self.config.max_position_embeddings,
+      dropout_prob=self.config.hidden_dropout_prob,
+      initializer_range=self.config.initializer_range,
+      dtype=tf.float32,
+      name="embedding_postprocessor",
+    )
     self.encoder = Transformer(
-        num_hidden_layers=self.config.num_hidden_layers,
-        hidden_size=self.config.hidden_size,
-        num_attention_heads=self.config.num_attention_heads,
-        intermediate_size=self.config.intermediate_size,
-        intermediate_activation=self.config.hidden_act,
-        hidden_dropout_prob=self.config.hidden_dropout_prob,
-        attention_probs_dropout_prob=self.config.attention_probs_dropout_prob,
-        initializer_range=self.config.initializer_range,
-        backward_compatible=self.config.backward_compatible,
-        float_type=self.float_type,
-        name="encoder")
+      num_hidden_layers=self.config.num_hidden_layers,
+      hidden_size=self.config.hidden_size,
+      num_attention_heads=self.config.num_attention_heads,
+      intermediate_size=self.config.intermediate_size,
+      intermediate_activation=self.config.hidden_act,
+      hidden_dropout_prob=self.config.hidden_dropout_prob,
+      attention_probs_dropout_prob=self.config.attention_probs_dropout_prob,
+      initializer_range=self.config.initializer_range,
+      backward_compatible=self.config.backward_compatible,
+      float_type=self.float_type,
+      name="encoder",
+    )
     self.pooler_transform = tf.keras.layers.Dense(
-        units=self.config.hidden_size,
-        activation="tanh",
-        kernel_initializer=get_initializer(self.config.initializer_range),
-        name="pooler_transform")
+      units=self.config.hidden_size,
+      activation="tanh",
+      kernel_initializer=get_initializer(self.config.initializer_range),
+      name="pooler_transform",
+    )
     super(BertModel, self).build(unused_input_shapes)
 
-  def __call__(self,
-               input_word_ids,
-               input_mask=None,
-               input_type_ids=None,
-               **kwargs):
+  def __call__(self, input_word_ids, input_mask=None, input_type_ids=None, **kwargs):
     inputs = tf_utils.pack_inputs([input_word_ids, input_mask, input_type_ids])
     return super(BertModel, self).__call__(inputs, **kwargs)
 
@@ -257,18 +244,15 @@ class BertModel(tf.keras.layers.Layer):
     input_type_ids = unpacked_inputs[2]
 
     word_embeddings = self.embedding_lookup(input_word_ids)
-    embedding_tensor = self.embedding_postprocessor(
-        word_embeddings=word_embeddings, token_type_ids=input_type_ids)
+    embedding_tensor = self.embedding_postprocessor(word_embeddings=word_embeddings, token_type_ids=input_type_ids)
     if self.float_type == tf.float16:
       embedding_tensor = tf.cast(embedding_tensor, tf.float16)
     attention_mask = None
     if input_mask is not None:
-      attention_mask = create_attention_mask_from_input_mask(
-          input_word_ids, input_mask)
+      attention_mask = create_attention_mask_from_input_mask(input_word_ids, input_mask)
 
     if mode == "encoder":
-      return self.encoder(
-          embedding_tensor, attention_mask, return_all_layers=True)
+      return self.encoder(embedding_tensor, attention_mask, return_all_layers=True)
 
     sequence_output = self.encoder(embedding_tensor, attention_mask)
     first_token_tensor = tf.squeeze(sequence_output[:, 0:1, :], axis=1)
@@ -285,11 +269,7 @@ class BertModel(tf.keras.layers.Layer):
 class EmbeddingLookup(tf.keras.layers.Layer):
   """Looks up words embeddings for id tensor."""
 
-  def __init__(self,
-               vocab_size,
-               embedding_size=768,
-               initializer_range=0.02,
-               **kwargs):
+  def __init__(self, vocab_size, embedding_size=768, initializer_range=0.02, **kwargs):
     super(EmbeddingLookup, self).__init__(**kwargs)
     self.vocab_size = vocab_size
     self.embedding_size = embedding_size
@@ -298,10 +278,11 @@ class EmbeddingLookup(tf.keras.layers.Layer):
   def build(self, unused_input_shapes):
     """Implements build() for the layer."""
     self.embeddings = self.add_weight(
-        "embeddings",
-        shape=[self.vocab_size, self.embedding_size],
-        initializer=get_initializer(self.initializer_range),
-        dtype=self.dtype)
+      "embeddings",
+      shape=[self.vocab_size, self.embedding_size],
+      initializer=get_initializer(self.initializer_range),
+      dtype=self.dtype,
+    )
     super(EmbeddingLookup, self).build(unused_input_shapes)
 
   def call(self, inputs):
@@ -316,15 +297,17 @@ class EmbeddingLookup(tf.keras.layers.Layer):
 class EmbeddingPostprocessor(tf.keras.layers.Layer):
   """Performs various post-processing on a word embedding tensor."""
 
-  def __init__(self,
-               use_type_embeddings=False,
-               token_type_vocab_size=None,
-               use_position_embeddings=True,
-               max_position_embeddings=512,
-               dropout_prob=0.0,
-               initializer_range=0.02,
-               initializer=None,
-               **kwargs):
+  def __init__(
+    self,
+    use_type_embeddings=False,
+    token_type_vocab_size=None,
+    use_position_embeddings=True,
+    max_position_embeddings=512,
+    dropout_prob=0.0,
+    initializer_range=0.02,
+    initializer=None,
+    **kwargs,
+  ):
     super(EmbeddingPostprocessor, self).__init__(**kwargs)
     self.use_type_embeddings = use_type_embeddings
     self.token_type_vocab_size = token_type_vocab_size
@@ -339,8 +322,7 @@ class EmbeddingPostprocessor(tf.keras.layers.Layer):
       self.initializer = initializer
 
     if self.use_type_embeddings and not self.token_type_vocab_size:
-      raise ValueError("If `use_type_embeddings` is True, then "
-                       "`token_type_vocab_size` must be specified.")
+      raise ValueError("If `use_type_embeddings` is True, then `token_type_vocab_size` must be specified.")
 
   def build(self, input_shapes):
     """Implements build() for the layer."""
@@ -349,23 +331,25 @@ class EmbeddingPostprocessor(tf.keras.layers.Layer):
     self.type_embeddings = None
     if self.use_type_embeddings:
       self.type_embeddings = self.add_weight(
-          "type_embeddings",
-          shape=[self.token_type_vocab_size, width],
-          initializer=get_initializer(self.initializer_range),
-          dtype=self.dtype)
+        "type_embeddings",
+        shape=[self.token_type_vocab_size, width],
+        initializer=get_initializer(self.initializer_range),
+        dtype=self.dtype,
+      )
 
     self.position_embeddings = None
     if self.use_position_embeddings:
       self.position_embeddings = self.add_weight(
-          "position_embeddings",
-          shape=[self.max_position_embeddings, width],
-          initializer=get_initializer(self.initializer_range),
-          dtype=self.dtype)
+        "position_embeddings",
+        shape=[self.max_position_embeddings, width],
+        initializer=get_initializer(self.initializer_range),
+        dtype=self.dtype,
+      )
 
     self.output_layer_norm = tf.keras.layers.LayerNormalization(
-        name="layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32)
-    self.output_dropout = tf.keras.layers.Dropout(
-        rate=self.dropout_prob, dtype=tf.float32)
+      name="layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
+    )
+    self.output_dropout = tf.keras.layers.Dropout(rate=self.dropout_prob, dtype=tf.float32)
     super(EmbeddingPostprocessor, self).build(input_shapes)
 
   def __call__(self, word_embeddings, token_type_ids=None, **kwargs):
@@ -385,16 +369,12 @@ class EmbeddingPostprocessor(tf.keras.layers.Layer):
     output = word_embeddings
     if self.use_type_embeddings:
       flat_token_type_ids = tf.reshape(token_type_ids, [-1])
-      token_type_embeddings = tf.gather(self.type_embeddings,
-                                        flat_token_type_ids)
-      token_type_embeddings = tf.reshape(token_type_embeddings,
-                                         [batch_size, seq_length, width])
+      token_type_embeddings = tf.gather(self.type_embeddings, flat_token_type_ids)
+      token_type_embeddings = tf.reshape(token_type_embeddings, [batch_size, seq_length, width])
       output += token_type_embeddings
 
     if self.use_position_embeddings:
-      position_embeddings = tf.expand_dims(
-          tf.slice(self.position_embeddings, [0, 0], [seq_length, width]),
-          axis=0)
+      position_embeddings = tf.expand_dims(tf.slice(self.position_embeddings, [0, 0], [seq_length, width]), axis=0)
 
       output += position_embeddings
 
@@ -435,13 +415,15 @@ class Attention(tf.keras.layers.Layer):
     Output:[BFD] = einsum('BFNH,DNH>BFD', context_layer, Wout)
   """
 
-  def __init__(self,
-               num_attention_heads=12,
-               size_per_head=64,
-               attention_probs_dropout_prob=0.0,
-               initializer_range=0.02,
-               backward_compatible=False,
-               **kwargs):
+  def __init__(
+    self,
+    num_attention_heads=12,
+    size_per_head=64,
+    attention_probs_dropout_prob=0.0,
+    initializer_range=0.02,
+    backward_compatible=False,
+    **kwargs,
+  ):
     super(Attention, self).__init__(**kwargs)
     self.num_attention_heads = num_attention_heads
     self.size_per_head = size_per_head
@@ -454,16 +436,14 @@ class Attention(tf.keras.layers.Layer):
     self.query_dense = self._projection_dense_layer("query")
     self.key_dense = self._projection_dense_layer("key")
     self.value_dense = self._projection_dense_layer("value")
-    self.attention_probs_dropout = tf.keras.layers.Dropout(
-        rate=self.attention_probs_dropout_prob)
+    self.attention_probs_dropout = tf.keras.layers.Dropout(rate=self.attention_probs_dropout_prob)
     super(Attention, self).build(unused_input_shapes)
 
   def reshape_to_matrix(self, input_tensor):
     """Reshape N > 2 rank tensor to rank 2 tensor for performance."""
     ndims = input_tensor.shape.ndims
     if ndims < 2:
-      raise ValueError("Input tensor must have at least rank 2."
-                       "Shape = %s" % (input_tensor.shape))
+      raise ValueError("Input tensor must have at least rank 2.Shape = %s" % (input_tensor.shape))
     if ndims == 2:
       return input_tensor
 
@@ -497,8 +477,7 @@ class Attention(tf.keras.layers.Layer):
     # Take the dot product between "query" and "key" to get the raw
     # attention scores.
     attention_scores = tf.einsum("BTNH,BFNH->BNFT", key_tensor, query_tensor)
-    attention_scores = tf.multiply(attention_scores,
-                                   1.0 / math.sqrt(float(self.size_per_head)))
+    attention_scores = tf.multiply(attention_scores, 1.0 / math.sqrt(float(self.size_per_head)))
 
     if attention_mask is not None:
       # `attention_mask` = [B, 1, F, T]
@@ -529,12 +508,13 @@ class Attention(tf.keras.layers.Layer):
   def _projection_dense_layer(self, name):
     """A helper to define a projection layer."""
     return Dense3D(
-        num_attention_heads=self.num_attention_heads,
-        size_per_head=self.size_per_head,
-        kernel_initializer=get_initializer(self.initializer_range),
-        output_projection=False,
-        backward_compatible=self.backward_compatible,
-        name=name)
+      num_attention_heads=self.num_attention_heads,
+      size_per_head=self.size_per_head,
+      kernel_initializer=get_initializer(self.initializer_range),
+      output_projection=False,
+      backward_compatible=self.backward_compatible,
+      name=name,
+    )
 
 
 class Dense3D(tf.keras.layers.Layer):
@@ -556,16 +536,18 @@ class Dense3D(tf.keras.layers.Layer):
       checkpoints converted from TF 1.x.
   """
 
-  def __init__(self,
-               num_attention_heads=12,
-               size_per_head=72,
-               kernel_initializer=None,
-               bias_initializer="zeros",
-               activation=None,
-               use_bias=True,
-               output_projection=False,
-               backward_compatible=False,
-               **kwargs):
+  def __init__(
+    self,
+    num_attention_heads=12,
+    size_per_head=72,
+    kernel_initializer=None,
+    bias_initializer="zeros",
+    activation=None,
+    use_bias=True,
+    output_projection=False,
+    backward_compatible=False,
+    **kwargs,
+  ):
     """Inits Dense3D."""
     super(Dense3D, self).__init__(**kwargs)
     self.num_attention_heads = num_attention_heads
@@ -604,15 +586,12 @@ class Dense3D(tf.keras.layers.Layer):
     """Implements build() for the layer."""
     dtype = tf.as_dtype(self.dtype or tf.keras.backend.floatx())
     if not (dtype.is_floating or dtype.is_complex):
-      raise TypeError("Unable to build `Dense3D` layer with non-floating "
-                      "point (and non-complex) dtype %s" % (dtype,))
+      raise TypeError("Unable to build `Dense3D` layer with non-floating point (and non-complex) dtype %s" % (dtype,))
     input_shape = tf.TensorShape(input_shape)
     if tf.compat.dimension_value(input_shape[-1]) is None:
-      raise ValueError("The last dimension of the inputs to `Dense3D` "
-                       "should be defined. Found `None`.")
+      raise ValueError("The last dimension of the inputs to `Dense3D` should be defined. Found `None`.")
     self.last_dim = tf.compat.dimension_value(input_shape[-1])
-    self.input_spec = tf.keras.layers.InputSpec(
-        min_ndim=3, axes={-1: self.last_dim})
+    self.input_spec = tf.keras.layers.InputSpec(min_ndim=3, axes={-1: self.last_dim})
     # Determines variable shapes.
     if self.backward_compatible:
       kernel_shape = self.compatible_kernel_shape
@@ -622,18 +601,12 @@ class Dense3D(tf.keras.layers.Layer):
       bias_shape = self.bias_shape
 
     self.kernel = self.add_weight(
-        "kernel",
-        shape=kernel_shape,
-        initializer=self.kernel_initializer,
-        dtype=self.dtype,
-        trainable=True)
+      "kernel", shape=kernel_shape, initializer=self.kernel_initializer, dtype=self.dtype, trainable=True
+    )
     if self.use_bias:
       self.bias = self.add_weight(
-          "bias",
-          shape=bias_shape,
-          initializer=self.bias_initializer,
-          dtype=self.dtype,
-          trainable=True)
+        "bias", shape=bias_shape, initializer=self.bias_initializer, dtype=self.dtype, trainable=True
+      )
     else:
       self.bias = None
     super(Dense3D, self).build(input_shape)
@@ -653,9 +626,7 @@ class Dense3D(tf.keras.layers.Layer):
     """
     if self.backward_compatible:
       kernel = tf.keras.backend.reshape(self.kernel, self.kernel_shape)
-      bias = (
-          tf.keras.backend.reshape(self.bias, self.bias_shape)
-          if self.use_bias else None)
+      bias = tf.keras.backend.reshape(self.bias, self.bias_shape) if self.use_bias else None
     else:
       kernel = self.kernel
       bias = self.bias
@@ -674,13 +645,15 @@ class Dense3D(tf.keras.layers.Layer):
 class Dense2DProjection(tf.keras.layers.Layer):
   """A 2D projection layer with tf.einsum implementation."""
 
-  def __init__(self,
-               output_size,
-               kernel_initializer=None,
-               bias_initializer="zeros",
-               activation=None,
-               fp32_activation=False,
-               **kwargs):
+  def __init__(
+    self,
+    output_size,
+    kernel_initializer=None,
+    bias_initializer="zeros",
+    activation=None,
+    fp32_activation=False,
+    **kwargs,
+  ):
     super(Dense2DProjection, self).__init__(**kwargs)
     self.output_size = output_size
     self.kernel_initializer = kernel_initializer
@@ -692,28 +665,24 @@ class Dense2DProjection(tf.keras.layers.Layer):
     """Implements build() for the layer."""
     dtype = tf.as_dtype(self.dtype or tf.keras.backend.floatx())
     if not (dtype.is_floating or dtype.is_complex):
-      raise TypeError("Unable to build `Dense2DProjection` layer with "
-                      "non-floating point (and non-complex) "
-                      "dtype %s" % (dtype,))
+      raise TypeError(
+        "Unable to build `Dense2DProjection` layer with non-floating point (and non-complex) dtype %s" % (dtype,)
+      )
     input_shape = tf.TensorShape(input_shape)
     if tf.compat.dimension_value(input_shape[-1]) is None:
-      raise ValueError("The last dimension of the inputs to "
-                       "`Dense2DProjection` should be defined. "
-                       "Found `None`.")
+      raise ValueError("The last dimension of the inputs to `Dense2DProjection` should be defined. Found `None`.")
     last_dim = tf.compat.dimension_value(input_shape[-1])
     self.input_spec = tf.keras.layers.InputSpec(min_ndim=3, axes={-1: last_dim})
     self.kernel = self.add_weight(
-        "kernel",
-        shape=[last_dim, self.output_size],
-        initializer=self.kernel_initializer,
-        dtype=self.dtype,
-        trainable=True)
+      "kernel",
+      shape=[last_dim, self.output_size],
+      initializer=self.kernel_initializer,
+      dtype=self.dtype,
+      trainable=True,
+    )
     self.bias = self.add_weight(
-        "bias",
-        shape=[self.output_size],
-        initializer=self.bias_initializer,
-        dtype=self.dtype,
-        trainable=True)
+      "bias", shape=[self.output_size], initializer=self.bias_initializer, dtype=self.dtype, trainable=True
+    )
     super(Dense2DProjection, self).build(input_shape)
 
   def call(self, inputs):
@@ -742,23 +711,24 @@ class TransformerBlock(tf.keras.layers.Layer):
   the second is a positionwise fully connected feed-forward network.
   """
 
-  def __init__(self,
-               hidden_size=768,
-               num_attention_heads=12,
-               intermediate_size=3072,
-               intermediate_activation="gelu",
-               hidden_dropout_prob=0.0,
-               attention_probs_dropout_prob=0.0,
-               initializer_range=0.02,
-               backward_compatible=False,
-               float_type=tf.float32,
-               **kwargs):
+  def __init__(
+    self,
+    hidden_size=768,
+    num_attention_heads=12,
+    intermediate_size=3072,
+    intermediate_activation="gelu",
+    hidden_dropout_prob=0.0,
+    attention_probs_dropout_prob=0.0,
+    initializer_range=0.02,
+    backward_compatible=False,
+    float_type=tf.float32,
+    **kwargs,
+  ):
     super(TransformerBlock, self).__init__(**kwargs)
     self.hidden_size = hidden_size
     self.num_attention_heads = num_attention_heads
     self.intermediate_size = intermediate_size
-    self.intermediate_activation = tf_utils.get_activation(
-        intermediate_activation)
+    self.intermediate_activation = tf_utils.get_activation(intermediate_activation)
     self.hidden_dropout_prob = hidden_dropout_prob
     self.attention_probs_dropout_prob = attention_probs_dropout_prob
     self.initializer_range = initializer_range
@@ -767,58 +737,65 @@ class TransformerBlock(tf.keras.layers.Layer):
 
     if self.hidden_size % self.num_attention_heads != 0:
       raise ValueError(
-          "The hidden size (%d) is not a multiple of the number of attention "
-          "heads (%d)" % (self.hidden_size, self.num_attention_heads))
+        "The hidden size (%d) is not a multiple of the number of attention "
+        "heads (%d)" % (self.hidden_size, self.num_attention_heads)
+      )
     self.attention_head_size = int(self.hidden_size / self.num_attention_heads)
 
   def build(self, unused_input_shapes):
     """Implements build() for the layer."""
     self.attention_layer = Attention(
-        num_attention_heads=self.num_attention_heads,
-        size_per_head=self.attention_head_size,
-        attention_probs_dropout_prob=self.attention_probs_dropout_prob,
-        initializer_range=self.initializer_range,
-        backward_compatible=self.backward_compatible,
-        name="self_attention")
+      num_attention_heads=self.num_attention_heads,
+      size_per_head=self.attention_head_size,
+      attention_probs_dropout_prob=self.attention_probs_dropout_prob,
+      initializer_range=self.initializer_range,
+      backward_compatible=self.backward_compatible,
+      name="self_attention",
+    )
     self.attention_output_dense = Dense3D(
-        num_attention_heads=self.num_attention_heads,
-        size_per_head=int(self.hidden_size / self.num_attention_heads),
-        kernel_initializer=get_initializer(self.initializer_range),
-        output_projection=True,
-        backward_compatible=self.backward_compatible,
-        name="self_attention_output")
-    self.attention_dropout = tf.keras.layers.Dropout(
-        rate=self.hidden_dropout_prob)
-    self.attention_layer_norm = (
-        tf.keras.layers.LayerNormalization(
-            name="self_attention_layer_norm",
-            axis=-1,
-            epsilon=1e-12,
-            # We do layer norm in float32 for numeric stability.
-            dtype=tf.float32))
+      num_attention_heads=self.num_attention_heads,
+      size_per_head=int(self.hidden_size / self.num_attention_heads),
+      kernel_initializer=get_initializer(self.initializer_range),
+      output_projection=True,
+      backward_compatible=self.backward_compatible,
+      name="self_attention_output",
+    )
+    self.attention_dropout = tf.keras.layers.Dropout(rate=self.hidden_dropout_prob)
+    self.attention_layer_norm = tf.keras.layers.LayerNormalization(
+      name="self_attention_layer_norm",
+      axis=-1,
+      epsilon=1e-12,
+      # We do layer norm in float32 for numeric stability.
+      dtype=tf.float32,
+    )
     self.intermediate_dense = Dense2DProjection(
-        output_size=self.intermediate_size,
-        kernel_initializer=get_initializer(self.initializer_range),
-        activation=self.intermediate_activation,
-        # Uses float32 so that gelu activation is done in float32.
-        fp32_activation=True,
-        name="intermediate")
+      output_size=self.intermediate_size,
+      kernel_initializer=get_initializer(self.initializer_range),
+      activation=self.intermediate_activation,
+      # Uses float32 so that gelu activation is done in float32.
+      fp32_activation=True,
+      name="intermediate",
+    )
     self.output_dense = Dense2DProjection(
-        output_size=self.hidden_size,
-        kernel_initializer=get_initializer(self.initializer_range),
-        name="output")
+      output_size=self.hidden_size, kernel_initializer=get_initializer(self.initializer_range), name="output"
+    )
     self.output_dropout = tf.keras.layers.Dropout(rate=self.hidden_dropout_prob)
     self.output_layer_norm = tf.keras.layers.LayerNormalization(
-        name="output_layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32)
+      name="output_layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
+    )
     super(TransformerBlock, self).build(unused_input_shapes)
 
   def common_layers(self):
     """Explicitly gets all layer objects inside a Transformer encoder block."""
     return [
-        self.attention_layer, self.attention_output_dense,
-        self.attention_dropout, self.attention_layer_norm,
-        self.intermediate_dense, self.output_dense, self.output_dropout,
-        self.output_layer_norm
+      self.attention_layer,
+      self.attention_output_dense,
+      self.attention_dropout,
+      self.attention_layer_norm,
+      self.intermediate_dense,
+      self.output_dense,
+      self.output_dropout,
+      self.output_layer_norm,
     ]
 
   def __call__(self, input_tensor, attention_mask=None, **kwargs):
@@ -829,15 +806,13 @@ class TransformerBlock(tf.keras.layers.Layer):
     """Implements call() for the layer."""
     (input_tensor, attention_mask) = tf_utils.unpack_inputs(inputs)
     attention_output = self.attention_layer(
-        from_tensor=input_tensor,
-        to_tensor=input_tensor,
-        attention_mask=attention_mask)
+      from_tensor=input_tensor, to_tensor=input_tensor, attention_mask=attention_mask
+    )
     attention_output = self.attention_output_dense(attention_output)
     attention_output = self.attention_dropout(attention_output)
     # Use float32 in keras layer norm and the gelu activation in the
     # intermediate dense layer for numeric stability
-    attention_output = self.attention_layer_norm(input_tensor +
-                                                 attention_output)
+    attention_output = self.attention_layer_norm(input_tensor + attention_output)
     if self.float_type == tf.float16:
       attention_output = tf.cast(attention_output, tf.float16)
     intermediate_output = self.intermediate_dense(attention_output)
@@ -864,25 +839,26 @@ class Transformer(tf.keras.layers.Layer):
   https://github.com/tensorflow/tensor2tensor/blob/master/tensor2tensor/models/transformer.py
   """
 
-  def __init__(self,
-               num_hidden_layers=12,
-               hidden_size=768,
-               num_attention_heads=12,
-               intermediate_size=3072,
-               intermediate_activation="gelu",
-               hidden_dropout_prob=0.0,
-               attention_probs_dropout_prob=0.0,
-               initializer_range=0.02,
-               backward_compatible=False,
-               float_type=tf.float32,
-               **kwargs):
+  def __init__(
+    self,
+    num_hidden_layers=12,
+    hidden_size=768,
+    num_attention_heads=12,
+    intermediate_size=3072,
+    intermediate_activation="gelu",
+    hidden_dropout_prob=0.0,
+    attention_probs_dropout_prob=0.0,
+    initializer_range=0.02,
+    backward_compatible=False,
+    float_type=tf.float32,
+    **kwargs,
+  ):
     super(Transformer, self).__init__(**kwargs)
     self.num_hidden_layers = num_hidden_layers
     self.hidden_size = hidden_size
     self.num_attention_heads = num_attention_heads
     self.intermediate_size = intermediate_size
-    self.intermediate_activation = tf_utils.get_activation(
-        intermediate_activation)
+    self.intermediate_activation = tf_utils.get_activation(intermediate_activation)
     self.hidden_dropout_prob = hidden_dropout_prob
     self.attention_probs_dropout_prob = attention_probs_dropout_prob
     self.initializer_range = initializer_range
@@ -894,17 +870,19 @@ class Transformer(tf.keras.layers.Layer):
     self.layers = []
     for i in range(self.num_hidden_layers):
       self.layers.append(
-          TransformerBlock(
-              hidden_size=self.hidden_size,
-              num_attention_heads=self.num_attention_heads,
-              intermediate_size=self.intermediate_size,
-              intermediate_activation=self.intermediate_activation,
-              hidden_dropout_prob=self.hidden_dropout_prob,
-              attention_probs_dropout_prob=self.attention_probs_dropout_prob,
-              initializer_range=self.initializer_range,
-              backward_compatible=self.backward_compatible,
-              float_type=self.float_type,
-              name=("layer_%d" % i)))
+        TransformerBlock(
+          hidden_size=self.hidden_size,
+          num_attention_heads=self.num_attention_heads,
+          intermediate_size=self.intermediate_size,
+          intermediate_activation=self.intermediate_activation,
+          hidden_dropout_prob=self.hidden_dropout_prob,
+          attention_probs_dropout_prob=self.attention_probs_dropout_prob,
+          initializer_range=self.initializer_range,
+          backward_compatible=self.backward_compatible,
+          float_type=self.float_type,
+          name=("layer_%d" % i),
+        )
+      )
     super(Transformer, self).build(unused_input_shapes)
 
   def __call__(self, input_tensor, attention_mask=None, **kwargs):
@@ -967,17 +945,14 @@ def create_attention_mask_from_input_mask(from_tensor, to_mask):
   to_shape = tf_utils.get_shape_list(to_mask, expected_rank=2)
   to_seq_length = to_shape[1]
 
-  to_mask = tf.cast(
-      tf.reshape(to_mask, [batch_size, 1, to_seq_length]),
-      dtype=from_tensor.dtype)
+  to_mask = tf.cast(tf.reshape(to_mask, [batch_size, 1, to_seq_length]), dtype=from_tensor.dtype)
 
   # We don't assume that `from_tensor` is a mask (although it could be). We
   # don't actually care if we attend *from* padding tokens (only *to* padding)
   # tokens so we create a tensor of all ones.
   #
   # `broadcast_ones` = [batch_size, from_seq_length, 1]
-  broadcast_ones = tf.ones(
-      shape=[batch_size, from_seq_length, 1], dtype=from_tensor.dtype)
+  broadcast_ones = tf.ones(shape=[batch_size, from_seq_length, 1], dtype=from_tensor.dtype)
 
   # Here we broadcast along two dimensions to create the mask.
   mask = broadcast_ones * to_mask

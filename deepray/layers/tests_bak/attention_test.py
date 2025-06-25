@@ -29,7 +29,6 @@ from deepray.layers import attention
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class AttentionLayerTest(keras_parameterized.TestCase):
-
   def test_non_masked_attention(self):
     """Test that the attention layer can be created without a mask tensor."""
     test_layer = attention.Attention(num_heads=12, head_size=64)
@@ -79,7 +78,7 @@ class AttentionLayerTest(keras_parameterized.TestCase):
   def test_initializer(self):
     """Test with a specified initializer."""
     test_layer = attention.Attention(
-        num_heads=12, head_size=64, kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02)
+      num_heads=12, head_size=64, kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02)
     )
     # Create a 3-dimensional input (the first dimension is implicit).
     from_tensor = tf.keras.Input(shape=(40, 80))
@@ -89,14 +88,13 @@ class AttentionLayerTest(keras_parameterized.TestCase):
 
 def _create_cache(batch_size, init_decode_length, num_heads, head_size):
   return {
-      "key": tf.zeros([batch_size, init_decode_length, num_heads, head_size], dtype=tf.float32),
-      "value": tf.zeros([batch_size, init_decode_length, num_heads, head_size], dtype=tf.float32)
+    "key": tf.zeros([batch_size, init_decode_length, num_heads, head_size], dtype=tf.float32),
+    "value": tf.zeros([batch_size, init_decode_length, num_heads, head_size], dtype=tf.float32),
   }
 
 
 @keras_parameterized.run_all_keras_modes
 class CachedAttentionTest(keras_parameterized.TestCase):
-
   def test_masked_attention(self):
     """Test with a mask tensor."""
     num_heads, head_size = 2, 2

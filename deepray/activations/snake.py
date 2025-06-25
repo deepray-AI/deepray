@@ -22,26 +22,26 @@ from deepray.utils import types
 def snake(x: types.TensorLike, frequency: types.Number = 1) -> tf.Tensor:
   r"""Snake activation to learn periodic functions.
 
-    Computes snake activation:
+  Computes snake activation:
 
-    $$
-    \mathrm{snake}(x) = \mathrm{x} + \frac{1 - \cos(2 \cdot \mathrm{frequency} \cdot x)}{2 \cdot \mathrm{frequency}}.
-    $$
+  $$
+  \mathrm{snake}(x) = \mathrm{x} + \frac{1 - \cos(2 \cdot \mathrm{frequency} \cdot x)}{2 \cdot \mathrm{frequency}}.
+  $$
 
-    See [Neural Networks Fail to Learn Periodic Functions and How to Fix It](https://arxiv.org/abs/2006.08195).
+  See [Neural Networks Fail to Learn Periodic Functions and How to Fix It](https://arxiv.org/abs/2006.08195).
 
-    Usage:
+  Usage:
 
-    >>> x = tf.constant([-1.0, 0.0, 1.0])
-    >>> dp.activations.snake(x)
-    <tf.Tensor: shape=(3,), dtype=float32, numpy=array([-0.29192656,  0.        ,  1.7080734 ], dtype=float32)>
+  >>> x = tf.constant([-1.0, 0.0, 1.0])
+  >>> dp.activations.snake(x)
+  <tf.Tensor: shape=(3,), dtype=float32, numpy=array([-0.29192656,  0.        ,  1.7080734 ], dtype=float32)>
 
-    Args:
-        x: A `Tensor`.
-        frequency: A scalar, frequency of the periodic part.
-    Returns:
-        A `Tensor`. Has the same type as `x`.
-    """
+  Args:
+      x: A `Tensor`.
+      frequency: A scalar, frequency of the periodic part.
+  Returns:
+      A `Tensor`. Has the same type as `x`.
+  """
   x = tf.convert_to_tensor(x)
   frequency = tf.cast(frequency, x.dtype)
 

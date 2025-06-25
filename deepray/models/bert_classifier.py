@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -46,13 +47,13 @@ class BertClassifier(tf.keras.Model):
       'predictions'.
   """
 
-  def __init__(self, network, num_classes, initializer='glorot_uniform', output='logits', dropout_rate=0.1, **kwargs):
+  def __init__(self, network, num_classes, initializer="glorot_uniform", output="logits", dropout_rate=0.1, **kwargs):
     self._self_setattr_tracking = False
     self._config = {
-        'network': network,
-        'num_classes': num_classes,
-        'initializer': initializer,
-        'output': output,
+      "network": network,
+      "num_classes": num_classes,
+      "initializer": initializer,
+      "output": output,
     }
 
     # We want to use the inputs of the passed network as the inputs to this
@@ -66,11 +67,11 @@ class BertClassifier(tf.keras.Model):
     cls_output = tf.keras.layers.Dropout(rate=dropout_rate)(cls_output)
 
     self.classifier = classification.Classification(
-        input_width=cls_output.shape[-1],
-        num_classes=num_classes,
-        initializer=initializer,
-        output=output,
-        name='classification'
+      input_width=cls_output.shape[-1],
+      num_classes=num_classes,
+      initializer=initializer,
+      output=output,
+      name="classification",
     )
     predictions = self.classifier(cls_output)
 

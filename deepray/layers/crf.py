@@ -27,49 +27,49 @@ from deepray.utils import types
 class CRF(tf.keras.layers.Layer):
   """Linear chain conditional random field (CRF).
 
-    Inherits from: `tf.keras.layers.Layer`.
+  Inherits from: `tf.keras.layers.Layer`.
 
-    References:
-        - [Conditional Random Field](https://en.wikipedia.org/wiki/Conditional_random_field)
+  References:
+      - [Conditional Random Field](https://en.wikipedia.org/wiki/Conditional_random_field)
 
-    Example:
+  Example:
 
-    >>> layer = dp.layers.CRF(4)
-    >>> inputs = np.random.rand(2, 4, 8).astype(np.float32)
-    >>> decoded_sequence, potentials, sequence_length, chain_kernel = layer(inputs)
-    >>> decoded_sequence.shape
-    TensorShape([2, 4])
-    >>> potentials.shape
-    TensorShape([2, 4, 4])
-    >>> sequence_length
-    <tf.Tensor: shape=(2,), dtype=int64, numpy=array([4, 4])>
-    >>> chain_kernel.shape
-    TensorShape([4, 4])
+  >>> layer = dp.layers.CRF(4)
+  >>> inputs = np.random.rand(2, 4, 8).astype(np.float32)
+  >>> decoded_sequence, potentials, sequence_length, chain_kernel = layer(inputs)
+  >>> decoded_sequence.shape
+  TensorShape([2, 4])
+  >>> potentials.shape
+  TensorShape([2, 4, 4])
+  >>> sequence_length
+  <tf.Tensor: shape=(2,), dtype=int64, numpy=array([4, 4])>
+  >>> chain_kernel.shape
+  TensorShape([4, 4])
 
-    Args:
-        units: Positive integer, dimensionality of the reservoir.
-        chain_initializer: Orthogonal matrix. Default to `orthogonal`.
-        use_boundary: `Boolean`, whether the layer uses a boundary vector. Default to `True`.
-        boundary_initializer: Tensors initialized to 0. Default to `zeros`.
-        use_kernel: `Boolean`, whether the layer uses a kernel weights. Default to `True`.
-    Call Args:
-        inputs: Positive integer, dimensionality of the output space.
-        mask: A boolean `Tensor` of shape `[batch_size, sequence_length]`
-            or `None`. Default to `None`.
-    Raises:
-        ValueError: If input mask doesn't have dim 2 or None.
-        NotImplementedError: If left padding is provided.
-    """
+  Args:
+      units: Positive integer, dimensionality of the reservoir.
+      chain_initializer: Orthogonal matrix. Default to `orthogonal`.
+      use_boundary: `Boolean`, whether the layer uses a boundary vector. Default to `True`.
+      boundary_initializer: Tensors initialized to 0. Default to `zeros`.
+      use_kernel: `Boolean`, whether the layer uses a kernel weights. Default to `True`.
+  Call Args:
+      inputs: Positive integer, dimensionality of the output space.
+      mask: A boolean `Tensor` of shape `[batch_size, sequence_length]`
+          or `None`. Default to `None`.
+  Raises:
+      ValueError: If input mask doesn't have dim 2 or None.
+      NotImplementedError: If left padding is provided.
+  """
 
   @typechecked
   def __init__(
-      self,
-      units: int,
-      chain_initializer: types.Initializer = "orthogonal",
-      use_boundary: bool = True,
-      boundary_initializer: types.Initializer = "zeros",
-      use_kernel: bool = True,
-      **kwargs,
+    self,
+    units: int,
+    chain_initializer: types.Initializer = "orthogonal",
+    use_boundary: bool = True,
+    boundary_initializer: types.Initializer = "zeros",
+    use_kernel: bool = True,
+    **kwargs,
   ):
     super().__init__(**kwargs)
 
@@ -87,22 +87,22 @@ class CRF(tf.keras.layers.Layer):
 
     # weights that work as transfer probability of each tags
     self.chain_kernel = self.add_weight(
-        shape=(self.units, self.units),
-        name="chain_kernel",
-        initializer=self.chain_initializer,
+      shape=(self.units, self.units),
+      name="chain_kernel",
+      initializer=self.chain_initializer,
     )
 
     # weight of <START> to tag probability and tag to <END> probability
     if self.use_boundary:
       self.left_boundary = self.add_weight(
-          shape=(self.units,),
-          name="left_boundary",
-          initializer=self.boundary_initializer,
+        shape=(self.units,),
+        name="left_boundary",
+        initializer=self.boundary_initializer,
       )
       self.right_boundary = self.add_weight(
-          shape=(self.units,),
-          name="right_boundary",
-          initializer=self.boundary_initializer,
+        shape=(self.units,),
+        name="right_boundary",
+        initializer=self.boundary_initializer,
       )
 
     if self.use_kernel:
@@ -142,13 +142,13 @@ class CRF(tf.keras.layers.Layer):
 
   def _get_sequence_length(self, input_, mask):
     """Currently underline CRF fucntion (provided by
-        deepray.text.crf) do not support bi-direction masking (left
-        padding / right padding), it support right padding by tell it the
-        sequence length.
+    deepray.text.crf) do not support bi-direction masking (left
+    padding / right padding), it support right padding by tell it the
+    sequence length.
 
-        this function is compute the sequence length from input and
-        mask.
-        """
+    this function is compute the sequence length from input and
+    mask.
+    """
     if mask is not None:
       sequence_length = self.mask_to_sequence_length(mask)
     else:
@@ -201,7 +201,6 @@ class CRF(tf.keras.layers.Layer):
     return left_boundary
 
   def add_boundary_energy(self, potentials, mask, start, end):
-
     def expand_scalar_to_3d(x):
       # expand tensor from shape (x, ) to (1, 1, x)
       return tf.reshape(x, (1, 1, -1))
@@ -229,11 +228,11 @@ class CRF(tf.keras.layers.Layer):
   def get_config(self):
     # used for loading model from disk
     config = {
-        "units": self.units,
-        "chain_initializer": tf.keras.initializers.serialize(self.chain_initializer),
-        "use_boundary": self.use_boundary,
-        "boundary_initializer": tf.keras.initializers.serialize(self.boundary_initializer),
-        "use_kernel": self.use_kernel,
+      "units": self.units,
+      "chain_initializer": tf.keras.initializers.serialize(self.chain_initializer),
+      "use_boundary": self.use_boundary,
+      "boundary_initializer": tf.keras.initializers.serialize(self.boundary_initializer),
+      "use_kernel": self.use_kernel,
     }
     base_config = super().get_config()
     return {**base_config, **config}

@@ -29,7 +29,6 @@ logger = logging_util.get_logger()
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class ModelCheckpoint(Callback):
-
   @typechecked
   def __init__(self, save_checkpoint_steps: int = sys.maxsize, max_to_keep: int = 3):
     super().__init__()
@@ -40,6 +39,7 @@ class ModelCheckpoint(Callback):
       self.epochs = 1
     if flags.FLAGS.use_dynamic_embedding:
       from tensorflow_recommenders_addons import dynamic_embedding as de
+
       tf.train.Checkpoint = de.train.checkpoint.DECheckpoint
 
   def set_models(self, models):
@@ -66,19 +66,17 @@ class ModelCheckpoint(Callback):
         self._checkpoints[name] = _checkpoint
         if get_world_size() > 1:
           self._managers[name] = tf.train.CheckpointManager(
-              _checkpoint,
-              os.path.join(flags.FLAGS.model_dir, f'ckpt_{name}_{get_rank()}'),
-              max_to_keep=self.max_to_keep
+            _checkpoint, os.path.join(flags.FLAGS.model_dir, f"ckpt_{name}_{get_rank()}"), max_to_keep=self.max_to_keep
           )
         else:
           self._managers[name] = tf.train.CheckpointManager(
-              _checkpoint, os.path.join(flags.FLAGS.model_dir, f'ckpt_{name}'), max_to_keep=self.max_to_keep
+            _checkpoint, os.path.join(flags.FLAGS.model_dir, f"ckpt_{name}"), max_to_keep=self.max_to_keep
           )
       else:
         _checkpoint = tf.train.Checkpoint(model=model)
         self._checkpoints[name] = _checkpoint
         self._managers[name] = tf.train.CheckpointManager(
-            _checkpoint, os.path.join(flags.FLAGS.model_dir, f'ckpt_{name}'), max_to_keep=self.max_to_keep
+          _checkpoint, os.path.join(flags.FLAGS.model_dir, f"ckpt_{name}"), max_to_keep=self.max_to_keep
         )
 
     if flags.FLAGS.init_checkpoint:
@@ -89,14 +87,14 @@ class ModelCheckpoint(Callback):
           else:
             latest_checkpoint = init_ckpt
           logger.info(
-              f'Checkpoint file {latest_checkpoint} found and restoring from initial checkpoint for {name} model.'
+            f"Checkpoint file {latest_checkpoint} found and restoring from initial checkpoint for {name} model."
           )
           if os.getenv("DEEPRAY_VERBOSITY", None) == "detail" or flags.FLAGS.use_dynamic_embedding:
             # TFRA DE doesn't support "assert_existing_objects_matched" method
             ckpt.restore(latest_checkpoint)
           else:
             ckpt.restore(latest_checkpoint).assert_existing_objects_matched()
-          logger.info('Loading from checkpoint file...')
+          logger.info("Loading from checkpoint file...")
 
     self.current_step = 0
     self._steps_from_save = 0  # self.optimizer.iterations.numpy()
@@ -127,8 +125,8 @@ class ModelCheckpoint(Callback):
 
   def get_config(self):
     config = {
-        "save_checkpoint_steps": self.save_checkpoint_steps,
-        "max_to_keep": self.max_to_keep,
+      "save_checkpoint_steps": self.save_checkpoint_steps,
+      "max_to_keep": self.max_to_keep,
     }
 
     base_config = super().get_config()

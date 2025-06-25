@@ -26,7 +26,6 @@ from distributed_embeddings.python.layers import embedding
 
 # pylint:disable=missing-docstring, no-self-use
 class EmbeddingTest(keras_parameterized.TestCase):
-
   @keras_parameterized.run_all_keras_modes
   def test_1d_input(self):
     layer = embedding.Embedding(output_dim=2, input_dim=3)
@@ -34,7 +33,7 @@ class EmbeddingTest(keras_parameterized.TestCase):
 
     layer.set_weights([np.array([[1, 2], [3, 4], [5, 6]])])
     model.run_eagerly = testing_utils.should_run_eagerly()
-    outputs = model(tf.constant([0, 1, 0], dtype='int64'))
+    outputs = model(tf.constant([0, 1, 0], dtype="int64"))
     self.assertAllEqual(outputs, [[1, 2], [3, 4], [1, 2]])
 
   @keras_parameterized.run_all_keras_modes
@@ -44,17 +43,17 @@ class EmbeddingTest(keras_parameterized.TestCase):
 
     layer.set_weights([np.array([[1, 2], [3, 4], [5, 6]])])
     model.run_eagerly = testing_utils.should_run_eagerly()
-    outputs = model.predict(np.array([[0, 1], [2, 0]], dtype='int64'))
+    outputs = model.predict(np.array([[0, 1], [2, 0]], dtype="int64"))
     self.assertAllEqual(outputs, [[[1, 2], [3, 4]], [[5, 6], [1, 2]]])
 
   @keras_parameterized.run_all_keras_modes
   def test_2d_input_with_sum_combiner(self):
-    layer = embedding.Embedding(output_dim=2, input_dim=3, combiner='sum')
+    layer = embedding.Embedding(output_dim=2, input_dim=3, combiner="sum")
     model = tf.keras.models.Sequential([layer])
 
     layer.set_weights([np.array([[1, 2], [3, 4], [5, 6]])])
     model.run_eagerly = testing_utils.should_run_eagerly()
-    outputs = model.predict(np.array([[0, 1], [2, 0]], dtype='int64'))
+    outputs = model.predict(np.array([[0, 1], [2, 0]], dtype="int64"))
     self.assertAllEqual(outputs, [[4, 6], [6, 8]])
 
   @keras_parameterized.run_all_keras_modes
@@ -64,24 +63,24 @@ class EmbeddingTest(keras_parameterized.TestCase):
 
     layer.set_weights([np.array([[1, 2], [3, 4], [5, 6]])])
     model.run_eagerly = testing_utils.should_run_eagerly()
-    ids = np.array([[[0, 1], [2, 0], [1, 2]]], dtype='int64')
+    ids = np.array([[[0, 1], [2, 0], [1, 2]]], dtype="int64")
     outputs = model.predict(ids)
     self.assertAllEqual(outputs, [[[[1, 2], [3, 4]], [[5, 6], [1, 2]], [[3, 4], [5, 6]]]])
 
   @keras_parameterized.run_all_keras_modes
   def test_3d_input_with_mean_combiner(self):
-    layer = embedding.Embedding(output_dim=2, input_dim=3, combiner='mean')
+    layer = embedding.Embedding(output_dim=2, input_dim=3, combiner="mean")
     model = tf.keras.models.Sequential([layer])
 
     layer.set_weights([np.array([[1, 2], [3, 4], [5, 6]])])
     model.run_eagerly = testing_utils.should_run_eagerly()
-    ids = np.array([[[0, 1], [2, 0], [1, 2]]], dtype='int64')
+    ids = np.array([[[0, 1], [2, 0], [1, 2]]], dtype="int64")
     outputs = model.predict(ids)
     self.assertAllEqual(outputs, [[[2, 3], [3, 4], [4, 5]]])
 
   @keras_parameterized.run_all_keras_modes
   def test_ragged_input(self):
-    layer = embedding.Embedding(input_dim=3, output_dim=2, weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])])
+    layer = embedding.Embedding(input_dim=3, output_dim=2, weights=[np.array([[0.0, 3.0], [1.0, 5.0], [7.0, 2.0]])])
     inputs = tf.keras.layers.Input(shape=(None,), dtype=tf.int64, ragged=True)
     outputs = layer(inputs)
 
@@ -90,14 +89,16 @@ class EmbeddingTest(keras_parameterized.TestCase):
     ids = ragged_factory_ops.constant([[1, 2, 2], [0], [1, 2]], ragged_rank=1)
     outputs = model.predict(ids)
 
-    ref_layer = tf.keras.layers.Embedding(input_dim=3, output_dim=2, weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])])
+    ref_layer = tf.keras.layers.Embedding(
+      input_dim=3, output_dim=2, weights=[np.array([[0.0, 3.0], [1.0, 5.0], [7.0, 2.0]])]
+    )
     ref_outputs = ref_layer(ids)
     self.assertAllEqual(outputs, ref_outputs)
 
   @keras_parameterized.run_all_keras_modes
   def test_ragged_input_with_mean_combiner(self):
     layer = embedding.Embedding(
-        input_dim=3, output_dim=2, combiner='mean', weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])]
+      input_dim=3, output_dim=2, combiner="mean", weights=[np.array([[0.0, 3.0], [1.0, 5.0], [7.0, 2.0]])]
     )
     inputs = tf.keras.layers.Input(shape=(None,), dtype=tf.int64, ragged=True)
     outputs = layer(inputs)
@@ -105,12 +106,12 @@ class EmbeddingTest(keras_parameterized.TestCase):
     model = tf.keras.Model(inputs, outputs)
     model.run_eagerly = testing_utils.should_run_eagerly()
     outputs = model.predict(ragged_factory_ops.constant([[1, 2, 2], [0], [1, 2]], ragged_rank=1))
-    self.assertAllEqual(outputs, [[5., 3.], [0., 3.], [4., 3.5]])
+    self.assertAllEqual(outputs, [[5.0, 3.0], [0.0, 3.0], [4.0, 3.5]])
 
   @keras_parameterized.run_all_keras_modes
   def test_sparse_input_with_mean_combiner(self):
     layer = embedding.Embedding(
-        input_dim=3, output_dim=2, combiner='mean', weights=[np.array([[0., 3.], [1., 5.], [7., 2.]])]
+      input_dim=3, output_dim=2, combiner="mean", weights=[np.array([[0.0, 3.0], [1.0, 5.0], [7.0, 2.0]])]
     )
     inputs = tf.keras.layers.Input(shape=(None,), dtype=tf.int64, sparse=True)
     outputs = layer(inputs)
@@ -119,18 +120,18 @@ class EmbeddingTest(keras_parameterized.TestCase):
     model.run_eagerly = testing_utils.should_run_eagerly()
 
     outputs = model.predict(
-        tf.sparse.SparseTensor(
-            indices=[[0, 0], [0, 1], [0, 2], [1, 0], [2, 0], [2, 1]], values=[1, 2, 2, 0, 1, 2], dense_shape=[3, 4]
-        )
+      tf.sparse.SparseTensor(
+        indices=[[0, 0], [0, 1], [0, 2], [1, 0], [2, 0], [2, 1]], values=[1, 2, 2, 0, 1, 2], dense_shape=[3, 4]
+      )
     )
-    self.assertAllEqual(outputs, [[5., 3.], [0., 3.], [4., 3.5]])
+    self.assertAllEqual(outputs, [[5.0, 3.0], [0.0, 3.0], [4.0, 3.5]])
 
-  @combinations.generate(combinations.combine(mode=['eager']))
+  @combinations.generate(combinations.combine(mode=["eager"]))
   def test_2d_input_with_sum_combiner_with_grad(self):
-    layer = embedding.Embedding(output_dim=2, input_dim=3, combiner='sum')
+    layer = embedding.Embedding(output_dim=2, input_dim=3, combiner="sum")
     layer.build((None, 2))
     layer.set_weights([np.array([[1, 2], [3, 4], [5, 6]])])
-    inputs = tf.keras.backend.constant([[0, 1, 0]], dtype='int64')
+    inputs = tf.keras.backend.constant([[0, 1, 0]], dtype="int64")
     with backprop.GradientTape() as tape:
       output = layer(inputs)
     gs = tape.gradient(output, layer.weights)
@@ -141,7 +142,7 @@ class EmbeddingTest(keras_parameterized.TestCase):
     ref_layer.build((None, 2))
     ref_layer.set_weights([np.array([[1, 2], [3, 4], [5, 6]])])
     # grad of sum combiner is same as grads for flatten inputs without combiner
-    ref_inputs = tf.keras.backend.constant([0, 1, 0], dtype='int64')
+    ref_inputs = tf.keras.backend.constant([0, 1, 0], dtype="int64")
     with backprop.GradientTape() as tape:
       ref_output = ref_layer(ref_inputs)
     ref_gs = tape.gradient(ref_output, ref_layer.weights)
@@ -150,12 +151,12 @@ class EmbeddingTest(keras_parameterized.TestCase):
     self.assertAllEqual(layer.weights[0], ref_layer.weights[0])
     self.assertAllEqual(tf.convert_to_tensor(gs[0]), tf.convert_to_tensor(ref_gs[0]))
 
-  @combinations.generate(combinations.combine(mode=['eager']))
+  @combinations.generate(combinations.combine(mode=["eager"]))
   def test_2d_input_with_sum_combiner_with_grad_32bit(self):
-    layer = embedding.Embedding(output_dim=2, input_dim=3, combiner='sum')
+    layer = embedding.Embedding(output_dim=2, input_dim=3, combiner="sum")
     layer.build((None, 2))
     layer.set_weights([np.array([[1, 2], [3, 4], [5, 6]])])
-    inputs = tf.keras.backend.constant([[0, 1, 0]], dtype='int32')
+    inputs = tf.keras.backend.constant([[0, 1, 0]], dtype="int32")
     with backprop.GradientTape() as tape:
       output = layer(inputs)
     gs = tape.gradient(output, layer.weights)
@@ -166,7 +167,7 @@ class EmbeddingTest(keras_parameterized.TestCase):
     ref_layer.build((None, 2))
     ref_layer.set_weights([np.array([[1, 2], [3, 4], [5, 6]])])
     # grad of sum combiner is same as grads for flatten inputs without combiner
-    ref_inputs = tf.keras.backend.constant([0, 1, 0], dtype='int32')
+    ref_inputs = tf.keras.backend.constant([0, 1, 0], dtype="int32")
     with backprop.GradientTape() as tape:
       ref_output = ref_layer(ref_inputs)
     ref_gs = tape.gradient(ref_output, ref_layer.weights)
@@ -177,7 +178,6 @@ class EmbeddingTest(keras_parameterized.TestCase):
 
 
 class ConcatOneHotEmbeddingTest(test.TestCase):
-
   def test_smoke(self):
     feature_sizes = [3, 5, 7, 11]
     embedding_width = 3

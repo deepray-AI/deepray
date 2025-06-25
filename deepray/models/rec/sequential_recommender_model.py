@@ -17,8 +17,11 @@ from abc import ABC, abstractmethod
 import tensorflow as tf
 
 from deepray.datasets.amazon_books_2014.defaults import (
-    CARDINALITY_SELECTOR, NEGATIVE_HISTORY_CHANNEL, POSITIVE_HISTORY_CHANNEL, TARGET_ITEM_FEATURES_CHANNEL,
-    USER_FEATURES_CHANNEL
+  CARDINALITY_SELECTOR,
+  NEGATIVE_HISTORY_CHANNEL,
+  POSITIVE_HISTORY_CHANNEL,
+  TARGET_ITEM_FEATURES_CHANNEL,
+  USER_FEATURES_CHANNEL,
 )
 from deepray.layers.ctr_classification_mlp import CTRClassificationMLP
 
@@ -26,9 +29,8 @@ from deepray.layers.ctr_classification_mlp import CTRClassificationMLP
 
 
 class EmbeddingInitializer(tf.keras.initializers.Initializer):
-
   def __call__(self, shape, dtype=tf.float32):
-    maxval = tf.sqrt(tf.constant(1.) / tf.cast(shape[0], tf.float32))
+    maxval = tf.sqrt(tf.constant(1.0) / tf.cast(shape[0], tf.float32))
     maxval = tf.cast(maxval, dtype=dtype)
     minval = -maxval
 
@@ -42,23 +44,22 @@ class EmbeddingInitializer(tf.keras.initializers.Initializer):
 
 # https://github.com/NVIDIA/DeepLearningExamples/blob/81ee705868a11d6fe18c12d237abe4a08aab5fd6/TensorFlow2/Recommendation/DLRM/embedding.py#L94
 class Embedding(tf.keras.layers.Layer):
-
   def __init__(self, input_dim, output_dim, *, trainable=True, embedding_name=None, initializer=EmbeddingInitializer()):
     super(Embedding, self).__init__()
     self.input_dim = input_dim
     self.output_dim = output_dim
-    self.embedding_name = (embedding_name if embedding_name is not None else "embedding_table")
+    self.embedding_name = embedding_name if embedding_name is not None else "embedding_table"
     self.embedding_table = None
     self.trainable = trainable
     self.initializer = initializer
 
   def build(self, input_shape):
     self.embedding_table = self.add_weight(
-        self.embedding_name,
-        shape=[self.input_dim, self.output_dim],
-        dtype=tf.float32,
-        initializer=self.initializer,
-        trainable=self.trainable,
+      self.embedding_name,
+      shape=[self.input_dim, self.output_dim],
+      dtype=tf.float32,
+      initializer=self.initializer,
+      trainable=self.trainable,
     )
 
   def call(self, indices):
@@ -66,9 +67,7 @@ class Embedding(tf.keras.layers.Layer):
 
 
 class SequentialRecommenderModel(tf.keras.Model, ABC):
-
   def __init__(self, feature_spec, embedding_dim, classifier_dense_sizes=(200,)):
-
     super(SequentialRecommenderModel, self).__init__()
     self.embedding_dim = embedding_dim
 
@@ -96,8 +95,9 @@ class SequentialRecommenderModel(tf.keras.Model, ABC):
 
     # Group corresponding item features from different item channels together
     zipped_item_features = zip(
-        channel_spec[TARGET_ITEM_FEATURES_CHANNEL], channel_spec[POSITIVE_HISTORY_CHANNEL],
-        channel_spec[NEGATIVE_HISTORY_CHANNEL]
+      channel_spec[TARGET_ITEM_FEATURES_CHANNEL],
+      channel_spec[POSITIVE_HISTORY_CHANNEL],
+      channel_spec[NEGATIVE_HISTORY_CHANNEL],
     )
 
     for i, (feature_target, feature_pos, feature_neg) in enumerate(zipped_item_features):
@@ -115,18 +115,18 @@ class SequentialRecommenderModel(tf.keras.Model, ABC):
     self.variable_embeddings_groups = []
     for embedding_name, cardinality in zip(embedding_names, feature_groups_cardinalities):
       self.variable_embeddings_groups.append(
-          Embedding(
-              embedding_name=embedding_name,
-              input_dim=cardinality + 1,  # ids in range <1, cardinality> (boundries included)
-              output_dim=embedding_dim
-          )
+        Embedding(
+          embedding_name=embedding_name,
+          input_dim=cardinality + 1,  # ids in range <1, cardinality> (boundries included)
+          output_dim=embedding_dim,
+        )
       )
 
     self.classificationMLP = CTRClassificationMLP(layer_sizes=classifier_dense_sizes)
 
   def embed(self, features):
     embeddings = []
-    for (variable, id) in features.items():
+    for variable, id in features.items():
       embedding_group = self.feature_name_to_embedding_group[variable]
 
       embeddings.append(self.variable_embeddings_groups[embedding_group](id))

@@ -8,18 +8,18 @@ from deepray.datasets.datapipeline import DataPipeline
 
 
 class Movielens100kRating(DataPipeline):
-
   def __init__(self, split=False, **kwargs):
     super().__init__(**kwargs)
     self.split = split
     flags.FLAGS([
-        "--feature_map={}".format(os.path.join(os.path.dirname(__file__), "movielens.csv")),
+      "--feature_map={}".format(os.path.join(os.path.dirname(__file__), "movielens.csv")),
     ])
     import tensorflow_datasets as tfds
+
     # Ratings data.
     self.ratings = tfds.load("movielens/100k-ratings", split="train", data_dir="/datasets/", download=True)
     # Features of all the available movies.
-    self.movies = tfds.load('movielens/100k-movies', split="train", data_dir="/datasets/", download=True)
+    self.movies = tfds.load("movielens/100k-movies", split="train", data_dir="/datasets/", download=True)
     users = self.ratings.map(lambda x: x["user_id"], os.cpu_count())
     movie_ids = self.movies.map(lambda x: x["movie_id"], os.cpu_count())
     movies = self.movies.map(lambda x: x["movie_title"], os.cpu_count())
@@ -38,25 +38,27 @@ class Movielens100kRating(DataPipeline):
     elif feature == "movie_title":
       return self.movie_titles_vocabulary.get_vocabulary()
     else:
-      column = self.original_dataset.map(lambda x: {
-          feature: x[feature]
-      }, os.cpu_count()).batch(self.__len__).map(lambda x: x[feature], os.cpu_count())
+      column = (
+        self.original_dataset.map(lambda x: {feature: x[feature]}, os.cpu_count())
+        .batch(self.__len__)
+        .map(lambda x: x[feature], os.cpu_count())
+      )
       return np.unique(np.concatenate(list(column)))
 
   def parser(self, record):
     return {
-        "movie_id": tf.strings.to_number(record["movie_id"], tf.int64),
-        "movie_title": self.movie_titles_vocabulary(record["movie_title"]),
-        "user_id": self.user_ids_vocabulary(record["user_id"]),
-        "movie_genres": tf.cast(record["movie_genres"][0], tf.int32),
-        "user_gender": tf.cast(record["user_gender"], tf.int32),
-        "user_occupation_label": tf.cast(record["user_occupation_label"], tf.int32),
-        "raw_user_age": tf.cast(record["raw_user_age"], tf.int32),
-        "timestamp": tf.cast(record["timestamp"] - 880000000, tf.int32)
+      "movie_id": tf.strings.to_number(record["movie_id"], tf.int64),
+      "movie_title": self.movie_titles_vocabulary(record["movie_title"]),
+      "user_id": self.user_ids_vocabulary(record["user_id"]),
+      "movie_genres": tf.cast(record["movie_genres"][0], tf.int32),
+      "user_gender": tf.cast(record["user_gender"], tf.int32),
+      "user_occupation_label": tf.cast(record["user_occupation_label"], tf.int32),
+      "raw_user_age": tf.cast(record["raw_user_age"], tf.int32),
+      "timestamp": tf.cast(record["timestamp"] - 880000000, tf.int32),
     }, record["user_rating"]
 
   def build_dataset(
-      self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
+    self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
     dataset = self.ratings.map(self.parser, os.cpu_count())
     if epochs > 1:

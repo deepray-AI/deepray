@@ -19,12 +19,12 @@ import time
 import tensorflow as tf
 
 from deepray.custom_ops.sleep import sleep_op
+
 # This pylint disable is only needed for internal google users
 from tensorflow.python.framework import errors_impl  # pylint: disable=g-direct-tensorflow-import
 
 
 class SleepTest(tf.test.TestCase):
-
   def _check_sleep(self, op):
     """Check that one sleep op works in isolation.
 
@@ -53,9 +53,9 @@ class SleepTest(tf.test.TestCase):
     # It is import that ComputeAsync() calls its done() callback if it returns
     # early due to an error.
     func = tf.function(lambda: sleep_op.AsyncSleep(-1.0))
-    with self.assertRaisesRegex(errors_impl.InvalidArgumentError, 'Input `delay` must be non-negative.'):
+    with self.assertRaisesRegex(errors_impl.InvalidArgumentError, "Input `delay` must be non-negative."):
       self.evaluate(func())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

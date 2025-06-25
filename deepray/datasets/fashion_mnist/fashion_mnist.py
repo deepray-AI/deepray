@@ -26,13 +26,12 @@ from keras.src.utils.data_utils import get_file
 from deepray.datasets.datapipeline import DataPipeline
 
 flags.FLAGS([
-    sys.argv[0],
-    "--num_train_examples=60000",
+  sys.argv[0],
+  "--num_train_examples=60000",
 ])
 
 
 class FashionMNIST(DataPipeline):
-
   def __init__(self):
     """Loads the Fashion-MNIST dataset.
 
@@ -90,10 +89,10 @@ class FashionMNIST(DataPipeline):
     dirname = os.path.join("datasets", "fashion-mnist")
     base = "https://storage.googleapis.com/tensorflow/tf-keras-datasets/"
     files = [
-        "train-labels-idx1-ubyte.gz",
-        "train-images-idx3-ubyte.gz",
-        "t10k-labels-idx1-ubyte.gz",
-        "t10k-images-idx3-ubyte.gz",
+      "train-labels-idx1-ubyte.gz",
+      "train-images-idx3-ubyte.gz",
+      "t10k-labels-idx1-ubyte.gz",
+      "t10k-images-idx3-ubyte.gz",
     ]
 
     self.paths = []
@@ -104,7 +103,7 @@ class FashionMNIST(DataPipeline):
     pass
 
   def build_dataset(
-      self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
+    self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
     if is_training:
       with gzip.open(self.paths[0], "rb") as lbpath:
@@ -119,8 +118,9 @@ class FashionMNIST(DataPipeline):
       with gzip.open(self.paths[3], "rb") as imgpath:
         x = np.frombuffer(imgpath.read(), np.uint8, offset=16).reshape(len(y), 28, 28)
 
-    dataset = tf.data.Dataset.from_tensor_slices(
-        (tf.cast(x[..., tf.newaxis] / 255.0, tf.float32), tf.cast(y, tf.int64))
-    )
+    dataset = tf.data.Dataset.from_tensor_slices((
+      tf.cast(x[..., tf.newaxis] / 255.0, tf.float32),
+      tf.cast(y, tf.int64),
+    ))
     dataset = dataset.repeat(flags.FLAGS.epochs).shuffle(10000).batch(batch_size)
     return dataset

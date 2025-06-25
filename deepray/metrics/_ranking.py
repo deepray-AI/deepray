@@ -61,7 +61,7 @@ class _RankingMetric(tf.keras.metrics.Mean):
   def get_config(self):
     config = super(_RankingMetric, self).get_config()
     config.update({
-        "ragged": self._ragged,
+      "ragged": self._ragged,
     })
     return config
 
@@ -106,7 +106,7 @@ def inverse(rank: TensorLike) -> tf.Tensor:
   Returns:
     A `Tensor` that has each input element transformed as `x` to `1/x`.
   """
-  return tf.math.divide_no_nan(1., rank)
+  return tf.math.divide_no_nan(1.0, rank)
 
 
 def pow_minus_1(label: TensorLike) -> tf.Tensor:
@@ -121,7 +121,7 @@ def pow_minus_1(label: TensorLike) -> tf.Tensor:
   Returns:
     A `Tensor` that has each input element transformed as `x` to `2**x - 1`.
   """
-  return tf.math.pow(2., label) - 1.
+  return tf.math.pow(2.0, label) - 1.0
 
 
 def log2_inverse(rank: TensorLike) -> tf.Tensor:
@@ -136,7 +136,7 @@ def log2_inverse(rank: TensorLike) -> tf.Tensor:
   Returns:
     A `Tensor` that has each input element transformed as `x` to `1./log2(1+x)`.
   """
-  return tf.math.divide_no_nan(tf.math.log(2.), tf.math.log1p(rank))
+  return tf.math.divide_no_nan(tf.math.log(2.0), tf.math.log1p(rank))
 
 
 def is_greater_equal_1(label: TensorLike) -> tf.Tensor:

@@ -43,7 +43,7 @@ def _safe_default_gain_fn(labels):
     A `tensor` of safe gain function values of shape [batch_size, list_size].
   """
   max_labels = tf.reduce_max(labels, axis=-1, keepdims=True)
-  gains = tf.pow(2., labels - max_labels) - tf.pow(2., -max_labels)
+  gains = tf.pow(2.0, labels - max_labels) - tf.pow(2.0, -max_labels)
   return gains
 
 
@@ -100,14 +100,14 @@ def approx_ranks(logits):
   x = tf.tile(tf.expand_dims(logits, 2), [1, 1, list_size])
   y = tf.tile(tf.expand_dims(logits, 1), [1, list_size, 1])
   pairs = tf.sigmoid(y - x)
-  return tf.reduce_sum(input_tensor=pairs, axis=-1) + .5
+  return tf.reduce_sum(input_tensor=pairs, axis=-1) + 0.5
 
 
 def inverse_max_dcg(
-    labels,
-    gain_fn=lambda labels: tf.pow(2.0, labels) - 1.,
-    rank_discount_fn=lambda rank: 1. / tf.math.log1p(rank),
-    topn=None
+  labels,
+  gain_fn=lambda labels: tf.pow(2.0, labels) - 1.0,
+  rank_discount_fn=lambda rank: 1.0 / tf.math.log1p(rank),
+  topn=None,
 ):
   """Computes the inverse of max DCG.
 
@@ -122,11 +122,11 @@ def inverse_max_dcg(
   Returns:
     A `Tensor` with shape [batch_size, 1].
   """
-  ideal_sorted_labels, = utils.sort_by_scores(labels, [labels], topn=topn)
+  (ideal_sorted_labels,) = utils.sort_by_scores(labels, [labels], topn=topn)
   rank = tf.range(tf.shape(input=ideal_sorted_labels)[1]) + 1
   discounted_gain = gain_fn(ideal_sorted_labels) * rank_discount_fn(tf.cast(rank, dtype=tf.float32))
   discounted_gain = tf.reduce_sum(input_tensor=discounted_gain, axis=1, keepdims=True)
-  return tf.compat.v1.where(tf.greater(discounted_gain, 0.), 1. / discounted_gain, tf.zeros_like(discounted_gain))
+  return tf.compat.v1.where(tf.greater(discounted_gain, 0.0), 1.0 / discounted_gain, tf.zeros_like(discounted_gain))
 
 
 def ndcg(labels, ranks=None, perm_mat=None):
@@ -146,12 +146,12 @@ def ndcg(labels, ranks=None, perm_mat=None):
     A `tensor` of NDCG, ApproxNDCG, or ExpectedNDCG of shape [batch_size, 1].
   """
   if ranks is not None and perm_mat is not None:
-    raise ValueError('Cannot use both ranks and perm_mat simultaneously.')
+    raise ValueError("Cannot use both ranks and perm_mat simultaneously.")
 
   if ranks is None:
     list_size = tf.shape(labels)[1]
     ranks = tf.range(list_size) + 1
-  discounts = 1. / tf.math.log1p(tf.cast(ranks, dtype=tf.float32))
+  discounts = 1.0 / tf.math.log1p(tf.cast(ranks, dtype=tf.float32))
   gains = _safe_default_gain_fn(tf.cast(labels, dtype=tf.float32))
   if perm_mat is not None:
     gains = tf.reduce_sum(input_tensor=perm_mat * tf.expand_dims(gains, 1), axis=-1)
@@ -169,6 +169,7 @@ class _LambdaWeight(object, metaclass=abc.ABCMeta):
   to be instantiated by concrete lambda weight models. The instance is used
   together with standard loss such as logistic loss and softmax loss.
   """
+
   # TODO: Define a public version of `_LambdaWeight` for typing
   # annotations.
 
@@ -184,7 +185,7 @@ class _LambdaWeight(object, metaclass=abc.ABCMeta):
     Returns:
       A `Tensor` that can weight example pairs.
     """
-    raise NotImplementedError('Calling an abstract method.')
+    raise NotImplementedError("Calling an abstract method.")
 
   def individual_weights(self, labels, ranks):
     """Returns the weight `Tensor` for individual examples.
@@ -213,7 +214,9 @@ class LabelDiffLambdaWeight(_LambdaWeight):
 class AbstractDCGLambdaWeight(_LambdaWeight):
   """Abstract LambdaWeight for Discounted Cumulative Gain (DCG) metric."""
 
-  def __init__(self, topn=None, gain_fn=lambda label: label, rank_discount_fn=lambda rank: 1. / rank, normalized=False):
+  def __init__(
+    self, topn=None, gain_fn=lambda label: label, rank_discount_fn=lambda rank: 1.0 / rank, normalized=False
+  ):
     """Initializer.
 
     Ranks are 1-based, not 0-based.
@@ -240,11 +243,11 @@ class AbstractDCGLambdaWeight(_LambdaWeight):
     Returns:
      A pairwise weights `Tensor` based on the `rank_discount_fn`.
     """
-    raise NotImplementedError('Calling an abstract method.')
+    raise NotImplementedError("Calling an abstract method.")
 
   def pair_weights(self, labels, ranks):
     """See `_LambdaWeight`."""
-    with tf.compat.v1.name_scope(name='dcg_lambda_weight'):
+    with tf.compat.v1.name_scope(name="dcg_lambda_weight"):
       _check_tensor_shapes([labels, ranks])
       valid_pair, labels = _get_valid_pairs_and_clean_labels(labels)
       gain = self._gain_fn(labels)
@@ -266,7 +269,7 @@ class AbstractDCGLambdaWeight(_LambdaWeight):
 
   def individual_weights(self, labels, ranks):
     """See `_LambdaWeight`."""
-    with tf.compat.v1.name_scope(name='dcg_lambda_weight'):
+    with tf.compat.v1.name_scope(name="dcg_lambda_weight"):
       _check_tensor_shapes([labels, ranks])
       labels = tf.convert_to_tensor(value=labels)
       labels = tf.compat.v1.where(utils.is_label_valid(labels), labels, tf.zeros_like(labels))
@@ -281,12 +284,12 @@ class DCGLambdaWeight(AbstractDCGLambdaWeight):
   """LambdaWeight for Discounted Cumulative Gain metric."""
 
   def __init__(
-      self,
-      topn=None,
-      gain_fn=lambda label: label,
-      rank_discount_fn=lambda rank: 1. / rank,
-      normalized=False,
-      smooth_fraction=0.
+    self,
+    topn=None,
+    gain_fn=lambda label: label,
+    rank_discount_fn=lambda rank: 1.0 / rank,
+    normalized=False,
+    smooth_fraction=0.0,
   ):
     """Initializer.
 
@@ -309,8 +312,8 @@ class DCGLambdaWeight(AbstractDCGLambdaWeight):
         LambdaMART.
     """
     super().__init__(topn, gain_fn, rank_discount_fn, normalized)
-    if not 0. <= smooth_fraction <= 1.:
-      raise ValueError('smooth_fraction %s should be in range [0, 1].' % smooth_fraction)
+    if not 0.0 <= smooth_fraction <= 1.0:
+      raise ValueError("smooth_fraction %s should be in range [0, 1]." % smooth_fraction)
     self._smooth_fraction = smooth_fraction
 
   def _pair_rank_discount(self, ranks, topn):
@@ -325,8 +328,9 @@ class DCGLambdaWeight(AbstractDCGLambdaWeight):
       pair_valid_rank = _apply_pairwise_op(tf.logical_or, tf.less_equal(ranks, topn))
       rank_diff = tf.cast(tf.abs(_apply_pairwise_op(tf.subtract, ranks)), dtype=tf.float32)
       pair_discount = tf.where(
-          tf.logical_and(tf.greater(rank_diff, 0), pair_valid_rank),
-          tf.abs(self._rank_discount_fn(rank_diff) - self._rank_discount_fn(rank_diff + 1)), tf.zeros_like(rank_diff)
+        tf.logical_and(tf.greater(rank_diff, 0), pair_valid_rank),
+        tf.abs(self._rank_discount_fn(rank_diff) - self._rank_discount_fn(rank_diff + 1)),
+        tf.zeros_like(rank_diff),
       )
       return pair_discount
 
@@ -335,15 +339,16 @@ class DCGLambdaWeight(AbstractDCGLambdaWeight):
       # When the rank discount is (1 / rank) for example, the discount is
       # |1 / r_i - 1 / r_j|. When i or j > topn, the discount becomes 0.
       rank_discount = tf.compat.v1.where(
-          tf.greater(ranks, topn), tf.zeros_like(tf.cast(ranks, dtype=tf.float32)),
-          self._rank_discount_fn(tf.cast(ranks, dtype=tf.float32))
+        tf.greater(ranks, topn),
+        tf.zeros_like(tf.cast(ranks, dtype=tf.float32)),
+        self._rank_discount_fn(tf.cast(ranks, dtype=tf.float32)),
       )
       pair_discount = tf.abs(_apply_pairwise_op(tf.subtract, rank_discount))
       return pair_discount
 
     u = _discount_for_relative_rank_diff()
     v = _discount_for_absolute_rank()
-    pair_discount = (1. - self._smooth_fraction) * u + self._smooth_fraction * v
+    pair_discount = (1.0 - self._smooth_fraction) * u + self._smooth_fraction * v
     pair_mask = _apply_pairwise_op(tf.logical_or, tf.less_equal(ranks, topn))
     return pair_discount * tf.cast(pair_mask, dtype=tf.float32)
 
@@ -361,12 +366,12 @@ class DCGLambdaWeightV2(AbstractDCGLambdaWeight):
     rank_diff = tf.cast(tf.abs(_apply_pairwise_op(tf.subtract, ranks)), dtype=tf.float32)
     max_rank = tf.cast(_apply_pairwise_op(tf.math.maximum, ranks), tf.float32)
     multiplier = tf.where(
-        tf.greater(max_rank, tf.cast(topn, tf.float32)), 1. / (1. - self._rank_discount_fn(max_rank)), 1.
+      tf.greater(max_rank, tf.cast(topn, tf.float32)), 1.0 / (1.0 - self._rank_discount_fn(max_rank)), 1.0
     )
     pair_discount = tf.where(
-        tf.greater(rank_diff, 0.),
-        tf.abs(self._rank_discount_fn(rank_diff) - self._rank_discount_fn(rank_diff + 1)) * multiplier,
-        tf.zeros_like(rank_diff)
+      tf.greater(rank_diff, 0.0),
+      tf.abs(self._rank_discount_fn(rank_diff) - self._rank_discount_fn(rank_diff + 1)) * multiplier,
+      tf.zeros_like(rank_diff),
     )
     return pair_discount
 
@@ -377,7 +382,7 @@ class YetiDCGLambdaWeight(DCGLambdaWeightV2):
   def pair_weights(self, labels: tf.Tensor, ranks: tf.Tensor) -> tf.Tensor:
     """See `_LambdaWeight`."""
     pair_weight = super().pair_weights(labels, ranks)
-    with tf.compat.v1.name_scope(name='yeti_dcg_lambda_weight'):
+    with tf.compat.v1.name_scope(name="yeti_dcg_lambda_weight"):
       neighbor_pair = tf.equal(tf.abs(_apply_pairwise_op(tf.subtract, ranks)), 1)
       pair_weight *= tf.cast(neighbor_pair, dtype=tf.float32)
     return pair_weight
@@ -415,7 +420,7 @@ class PrecisionLambdaWeight(_LambdaWeight):
     Returns:
       A `Tensor` that can weight example pairs.
     """
-    with tf.compat.v1.name_scope(name='precision_lambda_weight'):
+    with tf.compat.v1.name_scope(name="precision_lambda_weight"):
       _check_tensor_shapes([labels, ranks])
       valid_pair, labels = _get_valid_pairs_and_clean_labels(labels)
       binary_labels = tf.cast(self._positive_fn(labels), dtype=tf.float32)
@@ -446,7 +451,7 @@ class ListMLELambdaWeight(_LambdaWeight):
 
   def individual_weights(self, labels, ranks):
     """See `_LambdaWeight`."""
-    with tf.compat.v1.name_scope(name='p_list_mle_lambda_weight'):
+    with tf.compat.v1.name_scope(name="p_list_mle_lambda_weight"):
       _check_tensor_shapes([labels, ranks])
       labels = tf.convert_to_tensor(value=labels)
       rank_discount = self._rank_discount_fn(tf.cast(ranks, dtype=tf.float32))
@@ -468,7 +473,7 @@ def _compute_ranks(logits, is_valid):
   _check_tensor_shapes([logits, is_valid])
   # Only sort entries with is_valid = True.
   scores = tf.compat.v1.where(
-      is_valid, logits, -1e-6 * tf.ones_like(logits) + tf.reduce_min(input_tensor=logits, axis=1, keepdims=True)
+    is_valid, logits, -1e-6 * tf.ones_like(logits) + tf.reduce_min(input_tensor=logits, axis=1, keepdims=True)
   )
   return utils.sorted_ranks(scores)
 
@@ -548,7 +553,7 @@ class GumbelSampler(object):
       resulting
       Tensor has the updated dimensions.
     """
-    with tf.compat.v1.name_scope(self._name, 'gumbel_softmax_sample', (labels, logits, weights)):
+    with tf.compat.v1.name_scope(self._name, "gumbel_softmax_sample", (labels, logits, weights)):
       # Convert ragged tensors to dense and construct a mask.
       if self._ragged:
         is_weights_ragged = isinstance(weights, tf.RaggedTensor)
@@ -572,8 +577,7 @@ class GumbelSampler(object):
       if is_label_valid.shape.rank > 2:
         is_label_valid = tf.reduce_any(is_label_valid, axis=-1)
       sampled_logits = tf.compat.v1.where(
-          is_label_valid, sampled_logits / self._temperature,
-          tf.math.log(1e-20) * tf.ones_like(sampled_logits)
+        is_label_valid, sampled_logits / self._temperature, tf.math.log(1e-20) * tf.ones_like(sampled_logits)
       )
       sampled_logits = tf.math.log(tf.nn.softmax(sampled_logits) + 1e-20)
 
@@ -695,7 +699,7 @@ class _RankingLoss(object, metaclass=abc.ABCMeta):
     Returns:
       A tuple(losses, loss_weights) that have the same shape.
     """
-    raise NotImplementedError('Calling an abstract method.')
+    raise NotImplementedError("Calling an abstract method.")
 
   def normalize_weights(self, labels, weights):
     """Normalizes weights.
@@ -784,7 +788,7 @@ class _RankingLoss(object, metaclass=abc.ABCMeta):
       A pair of `Tensor` objects of shape [batch_size] containing per-list
       losses and weights.
     """
-    raise NotImplementedError('Calling an abstract method.')
+    raise NotImplementedError("Calling an abstract method.")
 
   def eval_metric(self, labels, logits, weights, mask=None):
     """Computes the eval metric for the loss in tf.estimator (not tf.keras).
@@ -816,7 +820,7 @@ class _PairwiseLoss(_RankingLoss, metaclass=abc.ABCMeta):
   @abc.abstractmethod
   def _pairwise_loss(self, pairwise_logits):
     """The loss of pairwise logits with l_i > l_j."""
-    raise NotImplementedError('Calling an abstract method.')
+    raise NotImplementedError("Calling an abstract method.")
 
   def _compute_unreduced_loss_impl(self, labels, logits, mask=None):
     """See `_RankingLoss`."""
@@ -828,7 +832,7 @@ class _PairwiseLoss(_RankingLoss, metaclass=abc.ABCMeta):
     if self._lambda_weight is not None:
       pairwise_weights *= self._lambda_weight.pair_weights(labels, ranks)
 
-    pairwise_weights = tf.stop_gradient(pairwise_weights, name='weights_stop_gradient')
+    pairwise_weights = tf.stop_gradient(pairwise_weights, name="weights_stop_gradient")
     return self._pairwise_loss(pairwise_logits), pairwise_weights
 
   def compute_per_list(self, labels, logits, weights, mask=None):
@@ -868,7 +872,7 @@ class _PairwiseLoss(_RankingLoss, metaclass=abc.ABCMeta):
     # actually symmetric when `weights` are constant per list, i.e., listwise
     # weights.
     if weights is None:
-      weights = 1.
+      weights = 1.0
     weights = tf.compat.v1.where(utils.is_label_valid(labels), tf.ones_like(labels) * weights, tf.zeros_like(labels))
     return tf.expand_dims(weights, axis=2)
 
@@ -896,7 +900,7 @@ class PairwiseSoftZeroOneLoss(_PairwiseLoss):
   def _pairwise_loss(self, pairwise_logits):
     """See `_PairwiseLoss`."""
     return tf.compat.v1.where(
-        tf.greater(pairwise_logits, 0), 1. - tf.sigmoid(pairwise_logits), tf.sigmoid(-pairwise_logits)
+      tf.greater(pairwise_logits, 0), 1.0 - tf.sigmoid(pairwise_logits), tf.sigmoid(-pairwise_logits)
     )
 
 
@@ -932,7 +936,7 @@ class PairwiseMSELoss(_PairwiseLoss):
     if self._lambda_weight is not None:
       ranks = _compute_ranks(logits, mask)
       pairwise_weights *= self._lambda_weight.pair_weights(labels, ranks)
-    pairwise_weights = tf.stop_gradient(pairwise_weights, name='weights_stop_gradient')
+    pairwise_weights = tf.stop_gradient(pairwise_weights, name="weights_stop_gradient")
 
     return pairwise_mse_loss, pairwise_weights
 
@@ -950,8 +954,8 @@ class _ListwiseLoss(_RankingLoss):
       is_valid = utils.is_label_valid(labels)
       labels = tf.where(is_valid, labels, tf.zeros_like(labels))
       return tf.compat.v1.math.divide_no_nan(
-          tf.reduce_sum(input_tensor=(weights * labels), axis=1, keepdims=True),
-          tf.reduce_sum(input_tensor=labels, axis=1, keepdims=True)
+        tf.reduce_sum(input_tensor=(weights * labels), axis=1, keepdims=True),
+        tf.reduce_sum(input_tensor=labels, axis=1, keepdims=True),
       )
 
   def compute_per_list(self, labels, logits, weights, mask=None):
@@ -1011,7 +1015,7 @@ class CircleLoss(_ListwiseLoss):
   def get_logits(self, logits):
     """See `_RankingLoss`."""
     # Add a clip to confine scores in [0, 1].
-    return tf.clip_by_value(tf.convert_to_tensor(value=logits), 0., 1.)
+    return tf.clip_by_value(tf.convert_to_tensor(value=logits), 0.0, 1.0)
 
   def _compute_unreduced_loss_impl(self, labels, logits, mask=None):
     """See `_RankingLoss`."""
@@ -1019,14 +1023,14 @@ class CircleLoss(_ListwiseLoss):
       mask = utils.is_label_valid(labels)
 
     def circle_loss_pairwise_op(score_i, score_j):
-      alpha_i = tf.stop_gradient(tf.nn.relu(1 - score_i + self._margin), name='circle_loss_alpha_pos')
-      alpha_j = tf.stop_gradient(tf.nn.relu(score_j + self._margin), name='circle_loss_alpha_neg')
+      alpha_i = tf.stop_gradient(tf.nn.relu(1 - score_i + self._margin), name="circle_loss_alpha_pos")
+      alpha_j = tf.stop_gradient(tf.nn.relu(score_j + self._margin), name="circle_loss_alpha_neg")
       return alpha_i * (1 - score_i - self._margin) + alpha_j * (score_j - self._margin)
 
     pairwise_labels, pairwise_logits = _pairwise_comparison(
-        labels, logits, mask, pairwise_logits_op=circle_loss_pairwise_op
+      labels, logits, mask, pairwise_logits_op=circle_loss_pairwise_op
     )
-    pairwise_weights = tf.stop_gradient(pairwise_labels, name='weights_stop_gradient')
+    pairwise_weights = tf.stop_gradient(pairwise_labels, name="weights_stop_gradient")
     # TODO: try lambda_weights for circle loss.
     # Pairwise losses and weights will be of shape
     # [batch_size, list_size, list_size].
@@ -1034,9 +1038,9 @@ class CircleLoss(_ListwiseLoss):
 
     # This computes the per-list losses and weights for circle loss.
     per_list_losses = tf.math.log1p(tf.reduce_sum(tf.math.multiply(losses, pairwise_weights), axis=[1, 2]))
-    per_list_weights = tf.reduce_sum(pairwise_weights, axis=[
-        1, 2
-    ]) / tf.reduce_sum(tf.cast(pairwise_weights > 0, tf.float32), axis=[1, 2])
+    per_list_weights = tf.reduce_sum(pairwise_weights, axis=[1, 2]) / tf.reduce_sum(
+      tf.cast(pairwise_weights > 0, tf.float32), axis=[1, 2]
+    )
 
     # Return per-list losses and weights with shape [batch_size, 1].
     return tf.expand_dims(per_list_losses, 1), tf.expand_dims(per_list_weights, 1)
@@ -1163,8 +1167,9 @@ class UniqueSoftmaxLoss(_ListwiseLoss):
     denominator_logits = tf.concat([denominator_logits, tf.expand_dims(logits, axis=2)], axis=2)
     denominator_mask = tf.concat([pairwise_labels, tf.expand_dims(tf.ones_like(logits), axis=2)], axis=2)
     denominator_logits = tf.where(
-        tf.greater(denominator_mask, 0.0), denominator_logits,
-        -1e-3 + tf.reduce_min(denominator_logits) * tf.ones_like(denominator_logits)
+      tf.greater(denominator_mask, 0.0),
+      denominator_logits,
+      -1e-3 + tf.reduce_min(denominator_logits) * tf.ones_like(denominator_logits),
     )
     logits_max = tf.reduce_max(denominator_logits, axis=-1, keepdims=True)
     # Subtract the max so that exp(denominator_logits) is numerically valid.
@@ -1184,7 +1189,7 @@ class _PointwiseLoss(_RankingLoss):
   def _normalize_weights_impl(self, labels, weights):
     """See _RankingLoss."""
     if weights is None:
-      weights = 1.
+      weights = 1.0
     return tf.compat.v1.where(utils.is_label_valid(labels), tf.ones_like(labels) * weights, tf.zeros_like(labels))
 
   def compute_per_list(self, labels, logits, weights, mask=None):
@@ -1264,15 +1269,15 @@ class ClickEMLoss(_PointwiseLoss):
       A tuple of (exam_given_clicks, rel_given_clicks) representing
       P(examination | click) and P(relevance | click).
     """
-    with tf.compat.v1.name_scope(name='compute_latent_prob'):
+    with tf.compat.v1.name_scope(name="compute_latent_prob"):
       is_clicked = tf.greater_equal(tf.cast(clicks, tf.float32), 1.0)
       exam_logits_posterior = exam_logits - tf.math.softplus(rel_logits)
       rel_logits_posterior = rel_logits - tf.math.softplus(exam_logits)
       exam_prob_posterior = tf.compat.v1.where(
-          is_clicked, tf.ones_like(exam_logits_posterior), tf.sigmoid(exam_logits_posterior)
+        is_clicked, tf.ones_like(exam_logits_posterior), tf.sigmoid(exam_logits_posterior)
       )
       rel_prob_posterior = tf.compat.v1.where(
-          is_clicked, tf.ones_like(rel_logits_posterior), tf.sigmoid(rel_logits_posterior)
+        is_clicked, tf.ones_like(rel_logits_posterior), tf.sigmoid(rel_logits_posterior)
       )
       return tf.stop_gradient(exam_prob_posterior), tf.stop_gradient(rel_prob_posterior)
 
@@ -1299,12 +1304,14 @@ class ClickEMLoss(_PointwiseLoss):
     # The distribution in the E step.
     exam_latent_prob, rel_latent_prob = self._compute_latent_prob(labels, exam_logits, rel_logits)
     # The loss in the M step.
-    losses = tf.compat.v1.nn.sigmoid_cross_entropy_with_logits(
-        labels=exam_latent_prob, logits=exam_logits
-    ) * self._exam_loss_weight
-    losses += tf.compat.v1.nn.sigmoid_cross_entropy_with_logits(
-        labels=rel_latent_prob, logits=rel_logits
-    ) * self._rel_loss_weight
+    losses = (
+      tf.compat.v1.nn.sigmoid_cross_entropy_with_logits(labels=exam_latent_prob, logits=exam_logits)
+      * self._exam_loss_weight
+    )
+    losses += (
+      tf.compat.v1.nn.sigmoid_cross_entropy_with_logits(labels=rel_latent_prob, logits=rel_logits)
+      * self._rel_loss_weight
+    )
     return losses, tf.cast(mask, dtype=tf.float32)
 
 
@@ -1374,9 +1381,9 @@ class MixtureEMLoss(_ListwiseLoss):
     Returns:
       A `Tensor` of probability with shape [batch_size, 1, model_num].
     """
-    with tf.compat.v1.name_scope(name='compute_model_prob'):
+    with tf.compat.v1.name_scope(name="compute_model_prob"):
       return tf.stop_gradient(
-          tf.exp(-self._alpha * (per_list_logodds - tf.reduce_min(per_list_logodds, axis=2, keepdims=True)))
+        tf.exp(-self._alpha * (per_list_logodds - tf.reduce_min(per_list_logodds, axis=2, keepdims=True)))
       )
 
   def _compute_unreduced_loss_impl(self, labels, logits, mask=None):
@@ -1398,11 +1405,11 @@ class MixtureEMLoss(_ListwiseLoss):
     # The loss in the M step.
     # shape = [batch_size, list_size, model_num]
     losses = tf.stack(
-        [
-            tf.compat.v1.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=model_logits)
-            for model_logits in tf.unstack(logits, axis=-1)
-        ],
-        axis=2
+      [
+        tf.compat.v1.nn.sigmoid_cross_entropy_with_logits(labels=labels, logits=model_logits)
+        for model_logits in tf.unstack(logits, axis=-1)
+      ],
+      axis=2,
     )
     losses = tf.where(tf.expand_dims(mask, axis=-1), losses, tf.zeros_like(losses, dtype=tf.float32))
 
@@ -1415,8 +1422,9 @@ class MixtureEMLoss(_ListwiseLoss):
 
     label_sum = tf.reduce_sum(input_tensor=labels, axis=1, keepdims=True)
     nonzero_mask = tf.greater(label_sum, 0.0)
-    return tf.reshape(tf.reduce_sum(losses * model_prob / prob_norm, axis=[1, 2]),
-                      [-1, 1]), tf.cast(nonzero_mask, dtype=tf.float32)
+    return tf.reshape(tf.reduce_sum(losses * model_prob / prob_norm, axis=[1, 2]), [-1, 1]), tf.cast(
+      nonzero_mask, dtype=tf.float32
+    )
 
 
 class ListMLELoss(_ListwiseLoss):
@@ -1431,8 +1439,7 @@ class ListMLELoss(_ListwiseLoss):
     labels = tf.compat.v1.where(mask, labels, tf.zeros_like(labels))
     logits = tf.compat.v1.where(mask, logits, tf.math.log(_EPSILON) * tf.ones_like(logits))
     scores = tf.compat.v1.where(
-        mask, labels,
-        tf.reduce_min(input_tensor=labels, axis=1, keepdims=True) - 1e-6 * tf.ones_like(labels)
+      mask, labels, tf.reduce_min(input_tensor=labels, axis=1, keepdims=True) - 1e-6 * tf.ones_like(labels)
     )
     # Use a fixed ops-level seed and the randomness is controlled by the
     # graph-level seed.
@@ -1446,7 +1453,7 @@ class ListMLELoss(_ListwiseLoss):
     if self._lambda_weight is not None and isinstance(self._lambda_weight, ListMLELambdaWeight):
       batch_size, list_size = tf.unstack(tf.shape(input=sorted_labels))
       sums *= self._lambda_weight.individual_weights(
-          sorted_labels, tf.tile(tf.expand_dims(tf.range(list_size) + 1, 0), [batch_size, 1])
+        sorted_labels, tf.tile(tf.expand_dims(tf.range(list_size) + 1, 0), [batch_size, 1])
       )
 
     negative_log_likelihood = tf.reduce_sum(input_tensor=sums, axis=1, keepdims=True)
@@ -1467,7 +1474,7 @@ class ApproxNDCGLoss(_ListwiseLoss):
       mask = utils.is_label_valid(labels)
     labels = tf.compat.v1.where(mask, labels, tf.zeros_like(labels))
     logits = tf.compat.v1.where(
-        mask, logits, -1e3 * tf.ones_like(logits) + tf.reduce_min(input_tensor=logits, axis=-1, keepdims=True)
+      mask, logits, -1e3 * tf.ones_like(logits) + tf.reduce_min(input_tensor=logits, axis=-1, keepdims=True)
     )
 
     label_sum = tf.reduce_sum(input_tensor=labels, axis=1, keepdims=True)
@@ -1492,7 +1499,7 @@ class ApproxMRRLoss(_ListwiseLoss):
       mask = utils.is_label_valid(labels)
     labels = tf.compat.v1.where(mask, labels, tf.zeros_like(labels))
     logits = tf.compat.v1.where(
-        mask, logits, -1e3 * tf.ones_like(logits) + tf.math.reduce_min(input_tensor=logits, axis=-1, keepdims=True)
+      mask, logits, -1e3 * tf.ones_like(logits) + tf.math.reduce_min(input_tensor=logits, axis=-1, keepdims=True)
     )
 
     label_sum = tf.math.reduce_sum(input_tensor=labels, axis=1, keepdims=True)
@@ -1500,7 +1507,7 @@ class ApproxMRRLoss(_ListwiseLoss):
     nonzero_mask = tf.math.greater(tf.reshape(label_sum, [-1]), 0.0)
     labels = tf.compat.v1.where(nonzero_mask, labels, _EPSILON * tf.ones_like(labels))
 
-    rr = 1. / approx_ranks(logits)
+    rr = 1.0 / approx_ranks(logits)
     rr = tf.math.reduce_sum(input_tensor=rr * labels, axis=-1, keepdims=True)
     mrr = rr / tf.math.reduce_sum(input_tensor=labels, axis=-1, keepdims=True)
     return -mrr, tf.reshape(tf.cast(nonzero_mask, dtype=tf.float32), [-1, 1])
@@ -1524,20 +1531,20 @@ class NeuralSortCrossEntropyLoss(_ListwiseLoss):
     smooth_perm = neural_sort(logits, mask=mask)
 
     losses = tf.compat.v1.nn.softmax_cross_entropy_with_logits_v2(
-        labels=true_perm, logits=tf.math.log(1e-20 + smooth_perm), axis=2
+      labels=true_perm, logits=tf.math.log(1e-20 + smooth_perm), axis=2
     )
 
     # Neural sort will place masked entries last. Losses are still computed on
     # those entries so we need to cancel those out. This means we need to mask
     # out the last n entries, where n is the number of masked items per list. We
     # do so by sorting the mask and setting (masked) invalid losses to 0.
-    sorted_mask = tf.cast(tf.sort(tf.cast(mask, dtype=tf.float32), axis=1, direction='DESCENDING'), dtype=tf.bool)
+    sorted_mask = tf.cast(tf.sort(tf.cast(mask, dtype=tf.float32), axis=1, direction="DESCENDING"), dtype=tf.bool)
     losses = tf.where(sorted_mask, losses, tf.zeros_like(losses))
 
     # shape = [batch_size, list_size].
     losses = tf.math.divide_no_nan(
-        tf.reduce_sum(input_tensor=losses, axis=-1, keepdims=True),
-        tf.reduce_sum(input_tensor=tf.cast(mask, dtype=tf.float32), axis=-1, keepdims=True)
+      tf.reduce_sum(input_tensor=losses, axis=-1, keepdims=True),
+      tf.reduce_sum(input_tensor=tf.cast(mask, dtype=tf.float32), axis=-1, keepdims=True),
     )
 
     return losses, tf.reshape(tf.cast(nonzero_mask, dtype=tf.float32), [-1, 1])
@@ -1615,7 +1622,7 @@ def neural_sort(logits, name=None, mask=None):
     A tensor of permutation matrices whose dimension is [batch_size, list_size,
     list_size].
   """
-  with tf.compat.v1.name_scope(name, 'neural_sort', [logits]):
+  with tf.compat.v1.name_scope(name, "neural_sort", [logits]):
     if mask is None:
       mask = tf.ones_like(logits, dtype=tf.bool)
 
@@ -1650,7 +1657,7 @@ def neural_sort(logits, name=None, mask=None):
 
     # By swapping the rows of masked items to the end of the permutation matrix,
     # we force masked items to be placed last.
-    sorted_mask_indices = tf.argsort(tf.cast(mask, dtype=tf.int32), axis=1, direction='DESCENDING', stable=True)
+    sorted_mask_indices = tf.argsort(tf.cast(mask, dtype=tf.int32), axis=1, direction="DESCENDING", stable=True)
     p_logits = tf.gather(p_logits, sorted_mask_indices, batch_dims=1, axis=1)
 
     smooth_perm = tf.nn.softmax(p_logits, -1)
@@ -1681,7 +1688,7 @@ def gumbel_neural_sort(logits, name=None, sample_size=8, temperature=1.0, seed=N
     A `Tensor` of permutation matrices whose dimension is [batch_size,
     sample_size, list_size, list_size].
   """
-  with tf.compat.v1.name_scope(name, 'gumbel_neural_sort', [logits]):
+  with tf.compat.v1.name_scope(name, "gumbel_neural_sort", [logits]):
     batch_size = tf.shape(input=logits)[0]
     list_size = tf.shape(input=logits)[1]
 
@@ -1748,17 +1755,17 @@ class OrdinalLoss(_PointwiseLoss):
     if mask is None:
       mask = utils.is_label_valid(labels)
     if logits.shape.rank != 3:
-      raise ValueError('Predictions for ordinal loss must have rank 3.')
+      raise ValueError("Predictions for ordinal loss must have rank 3.")
     elif logits.shape[-1] != self._ordinal_size:
       raise ValueError(
-          'The last dimension of logits must be the number of ordinal levels '
-          f'{self._ordinal_size}, the actual dimension is {logits.shape[-1]}.'
+        "The last dimension of logits must be the number of ordinal levels "
+        f"{self._ordinal_size}, the actual dimension is {logits.shape[-1]}."
       )
     labels = tf.where(mask, labels, 0.0)
     logits = tf.where(tf.expand_dims(mask, -1), logits, 0.0)
     ordinals = self._labels_to_ordinals(labels, mask)
     losses = tf.where(
-        tf.expand_dims(mask, -1), tf.compat.v1.nn.sigmoid_cross_entropy_with_logits(labels=ordinals, logits=logits), 0.0
+      tf.expand_dims(mask, -1), tf.compat.v1.nn.sigmoid_cross_entropy_with_logits(labels=ordinals, logits=logits), 0.0
     )
     return tf.reduce_sum(losses, axis=-1), tf.cast(mask, dtype=tf.float32)
 
@@ -1801,21 +1808,21 @@ class MultiClassLoss(_PointwiseLoss):
     if mask is None:
       mask = utils.is_label_valid(labels)
     if logits.shape.rank != 3:
-      raise ValueError('Predictions for multi-class loss must have rank 3.')
+      raise ValueError("Predictions for multi-class loss must have rank 3.")
     elif logits.shape[-1] != self._num_classes:
       raise ValueError(
-          'The last dimension of logits must be the number of classes '
-          f'{self._num_classes}, the actual dimension is {logits.shape[-1]}.'
+        "The last dimension of logits must be the number of classes "
+        f"{self._num_classes}, the actual dimension is {logits.shape[-1]}."
       )
     labels = tf.where(mask, labels, 0.0)
     logits = tf.where(tf.expand_dims(mask, -1), logits, 0.0)
     classes = self._labels_to_one_hot_class(labels, mask)
     losses = tf.keras.losses.CategoricalCrossentropy(
-        from_logits=self._from_logits,
-        label_smoothing=self._label_smoothing,
-        axis=-1,
-        reduction=tf.keras.losses.Reduction.NONE,
-        name='categorical_crossentropy'
+      from_logits=self._from_logits,
+      label_smoothing=self._label_smoothing,
+      axis=-1,
+      reduction=tf.keras.losses.Reduction.NONE,
+      name="categorical_crossentropy",
     )(classes, logits, tf.cast(mask, dtype=tf.float32))
     return losses, tf.cast(mask, dtype=tf.float32)
 
@@ -1846,7 +1853,7 @@ class CoupledRankDistilLoss(_ListwiseLoss):
   [reddi2021]: https://research.google/pubs/pub50695/
   """
 
-  def __init__(self, name, sample_size, topk=None, temperature=1., ragged=False):
+  def __init__(self, name, sample_size, topk=None, temperature=1.0, ragged=False):
     """Initializer.
 
     Args:
@@ -1891,10 +1898,10 @@ class CoupledRankDistilLoss(_ListwiseLoss):
     # Sort teacher scores and student scores to obtain top-k student scores
     # whose order is based on teacher scores.
     sorted_student_scores = utils.sort_by_scores(
-        utils.reshape_first_ndims(sampled_teacher_scores, 2, [batch_size * self._sample_size]),
-        [utils.reshape_first_ndims(expanded_student_scores, 2, [batch_size * self._sample_size])],
-        shuffle_ties=True,
-        seed=37
+      utils.reshape_first_ndims(sampled_teacher_scores, 2, [batch_size * self._sample_size]),
+      [utils.reshape_first_ndims(expanded_student_scores, 2, [batch_size * self._sample_size])],
+      shuffle_ties=True,
+      seed=37,
     )[0]
     sorted_student_scores = utils.reshape_first_ndims(sorted_student_scores, 1, [batch_size, self._sample_size])
     topk = self._topk or list_size
@@ -1917,13 +1924,12 @@ class CoupledRankDistilLoss(_ListwiseLoss):
     # [batch_size * sample_size, topk, list_size] ->
     # [batch_size, sample_size, topk, list_size].
     topk_pl_denominator_mask = tf.cast(
-        utils.reshape_first_ndims(topk_pl_denominator_mask, 1, [batch_size, self._sample_size]), dtype=tf.bool
+      utils.reshape_first_ndims(topk_pl_denominator_mask, 1, [batch_size, self._sample_size]), dtype=tf.bool
     )
     sorted_student_scores = tf.tile(tf.expand_dims(sorted_student_scores, 2), [1, 1, topk, 1])
 
     sorted_student_scores_denom = tf.where(
-        topk_pl_denominator_mask, sorted_student_scores,
-        tf.math.log(_EPSILON) * tf.ones_like(sorted_student_scores)
+      topk_pl_denominator_mask, sorted_student_scores, tf.math.log(_EPSILON) * tf.ones_like(sorted_student_scores)
     )
     logprob = topk_student_scores - tf.math.reduce_logsumexp(sorted_student_scores_denom, axis=3)
     # Compute log-likelihood over top-k Plackett-Luce scores.

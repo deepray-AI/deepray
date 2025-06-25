@@ -23,12 +23,12 @@ from deepray.metrics import GeometricMean
 
 def get_test_data():
   return [
-      ([0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0),
-      ([0, 0, 0, 0, 0, 0, 0, 1, 2, 6], 0),
-      ([0.2, 0.5, 0.3, 0.6, 0.1, 0.7], 0.32864603),
-      ([8, 4, 1, 7, 2, 11, 9, 22, 52], 7.1804023),
-      ([8.2, 9.7, 9.1, 2.7, 1.1, 2.0], 4.0324492),
-      ([0.6666666, 0.215213, 0.15167], 0.27918512),
+    ([0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 0),
+    ([0, 0, 0, 0, 0, 0, 0, 1, 2, 6], 0),
+    ([0.2, 0.5, 0.3, 0.6, 0.1, 0.7], 0.32864603),
+    ([8, 4, 1, 7, 2, 11, 9, 22, 52], 7.1804023),
+    ([8.2, 9.7, 9.1, 2.7, 1.1, 2.0], 4.0324492),
+    ([0.6666666, 0.215213, 0.15167], 0.27918512),
   ]
 
 
@@ -44,7 +44,6 @@ def check_result(obj, expected_result, expected_count):
 
 
 def test_config_gmean():
-
   def _check_config(obj, name):
     assert obj.name == name
     assert obj.dtype == tf.float32
@@ -102,12 +101,12 @@ def test_reset_state():
 
 
 @pytest.mark.parametrize(
-    "values, sample_weight, expected",
-    [
-        ([1, 2, 3, 4, 5], 1, 2.6051712),
-        ([2.1, 4.6, 7.1], [1, 2, 3], 5.014777),
-        ([9.6, 1.8, 8.2], [0.2, 0.5, 0.3], 3.9649222),
-    ],
+  "values, sample_weight, expected",
+  [
+    ([1, 2, 3, 4, 5], 1, 2.6051712),
+    ([2.1, 4.6, 7.1], [1, 2, 3], 5.014777),
+    ([9.6, 1.8, 8.2], [0.2, 0.5, 0.3], 3.9649222),
+  ],
 )
 def test_sample_weight_gmean(values, sample_weight, expected):
   obj = GeometricMean()

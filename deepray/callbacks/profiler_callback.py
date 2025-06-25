@@ -9,11 +9,11 @@ logger = logging_util.get_logger()
 def get_profiler_callback(model_dir, profile_steps, enable_tensorboard, steps_per_epoch):
   """Validate profile_steps flag value and return profiler callback."""
   profile_steps_error_message = (
-      'profile_steps must be a comma separated pair of positive integers, '
-      'specifying the first and last steps to be profiled.'
+    "profile_steps must be a comma separated pair of positive integers, "
+    "specifying the first and last steps to be profiled."
   )
   try:
-    profile_steps = [int(i) for i in profile_steps.split(',')]
+    profile_steps = [int(i) for i in profile_steps.split(",")]
   except ValueError:
     raise ValueError(profile_steps_error_message)
   if len(profile_steps) != 2:
@@ -23,10 +23,10 @@ def get_profiler_callback(model_dir, profile_steps, enable_tensorboard, steps_pe
     raise ValueError(profile_steps_error_message)
   if enable_tensorboard:
     logger.warning(
-        'Both TensorBoard and profiler callbacks are used. Note that the '
-        'TensorBoard callback profiles the 2nd step (unless otherwise '
-        'specified). Please make sure the steps profiled by the two callbacks '
-        'do not overlap.'
+      "Both TensorBoard and profiler callbacks are used. Note that the "
+      "TensorBoard callback profiles the 2nd step (unless otherwise "
+      "specified). Please make sure the steps profiled by the two callbacks "
+      "do not overlap."
     )
   return ProfilerCallback(model_dir, start_step, stop_step, steps_per_epoch)
 
@@ -56,7 +56,7 @@ class ProfilerCallback(Callback):
     if batch == self.start_step_in_epoch and self.should_start:
       self.should_start = False
       profiler.start()
-      logger.info('Profiler started at Step %s', self.start_step)
+      logger.info("Profiler started at Step %s", self.start_step)
 
   def on_batch_end(self, batch, logs=None):
     if batch == self.stop_step_in_epoch and self.should_stop:
@@ -64,5 +64,5 @@ class ProfilerCallback(Callback):
       results = profiler.stop()
       profiler.save(self.log_dir, results)
       logger.info(
-          'Profiler saved profiles for steps between %s and %s to %s', self.start_step, self.stop_step, self.log_dir
+        "Profiler saved profiles for steps between %s and %s to %s", self.start_step, self.stop_step, self.log_dir
       )

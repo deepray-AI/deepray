@@ -36,15 +36,15 @@ def test_affine(dtype):
   x = np.array([[-2.5, 0.0, 0.3]]).astype(dtype)
   val = np.array([[-1.5, 1.0, 1.3]]).astype(dtype)
   test_utils.layer_test(
-      TLU,
-      kwargs={
-          "affine": True,
-          "dtype": dtype,
-          "alpha_initializer": "ones",
-          "tau_initializer": "ones",
-      },
-      input_data=x,
-      expected_output=val,
+    TLU,
+    kwargs={
+      "affine": True,
+      "dtype": dtype,
+      "alpha_initializer": "ones",
+      "tau_initializer": "ones",
+    },
+    input_data=x,
+    expected_output=val,
   )
 
 

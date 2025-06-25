@@ -34,13 +34,13 @@ def get_project_root():
 def get_path_to_datafile(path, is_so=False):
   """Get the path to the specified file in the data dependencies.
 
-    The path is relative to deepray/
+  The path is relative to deepray/
 
-    Args:
-      path: a string resource path relative to deepray/
-    Returns:
-      The path to the specified data file
-    """
+  Args:
+    path: a string resource path relative to deepray/
+  Returns:
+    The path to the specified data file
+  """
   root_dir = get_project_root()
   if is_so:
     bazel_bin_dir = os.path.join(os.path.dirname(root_dir), "bazel-bin")
@@ -50,7 +50,6 @@ def get_path_to_datafile(path, is_so=False):
 
 
 class LazySO:
-
   def __init__(self, relative_path):
     self.relative_path = relative_path
     self._ops = None
@@ -60,8 +59,7 @@ class LazySO:
     if SKIP_CUSTOM_OPS:
       import pytest
 
-      pytest.skip("Skipping the test because a custom ops "
-                  "was being loaded while --skip-custom-ops was set.")
+      pytest.skip("Skipping the test because a custom ops was being loaded while --skip-custom-ops was set.")
     if self._ops is None:
       # self.display_warning_if_incompatible()
       self._ops = tf.load_op_library(get_path_to_datafile(self.relative_path, is_so=True))
@@ -73,38 +71,38 @@ class LazySO:
       return
 
     warnings.warn(
-        "You are currently using TensorFlow {} and trying to load a custom op ({})."
-        "\n"
-        "Deepray has compiled its custom ops against TensorFlow {}, "
-        "and there are no compatibility guarantees between the two versions. "
-        "\n"
-        "This means that you might get segfaults when loading the custom op, "
-        "or other kind of low-level errors.\n If you do, do not file an issue "
-        "on Github. This is a known limitation."
-        "\n\n"
-        "It might help you to fallback to pure Python "
-        "ops by setting environment variable `DEEPRAY_PY_OPS=1` or using `dp.options.disable_custom_kernel()` in your code. "
-        "To do that, see "
-        "https://github.com/tensorflow/deepray#gpucpu-custom-ops "
-        "\n\n"
-        "You can also change the TensorFlow version installed on your system. "
-        "You would need a TensorFlow version equal to or above {} and strictly "
-        "below {}.\n Note that nightly versions of TensorFlow, "
-        "as well as non-pip TensorFlow like `conda install tensorflow` or compiled "
-        "from source are not supported."
-        "\n\n"
-        "The last solution is to find the Deepray version that has "
-        "custom ops compatible with the TensorFlow installed on your "
-        "system. To do that, refer to the readme: "
-        "https://github.com/tensorflow/deepray"
-        "".format(
-            tf.__version__,
-            self.relative_path,
-            INCLUSIVE_MIN_TF_VERSION_FOR_ABI_COMPATIBILITY,
-            INCLUSIVE_MIN_TF_VERSION_FOR_ABI_COMPATIBILITY,
-            EXCLUSIVE_MAX_TF_VERSION_FOR_ABI_COMPATIBILITY,
-        ),
-        UserWarning,
+      "You are currently using TensorFlow {} and trying to load a custom op ({})."
+      "\n"
+      "Deepray has compiled its custom ops against TensorFlow {}, "
+      "and there are no compatibility guarantees between the two versions. "
+      "\n"
+      "This means that you might get segfaults when loading the custom op, "
+      "or other kind of low-level errors.\n If you do, do not file an issue "
+      "on Github. This is a known limitation."
+      "\n\n"
+      "It might help you to fallback to pure Python "
+      "ops by setting environment variable `DEEPRAY_PY_OPS=1` or using `dp.options.disable_custom_kernel()` in your code. "
+      "To do that, see "
+      "https://github.com/tensorflow/deepray#gpucpu-custom-ops "
+      "\n\n"
+      "You can also change the TensorFlow version installed on your system. "
+      "You would need a TensorFlow version equal to or above {} and strictly "
+      "below {}.\n Note that nightly versions of TensorFlow, "
+      "as well as non-pip TensorFlow like `conda install tensorflow` or compiled "
+      "from source are not supported."
+      "\n\n"
+      "The last solution is to find the Deepray version that has "
+      "custom ops compatible with the TensorFlow installed on your "
+      "system. To do that, refer to the readme: "
+      "https://github.com/tensorflow/deepray"
+      "".format(
+        tf.__version__,
+        self.relative_path,
+        INCLUSIVE_MIN_TF_VERSION_FOR_ABI_COMPATIBILITY,
+        INCLUSIVE_MIN_TF_VERSION_FOR_ABI_COMPATIBILITY,
+        EXCLUSIVE_MAX_TF_VERSION_FOR_ABI_COMPATIBILITY,
+      ),
+      UserWarning,
     )
     abi_warning_already_raised = True
 

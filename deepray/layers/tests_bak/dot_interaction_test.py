@@ -20,7 +20,6 @@ from deepray.layers.dot_interaction import DotInteraction
 
 
 class DotInteractionTest(tf.test.TestCase):
-
   def test_valid_input(self):
     feature1 = np.asarray([[0.1, -4.3, 0.2, 1.1, 0.3]]).astype(np.float32)
     feature2 = np.asarray([[2.0, 3.2, -1.0, 0.0, 1.0]]).astype(np.float32)

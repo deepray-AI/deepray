@@ -23,23 +23,23 @@ from typing import Union, List
 class PoincareNormalize(tf.keras.layers.Layer):
   """Project into the Poincare ball with `norm <= 1.0 - epsilon`.
 
-    See [Poincaré Embeddings for Learning Hierarchical Representations](https://arxiv.org/pdf/1705.08039.pdf),
-    and [wiki](https://en.wikipedia.org/wiki/Poincare_ball_model).
+  See [Poincaré Embeddings for Learning Hierarchical Representations](https://arxiv.org/pdf/1705.08039.pdf),
+  and [wiki](https://en.wikipedia.org/wiki/Poincare_ball_model).
 
-    For a 1-D tensor with `axis = 0`, computes
+  For a 1-D tensor with `axis = 0`, computes
 
-                  (x * (1 - epsilon)) / ||x||     if ||x|| > 1 - epsilon
-        output =
-                   x                              otherwise
+                (x * (1 - epsilon)) / ||x||     if ||x|| > 1 - epsilon
+      output =
+                 x                              otherwise
 
-    For `x` with more dimensions, independently normalizes each 1-D slice along
-    dimension `axis`.
+  For `x` with more dimensions, independently normalizes each 1-D slice along
+  dimension `axis`.
 
-    Args:
-      axis: Axis along which to normalize.  A scalar or a vector of integers.
-      epsilon: A small deviation from the edge of the unit sphere for
-        numerical stability.
-    """
+  Args:
+    axis: Axis along which to normalize.  A scalar or a vector of integers.
+    epsilon: A small deviation from the edge of the unit sphere for
+      numerical stability.
+  """
 
   @typechecked
   def __init__(self, axis: Union[None, int, List[int]] = 1, epsilon: float = 1e-5, **kwargs):

@@ -99,7 +99,7 @@ def iter_shard_dataframe(df, rows_per_core=1000):
     df_shard = df[min_index:max_index]
     n_shard = len(df_shard)
     boundaries = np.linspace(0, n_shard, num_cores + 1, dtype=np.int64)
-    yield [df_shard[boundaries[j]:boundaries[j + 1]] for j in range(num_cores)]
+    yield [df_shard[boundaries[j] : boundaries[j + 1]] for j in range(num_cores)]
 
 
 def _shard_dict_to_examples(shard_dict):
@@ -119,7 +119,7 @@ def _shard_dict_to_examples(shard_dict):
     for i in range(n):
       feature_list[i][column] = feature_map(values[i])
   examples = [
-      tf.train.Example(features=tf.train.Features(feature=example_features)) for example_features in feature_list
+    tf.train.Example(features=tf.train.Features(feature=example_features)) for example_features in feature_list
   ]
 
   return [e.SerializeToString() for e in examples]
@@ -166,13 +166,14 @@ def write_to_buffer(dataframe, buffer_path, columns, expected_size=None):
   Returns:
     The path of the buffer.
   """
-  if (tf.io.gfile.exists(buffer_path) and tf.io.gfile.stat(buffer_path).length > 0):
+  if tf.io.gfile.exists(buffer_path) and tf.io.gfile.stat(buffer_path).length > 0:
     actual_size = tf.io.gfile.stat(buffer_path).length
     if expected_size == actual_size:
       return buffer_path
     logging.warning(
-        "Existing buffer {} has size {}. Expected size {}. Deleting and "
-        "rebuilding buffer.".format(buffer_path, actual_size, expected_size)
+      "Existing buffer {} has size {}. Expected size {}. Deleting and rebuilding buffer.".format(
+        buffer_path, actual_size, expected_size
+      )
     )
     tf.io.gfile.remove(buffer_path)
 
@@ -200,10 +201,10 @@ def write_to_buffer(dataframe, buffer_path, columns, expected_size=None):
 
 def recursive_copy(src_dir, dest_dir):
   """Copy the contents of src_dir into the folder dest_dir.
-    Args:
-      src_dir: hdfs or local path.
-      dest_dir: hdfs or local path.
-    """
+  Args:
+    src_dir: hdfs or local path.
+    dest_dir: hdfs or local path.
+  """
   for file_name in tf.io.gfile.listdir(src_dir):
     old_path = os.path.join(src_dir, file_name)
     new_path = os.path.join(dest_dir, file_name)

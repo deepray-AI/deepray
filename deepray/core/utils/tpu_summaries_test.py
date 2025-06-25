@@ -41,7 +41,6 @@ def train_function_with_summaries(function=None, **kwargs):
 
 
 class DummyTrainer(tf.Module):
-
   def __init__(self):
     self.step_counter = common.create_global_step()
 
@@ -67,7 +66,6 @@ class DummyTrainer(tf.Module):
 
 
 class TpuSummariesTest(tf.test.TestCase):
-
   def setUp(self):
     super().setUp()
     self.trainer = DummyTrainer()
@@ -102,7 +100,7 @@ class TpuSummariesTest(tf.test.TestCase):
 
   def test_train_with_tpu_summary_optimization_and_input_signature(self):
     output = self._validate_tpu_summary_optimization(
-        self.trainer.train_with_tpu_summary_optimization_and_input_signature
+      self.trainer.train_with_tpu_summary_optimization_and_input_signature
     )
     self.assertEqual(output, self.trainer.step_counter.numpy())
     function = self.trainer.train_with_tpu_summary_optimization_and_input_signature

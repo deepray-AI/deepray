@@ -22,32 +22,32 @@ from deepray.utils import types
 def sparsemax(logits: types.TensorLike, axis: int = -1) -> tf.Tensor:
   r"""Sparsemax activation function.
 
-    For each batch $i$, and class $j$,
-    compute sparsemax activation function:
+  For each batch $i$, and class $j$,
+  compute sparsemax activation function:
 
-    $$
-    \mathrm{sparsemax}(x)[i, j] = \max(\mathrm{logits}[i, j] - \tau(\mathrm{logits}[i, :]), 0).
-    $$
+  $$
+  \mathrm{sparsemax}(x)[i, j] = \max(\mathrm{logits}[i, j] - \tau(\mathrm{logits}[i, :]), 0).
+  $$
 
-    See [From Softmax to Sparsemax: A Sparse Model of Attention and Multi-Label Classification](https://arxiv.org/abs/1602.02068).
+  See [From Softmax to Sparsemax: A Sparse Model of Attention and Multi-Label Classification](https://arxiv.org/abs/1602.02068).
 
-    Usage:
+  Usage:
 
-    >>> x = tf.constant([[-1.0, 0.0, 1.0], [-5.0, 1.0, 2.0]])
-    >>> dp.activations.sparsemax(x)
-    <tf.Tensor: shape=(2, 3), dtype=float32, numpy=
-    array([[0., 0., 1.],
-           [0., 0., 1.]], dtype=float32)>
+  >>> x = tf.constant([[-1.0, 0.0, 1.0], [-5.0, 1.0, 2.0]])
+  >>> dp.activations.sparsemax(x)
+  <tf.Tensor: shape=(2, 3), dtype=float32, numpy=
+  array([[0., 0., 1.],
+         [0., 0., 1.]], dtype=float32)>
 
-    Args:
-        logits: A `Tensor`.
-        axis: `int`, axis along which the sparsemax operation is applied.
-    Returns:
-        A `Tensor`, output of sparsemax transformation. Has the same type and
-        shape as `logits`.
-    Raises:
-        ValueError: In case `dim(logits) == 1`.
-    """
+  Args:
+      logits: A `Tensor`.
+      axis: `int`, axis along which the sparsemax operation is applied.
+  Returns:
+      A `Tensor`, output of sparsemax transformation. Has the same type and
+      shape as `logits`.
+  Raises:
+      ValueError: In case `dim(logits) == 1`.
+  """
   logits = tf.convert_to_tensor(logits, name="logits")
 
   # We need its original shape for shape inference.
@@ -79,17 +79,17 @@ def sparsemax(logits: types.TensorLike, axis: int = -1) -> tf.Tensor:
 
 def _swap_axis(logits, dim_index, last_index, **kwargs):
   return tf.transpose(
-      logits,
-      tf.concat(
-          [
-              tf.range(dim_index),
-              [last_index],
-              tf.range(dim_index + 1, last_index),
-              [dim_index],
-          ],
-          0,
-      ),
-      **kwargs,
+    logits,
+    tf.concat(
+      [
+        tf.range(dim_index),
+        [last_index],
+        tf.range(dim_index + 1, last_index),
+        [dim_index],
+      ],
+      0,
+    ),
+    **kwargs,
   )
 
 
@@ -136,12 +136,12 @@ def _compute_2d_sparsemax(logits):
   p = tf.math.maximum(tf.cast(0, logits.dtype), z - tf.expand_dims(tau_z, -1))
   # If k_z = 0 or if z = nan, then the input is invalid
   p_safe = tf.where(
-      tf.expand_dims(
-          tf.math.logical_or(tf.math.equal(k_z, 0), tf.math.is_nan(z_cumsum[:, -1])),
-          axis=-1,
-      ),
-      tf.fill([obs, dims], tf.cast(float("nan"), logits.dtype)),
-      p,
+    tf.expand_dims(
+      tf.math.logical_or(tf.math.equal(k_z, 0), tf.math.is_nan(z_cumsum[:, -1])),
+      axis=-1,
+    ),
+    tf.fill([obs, dims], tf.cast(float("nan"), logits.dtype)),
+    p,
   )
 
   # Reshape back to original size

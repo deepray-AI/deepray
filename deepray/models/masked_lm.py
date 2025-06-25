@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -43,59 +44,58 @@ class MaskedLM(tf.keras.Model):
   """
 
   def __init__(
-      self,
-      input_width,
-      num_predictions,
-      source_network,
-      float_type,
-      activation=None,
-      initializer='glorot_uniform',
-      output='logits',
-      **kwargs
+    self,
+    input_width,
+    num_predictions,
+    source_network,
+    float_type,
+    activation=None,
+    initializer="glorot_uniform",
+    output="logits",
+    **kwargs,
   ):
-
     embedding_table = source_network.get_embedding_table()
     vocab_size, hidden_size = embedding_table.shape
 
-    sequence_data = tf.keras.layers.Input(shape=(None, input_width), name='sequence_data', dtype=tf.float32)
-    masked_lm_positions = tf.keras.layers.Input(shape=(num_predictions,), name='masked_lm_positions', dtype=tf.int32)
+    sequence_data = tf.keras.layers.Input(shape=(None, input_width), name="sequence_data", dtype=tf.float32)
+    masked_lm_positions = tf.keras.layers.Input(shape=(num_predictions,), name="masked_lm_positions", dtype=tf.int32)
 
-    masked_lm_input = tf.keras.layers.Lambda(lambda x: self._gather_indexes(x[0], x[1]))(
-        [sequence_data, masked_lm_positions]
+    masked_lm_input = tf.keras.layers.Lambda(lambda x: self._gather_indexes(x[0], x[1]))([
+      sequence_data,
+      masked_lm_positions,
+    ])
+    lm_data = tf.keras.layers.Dense(
+      hidden_size, activation=activation, kernel_initializer=initializer, name="cls/predictions/transform/dense"
+    )(masked_lm_input)
+    lm_data = tf.keras.layers.LayerNormalization(axis=-1, epsilon=1e-12, name="cls/predictions/transform/LayerNorm")(
+      lm_data
     )
-    lm_data = (
-        tf.keras.layers.Dense(
-            hidden_size, activation=activation, kernel_initializer=initializer, name='cls/predictions/transform/dense'
-        )(masked_lm_input)
+    lm_data = tf.keras.layers.Lambda(lambda x: tf.matmul(x, tf.cast(embedding_table, float_type), transpose_b=True))(
+      lm_data
     )
-    lm_data = tf.keras.layers.LayerNormalization(axis=-1, epsilon=1e-12,
-                                                 name='cls/predictions/transform/LayerNorm')(lm_data)
-    lm_data = tf.keras.layers.Lambda(lambda x: tf.matmul(x, tf.cast(embedding_table, float_type), transpose_b=True)
-                                    )(lm_data)
-    logits = Bias(initializer=tf.keras.initializers.Zeros(), name='cls/predictions/output_bias')(lm_data)
+    logits = Bias(initializer=tf.keras.initializers.Zeros(), name="cls/predictions/output_bias")(lm_data)
 
     # We can't use the standard Keras reshape layer here, since it expects
     # the input and output batch size to be the same.
     reshape_layer = tf.keras.layers.Lambda(lambda x: tf.reshape(x, [-1, num_predictions, vocab_size]))
 
     self.logits = reshape_layer(logits)
-    predictions = tf.keras.layers.Activation(tf.nn.log_softmax, dtype='float32')(self.logits)
+    predictions = tf.keras.layers.Activation(tf.nn.log_softmax, dtype="float32")(self.logits)
 
-    if output == 'logits':
+    if output == "logits":
       output_tensors = self.logits
-    elif output == 'predictions':
+    elif output == "predictions":
       output_tensors = predictions
     else:
-      raise ValueError(('Unknown `output` value "%s". `output` can be either "logits" or '
-                        '"predictions"') % output)
+      raise ValueError(('Unknown `output` value "%s". `output` can be either "logits" or "predictions"') % output)
 
     super(MaskedLM, self).__init__(inputs=[sequence_data, masked_lm_positions], outputs=output_tensors, **kwargs)
 
   def get_config(self):
     raise NotImplementedError(
-        'MaskedLM cannot be directly serialized at this '
-        'time. Please use it only in Layers or '
-        'functionally subclassed Models/Networks.'
+      "MaskedLM cannot be directly serialized at this "
+      "time. Please use it only in Layers or "
+      "functionally subclassed Models/Networks."
     )
 
   def _gather_indexes(self, sequence_tensor, positions):
@@ -114,7 +114,7 @@ class MaskedLM(tf.keras.Model):
         Masked out sequence tensor of shape (batch_size * num_predictions,
         num_hidden).
     """
-    sequence_shape = tf_utils.get_shape_list(sequence_tensor, name='sequence_output_tensor')
+    sequence_shape = tf_utils.get_shape_list(sequence_tensor, name="sequence_output_tensor")
     batch_size, seq_length, width = sequence_shape
 
     flat_offsets = tf.keras.backend.reshape(tf.range(0, batch_size, dtype=tf.int32) * seq_length, [-1, 1])
@@ -129,7 +129,7 @@ class MaskedLM(tf.keras.Model):
 class Bias(tf.keras.layers.Layer):
   """Adds a bias term to an input."""
 
-  def __init__(self, initializer='zeros', regularizer=None, constraint=None, activation=None, **kwargs):
+  def __init__(self, initializer="zeros", regularizer=None, constraint=None, activation=None, **kwargs):
     super(Bias, self).__init__(**kwargs)
     self._initializer = tf.keras.initializers.get(initializer)
     self._regularizer = tf.keras.regularizers.get(regularizer)
@@ -139,23 +139,23 @@ class Bias(tf.keras.layers.Layer):
   def build(self, input_shape):
     input_shape = tf.TensorShape(input_shape)
     self._bias = self.add_weight(
-        'bias',
-        shape=input_shape[1:],
-        initializer=self._initializer,
-        regularizer=self._regularizer,
-        constraint=self._constraint,
-        dtype=self._dtype,
-        trainable=True
+      "bias",
+      shape=input_shape[1:],
+      initializer=self._initializer,
+      regularizer=self._regularizer,
+      constraint=self._constraint,
+      dtype=self._dtype,
+      trainable=True,
     )
 
     super(Bias, self).build(input_shape)
 
   def get_config(self):
     config = {
-        'activation': tf.keras.activations.serialize(self._activation),
-        'initializer': tf.keras.initializers.serialize(self._initializer),
-        'regularizer': tf.keras.regularizers.serialize(self._regularizer),
-        'constraint': tf.keras.constraints.serialize(self._constraint)
+      "activation": tf.keras.activations.serialize(self._activation),
+      "initializer": tf.keras.initializers.serialize(self._initializer),
+      "regularizer": tf.keras.regularizers.serialize(self._regularizer),
+      "constraint": tf.keras.constraints.serialize(self._constraint),
     }
     base_config = super(Bias, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))

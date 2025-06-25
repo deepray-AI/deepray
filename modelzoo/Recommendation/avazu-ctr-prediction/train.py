@@ -32,22 +32,20 @@ from deepray.datasets.avazu import Avazu
 
 def main(_):
   field_info = {
-      "user": [
-          'C14', 'C15', 'C16', 'C17', 'C18', 'C19', 'C20', 'C21', 'C1', 'device_model', 'device_type', 'device_id'
-      ],
-      "context": [
-          'banner_pos',
-          'site_id',
-          'site_domain',
-          'site_category',
-          'device_conn_type',
-          'hour',
-      ],
-      "item": [
-          'app_id',
-          'app_domain',
-          'app_category',
-      ]
+    "user": ["C14", "C15", "C16", "C17", "C18", "C19", "C20", "C21", "C1", "device_model", "device_type", "device_id"],
+    "context": [
+      "banner_pos",
+      "site_id",
+      "site_domain",
+      "site_category",
+      "device_conn_type",
+      "hour",
+    ],
+    "item": [
+      "app_id",
+      "app_domain",
+      "app_category",
+    ],
   }
 
   if flags.FLAGS.model_name == "flen":
@@ -69,21 +67,21 @@ def main(_):
   valid_g2b = data_pipe(flags.FLAGS.valid_data, flags.FLAGS.batch_size, is_training=False)
 
   trainer = Trainer(
-      model=model,
-      loss=tf.keras.losses.BinaryCrossentropy(),
-      # optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.03, initial_accumulator_value=1e-3),
-      optimizer=optimizer,
-      metrics=[tf.keras.metrics.AUC()]
+    model=model,
+    loss=tf.keras.losses.BinaryCrossentropy(),
+    # optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.03, initial_accumulator_value=1e-3),
+    optimizer=optimizer,
+    metrics=[tf.keras.metrics.AUC()],
   )
 
   trainer.fit(
-      x=train_dataset,
-      validation_data=valid_g2b,
-      # callbacks=[
-      #   # Write TensorBoard logs to `./logs` directory
-      #   tf.keras.callbacks.TensorBoard(log_dir=FLAGS.model_dir, histogram_freq=1, profile_batch=3),
-      #   # tf.keras.callbacks.ModelCheckpoint(filepath=FLAGS.model_dir),
-      # ]
+    x=train_dataset,
+    validation_data=valid_g2b,
+    # callbacks=[
+    #   # Write TensorBoard logs to `./logs` directory
+    #   tf.keras.callbacks.TensorBoard(log_dir=FLAGS.model_dir, histogram_freq=1, profile_batch=3),
+    #   # tf.keras.callbacks.ModelCheckpoint(filepath=FLAGS.model_dir),
+    # ]
   )
 
 

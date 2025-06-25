@@ -15,12 +15,12 @@ TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 def runner(argv=None):
   if len(argv) <= 1:
     argv = [
-        sys.argv[0],
-        "--batch_size=10",
-        "-epochs=1",
-        "--train_data=movielens/1m-ratings",
-        # f"--feature_map={dir_path}/feature_map.csv",
-        "--label=clicked",
+      sys.argv[0],
+      "--batch_size=10",
+      "-epochs=1",
+      "--train_data=movielens/1m-ratings",
+      # f"--feature_map={dir_path}/feature_map.csv",
+      "--label=clicked",
     ]
   if argv:
     FLAGS(argv, known_only=True)

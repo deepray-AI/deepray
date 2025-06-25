@@ -14,7 +14,6 @@ else:
 
 
 class HvdMetricsContainer(MetricsContainer):
-
   def update_state(self, y_true, y_pred, sample_weight=None):
     """Updates the state of per-output metrics."""
     y_true = self._conform_to_outputs(y_pred, y_true)
@@ -28,11 +27,11 @@ class HvdMetricsContainer(MetricsContainer):
     sample_weight = tf.nest.flatten(sample_weight)
 
     zip_args = (
-        y_true,
-        y_pred,
-        sample_weight,
-        self._metrics,
-        self._weighted_metrics,
+      y_true,
+      y_pred,
+      sample_weight,
+      self._metrics,
+      self._weighted_metrics,
     )
     for y_t, y_p, sw, metric_objs, weighted_metric_objs in zip(*zip_args):
       # Ok to have no metrics for an output.

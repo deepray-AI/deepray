@@ -16,9 +16,11 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 def define_flags():
   argv = sys.argv + [
-      "--batch_size=4096", "--epochs=1", "--dataset=ps_test",
-      "--feature_map=/workspaces/one-code/shadow-tf/datasets/feature_map.csv",
-      "--config_file=/workspaces/one-code/shadow-tf/train_feature_process.yaml"
+    "--batch_size=4096",
+    "--epochs=1",
+    "--dataset=ps_test",
+    "--feature_map=/workspaces/one-code/shadow-tf/datasets/feature_map.csv",
+    "--config_file=/workspaces/one-code/shadow-tf/train_feature_process.yaml",
   ]
   flags.FLAGS(argv)
 
@@ -26,10 +28,10 @@ def define_flags():
 def main():
   define_flags()
   filenames = [
-      "/workspaces/datasets/00000-1-038360cf-9d9d-454c-8381-6a57bdbf6d57-00001.parquet",
-      "/workspaces/datasets/01799-1800-26382079-2024-439e-84bf-e7b2231e0a2f-00001.parquet",
+    "/workspaces/datasets/00000-1-038360cf-9d9d-454c-8381-6a57bdbf6d57-00001.parquet",
+    "/workspaces/datasets/01799-1800-26382079-2024-439e-84bf-e7b2231e0a2f-00001.parquet",
   ]
-  data_pipe = ParquetPipeline(column_names=['f_c0', 'f_c1', 'f_c14'])
+  data_pipe = ParquetPipeline(column_names=["f_c0", "f_c1", "f_c14"])
   # create data pipline of train & test dataset
   train_dataset = data_pipe(batch_size=flags.FLAGS.batch_size, input_file_pattern=filenames, is_training=True)
   _performance_calculator = PerformanceCalculator(0, 1000)
@@ -40,7 +42,7 @@ def main():
     step += 1
     num_examples += flags.FLAGS.batch_size
     step_throughput = _performance_calculator(1, flags.FLAGS.batch_size)
-    print(f'step {step}, Perf {step_throughput} samples/s')
+    print(f"step {step}, Perf {step_throughput} samples/s")
   print(batch)
 
   print(num_examples)

@@ -82,7 +82,7 @@ try:
   torch_cache_home = _get_torch_home()
 except ImportError:
   torch_cache_home = os.path.expanduser(
-      os.getenv("TORCH_HOME", os.path.join(os.getenv("XDG_CACHE_HOME", "~/.cache"), "torch"))
+    os.getenv("TORCH_HOME", os.path.join(os.getenv("XDG_CACHE_HOME", "~/.cache"), "torch"))
   )
 default_cache_path = os.path.join(torch_cache_home, "transformers")
 
@@ -90,11 +90,11 @@ try:
   from pathlib import Path
 
   PYTORCH_PRETRAINED_BERT_CACHE = Path(
-      os.getenv("PYTORCH_TRANSFORMERS_CACHE", os.getenv("PYTORCH_PRETRAINED_BERT_CACHE", default_cache_path))
+    os.getenv("PYTORCH_TRANSFORMERS_CACHE", os.getenv("PYTORCH_PRETRAINED_BERT_CACHE", default_cache_path))
   )
 except (AttributeError, ImportError):
   PYTORCH_PRETRAINED_BERT_CACHE = os.getenv(
-      "PYTORCH_TRANSFORMERS_CACHE", os.getenv("PYTORCH_PRETRAINED_BERT_CACHE", default_cache_path)
+    "PYTORCH_TRANSFORMERS_CACHE", os.getenv("PYTORCH_PRETRAINED_BERT_CACHE", default_cache_path)
   )
 
 PYTORCH_TRANSFORMERS_CACHE = PYTORCH_PRETRAINED_BERT_CACHE  # Kept for backward compatibility
@@ -123,7 +123,6 @@ def is_tf_available():
 
 
 def add_start_docstrings(*docstr):
-
   def docstring_decorator(fn):
     fn.__doc__ = "".join(docstr) + (fn.__doc__ if fn.__doc__ is not None else "")
     return fn
@@ -132,7 +131,6 @@ def add_start_docstrings(*docstr):
 
 
 def add_start_docstrings_to_callable(*docstr):
-
   def docstring_decorator(fn):
     class_name = ":class:`~transformers.{}`".format(fn.__qualname__.split(".")[0])
     intro = "   The {} forward method, overrides the :func:`__call__` special method.".format(class_name)
@@ -151,7 +149,6 @@ def add_start_docstrings_to_callable(*docstr):
 
 
 def add_end_docstrings(*docstr):
-
   def docstring_decorator(fn):
     fn.__doc__ = fn.__doc__ + "".join(docstr)
     return fn
@@ -174,13 +171,13 @@ def hf_bucket_url(identifier, postfix=None, cdn=False) -> str:
 
 def url_to_filename(url, etag=None):
   """
-    Convert `url` into a hashed filename in a repeatable way.
-    If `etag` is specified, append its hash to the url's, delimited
-    by a period.
-    If the url ends with .h5 (Keras HDF5 weights) adds '.h5' to the name
-    so that TF 2.0 can identify it as a HDF5 file
-    (see https://github.com/tensorflow/tensorflow/blob/00fad90125b18b80fe054de1055770cfb8fe4ba3/tensorflow/python/keras/engine/network.py#L1380)
-    """
+  Convert `url` into a hashed filename in a repeatable way.
+  If `etag` is specified, append its hash to the url's, delimited
+  by a period.
+  If the url ends with .h5 (Keras HDF5 weights) adds '.h5' to the name
+  so that TF 2.0 can identify it as a HDF5 file
+  (see https://github.com/tensorflow/tensorflow/blob/00fad90125b18b80fe054de1055770cfb8fe4ba3/tensorflow/python/keras/engine/network.py#L1380)
+  """
   url_bytes = url.encode("utf-8")
   url_hash = sha256(url_bytes)
   filename = url_hash.hexdigest()
@@ -198,9 +195,9 @@ def url_to_filename(url, etag=None):
 
 def filename_to_url(filename, cache_dir=None):
   """
-    Return the url and etag (which may be ``None``) stored for `filename`.
-    Raise ``EnvironmentError`` if `filename` or its stored metadata do not exist.
-    """
+  Return the url and etag (which may be ``None``) stored for `filename`.
+  Raise ``EnvironmentError`` if `filename` or its stored metadata do not exist.
+  """
   if cache_dir is None:
     cache_dir = TRANSFORMERS_CACHE
   if isinstance(cache_dir, Path):
@@ -223,35 +220,35 @@ def filename_to_url(filename, cache_dir=None):
 
 
 def cached_path(
-    url_or_filename,
-    cache_dir=None,
-    force_download=False,
-    proxies=None,
-    resume_download=False,
-    user_agent=None,
-    extract_compressed_file=False,
-    force_extract=False,
-    local_files_only=False,
+  url_or_filename,
+  cache_dir=None,
+  force_download=False,
+  proxies=None,
+  resume_download=False,
+  user_agent=None,
+  extract_compressed_file=False,
+  force_extract=False,
+  local_files_only=False,
 ) -> Optional[str]:
   """
-    Given something that might be a URL (or might be a local path),
-    determine which. If it's a URL, download the file and cache it, and
-    return the path to the cached file. If it's already a local path,
-    make sure the file exists and then return the path.
-    Args:
-        cache_dir: specify a cache directory to save the file to (overwrite the default cache dir).
-        force_download: if True, re-dowload the file even if it's already cached in the cache dir.
-        resume_download: if True, resume the download if incompletly recieved file is found.
-        user_agent: Optional string or dict that will be appended to the user-agent on remote requests.
-        extract_compressed_file: if True and the path point to a zip or tar file, extract the compressed
-            file in a folder along the archive.
-        force_extract: if True when extract_compressed_file is True and the archive was already extracted,
-            re-extract the archive and overide the folder where it was extracted.
+  Given something that might be a URL (or might be a local path),
+  determine which. If it's a URL, download the file and cache it, and
+  return the path to the cached file. If it's already a local path,
+  make sure the file exists and then return the path.
+  Args:
+      cache_dir: specify a cache directory to save the file to (overwrite the default cache dir).
+      force_download: if True, re-dowload the file even if it's already cached in the cache dir.
+      resume_download: if True, resume the download if incompletly recieved file is found.
+      user_agent: Optional string or dict that will be appended to the user-agent on remote requests.
+      extract_compressed_file: if True and the path point to a zip or tar file, extract the compressed
+          file in a folder along the archive.
+      force_extract: if True when extract_compressed_file is True and the archive was already extracted,
+          re-extract the archive and overide the folder where it was extracted.
 
-    Return:
-        None in case of non-recoverable file (non-existent or inaccessible url + no cache on disk).
-        Local path (string) otherwise
-    """
+  Return:
+      None in case of non-recoverable file (non-existent or inaccessible url + no cache on disk).
+      Local path (string) otherwise
+  """
   if cache_dir is None:
     cache_dir = TRANSFORMERS_CACHE
   if isinstance(url_or_filename, Path):
@@ -262,13 +259,13 @@ def cached_path(
   if is_remote_url(url_or_filename):
     # URL, so get it from the cache (downloading if necessary)
     output_path = get_from_cache(
-        url_or_filename,
-        cache_dir=cache_dir,
-        force_download=force_download,
-        proxies=proxies,
-        resume_download=resume_download,
-        user_agent=user_agent,
-        local_files_only=local_files_only,
+      url_or_filename,
+      cache_dir=cache_dir,
+      force_download=force_download,
+      proxies=proxies,
+      resume_download=resume_download,
+      user_agent=user_agent,
+      local_files_only=local_files_only,
     )
   elif os.path.exists(url_or_filename):
     # File, and it exists.
@@ -329,9 +326,9 @@ def split_s3_path(url):
 
 def s3_request(func):
   """
-    Wrapper function for s3 requests in order to create more helpful error
-    messages.
-    """
+  Wrapper function for s3 requests in order to create more helpful error
+  messages.
+  """
 
   @wraps(func)
   def wrapper(url, *args, **kwargs):
@@ -382,12 +379,12 @@ def http_get(url, temp_file, proxies=None, resume_size=0, user_agent=None):
   content_length = response.headers.get("Content-Length")
   total = resume_size + int(content_length) if content_length is not None else None
   progress = tqdm(
-      unit="B",
-      unit_scale=True,
-      total=total,
-      initial=resume_size,
-      desc="Downloading",
-      disable=bool(logger.getEffectiveLevel() == logging.NOTSET),
+    unit="B",
+    unit_scale=True,
+    total=total,
+    initial=resume_size,
+    desc="Downloading",
+    disable=bool(logger.getEffectiveLevel() == logging.NOTSET),
   )
   for chunk in response.iter_content(chunk_size=1024):
     if chunk:  # filter out keep-alive new chunks
@@ -397,23 +394,23 @@ def http_get(url, temp_file, proxies=None, resume_size=0, user_agent=None):
 
 
 def get_from_cache(
-    url,
-    cache_dir=None,
-    force_download=False,
-    proxies=None,
-    etag_timeout=10,
-    resume_download=False,
-    user_agent=None,
-    local_files_only=False,
+  url,
+  cache_dir=None,
+  force_download=False,
+  proxies=None,
+  etag_timeout=10,
+  resume_download=False,
+  user_agent=None,
+  local_files_only=False,
 ) -> Optional[str]:
   """
-    Given a URL, look for the corresponding file in the local cache.
-    If it's not there, download it. Then return the path to the cached file.
+  Given a URL, look for the corresponding file in the local cache.
+  If it's not there, download it. Then return the path to the cached file.
 
-    Return:
-        None in case of non-recoverable file (non-existent or inaccessible url + no cache on disk).
-        Local path (string) otherwise
-    """
+  Return:
+      None in case of non-recoverable file (non-existent or inaccessible url + no cache on disk).
+      Local path (string) otherwise
+  """
   if cache_dir is None:
     cache_dir = TRANSFORMERS_CACHE
   if isinstance(cache_dir, Path):
@@ -447,8 +444,9 @@ def get_from_cache(
       return cache_path
     else:
       matching_files = [
-          file for file in fnmatch.filter(os.listdir(cache_dir), filename + ".*")
-          if not file.endswith(".json") and not file.endswith(".lock")
+        file
+        for file in fnmatch.filter(os.listdir(cache_dir), filename + ".*")
+        if not file.endswith(".json") and not file.endswith(".lock")
       ]
       if len(matching_files) > 0:
         return os.path.join(cache_dir, matching_files[-1])
@@ -458,9 +456,9 @@ def get_from_cache(
         # Notify the user about that
         if local_files_only:
           raise ValueError(
-              "Cannot find the requested files in the cached path and outgoing traffic has been"
-              " disabled. To enable model look-ups and downloads online, set 'local_files_only'"
-              " to False."
+            "Cannot find the requested files in the cached path and outgoing traffic has been"
+            " disabled. To enable model look-ups and downloads online, set 'local_files_only'"
+            " to False."
           )
         return None
 
@@ -471,7 +469,6 @@ def get_from_cache(
   # Prevent parallel downloads of the same file with a lock.
   lock_path = cache_path + ".lock"
   with FileLock(lock_path):
-
     if resume_download:
       incomplete_path = cache_path + ".incomplete"
 

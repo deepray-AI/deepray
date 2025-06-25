@@ -29,7 +29,7 @@ from deepray.metrics import utils
 
 _DEFAULT_GAIN_FN = lambda label: tf.pow(2.0, label) - 1
 
-_DEFAULT_RANK_DISCOUNT_FN = lambda rank: tf.math.log(2.) / tf.math.log1p(rank)
+_DEFAULT_RANK_DISCOUNT_FN = lambda rank: tf.math.log(2.0) / tf.math.log1p(rank)
 
 
 def _alpha_dcg_gain_fn(labels, alpha):
@@ -92,28 +92,29 @@ def _per_example_weights_to_per_list_weights(weights, relevance):
   nonzero_weights = tf.greater(tf.reduce_sum(input_tensor=weights, axis=1, keepdims=True), 0.0)
   per_list_relevance = tf.reduce_sum(input_tensor=relevance, axis=1, keepdims=True)
   nonzero_relevance = tf.compat.v1.where(
-      nonzero_weights, tf.cast(tf.greater(per_list_relevance, 0.0), tf.float32), tf.zeros_like(per_list_relevance)
+    nonzero_weights, tf.cast(tf.greater(per_list_relevance, 0.0), tf.float32), tf.zeros_like(per_list_relevance)
   )
   nonzero_relevance_count = tf.reduce_sum(input_tensor=nonzero_relevance, axis=0, keepdims=True)
 
   per_list_weights = tf.compat.v1.math.divide_no_nan(
-      tf.reduce_sum(input_tensor=weights * relevance, axis=1, keepdims=True), per_list_relevance
+    tf.reduce_sum(input_tensor=weights * relevance, axis=1, keepdims=True), per_list_relevance
   )
   sum_weights = tf.reduce_sum(input_tensor=per_list_weights, axis=0, keepdims=True)
 
   avg_weight = tf.compat.v1.where(
-      tf.greater(nonzero_relevance_count, 0.0), tf.compat.v1.math.divide_no_nan(sum_weights, nonzero_relevance_count),
-      tf.ones_like(nonzero_relevance_count)
+    tf.greater(nonzero_relevance_count, 0.0),
+    tf.compat.v1.math.divide_no_nan(sum_weights, nonzero_relevance_count),
+    tf.ones_like(nonzero_relevance_count),
   )
   return tf.compat.v1.where(
-      nonzero_weights,
-      tf.where(tf.greater(per_list_relevance, 0.0), per_list_weights,
-               tf.ones_like(per_list_weights) * avg_weight), tf.zeros_like(per_list_weights)
+    nonzero_weights,
+    tf.where(tf.greater(per_list_relevance, 0.0), per_list_weights, tf.ones_like(per_list_weights) * avg_weight),
+    tf.zeros_like(per_list_weights),
   )
 
 
 def _discounted_cumulative_gain(
-    labels, weights=None, gain_fn=_DEFAULT_GAIN_FN, rank_discount_fn=_DEFAULT_RANK_DISCOUNT_FN
+  labels, weights=None, gain_fn=_DEFAULT_GAIN_FN, rank_discount_fn=_DEFAULT_RANK_DISCOUNT_FN
 ):
   """Computes discounted cumulative gain (DCG).
 
@@ -161,8 +162,8 @@ def _per_list_recall(labels, predictions, topn, mask):
   topn_positives = tf.cast(tf.greater_equal(sorted_labels, 1.0), dtype=tf.float32)
   labels = tf.cast(tf.greater_equal(labels, 1.0), dtype=tf.float32)
   per_list_recall = tf.compat.v1.math.divide_no_nan(
-      tf.reduce_sum(input_tensor=topn_positives, axis=1, keepdims=True),
-      tf.reduce_sum(input_tensor=labels, axis=1, keepdims=True)
+    tf.reduce_sum(input_tensor=topn_positives, axis=1, keepdims=True),
+    tf.reduce_sum(input_tensor=labels, axis=1, keepdims=True),
   )
   return per_list_recall
 
@@ -190,7 +191,7 @@ def _per_list_precision(labels, predictions, topn, mask):
     topn = tf.shape(relevance)[1]
   valid_topn = tf.minimum(topn, tf.reduce_sum(tf.cast(mask, dtype=tf.int32), axis=1, keepdims=True))
   per_list_precision = tf.compat.v1.math.divide_no_nan(
-      tf.reduce_sum(input_tensor=relevance, axis=1, keepdims=True), tf.cast(valid_topn, dtype=tf.float32)
+    tf.reduce_sum(input_tensor=relevance, axis=1, keepdims=True), tf.cast(valid_topn, dtype=tf.float32)
   )
   return per_list_precision
 
@@ -211,7 +212,7 @@ class _RankingMetric(six.with_metaclass(abc.ABCMeta, object)):
   @abc.abstractproperty
   def name(self):
     """The metric name."""
-    raise NotImplementedError('Calling an abstract method.')
+    raise NotImplementedError("Calling an abstract method.")
 
   def _prepare_and_validate_params(self, labels, predictions, weights, mask):
     """Prepares and validates the parameters.
@@ -232,8 +233,7 @@ class _RankingMetric(six.with_metaclass(abc.ABCMeta, object)):
     """
     if any(isinstance(tensor, tf.RaggedTensor) for tensor in [labels, predictions, weights]):
       raise ValueError(
-          'labels, predictions and/or weights are ragged tensors, '
-          'use ragged=True to enable ragged support for metrics.'
+        "labels, predictions and/or weights are ragged tensors, use ragged=True to enable ragged support for metrics."
       )
     labels = tf.convert_to_tensor(value=labels)
     predictions = tf.convert_to_tensor(value=predictions)
@@ -249,8 +249,9 @@ class _RankingMetric(six.with_metaclass(abc.ABCMeta, object)):
     mask = tf.math.logical_and(mask, tf.math.greater(example_weights, 0.0))
     labels = tf.compat.v1.where(mask, labels, tf.zeros_like(labels))
     predictions = tf.compat.v1.where(
-        mask, predictions,
-        -1e-6 * tf.ones_like(predictions) + tf.reduce_min(input_tensor=predictions, axis=1, keepdims=True)
+      mask,
+      predictions,
+      -1e-6 * tf.ones_like(predictions) + tf.reduce_min(input_tensor=predictions, axis=1, keepdims=True),
     )
     return labels, predictions, example_weights, mask
 
@@ -294,7 +295,7 @@ class _RankingMetric(six.with_metaclass(abc.ABCMeta, object)):
     Returns:
       A tf metric.
     """
-    raise NotImplementedError('Calling an abstract method.')
+    raise NotImplementedError("Calling an abstract method.")
 
 
 class _DivRankingMetric(_RankingMetric):
@@ -359,12 +360,13 @@ class _DivRankingMetric(_RankingMetric):
     if mask.get_shape().rank == 3:
       mask = tf.reduce_any(mask, axis=2)
     predictions = tf.where(
-        mask, predictions,
-        -1e-6 * tf.ones_like(predictions) + tf.reduce_min(input_tensor=predictions, axis=1, keepdims=True)
+      mask,
+      predictions,
+      -1e-6 * tf.ones_like(predictions) + tf.reduce_min(input_tensor=predictions, axis=1, keepdims=True),
     )
     # All labels should be >= 0. Invalid entries are reset.
     labels = tf.where(tf.expand_dims(mask, axis=2), labels, tf.zeros_like(labels))
-    weights = (tf.constant(1.0, dtype=tf.float32) if weights is None else tf.convert_to_tensor(value=weights))
+    weights = tf.constant(1.0, dtype=tf.float32) if weights is None else tf.convert_to_tensor(value=weights)
     example_weights = tf.ones_like(predictions) * weights
 
     return labels, predictions, example_weights, mask
@@ -383,7 +385,7 @@ class _DivRankingMetric(_RankingMetric):
     # per_list_weights are computed from the whole list to avoid the problem of
     # 0 when there is no relevant example in topn.
     return _per_example_weights_to_per_list_weights(
-        weights, tf.cast(tf.reduce_any(tf.greater_equal(labels, 1.0), axis=-1), dtype=tf.float32)
+      weights, tf.cast(tf.reduce_any(tf.greater_equal(labels, 1.0), axis=-1), dtype=tf.float32)
     )
 
   def _compute_impl(self, labels, predictions, weights, mask):
@@ -425,7 +427,7 @@ class MRRMetric(_RankingMetric):
   def _compute_impl(self, labels, predictions, weights, mask):
     """See `_RankingMetric`."""
     topn = tf.shape(predictions)[1] if self._topn is None else self._topn
-    sorted_labels, = utils.sort_by_scores(predictions, [labels], topn=topn, mask=mask)
+    (sorted_labels,) = utils.sort_by_scores(predictions, [labels], topn=topn, mask=mask)
     sorted_list_size = tf.shape(input=sorted_labels)[1]
     # Relevance = 1.0 when labels >= 1.0 to accommodate graded relevance.
     relevance = tf.cast(tf.greater_equal(sorted_labels, 1.0), dtype=tf.float32)
@@ -433,7 +435,7 @@ class MRRMetric(_RankingMetric):
     # MRR has a shape of [batch_size, 1].
     mrr = tf.reduce_max(input_tensor=relevance * reciprocal_rank, axis=1, keepdims=True)
     per_list_weights = _per_example_weights_to_per_list_weights(
-        weights=weights, relevance=tf.cast(tf.greater_equal(labels, 1.0), dtype=tf.float32)
+      weights=weights, relevance=tf.cast(tf.greater_equal(labels, 1.0), dtype=tf.float32)
     )
     return mrr, per_list_weights
 
@@ -461,8 +463,7 @@ class HitsMetric(_RankingMetric):
     self._name = name
     if topn is None:
       tf.compat.v1.logging.warning(
-          'Hits metric without `topn` specified could be trivial. '
-          'Consider specify `topn` for Hits metric.'
+        "Hits metric without `topn` specified could be trivial. Consider specify `topn` for Hits metric."
       )
     self._topn = topn
 
@@ -474,13 +475,13 @@ class HitsMetric(_RankingMetric):
   def _compute_impl(self, labels, predictions, weights, mask):
     """See `_RankingMetric`."""
     topn = tf.shape(predictions)[1] if self._topn is None else self._topn
-    sorted_labels, = utils.sort_by_scores(predictions, [labels], topn=topn, mask=mask)
+    (sorted_labels,) = utils.sort_by_scores(predictions, [labels], topn=topn, mask=mask)
     # Relevance = 1.0 when labels >= 1.0 to accommodate graded relevance.
     relevance = tf.cast(tf.greater_equal(sorted_labels, 1.0), dtype=tf.float32)
     # Hits has a shape of [batch_size, 1].
     hits = tf.reduce_max(input_tensor=relevance, axis=1, keepdims=True)
     per_list_weights = _per_example_weights_to_per_list_weights(
-        weights=weights, relevance=tf.cast(tf.greater_equal(labels, 1.0), dtype=tf.float32)
+      weights=weights, relevance=tf.cast(tf.greater_equal(labels, 1.0), dtype=tf.float32)
     )
     return hits, per_list_weights
 
@@ -503,10 +504,10 @@ class ARPMetric(_RankingMetric):
     topn = tf.shape(predictions)[1]
     sorted_labels, sorted_weights = utils.sort_by_scores(predictions, [labels, weights], topn=topn, mask=mask)
     weighted_labels = sorted_labels * sorted_weights
-    position = (tf.cast(tf.range(1, topn + 1), dtype=tf.float32) * tf.ones_like(weighted_labels))
+    position = tf.cast(tf.range(1, topn + 1), dtype=tf.float32) * tf.ones_like(weighted_labels)
     per_list_weights = tf.reduce_sum(weighted_labels, axis=1, keepdims=True)
     per_list_arp = tf.compat.v1.div_no_nan(
-        tf.reduce_sum(position * weighted_labels, axis=1, keepdims=True), per_list_weights
+      tf.reduce_sum(position * weighted_labels, axis=1, keepdims=True), per_list_weights
     )
     # TODO: Consider to add a cap position topn + 1 when there is no
     # relevant examples.
@@ -534,7 +535,7 @@ class RecallMetric(_RankingMetric):
     # per_list_weights are computed from the whole list to avoid the problem of
     # 0 when there is no relevant example in topn.
     per_list_weights = _per_example_weights_to_per_list_weights(
-        weights, tf.cast(tf.greater_equal(labels, 1.0), dtype=tf.float32)
+      weights, tf.cast(tf.greater_equal(labels, 1.0), dtype=tf.float32)
     )
     return per_list_recall, per_list_weights
 
@@ -560,7 +561,7 @@ class PrecisionMetric(_RankingMetric):
     # per_list_weights are computed from the whole list to avoid the problem of
     # 0 when there is no relevant example in topn.
     per_list_weights = _per_example_weights_to_per_list_weights(
-        weights, tf.cast(tf.greater_equal(labels, 1.0), dtype=tf.float32)
+      weights, tf.cast(tf.greater_equal(labels, 1.0), dtype=tf.float32)
     )
     return per_list_precision, per_list_weights
 
@@ -589,7 +590,7 @@ class MeanAveragePrecisionMetric(_RankingMetric):
     per_list_cutoffs = tf.cumsum(tf.ones_like(sorted_relevance), axis=1)
     per_list_precisions = tf.math.divide_no_nan(per_list_relevant_counts, per_list_cutoffs)
     total_precision = tf.reduce_sum(
-        input_tensor=per_list_precisions * sorted_weights * sorted_relevance, axis=1, keepdims=True
+      input_tensor=per_list_precisions * sorted_weights * sorted_relevance, axis=1, keepdims=True
     )
 
     # Compute the total relevance regardless of self._topn.
@@ -626,14 +627,14 @@ class NDCGMetric(_RankingMetric):
     # Sorting over the weighted gains to get ideal ranking.
     weighted_gains = weights * self._gain_fn(tf.cast(labels, dtype=tf.float32))
     ideal_sorted_labels, ideal_sorted_weights = utils.sort_by_scores(
-        weighted_gains, [labels, weights], topn=topn, mask=mask
+      weighted_gains, [labels, weights], topn=topn, mask=mask
     )
     ideal_dcg = _discounted_cumulative_gain(
-        ideal_sorted_labels, ideal_sorted_weights, self._gain_fn, self._rank_discount_fn
+      ideal_sorted_labels, ideal_sorted_weights, self._gain_fn, self._rank_discount_fn
     )
     per_list_ndcg = tf.compat.v1.math.divide_no_nan(dcg, ideal_dcg)
     per_list_weights = _per_example_weights_to_per_list_weights(
-        weights=weights, relevance=self._gain_fn(tf.cast(labels, dtype=tf.float32))
+      weights=weights, relevance=self._gain_fn(tf.cast(labels, dtype=tf.float32))
     )
     return per_list_ndcg, per_list_weights
 
@@ -660,7 +661,7 @@ class DCGMetric(_RankingMetric):
     sorted_labels, sorted_weights = utils.sort_by_scores(predictions, [labels, weights], topn=topn, mask=mask)
     dcg = _discounted_cumulative_gain(sorted_labels, sorted_weights, self._gain_fn, self._rank_discount_fn)
     per_list_weights = _per_example_weights_to_per_list_weights(
-        weights=weights, relevance=self._gain_fn(tf.cast(labels, dtype=tf.float32))
+      weights=weights, relevance=self._gain_fn(tf.cast(labels, dtype=tf.float32))
     )
     per_list_dcg = tf.compat.v1.math.divide_no_nan(dcg, per_list_weights)
     return per_list_dcg, per_list_weights
@@ -687,11 +688,14 @@ class OPAMetric(_RankingMetric):
     # Correct pairs are represented twice in the above pair difference tensors.
     # We only take one copy for each pair.
     correct_pairs = tf.cast(pair_label_diff > 0, dtype=tf.float32) * tf.cast(pair_pred_diff > 0, dtype=tf.float32)
-    pair_weights = tf.cast(pair_label_diff > 0,
-                           dtype=tf.float32) * tf.expand_dims(weights, 2) * tf.cast(valid_pair, dtype=tf.float32)
+    pair_weights = (
+      tf.cast(pair_label_diff > 0, dtype=tf.float32)
+      * tf.expand_dims(weights, 2)
+      * tf.cast(valid_pair, dtype=tf.float32)
+    )
     per_list_weights = tf.expand_dims(tf.reduce_sum(pair_weights, axis=[1, 2]), 1)
     per_list_opa = tf.compat.v1.math.divide_no_nan(
-        tf.expand_dims(tf.reduce_sum(correct_pairs * pair_weights, axis=[1, 2]), 1), per_list_weights
+      tf.expand_dims(tf.reduce_sum(correct_pairs * pair_weights, axis=[1, 2]), 1), per_list_weights
     )
     return per_list_opa, per_list_weights
 
@@ -715,15 +719,15 @@ class PrecisionIAMetric(_DivRankingMetric):
     relevance = tf.reduce_sum(tf.cast(tf.greater_equal(sorted_labels, 1.0), dtype=tf.float32), axis=-1)
     # num_subtopics shape = [batch_size, 1].
     num_subtopics = tf.reduce_sum(
-        tf.cast(tf.reduce_any(tf.greater_equal(labels, 1.0), axis=1, keepdims=True), dtype=tf.float32), axis=-1
+      tf.cast(tf.reduce_any(tf.greater_equal(labels, 1.0), axis=1, keepdims=True), dtype=tf.float32), axis=-1
     )
     if topn is None:
       topn = tf.shape(relevance)[1]
     # valid_topn shape = [batch_size, 1].
     valid_topn = tf.minimum(topn, tf.reduce_sum(tf.cast(mask, dtype=tf.int32), axis=1, keepdims=True))
     return tf.compat.v1.math.divide_no_nan(
-        tf.reduce_sum(input_tensor=relevance, axis=1, keepdims=True),
-        tf.reduce_sum(input_tensor=tf.cast(valid_topn, dtype=tf.float32) * num_subtopics, axis=1, keepdims=True)
+      tf.reduce_sum(input_tensor=relevance, axis=1, keepdims=True),
+      tf.reduce_sum(input_tensor=tf.cast(valid_topn, dtype=tf.float32) * num_subtopics, axis=1, keepdims=True),
     )
 
 
@@ -753,7 +757,7 @@ class AlphaDCGMetric(_DivRankingMetric):
   def _compute_per_list_metric(self, labels, predictions, weights, topn, mask):
     """See `_DivRankingMetric`."""
     sorted_labels, sorted_weights = utils.sort_by_scores(
-        predictions, [labels, weights], topn=topn, seed=self._seed, mask=mask
+      predictions, [labels, weights], topn=topn, seed=self._seed, mask=mask
     )
     alpha_dcg = _discounted_cumulative_gain(sorted_labels, sorted_weights, self._gain_fn, self._rank_discount_fn)
     per_list_weights = self._compute_per_list_weights(weights, labels)
@@ -816,19 +820,19 @@ class BPrefMetric(_RankingMetric):
     total_irrelevance = tf.reduce_sum(irrelevance, axis=1, keepdims=True)
 
     sorted_relevance, sorted_irrelevance = utils.sort_by_scores(
-        predictions, [relevance, irrelevance], mask=mask, topn=topn
+      predictions, [relevance, irrelevance], mask=mask, topn=topn
     )
 
     numerator = tf.minimum(tf.cumsum(sorted_irrelevance, axis=1), total_relevance)
     denominator = tf.minimum(total_irrelevance, total_relevance) if self._use_trec_version else total_relevance
 
     bpref = tf.math.divide_no_nan(
-        tf.reduce_sum(((1. - tf.math.divide_no_nan(numerator, denominator)) * sorted_relevance), axis=1, keepdims=True),
-        total_relevance
+      tf.reduce_sum(((1.0 - tf.math.divide_no_nan(numerator, denominator)) * sorted_relevance), axis=1, keepdims=True),
+      total_relevance,
     )
 
     per_list_weights = _per_example_weights_to_per_list_weights(
-        weights=weights, relevance=tf.cast(tf.greater_equal(relevance, 1.0), dtype=tf.float32)
+      weights=weights, relevance=tf.cast(tf.greater_equal(relevance, 1.0), dtype=tf.float32)
     )
 
     return bpref, per_list_weights
@@ -871,8 +875,7 @@ class PWAMetric(_RankingMetric):
       predictions_tensor = tf.convert_to_tensor(value=predictions)
       expected_shape = tf.zeros([tf.shape(predictions_tensor)[0], 1])
       if not weights_tensor.shape.is_compatible_with(expected_shape.shape):
-        raise ValueError('Weights should be a `Tensor` of the shape'
-                         '[batch_size, 1]')
+        raise ValueError("Weights should be a `Tensor` of the shape[batch_size, 1]")
     return super().compute(labels, predictions, weights, mask)
 
   def _compute_impl(self, labels, predictions, weights, mask):
@@ -882,10 +885,10 @@ class PWAMetric(_RankingMetric):
 
     sorted_list_size = tf.shape(input=sorted_labels)[1]
     position_weights = 1.0 / tf.cast(tf.range(1, sorted_list_size + 1), dtype=tf.float32)
-    masked_position_weights = (tf.cast(sorted_mask, dtype=tf.float32) * position_weights)
+    masked_position_weights = tf.cast(sorted_mask, dtype=tf.float32) * position_weights
     pwa = tf.compat.v1.math.divide_no_nan(
-        tf.reduce_sum(input_tensor=tf.multiply(sorted_labels, masked_position_weights), axis=1, keepdims=True),
-        tf.reduce_sum(input_tensor=masked_position_weights, axis=1, keepdims=True)
+      tf.reduce_sum(input_tensor=tf.multiply(sorted_labels, masked_position_weights), axis=1, keepdims=True),
+      tf.reduce_sum(input_tensor=masked_position_weights, axis=1, keepdims=True),
     )
     # Weights list should come in with size [batch_size, 1], then will be
     # expanded out to [batch_size, list_size] in the

@@ -10,8 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""AdamAsync optimizer for Deepray. 
-"""
+"""AdamAsync optimizer for Deepray."""
 
 from __future__ import absolute_import, division, print_function
 
@@ -48,29 +47,29 @@ class AdamAsync(tf.keras.optimizers.legacy.Adam):
       self.add_slot(var, "v", slot_config=SlotConfig(slot_index=2, slot_num=2))
       if isinstance(var, kv_variable_ops.EmbeddingVariable):
         self.add_slot(
-            var,
-            slot_name="beta1_power",
-            initializer=array_ops.expand_dims(self._get_hyper("beta_1", var.dtype.base_dtype), -1),
-            slot_config=SlotConfig(slot_type=config_pb2.SlotType.VARIABLE)
+          var,
+          slot_name="beta1_power",
+          initializer=array_ops.expand_dims(self._get_hyper("beta_1", var.dtype.base_dtype), -1),
+          slot_config=SlotConfig(slot_type=config_pb2.SlotType.VARIABLE),
         )
         self.add_slot(
-            var,
-            slot_name="beta2_power",
-            initializer=array_ops.expand_dims(self._get_hyper("beta_2", var.dtype.base_dtype), -1),
-            slot_config=SlotConfig(slot_type=config_pb2.SlotType.VARIABLE)
+          var,
+          slot_name="beta2_power",
+          initializer=array_ops.expand_dims(self._get_hyper("beta_2", var.dtype.base_dtype), -1),
+          slot_config=SlotConfig(slot_type=config_pb2.SlotType.VARIABLE),
         )
       else:
         self.add_slot(
-            var,
-            slot_name="beta1_power",
-            initializer=self._get_hyper("beta_1", var.dtype.base_dtype),
-            slot_config=SlotConfig(slot_type=config_pb2.SlotType.VARIABLE)
+          var,
+          slot_name="beta1_power",
+          initializer=self._get_hyper("beta_1", var.dtype.base_dtype),
+          slot_config=SlotConfig(slot_type=config_pb2.SlotType.VARIABLE),
         )
         self.add_slot(
-            var,
-            slot_name="beta2_power",
-            initializer=self._get_hyper("beta_2", var.dtype.base_dtype),
-            slot_config=SlotConfig(slot_type=config_pb2.SlotType.VARIABLE)
+          var,
+          slot_name="beta2_power",
+          initializer=self._get_hyper("beta_2", var.dtype.base_dtype),
+          slot_config=SlotConfig(slot_type=config_pb2.SlotType.VARIABLE),
         )
     if self.amsgrad:
       for var in var_list:
@@ -88,99 +87,97 @@ class AdamAsync(tf.keras.optimizers.legacy.Adam):
 
     # lr = apply_state[(var_device, var_dtype)]["lr_t"] * (tf.sqrt(1 - beta_2_power) / (1 - beta_1_power))
     apply_state[(var_device, var_dtype)].update(
-        dict(
-            # lr=lr,
-            epsilon=tf.convert_to_tensor(self.epsilon, var_dtype),
-            beta_1_t=beta_1_t,
-            # beta_1_power=beta_1_power,
-            one_minus_beta_1_t=1 - beta_1_t,
-            beta_2_t=beta_2_t,
-            # beta_2_power=beta_2_power,
-            one_minus_beta_2_t=1 - beta_2_t,
-        )
+      dict(
+        # lr=lr,
+        epsilon=tf.convert_to_tensor(self.epsilon, var_dtype),
+        beta_1_t=beta_1_t,
+        # beta_1_power=beta_1_power,
+        one_minus_beta_1_t=1 - beta_1_t,
+        beta_2_t=beta_2_t,
+        # beta_2_power=beta_2_power,
+        one_minus_beta_2_t=1 - beta_2_t,
+      )
     )
 
   def _resource_apply_dense(self, grad, var):
     m = self.get_slot(var, "m")
     v = self.get_slot(var, "v")
-    beta1_power = self.get_slot(var, 'beta1_power')
-    beta2_power = self.get_slot(var, 'beta2_power')
+    beta1_power = self.get_slot(var, "beta1_power")
+    beta2_power = self.get_slot(var, "beta2_power")
     return gen_training_ops.resource_apply_adam_async(
-        var.handle,
-        m.handle,
-        v.handle,
-        beta1_power.handle,
-        beta2_power.handle,
-        math_ops.cast(self._lr_t, grad.dtype.base_dtype),
-        math_ops.cast(self._beta1_t, grad.dtype.base_dtype),
-        math_ops.cast(self._beta2_t, grad.dtype.base_dtype),
-        math_ops.cast(self._epsilon_t, grad.dtype.base_dtype),
-        grad,
-        use_locking=self._use_locking,
-        apply_sparse_rmsprop=self._apply_sparse_rmsprop
+      var.handle,
+      m.handle,
+      v.handle,
+      beta1_power.handle,
+      beta2_power.handle,
+      math_ops.cast(self._lr_t, grad.dtype.base_dtype),
+      math_ops.cast(self._beta1_t, grad.dtype.base_dtype),
+      math_ops.cast(self._beta2_t, grad.dtype.base_dtype),
+      math_ops.cast(self._epsilon_t, grad.dtype.base_dtype),
+      grad,
+      use_locking=self._use_locking,
+      apply_sparse_rmsprop=self._apply_sparse_rmsprop,
     )
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None, indices_counts=None):
-    m = self.get_slot(var, 'm')
-    v = self.get_slot(var, 'v')
-    beta1_power = self.get_slot(var, 'beta1_power')
-    beta2_power = self.get_slot(var, 'beta2_power')
+    m = self.get_slot(var, "m")
+    v = self.get_slot(var, "v")
+    beta1_power = self.get_slot(var, "beta1_power")
+    beta2_power = self.get_slot(var, "beta2_power")
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = (
-        (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
-    )
+    coefficients = (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
 
     if isinstance(var, kv_variable_ops.EmbeddingVariable):
       if indices_counts is not None:
         return gen_kv_variable_ops.kv_resource_sparse_apply_adam_async_with_counts(
-            var.handle,
-            m.handle,
-            v.handle,
-            beta1_power.handle,
-            beta2_power.handle,
-            coefficients['lr_t'],
-            coefficients['beta_1_t'],
-            coefficients['beta_2_t'],
-            coefficients['epsilon'],
-            grad,
-            indices,
-            self.global_step,
-            indices_counts,
-            use_locking=self._use_locking,
-            apply_sparse_rmsprop=self._apply_sparse_rmsprop
+          var.handle,
+          m.handle,
+          v.handle,
+          beta1_power.handle,
+          beta2_power.handle,
+          coefficients["lr_t"],
+          coefficients["beta_1_t"],
+          coefficients["beta_2_t"],
+          coefficients["epsilon"],
+          grad,
+          indices,
+          self.global_step,
+          indices_counts,
+          use_locking=self._use_locking,
+          apply_sparse_rmsprop=self._apply_sparse_rmsprop,
         )
       else:
         return gen_kv_variable_ops.kv_resource_sparse_apply_adam_async(
-            var.handle,
-            m.handle,
-            v.handle,
-            beta1_power.handle,
-            beta2_power.handle,
-            coefficients['lr_t'],
-            coefficients['beta_1_t'],
-            coefficients['beta_2_t'],
-            coefficients['epsilon'],
-            grad,
-            indices,
-            self.global_step,
-            use_locking=self._use_locking,
-            apply_sparse_rmsprop=self._apply_sparse_rmsprop
+          var.handle,
+          m.handle,
+          v.handle,
+          beta1_power.handle,
+          beta2_power.handle,
+          coefficients["lr_t"],
+          coefficients["beta_1_t"],
+          coefficients["beta_2_t"],
+          coefficients["epsilon"],
+          grad,
+          indices,
+          self.global_step,
+          use_locking=self._use_locking,
+          apply_sparse_rmsprop=self._apply_sparse_rmsprop,
         )
     else:
       return gen_training_ops.resource_sparse_apply_adam_async(
-          var=var.handle,
-          m=m.handle,
-          v=v.handle,
-          beta1_power=beta1_power.handle,
-          beta2_power=beta2_power.handle,
-          lr=coefficients['lr_t'],
-          beta1=coefficients['beta_1_t'],
-          beta2=coefficients['beta_2_t'],
-          epsilon=coefficients['epsilon'],
-          grad=grad,
-          indices=indices,
-          use_locking=self._use_locking,
-          apply_sparse_rmsprop=self._apply_sparse_rmsprop
+        var=var.handle,
+        m=m.handle,
+        v=v.handle,
+        beta1_power=beta1_power.handle,
+        beta2_power=beta2_power.handle,
+        lr=coefficients["lr_t"],
+        beta1=coefficients["beta_1_t"],
+        beta2=coefficients["beta_2_t"],
+        epsilon=coefficients["epsilon"],
+        grad=grad,
+        indices=indices,
+        use_locking=self._use_locking,
+        apply_sparse_rmsprop=self._apply_sparse_rmsprop,
       )
 
 

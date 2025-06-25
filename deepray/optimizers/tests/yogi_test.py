@@ -23,38 +23,38 @@ from deepray.utils import test_utils
 
 
 def yogi_update_numpy(
-    param,
-    g_t,
-    t,
-    m,
-    v,
-    alpha=0.01,
-    beta1=0.9,
-    beta2=0.999,
-    epsilon=1e-3,
-    l1reg=0.0,
-    l2reg=0.0,
+  param,
+  g_t,
+  t,
+  m,
+  v,
+  alpha=0.01,
+  beta1=0.9,
+  beta2=0.999,
+  epsilon=1e-3,
+  l1reg=0.0,
+  l2reg=0.0,
 ):
   """Performs Yogi parameter update using numpy.
 
-    Args:
-      param: An numpy ndarray of the current parameter.
-      g_t: An numpy ndarray of the current gradients.
-      t: An numpy ndarray of the current time step.
-      m: An numpy ndarray of the 1st moment estimates.
-      v: An numpy ndarray of the 2nd moment estimates.
-      alpha: A float value of the learning rate.
-      beta1: A float value of the exponential decay rate for the 1st moment
-        estimates.
-      beta2: A float value of the exponential decay rate for the 2nd moment
-         estimates.
-      epsilon: A float of a small constant for numerical stability.
-      l1reg: A float value of L1 regularization
-      l2reg: A float value of L2 regularization
-    Returns:
-      A tuple of numpy ndarrays (param_t, m_t, v_t) representing the
-      updated parameters for `param`, `m`, and `v` respectively.
-    """
+  Args:
+    param: An numpy ndarray of the current parameter.
+    g_t: An numpy ndarray of the current gradients.
+    t: An numpy ndarray of the current time step.
+    m: An numpy ndarray of the 1st moment estimates.
+    v: An numpy ndarray of the 2nd moment estimates.
+    alpha: A float value of the learning rate.
+    beta1: A float value of the exponential decay rate for the 1st moment
+      estimates.
+    beta2: A float value of the exponential decay rate for the 2nd moment
+       estimates.
+    epsilon: A float of a small constant for numerical stability.
+    l1reg: A float value of L1 regularization
+    l2reg: A float value of L2 regularization
+  Returns:
+    A tuple of numpy ndarrays (param_t, m_t, v_t) representing the
+    updated parameters for `param`, `m`, and `v` respectively.
+  """
   beta1 = np.array(beta1, dtype=param.dtype)
   beta2 = np.array(beta2, dtype=param.dtype)
 
@@ -108,10 +108,10 @@ def do_test_sparse(beta1=0.0, l1reg=0.0, l2reg=0.0):
     grads1_np_indices = np.array([0, 1], dtype=np.int32)
     grads1 = tf.IndexedSlices(tf.constant(grads1_np), tf.constant(grads1_np_indices), tf.constant([2]))
     opt = yogi.Yogi(
-        beta1=beta1,
-        l1_regularization_strength=l1reg,
-        l2_regularization_strength=l2reg,
-        initial_accumulator_value=1.0,
+      beta1=beta1,
+      l1_regularization_strength=l1reg,
+      l2_regularization_strength=l2reg,
+      initial_accumulator_value=1.0,
     )
 
     # Fetch params to validate initial values.
@@ -158,21 +158,21 @@ def test_sparse_repeated_indices():
     repeated_index_update_var = tf.Variable([[1.0], [2.0]], dtype=dtype)
     aggregated_update_var = tf.Variable([[1.0], [2.0]], dtype=dtype)
     grad_repeated_index = tf.IndexedSlices(
-        tf.constant([0.1, 0.1], shape=[2, 1], dtype=dtype),
-        tf.constant([1, 1]),
-        tf.constant([2, 1]),
+      tf.constant([0.1, 0.1], shape=[2, 1], dtype=dtype),
+      tf.constant([1, 1]),
+      tf.constant([2, 1]),
     )
     grad_aggregated = tf.IndexedSlices(
-        tf.constant([0.2], shape=[1, 1], dtype=dtype),
-        tf.constant([1]),
-        tf.constant([2, 1]),
+      tf.constant([0.2], shape=[1, 1], dtype=dtype),
+      tf.constant([1]),
+      tf.constant([2, 1]),
     )
     opt1 = yogi.Yogi()
     opt2 = yogi.Yogi()
 
     np.testing.assert_allclose(
-        aggregated_update_var.numpy(),
-        repeated_index_update_var.numpy(),
+      aggregated_update_var.numpy(),
+      repeated_index_update_var.numpy(),
     )
 
     for _ in range(3):
@@ -180,8 +180,8 @@ def test_sparse_repeated_indices():
       opt2.apply_gradients([(grad_aggregated, aggregated_update_var)])
 
     np.testing.assert_allclose(
-        aggregated_update_var.numpy(),
-        repeated_index_update_var.numpy(),
+      aggregated_update_var.numpy(),
+      repeated_index_update_var.numpy(),
     )
 
 
@@ -200,10 +200,10 @@ def do_test_basic(beta1=0.0, l1reg=0.0, l2reg=0.0):
     grads1 = tf.constant(grads1_np)
 
     opt = yogi.Yogi(
-        beta1=beta1,
-        l1_regularization_strength=l1reg,
-        l2_regularization_strength=l2reg,
-        initial_accumulator_value=1.0,
+      beta1=beta1,
+      l1_regularization_strength=l1reg,
+      l2_regularization_strength=l2reg,
+      initial_accumulator_value=1.0,
     )
 
     # Fetch params to validate initial values.

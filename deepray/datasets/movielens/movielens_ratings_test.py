@@ -16,9 +16,9 @@ TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 def define_flags():
   argv = sys.argv + [
-      "--epochs=1",
-      "--batch_size=2",
-      "--train_data=movielens/100k-ratings",
+    "--epochs=1",
+    "--batch_size=2",
+    "--train_data=movielens/100k-ratings",
   ]
   flags.FLAGS(argv)
 

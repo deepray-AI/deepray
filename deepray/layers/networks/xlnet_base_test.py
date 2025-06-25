@@ -22,21 +22,20 @@ from official.nlp.modeling.networks import xlnet_base
 
 
 class RelativePositionEncodingTest(tf.test.TestCase):
-
   def test_positional_embedding(self):
     """A low-dimensional example is tested.
 
-     With len(pos_seq)=2 and d_model=4:
+    With len(pos_seq)=2 and d_model=4:
 
-       pos_seq  = [[1.], [0.]]
-       inv_freq = [1., 0.01]
-       pos_seq x inv_freq = [[1, 0.01], [0., 0.]]
-       pos_emb = [[sin(1.), sin(0.01), cos(1.), cos(0.01)],
-                  [sin(0.), sin(0.), cos(0.), cos(0.)]]
-               = [[0.84147096, 0.00999983, 0.54030228, 0.99994999],
-                 [0., 0., 1., 1.]]
+      pos_seq  = [[1.], [0.]]
+      inv_freq = [1., 0.01]
+      pos_seq x inv_freq = [[1, 0.01], [0., 0.]]
+      pos_emb = [[sin(1.), sin(0.01), cos(1.), cos(0.01)],
+                 [sin(0.), sin(0.), cos(0.), cos(0.)]]
+              = [[0.84147096, 0.00999983, 0.54030228, 0.99994999],
+                [0., 0., 1., 1.]]
     """
-    target = np.array([[[0.84147096, 0.00999983, 0.54030228, 0.99994999], [0., 0., 1., 1.]]])
+    target = np.array([[[0.84147096, 0.00999983, 0.54030228, 0.99994999], [0.0, 0.0, 1.0, 1.0]]])
     hidden_size = 4
     pos_seq = tf.range(1, -1, -1.0)  # [1., 0.]
     encoding_layer = xlnet_base.RelativePositionEncoding(hidden_size=hidden_size)
@@ -45,11 +44,12 @@ class RelativePositionEncodingTest(tf.test.TestCase):
 
 
 class ComputePositionEncodingTest(tf.test.TestCase, parameterized.TestCase):
-
-  @combinations.generate(combinations.combine(
+  @combinations.generate(
+    combinations.combine(
       attention_type=["uni", "bi"],
       bi_data=[False, True],
-  ))
+    )
+  )
   def test_compute_position_encoding_smoke(self, attention_type, bi_data):
     hidden_size = 4
     batch_size = 4
@@ -57,22 +57,21 @@ class ComputePositionEncodingTest(tf.test.TestCase, parameterized.TestCase):
     seq_length = 4
     position_encoding_layer = xlnet_base.RelativePositionEncoding(hidden_size=hidden_size)
     encoding = xlnet_base._compute_positional_encoding(
-        attention_type=attention_type,
-        position_encoding_layer=position_encoding_layer,
-        hidden_size=hidden_size,
-        batch_size=batch_size,
-        total_length=total_length,
-        seq_length=seq_length,
-        clamp_length=2,
-        bi_data=bi_data,
-        dtype=tf.float32
+      attention_type=attention_type,
+      position_encoding_layer=position_encoding_layer,
+      hidden_size=hidden_size,
+      batch_size=batch_size,
+      total_length=total_length,
+      seq_length=seq_length,
+      clamp_length=2,
+      bi_data=bi_data,
+      dtype=tf.float32,
     )
     self.assertEqual(encoding.shape[0], batch_size)
     self.assertEqual(encoding.shape[2], hidden_size)
 
 
 class CausalAttentionMaskTests(tf.test.TestCase):
-
   def test_casual_attention_mask_with_no_memory(self):
     seq_length, memory_length = 3, 0
     causal_attention_mask = xlnet_base._create_causal_attention_mask(seq_length=seq_length, memory_length=memory_length)
@@ -90,7 +89,7 @@ class CausalAttentionMaskTests(tf.test.TestCase):
   def test_causal_attention_mask_with_same_length(self):
     seq_length, memory_length = 3, 2
     causal_attention_mask = xlnet_base._create_causal_attention_mask(
-        seq_length=seq_length, memory_length=memory_length, same_length=True
+      seq_length=seq_length, memory_length=memory_length, same_length=True
     )
 
     expected_output = np.array([[1, 1, 1, 0, 0], [0, 1, 1, 1, 0], [0, 0, 1, 1, 1]])
@@ -98,14 +97,13 @@ class CausalAttentionMaskTests(tf.test.TestCase):
 
 
 class MaskComputationTests(tf.test.TestCase, parameterized.TestCase):
-
   @combinations.generate(
-      combinations.combine(
-          use_input_mask=[False, True],
-          use_permutation_mask=[False, True],
-          attention_type=["uni", "bi"],
-          memory_length=[0, 4],
-      )
+    combinations.combine(
+      use_input_mask=[False, True],
+      use_permutation_mask=[False, True],
+      attention_type=["uni", "bi"],
+      memory_length=[0, 4],
+    )
   )
   def test_compute_attention_mask_smoke(self, use_input_mask, use_permutation_mask, attention_type, memory_length):
     """Tests coverage and functionality for different configurations."""
@@ -120,13 +118,13 @@ class MaskComputationTests(tf.test.TestCase, parameterized.TestCase):
     else:
       permutation_mask = None
     _, content_mask = xlnet_base._compute_attention_mask(
-        input_mask=input_mask,
-        permutation_mask=permutation_mask,
-        attention_type=attention_type,
-        seq_length=seq_length,
-        memory_length=memory_length,
-        batch_size=batch_size,
-        dtype=tf.float32
+      input_mask=input_mask,
+      permutation_mask=permutation_mask,
+      attention_type=attention_type,
+      seq_length=seq_length,
+      memory_length=memory_length,
+      batch_size=batch_size,
+      dtype=tf.float32,
     )
 
     expected_mask_shape = (batch_size, 1, seq_length, seq_length + memory_length)
@@ -135,13 +133,13 @@ class MaskComputationTests(tf.test.TestCase, parameterized.TestCase):
 
   def test_no_input_masks(self):
     query_mask, content_mask = xlnet_base._compute_attention_mask(
-        input_mask=None,
-        permutation_mask=None,
-        attention_type="uni",
-        seq_length=8,
-        memory_length=2,
-        batch_size=2,
-        dtype=tf.float32
+      input_mask=None,
+      permutation_mask=None,
+      attention_type="uni",
+      seq_length=8,
+      memory_length=2,
+      batch_size=2,
+      dtype=tf.float32,
     )
     self.assertIsNone(query_mask)
     self.assertIsNone(content_mask)
@@ -168,13 +166,13 @@ class MaskComputationTests(tf.test.TestCase, parameterized.TestCase):
     expected_content_mask = np.array([[[[1, 1, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [1, 1, 0, 1]]]])
 
     query_mask, content_mask = xlnet_base._compute_attention_mask(
-        input_mask=input_mask,
-        permutation_mask=permutation_mask,
-        attention_type="bi",
-        seq_length=seq_length,
-        memory_length=memory_length,
-        batch_size=batch_size,
-        dtype=tf.float32
+      input_mask=input_mask,
+      permutation_mask=permutation_mask,
+      attention_type="bi",
+      seq_length=seq_length,
+      memory_length=memory_length,
+      batch_size=batch_size,
+      dtype=tf.float32,
     )
 
     self.assertAllClose(query_mask, expected_query_mask)
@@ -188,20 +186,20 @@ class MaskComputationTests(tf.test.TestCase, parameterized.TestCase):
 
     input_mask = None
     permutation_mask = np.array([
-        [[1, 0], [1, 0]],
+      [[1, 0], [1, 0]],
     ])
 
     expected_query_mask = permutation_mask[:, None, :, :]
     expected_content_mask = np.array([[[[1, 0], [1, 1]]]])
 
     query_mask, content_mask = xlnet_base._compute_attention_mask(
-        input_mask=input_mask,
-        permutation_mask=permutation_mask,
-        attention_type="bi",
-        seq_length=seq_length,
-        memory_length=memory_length,
-        batch_size=batch_size,
-        dtype=tf.float32
+      input_mask=input_mask,
+      permutation_mask=permutation_mask,
+      attention_type="bi",
+      seq_length=seq_length,
+      memory_length=memory_length,
+      batch_size=batch_size,
+      dtype=tf.float32,
     )
 
     self.assertAllClose(query_mask, expected_query_mask)
@@ -214,23 +212,25 @@ class MaskComputationTests(tf.test.TestCase, parameterized.TestCase):
     memory_length = 0
 
     input_mask = np.array([[1, 1, 0, 0]])
-    permutation_mask = np.array([[
+    permutation_mask = np.array([
+      [
         [0, 1, 1, 1],
         [1, 0, 1, 1],
         [1, 1, 0, 1],
         [1, 1, 1, 0],
-    ]])
+      ]
+    ])
 
     expected_query_mask = np.array([[[[0, 1, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 0, 0]]]])
     expected_content_mask = np.array([[[[1, 1, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [1, 1, 0, 1]]]])
     query_mask, content_mask = xlnet_base._compute_attention_mask(
-        input_mask=input_mask,
-        permutation_mask=permutation_mask,
-        attention_type="bi",
-        seq_length=seq_length,
-        memory_length=memory_length,
-        batch_size=batch_size,
-        dtype=tf.float32
+      input_mask=input_mask,
+      permutation_mask=permutation_mask,
+      attention_type="bi",
+      seq_length=seq_length,
+      memory_length=memory_length,
+      batch_size=batch_size,
+      dtype=tf.float32,
     )
 
     self.assertAllClose(query_mask, expected_query_mask)
@@ -243,23 +243,25 @@ class MaskComputationTests(tf.test.TestCase, parameterized.TestCase):
     memory_length = 0
 
     input_mask = np.array([[1, 1, 1, 0]])
-    permutation_mask = np.array([[
+    permutation_mask = np.array([
+      [
         [0, 1, 1, 1],
         [1, 0, 1, 1],
         [1, 1, 0, 1],
         [1, 1, 1, 0],
-    ]])
+      ]
+    ])
 
     expected_query_mask = np.array([[[[0, 0, 0, 0], [1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0]]]])
     expected_content_mask = np.array([[[[1, 0, 0, 0], [1, 1, 0, 0], [1, 1, 1, 0], [1, 1, 1, 1]]]])
     query_mask, content_mask = xlnet_base._compute_attention_mask(
-        input_mask=input_mask,
-        permutation_mask=permutation_mask,
-        attention_type="uni",
-        seq_length=seq_length,
-        memory_length=memory_length,
-        batch_size=batch_size,
-        dtype=tf.float32
+      input_mask=input_mask,
+      permutation_mask=permutation_mask,
+      attention_type="uni",
+      seq_length=seq_length,
+      memory_length=memory_length,
+      batch_size=batch_size,
+      dtype=tf.float32,
     )
 
     self.assertAllClose(query_mask, expected_query_mask)
@@ -267,10 +269,9 @@ class MaskComputationTests(tf.test.TestCase, parameterized.TestCase):
 
 
 class SegmentMatrixTests(tf.test.TestCase):
-
   def test_no_segment_ids(self):
     segment_matrix = xlnet_base._compute_segment_matrix(
-        segment_ids=None, memory_length=2, batch_size=1, use_cls_mask=False
+      segment_ids=None, memory_length=2, batch_size=1, use_cls_mask=False
     )
     self.assertIsNone(segment_matrix)
 
@@ -278,16 +279,11 @@ class SegmentMatrixTests(tf.test.TestCase):
     batch_size = 1
     memory_length = 0
     segment_ids = np.array([[1, 1, 2, 1]])
-    expected_segment_matrix = np.array(
-        [
-            [
-                [False, False, True, False], [False, False, True, False], [True, True, False, True],
-                [False, False, True, False]
-            ]
-        ]
-    )
+    expected_segment_matrix = np.array([
+      [[False, False, True, False], [False, False, True, False], [True, True, False, True], [False, False, True, False]]
+    ])
     segment_matrix = xlnet_base._compute_segment_matrix(
-        segment_ids=segment_ids, memory_length=memory_length, batch_size=batch_size, use_cls_mask=False
+      segment_ids=segment_ids, memory_length=memory_length, batch_size=batch_size, use_cls_mask=False
     )
     self.assertAllClose(segment_matrix, expected_segment_matrix)
 
@@ -295,19 +291,19 @@ class SegmentMatrixTests(tf.test.TestCase):
     batch_size = 1
     memory_length = 1
     segment_ids = np.array([[1, 1, 2, 1]])
-    expected_segment_matrix = np.array(
-        [
-            [
-                [True, False, False, True, False], [True, False, False, True, False], [True, True, True, False, True],
-                [True, False, False, True, False]
-            ]
-        ]
-    ).astype(int)
+    expected_segment_matrix = np.array([
+      [
+        [True, False, False, True, False],
+        [True, False, False, True, False],
+        [True, True, True, False, True],
+        [True, False, False, True, False],
+      ]
+    ]).astype(int)
     segment_matrix = tf.cast(
-        xlnet_base._compute_segment_matrix(
-            segment_ids=segment_ids, memory_length=memory_length, batch_size=batch_size, use_cls_mask=False
-        ),
-        dtype=tf.uint8
+      xlnet_base._compute_segment_matrix(
+        segment_ids=segment_ids, memory_length=memory_length, batch_size=batch_size, use_cls_mask=False
+      ),
+      dtype=tf.uint8,
     )
     self.assertAllClose(segment_matrix, expected_segment_matrix)
 
@@ -317,25 +313,19 @@ class SegmentMatrixTests(tf.test.TestCase):
     batch_size = 1
     memory_length = 0
     segment_ids = np.array([[1, 1, 2, 1]])
-    expected_segment_matrix = np.array(
-        [
-            [
-                [False, False, True, False], [False, False, True, False], [True, True, False, True],
-                [False, False, True, False]
-            ]
-        ]
-    ).astype(int)
+    expected_segment_matrix = np.array([
+      [[False, False, True, False], [False, False, True, False], [True, True, False, True], [False, False, True, False]]
+    ]).astype(int)
     segment_matrix = tf.cast(
-        xlnet_base._compute_segment_matrix(
-            segment_ids=segment_ids, memory_length=memory_length, batch_size=batch_size, use_cls_mask=True
-        ),
-        dtype=tf.uint8
+      xlnet_base._compute_segment_matrix(
+        segment_ids=segment_ids, memory_length=memory_length, batch_size=batch_size, use_cls_mask=True
+      ),
+      dtype=tf.uint8,
     )
     self.assertAllClose(segment_matrix, expected_segment_matrix)
 
 
 class XLNetModelTests(tf.test.TestCase):
-
   def _generate_data(self, batch_size, seq_length, num_predictions=None):
     """Generates sample XLNet data for testing."""
     sequence_shape = (batch_size, seq_length)
@@ -343,12 +333,12 @@ class XLNetModelTests(tf.test.TestCase):
       target_mapping = tf.random.uniform(shape=(batch_size, num_predictions, seq_length))
 
     return {
-        "input_ids": np.random.randint(10, size=sequence_shape, dtype="int32"),
-        "segment_ids": np.random.randint(2, size=sequence_shape, dtype="int32"),
-        "input_mask": np.random.randint(2, size=sequence_shape).astype("float32"),
-        "permutation_mask": np.random.randint(2, size=(batch_size, seq_length, seq_length)).astype("float32"),
-        "target_mapping": target_mapping,
-        "masked_tokens": tf.random.uniform(shape=sequence_shape),
+      "input_ids": np.random.randint(10, size=sequence_shape, dtype="int32"),
+      "segment_ids": np.random.randint(2, size=sequence_shape, dtype="int32"),
+      "input_mask": np.random.randint(2, size=sequence_shape).astype("float32"),
+      "permutation_mask": np.random.randint(2, size=(batch_size, seq_length, seq_length)).astype("float32"),
+      "target_mapping": target_mapping,
+      "masked_tokens": tf.random.uniform(shape=sequence_shape),
     }
 
   def test_xlnet_model(self):
@@ -357,21 +347,21 @@ class XLNetModelTests(tf.test.TestCase):
     num_predictions = 2
     hidden_size = 4
     xlnet_model = xlnet_base.XLNetBase(
-        vocab_size=32000,
-        num_layers=2,
-        hidden_size=hidden_size,
-        num_attention_heads=2,
-        head_size=2,
-        inner_size=2,
-        dropout_rate=0.,
-        attention_dropout_rate=0.,
-        attention_type="bi",
-        bi_data=True,
-        initializer=tf.keras.initializers.RandomNormal(stddev=0.1),
-        two_stream=False,
-        tie_attention_biases=True,
-        reuse_length=0,
-        inner_activation="relu"
+      vocab_size=32000,
+      num_layers=2,
+      hidden_size=hidden_size,
+      num_attention_heads=2,
+      head_size=2,
+      inner_size=2,
+      dropout_rate=0.0,
+      attention_dropout_rate=0.0,
+      attention_type="bi",
+      bi_data=True,
+      initializer=tf.keras.initializers.RandomNormal(stddev=0.1),
+      two_stream=False,
+      tie_attention_biases=True,
+      reuse_length=0,
+      inner_activation="relu",
     )
     input_data = self._generate_data(batch_size=batch_size, seq_length=seq_length, num_predictions=num_predictions)
     model_output = xlnet_model(**input_data)
@@ -379,22 +369,22 @@ class XLNetModelTests(tf.test.TestCase):
 
   def test_get_config(self):
     xlnet_model = xlnet_base.XLNetBase(
-        vocab_size=32000,
-        num_layers=12,
-        hidden_size=36,
-        num_attention_heads=12,
-        head_size=12,
-        inner_size=12,
-        dropout_rate=0.,
-        attention_dropout_rate=0.,
-        attention_type="bi",
-        bi_data=True,
-        initializer=tf.keras.initializers.RandomNormal(stddev=0.1),
-        two_stream=False,
-        tie_attention_biases=True,
-        memory_length=0,
-        reuse_length=0,
-        inner_activation="relu"
+      vocab_size=32000,
+      num_layers=12,
+      hidden_size=36,
+      num_attention_heads=12,
+      head_size=12,
+      inner_size=12,
+      dropout_rate=0.0,
+      attention_dropout_rate=0.0,
+      attention_type="bi",
+      bi_data=True,
+      initializer=tf.keras.initializers.RandomNormal(stddev=0.1),
+      two_stream=False,
+      tie_attention_biases=True,
+      memory_length=0,
+      reuse_length=0,
+      inner_activation="relu",
     )
     config = xlnet_model.get_config()
     new_xlnet = xlnet_base.XLNetBase.from_config(config)

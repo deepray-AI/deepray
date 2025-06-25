@@ -137,13 +137,13 @@ def test_fit_simple_linear_model_mixed_precision():
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def test_model_dynamic_lr():
   grad = tf.Variable([[0.1]])
-  model = tf.keras.Sequential(
-      [tf.keras.layers.Dense(
-          1,
-          kernel_initializer=tf.keras.initializers.Constant([[1.0]]),
-          use_bias=False,
-      )]
-  )
+  model = tf.keras.Sequential([
+    tf.keras.layers.Dense(
+      1,
+      kernel_initializer=tf.keras.initializers.Constant([[1.0]]),
+      use_bias=False,
+    )
+  ])
   model.build(input_shape=[1, 1])
 
   opt = Lookahead("adam", sync_period=10, slow_step_size=0.4)

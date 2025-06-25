@@ -18,7 +18,6 @@ from distributed_embeddings import embedding_lookup
 
 
 class EmbeddingLookupTest(tf.test.TestCase):
-
   def test_variable_hotness(self):
     voc, emb, batch, max_hotness = 69, 64, 15, 207
     # create dense representation of index matrix
@@ -41,7 +40,7 @@ class EmbeddingLookupTest(tf.test.TestCase):
     initial_weight = tf.random.uniform([voc, emb], dtype=tf.float32)
     param = tf.Variable(initial_weight)
 
-    for red in ['sum', 'mean']:
+    for red in ["sum", "mean"]:
       with tf.GradientTape(persistent=True) as tape:
         tape.watch(param)
         ref_ret = tf.nn.embedding_lookup_sparse(param, ref_ids, sp_weights=None, combiner=red)
@@ -62,12 +61,12 @@ class EmbeddingLookupTest(tf.test.TestCase):
     initial_weight = tf.random.uniform([voc, emb], dtype=tf.float32)
     param = tf.Variable(initial_weight)
 
-    for red in ['sum', 'mean']:
+    for red in ["sum", "mean"]:
       with tf.GradientTape(persistent=True) as tape:
         tape.watch(param)
-        if red == 'sum':
+        if red == "sum":
           ref_ret = tf.reduce_sum(tf.nn.embedding_lookup(param, ids), 1)
-        if red == 'mean':
+        if red == "mean":
           ref_ret = tf.reduce_mean(tf.nn.embedding_lookup(param, ids), 1)
         ret = embedding_lookup(param, ids, combiner=red)
       ref_g = tape.gradient(ref_ret, param)
@@ -98,7 +97,7 @@ class EmbeddingLookupTest(tf.test.TestCase):
     initial_weight = tf.random.uniform([voc, emb], dtype=tf.float32)
     param = tf.Variable(initial_weight)
 
-    for red in ['sum', 'mean']:
+    for red in ["sum", "mean"]:
       with tf.GradientTape(persistent=True) as tape:
         tape.watch(param)
         ref_ret = tf.nn.embedding_lookup_sparse(param, ref_ids, sp_weights=None, combiner=red)
@@ -113,5 +112,5 @@ class EmbeddingLookupTest(tf.test.TestCase):
       self.assertAllClose(ref_g_dense, g_dense)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

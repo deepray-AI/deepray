@@ -36,24 +36,22 @@ def test_skip_gram_sample_skips_2():
   """Tests skip-gram with min_skips = max_skips = 2."""
   input_tensor = tf.constant([b"the", b"quick", b"brown", b"fox", b"jumps"])
   tokens, labels = text.skip_gram_sample(input_tensor, min_skips=2, max_skips=2)
-  expected_tokens, expected_labels = _split_tokens_labels(
-      [
-          (b"the", b"quick"),
-          (b"the", b"brown"),
-          (b"quick", b"the"),
-          (b"quick", b"brown"),
-          (b"quick", b"fox"),
-          (b"brown", b"the"),
-          (b"brown", b"quick"),
-          (b"brown", b"fox"),
-          (b"brown", b"jumps"),
-          (b"fox", b"quick"),
-          (b"fox", b"brown"),
-          (b"fox", b"jumps"),
-          (b"jumps", b"brown"),
-          (b"jumps", b"fox"),
-      ]
-  )
+  expected_tokens, expected_labels = _split_tokens_labels([
+    (b"the", b"quick"),
+    (b"the", b"brown"),
+    (b"quick", b"the"),
+    (b"quick", b"brown"),
+    (b"quick", b"fox"),
+    (b"brown", b"the"),
+    (b"brown", b"quick"),
+    (b"brown", b"fox"),
+    (b"brown", b"jumps"),
+    (b"fox", b"quick"),
+    (b"fox", b"brown"),
+    (b"fox", b"jumps"),
+    (b"jumps", b"brown"),
+    (b"jumps", b"fox"),
+  ])
   np.testing.assert_equal(np.asanyarray(expected_tokens), tokens.numpy())
   np.testing.assert_equal(np.asanyarray(expected_labels), labels.numpy())
 
@@ -62,29 +60,27 @@ def test_skip_gram_sample_emit_self():
   """Tests skip-gram with emit_self_as_target = True."""
   input_tensor = tf.constant([b"the", b"quick", b"brown", b"fox", b"jumps"])
   tokens, labels = text.skip_gram_sample(input_tensor, min_skips=2, max_skips=2, emit_self_as_target=True)
-  expected_tokens, expected_labels = _split_tokens_labels(
-      [
-          (b"the", b"the"),
-          (b"the", b"quick"),
-          (b"the", b"brown"),
-          (b"quick", b"the"),
-          (b"quick", b"quick"),
-          (b"quick", b"brown"),
-          (b"quick", b"fox"),
-          (b"brown", b"the"),
-          (b"brown", b"quick"),
-          (b"brown", b"brown"),
-          (b"brown", b"fox"),
-          (b"brown", b"jumps"),
-          (b"fox", b"quick"),
-          (b"fox", b"brown"),
-          (b"fox", b"fox"),
-          (b"fox", b"jumps"),
-          (b"jumps", b"brown"),
-          (b"jumps", b"fox"),
-          (b"jumps", b"jumps"),
-      ]
-  )
+  expected_tokens, expected_labels = _split_tokens_labels([
+    (b"the", b"the"),
+    (b"the", b"quick"),
+    (b"the", b"brown"),
+    (b"quick", b"the"),
+    (b"quick", b"quick"),
+    (b"quick", b"brown"),
+    (b"quick", b"fox"),
+    (b"brown", b"the"),
+    (b"brown", b"quick"),
+    (b"brown", b"brown"),
+    (b"brown", b"fox"),
+    (b"brown", b"jumps"),
+    (b"fox", b"quick"),
+    (b"fox", b"brown"),
+    (b"fox", b"fox"),
+    (b"fox", b"jumps"),
+    (b"jumps", b"brown"),
+    (b"jumps", b"fox"),
+    (b"jumps", b"jumps"),
+  ])
   np.testing.assert_equal(np.asanyarray(expected_tokens), tokens.numpy())
   np.testing.assert_equal(np.asanyarray(expected_labels), labels.numpy())
 
@@ -101,9 +97,11 @@ def test_skip_gram_sample_skips_0():
 
   # If emit_self_as_target is True, each token will be its own label.
   tokens, labels = text.skip_gram_sample(input_tensor, min_skips=0, max_skips=0, emit_self_as_target=True)
-  expected_tokens, expected_labels = _split_tokens_labels(
-      [(b"the", b"the"), (b"quick", b"quick"), (b"brown", b"brown")]
-  )
+  expected_tokens, expected_labels = _split_tokens_labels([
+    (b"the", b"the"),
+    (b"quick", b"quick"),
+    (b"brown", b"brown"),
+  ])
   np.testing.assert_equal(np.asanyarray(expected_tokens), tokens.numpy())
   np.testing.assert_equal(np.asanyarray(expected_labels), labels.numpy())
 
@@ -112,16 +110,14 @@ def test_skip_gram_sample_skips_exceed_length():
   """Tests skip-gram when min/max_skips exceed length of input."""
   input_tensor = tf.constant([b"the", b"quick", b"brown"])
   tokens, labels = text.skip_gram_sample(input_tensor, min_skips=100, max_skips=100)
-  expected_tokens, expected_labels = _split_tokens_labels(
-      [
-          (b"the", b"quick"),
-          (b"the", b"brown"),
-          (b"quick", b"the"),
-          (b"quick", b"brown"),
-          (b"brown", b"the"),
-          (b"brown", b"quick"),
-      ]
-  )
+  expected_tokens, expected_labels = _split_tokens_labels([
+    (b"the", b"quick"),
+    (b"the", b"brown"),
+    (b"quick", b"the"),
+    (b"quick", b"brown"),
+    (b"brown", b"the"),
+    (b"brown", b"quick"),
+  ])
   np.testing.assert_equal(np.asanyarray(expected_tokens), tokens.numpy())
   np.testing.assert_equal(np.asanyarray(expected_labels), labels.numpy())
 
@@ -130,14 +126,12 @@ def test_skip_gram_sample_start_limit():
   """Tests skip-gram over a limited portion of the input."""
   input_tensor = tf.constant([b"foo", b"the", b"quick", b"brown", b"bar"])
   tokens, labels = text.skip_gram_sample(input_tensor, min_skips=1, max_skips=1, start=1, limit=3)
-  expected_tokens, expected_labels = _split_tokens_labels(
-      [
-          (b"the", b"quick"),
-          (b"quick", b"the"),
-          (b"quick", b"brown"),
-          (b"brown", b"quick"),
-      ]
-  )
+  expected_tokens, expected_labels = _split_tokens_labels([
+    (b"the", b"quick"),
+    (b"quick", b"the"),
+    (b"quick", b"brown"),
+    (b"brown", b"quick"),
+  ])
   np.testing.assert_equal(np.asanyarray(expected_tokens), tokens.numpy())
   np.testing.assert_equal(np.asanyarray(expected_labels), labels.numpy())
 
@@ -146,14 +140,12 @@ def test_skip_gram_sample_limit_exceeds():
   """Tests skip-gram when limit exceeds the length of the input."""
   input_tensor = tf.constant([b"foo", b"the", b"quick", b"brown"])
   tokens, labels = text.skip_gram_sample(input_tensor, min_skips=1, max_skips=1, start=1, limit=100)
-  expected_tokens, expected_labels = _split_tokens_labels(
-      [
-          (b"the", b"quick"),
-          (b"quick", b"the"),
-          (b"quick", b"brown"),
-          (b"brown", b"quick"),
-      ]
-  )
+  expected_tokens, expected_labels = _split_tokens_labels([
+    (b"the", b"quick"),
+    (b"quick", b"the"),
+    (b"quick", b"brown"),
+    (b"brown", b"quick"),
+  ])
   np.testing.assert_equal(np.asanyarray(expected_tokens), tokens.numpy())
   np.testing.assert_equal(np.asanyarray(expected_labels), labels.numpy())
 
@@ -166,32 +158,30 @@ def test_skip_gram_sample_random_skips():
 
   input_tensor = tf.constant([b"the", b"quick", b"brown", b"fox", b"jumps", b"over"])
   tokens, labels = text.skip_gram_sample(input_tensor, min_skips=1, max_skips=2, seed=9)
-  expected_tokens, expected_labels = _split_tokens_labels(
-      [
-          (b"the", b"quick"),
-          (b"the", b"brown"),
-          (b"quick", b"the"),
-          (b"quick", b"brown"),
-          (b"quick", b"fox"),
-          (b"brown", b"the"),
-          (b"brown", b"quick"),
-          (b"brown", b"fox"),
-          (b"brown", b"jumps"),
-          (b"fox", b"brown"),
-          (b"fox", b"jumps"),
-          (b"jumps", b"fox"),
-          (b"jumps", b"over"),
-          (b"over", b"fox"),
-          (b"over", b"jumps"),
-      ]
-  )
+  expected_tokens, expected_labels = _split_tokens_labels([
+    (b"the", b"quick"),
+    (b"the", b"brown"),
+    (b"quick", b"the"),
+    (b"quick", b"brown"),
+    (b"quick", b"fox"),
+    (b"brown", b"the"),
+    (b"brown", b"quick"),
+    (b"brown", b"fox"),
+    (b"brown", b"jumps"),
+    (b"fox", b"brown"),
+    (b"fox", b"jumps"),
+    (b"jumps", b"fox"),
+    (b"jumps", b"over"),
+    (b"over", b"fox"),
+    (b"over", b"jumps"),
+  ])
   np.testing.assert_equal(np.asanyarray(expected_tokens), tokens.numpy())
   np.testing.assert_equal(np.asanyarray(expected_labels), labels.numpy())
 
 
 def test_skip_gram_sample_random_skips_default_seed():
   """Tests outputs are still random when no op-level seed is
-    specified."""
+  specified."""
 
   # This is needed since tests set a graph-level seed by default. We want
   # to explicitly avoid setting both graph-level seed and op-level seed,
@@ -239,11 +229,11 @@ def test_skip_gram_sample_errors():
   input_tensor = tf.constant([b"the", b"quick", b"brown"])
 
   invalid_skips = (
-      # min_skips and max_skips must be >= 0.
-      (-1, 2),
-      (1, -2),
-      # min_skips must be <= max_skips.
-      (2, 1),
+    # min_skips and max_skips must be >= 0.
+    (-1, 2),
+    (1, -2),
+    # min_skips must be <= max_skips.
+    (2, 1),
   )
   for min_skips, max_skips in invalid_skips:
     with pytest.raises(tf.errors.InvalidArgumentError):
@@ -270,23 +260,23 @@ def test_skip_gram_sample_errors():
   dummy_table = tf.lookup.StaticHashTable(tf.lookup.KeyValueTensorInitializer([b"foo"], [10]), -1)
   with pytest.raises(ValueError):
     text.skip_gram_sample(
-        dummy_input,
-        vocab_freq_table=dummy_table,
-        vocab_subsampling=None,
-        corpus_size=100,
+      dummy_input,
+      vocab_freq_table=dummy_table,
+      vocab_subsampling=None,
+      corpus_size=100,
     )
   with pytest.raises(ValueError):
     text.skip_gram_sample(
-        dummy_input,
-        vocab_freq_table=dummy_table,
-        vocab_subsampling=1e-5,
-        corpus_size=None,
+      dummy_input,
+      vocab_freq_table=dummy_table,
+      vocab_subsampling=1e-5,
+      corpus_size=None,
     )
 
 
 def test_filter_input_filter_vocab():
   """Tests input filtering based on vocab frequency table and
-    thresholds."""
+  thresholds."""
   input_tensor = tf.constant([b"the", b"answer", b"to", b"life", b"and", b"universe"])
   keys = tf.constant([b"and", b"life", b"the", b"to", b"universe"])
   values = tf.constant([0, 1, 2, 3, 4], tf.dtypes.int64)
@@ -294,40 +284,40 @@ def test_filter_input_filter_vocab():
 
   # No vocab_freq_table specified - output should be the same as input
   no_table_output = skip_gram_ops._filter_input(
-      input_tensor=input_tensor,
-      vocab_freq_table=None,
-      vocab_min_count=None,
-      vocab_subsampling=None,
-      corpus_size=None,
-      seed=None,
+    input_tensor=input_tensor,
+    vocab_freq_table=None,
+    vocab_min_count=None,
+    vocab_subsampling=None,
+    corpus_size=None,
+    seed=None,
   )
   np.testing.assert_equal(input_tensor.numpy(), np.asanyarray(no_table_output))
 
   # vocab_freq_table specified, but no vocab_min_count - output should
   # have filtered out tokens not in the table (b"answer").
   table_output = skip_gram_ops._filter_input(
-      input_tensor=input_tensor,
-      vocab_freq_table=vocab_freq_table,
-      vocab_min_count=None,
-      vocab_subsampling=None,
-      corpus_size=None,
-      seed=None,
+    input_tensor=input_tensor,
+    vocab_freq_table=vocab_freq_table,
+    vocab_min_count=None,
+    vocab_subsampling=None,
+    corpus_size=None,
+    seed=None,
   )
   np.testing.assert_equal(
-      np.asanyarray([b"the", b"to", b"life", b"and", b"universe"]),
-      table_output.numpy(),
+    np.asanyarray([b"the", b"to", b"life", b"and", b"universe"]),
+    table_output.numpy(),
   )
 
   # vocab_freq_table and vocab_min_count specified - output should have
   # filtered out tokens whose frequencies are below the threshold
   # (b"and": 0, b"life": 1).
   threshold_output = skip_gram_ops._filter_input(
-      input_tensor=input_tensor,
-      vocab_freq_table=vocab_freq_table,
-      vocab_min_count=2,
-      vocab_subsampling=None,
-      corpus_size=None,
-      seed=None,
+    input_tensor=input_tensor,
+    vocab_freq_table=vocab_freq_table,
+    vocab_min_count=2,
+    vocab_subsampling=None,
+    corpus_size=None,
+    seed=None,
   )
   np.testing.assert_equal(np.asanyarray([b"the", b"to", b"universe"]), threshold_output.numpy())
 
@@ -338,45 +328,41 @@ def test_filter_input_subsample_vocab():
   # that the outputs remain constant for testing.
   tf.random.set_seed(42)
 
-  input_tensor = tf.constant(
-      [
-          # keep_prob = (sqrt(30/(0.05*100)) + 1) * (0.05*100/30) = 0.57.
-          b"the",
-          b"answer",  # Not in vocab. (Always discarded)
-          b"to",  # keep_prob = 0.75.
-          b"life",  # keep_prob > 1. (Always kept)
-          b"and",  # keep_prob = 0.48.
-          b"universe",  # Below vocab threshold of 3. (Always discarded)
-      ]
-  )
+  input_tensor = tf.constant([
+    # keep_prob = (sqrt(30/(0.05*100)) + 1) * (0.05*100/30) = 0.57.
+    b"the",
+    b"answer",  # Not in vocab. (Always discarded)
+    b"to",  # keep_prob = 0.75.
+    b"life",  # keep_prob > 1. (Always kept)
+    b"and",  # keep_prob = 0.48.
+    b"universe",  # Below vocab threshold of 3. (Always discarded)
+  ])
   keys = tf.constant([b"and", b"life", b"the", b"to", b"universe"])
   values = tf.constant([40, 8, 30, 20, 2], tf.dtypes.int64)
   vocab_freq_table = tf.lookup.StaticHashTable(tf.lookup.KeyValueTensorInitializer(keys, values), -1)
 
   output = skip_gram_ops._filter_input(
-      input_tensor=input_tensor,
-      vocab_freq_table=vocab_freq_table,
-      vocab_min_count=3,
-      vocab_subsampling=0.05,
-      corpus_size=tf.math.reduce_sum(values),
-      seed=9,
+    input_tensor=input_tensor,
+    vocab_freq_table=vocab_freq_table,
+    vocab_min_count=3,
+    vocab_subsampling=0.05,
+    corpus_size=tf.math.reduce_sum(values),
+    seed=9,
   )
   np.testing.assert_equal(np.asanyarray([b"the", b"to", b"life", b"and"]), output.numpy())
 
 
 def test_skip_gram_sample_with_text_vocab_filter_vocab():
   """Tests skip-gram sampling with text vocab and freq threshold
-    filtering."""
-  input_tensor = tf.constant(
-      [
-          b"the",
-          b"answer",  # Will be filtered before candidate generation.
-          b"to",
-          b"life",
-          b"and",
-          b"universe",  # Will be filtered before candidate generation.
-      ]
-  )
+  filtering."""
+  input_tensor = tf.constant([
+    b"the",
+    b"answer",  # Will be filtered before candidate generation.
+    b"to",
+    b"life",
+    b"and",
+    b"universe",  # Will be filtered before candidate generation.
+  ])
 
   # b"answer" is not in vocab file, and b"universe"'s frequency is below
   # threshold of 3.
@@ -384,25 +370,23 @@ def test_skip_gram_sample_with_text_vocab_filter_vocab():
     vocab_freq_file = _make_text_vocab_freq_file(tmp_dir)
 
     tokens, labels = text.skip_gram_sample_with_text_vocab(
-        input_tensor=input_tensor,
-        vocab_freq_file=vocab_freq_file,
-        vocab_token_index=0,
-        vocab_freq_index=1,
-        vocab_min_count=3,
-        min_skips=1,
-        max_skips=1,
+      input_tensor=input_tensor,
+      vocab_freq_file=vocab_freq_file,
+      vocab_token_index=0,
+      vocab_freq_index=1,
+      vocab_min_count=3,
+      min_skips=1,
+      max_skips=1,
     )
 
-  expected_tokens, expected_labels = _split_tokens_labels(
-      [
-          (b"the", b"to"),
-          (b"to", b"the"),
-          (b"to", b"life"),
-          (b"life", b"to"),
-          (b"life", b"and"),
-          (b"and", b"life"),
-      ]
-  )
+  expected_tokens, expected_labels = _split_tokens_labels([
+    (b"the", b"to"),
+    (b"to", b"the"),
+    (b"to", b"life"),
+    (b"life", b"to"),
+    (b"life", b"and"),
+    (b"and", b"life"),
+  ])
   np.testing.assert_equal(np.asanyarray(expected_tokens), tokens.numpy())
   np.testing.assert_equal(np.asanyarray(expected_labels), labels.numpy())
 
@@ -412,17 +396,15 @@ def _text_vocab_subsample_vocab_helper(vocab_freq_file, vocab_min_count, vocab_f
   # that the outputs remain constant for testing.
   tf.random.set_seed(42)
 
-  input_tensor = tf.constant(
-      [
-          # keep_prob = (sqrt(30/(0.05*100)) + 1) * (0.05*100/30) = 0.57.
-          b"the",
-          b"answer",  # Not in vocab. (Always discarded)
-          b"to",  # keep_prob = 0.75.
-          b"life",  # keep_prob > 1. (Always kept)
-          b"and",  # keep_prob = 0.48.
-          b"universe",  # Below vocab threshold of 3. (Always discarded)
-      ]
-  )
+  input_tensor = tf.constant([
+    # keep_prob = (sqrt(30/(0.05*100)) + 1) * (0.05*100/30) = 0.57.
+    b"the",
+    b"answer",  # Not in vocab. (Always discarded)
+    b"to",  # keep_prob = 0.75.
+    b"life",  # keep_prob > 1. (Always kept)
+    b"and",  # keep_prob = 0.48.
+    b"universe",  # Below vocab threshold of 3. (Always discarded)
+  ])
   # keep_prob calculated from vocab file with relative frequencies of:
   # and: 40
   # life: 8
@@ -431,22 +413,25 @@ def _text_vocab_subsample_vocab_helper(vocab_freq_file, vocab_min_count, vocab_f
   # universe: 2
 
   tokens, labels = text.skip_gram_sample_with_text_vocab(
-      input_tensor=input_tensor,
-      vocab_freq_file=vocab_freq_file,
-      vocab_token_index=0,
-      vocab_freq_index=1,
-      vocab_freq_dtype=tf.dtypes.float64,
-      vocab_min_count=vocab_min_count,
-      vocab_subsampling=0.05,
-      corpus_size=corpus_size,
-      min_skips=1,
-      max_skips=1,
-      seed=123,
+    input_tensor=input_tensor,
+    vocab_freq_file=vocab_freq_file,
+    vocab_token_index=0,
+    vocab_freq_index=1,
+    vocab_freq_dtype=tf.dtypes.float64,
+    vocab_min_count=vocab_min_count,
+    vocab_subsampling=0.05,
+    corpus_size=corpus_size,
+    min_skips=1,
+    max_skips=1,
+    seed=123,
   )
 
-  expected_tokens, expected_labels = _split_tokens_labels(
-      [(b"the", b"to"), (b"to", b"the"), (b"to", b"life"), (b"life", b"to")]
-  )
+  expected_tokens, expected_labels = _split_tokens_labels([
+    (b"the", b"to"),
+    (b"to", b"the"),
+    (b"to", b"life"),
+    (b"life", b"to"),
+  ])
   np.testing.assert_equal(np.asanyarray(expected_tokens), tokens.numpy())
   np.testing.assert_equal(np.asanyarray(expected_labels), labels.numpy())
 
@@ -468,31 +453,31 @@ def test_skip_gram_sample_with_text_vocab_subsample_vocab():
 
 def _skip_gram_sample_with_text_vocab_subsample_vocab(text_vocab_freq_file):
   _text_vocab_subsample_vocab_helper(
-      vocab_freq_file=text_vocab_freq_file,
-      vocab_min_count=3,
-      vocab_freq_dtype=tf.dtypes.int64,
+    vocab_freq_file=text_vocab_freq_file,
+    vocab_min_count=3,
+    vocab_freq_dtype=tf.dtypes.int64,
   )
   _text_vocab_subsample_vocab_helper(
-      vocab_freq_file=text_vocab_freq_file,
-      vocab_min_count=3,
-      vocab_freq_dtype=tf.dtypes.int64,
-      corpus_size=100,
+    vocab_freq_file=text_vocab_freq_file,
+    vocab_min_count=3,
+    vocab_freq_dtype=tf.dtypes.int64,
+    corpus_size=100,
   )
 
   # The user-supplied corpus_size should not be less than the sum of all
   # the frequency counts of vocab_freq_file, which is 100.
   with pytest.raises(ValueError):
     _text_vocab_subsample_vocab_helper(
-        vocab_freq_file=text_vocab_freq_file,
-        vocab_min_count=3,
-        vocab_freq_dtype=tf.dtypes.int64,
-        corpus_size=99,
+      vocab_freq_file=text_vocab_freq_file,
+      vocab_min_count=3,
+      vocab_freq_dtype=tf.dtypes.int64,
+      corpus_size=99,
     )
 
 
 def test_skip_gram_sample_with_text_vocab_subsample_vocab_float():
   """Tests skip-gram sampling with text vocab and subsampling with
-    floats."""
+  floats."""
   # Vocab file frequencies
   # and: 0.4
   # life: 0.08
@@ -508,31 +493,31 @@ def test_skip_gram_sample_with_text_vocab_subsample_vocab_float():
 
 def _skip_gram_sample_with_text_vocab_subsample_vocab_float(text_vocab_float_file):
   _text_vocab_subsample_vocab_helper(
-      vocab_freq_file=text_vocab_float_file,
-      vocab_min_count=0.03,
-      vocab_freq_dtype=tf.dtypes.float32,
+    vocab_freq_file=text_vocab_float_file,
+    vocab_min_count=0.03,
+    vocab_freq_dtype=tf.dtypes.float32,
   )
   _text_vocab_subsample_vocab_helper(
-      vocab_freq_file=text_vocab_float_file,
-      vocab_min_count=0.03,
-      vocab_freq_dtype=tf.dtypes.float32,
-      corpus_size=1.0,
+    vocab_freq_file=text_vocab_float_file,
+    vocab_min_count=0.03,
+    vocab_freq_dtype=tf.dtypes.float32,
+    corpus_size=1.0,
   )
 
   # The user-supplied corpus_size should not be less than the sum of all
   # the frequency counts of vocab_freq_file, which is 1.
   with pytest.raises(ValueError):
     _text_vocab_subsample_vocab_helper(
-        vocab_freq_file=text_vocab_float_file,
-        vocab_min_count=0.03,
-        vocab_freq_dtype=tf.dtypes.float32,
-        corpus_size=0.99,
+      vocab_freq_file=text_vocab_float_file,
+      vocab_min_count=0.03,
+      vocab_freq_dtype=tf.dtypes.float32,
+      corpus_size=0.99,
     )
 
 
 def test_skip_gram_sample_with_text_vocab_errors():
   """Tests various errors raised by
-    skip_gram_sample_with_text_vocab()."""
+  skip_gram_sample_with_text_vocab()."""
 
   with tempfile.TemporaryDirectory() as tmp_dir:
     vocab_freq_file = _make_text_vocab_freq_file(tmp_dir)
@@ -542,25 +527,25 @@ def test_skip_gram_sample_with_text_vocab_errors():
 def _skip_gram_sample_with_text_vocab_errors(vocab_freq_file):
   dummy_input = tf.constant([""])
   invalid_indices = (
-      # vocab_token_index can't be negative.
-      (-1, 0),
-      # vocab_freq_index can't be negative.
-      (0, -1),
-      # vocab_token_index can't be equal to vocab_freq_index.
-      (0, 0),
-      (1, 1),
-      # vocab_freq_file only has two columns.
-      (0, 2),
-      (2, 0),
+    # vocab_token_index can't be negative.
+    (-1, 0),
+    # vocab_freq_index can't be negative.
+    (0, -1),
+    # vocab_token_index can't be equal to vocab_freq_index.
+    (0, 0),
+    (1, 1),
+    # vocab_freq_file only has two columns.
+    (0, 2),
+    (2, 0),
   )
 
   for vocab_token_index, vocab_freq_index in invalid_indices:
     with pytest.raises(ValueError):
       text.skip_gram_sample_with_text_vocab(
-          input_tensor=dummy_input,
-          vocab_freq_file=vocab_freq_file,
-          vocab_token_index=vocab_token_index,
-          vocab_freq_index=vocab_freq_index,
+        input_tensor=dummy_input,
+        vocab_freq_file=vocab_freq_file,
+        vocab_token_index=vocab_token_index,
+        vocab_freq_index=vocab_freq_index,
       )
 
 
@@ -577,10 +562,10 @@ def _make_text_vocab_float_file(tmp_dir):
   with open(filepath, "w") as f:
     writer = csv.writer(f)
     writer.writerows([
-        ["and", 0.4],
-        ["life", 0.08],
-        ["the", 0.3],
-        ["to", 0.2],
-        ["universe", 0.02],
+      ["and", 0.4],
+      ["life", 0.08],
+      ["the", 0.3],
+      ["to", 0.2],
+      ["universe", 0.02],
     ])
   return filepath

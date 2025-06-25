@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -59,9 +60,9 @@ class PositionEmbedding(tf.keras.layers.Layer):
 
   def get_config(self):
     config = {
-        "max_sequence_length": self._max_sequence_length,
-        "initializer": tf.keras.initializers.serialize(self._initializer),
-        "use_dynamic_slicing": self._use_dynamic_slicing,
+      "max_sequence_length": self._max_sequence_length,
+      "initializer": tf.keras.initializers.serialize(self._initializer),
+      "use_dynamic_slicing": self._use_dynamic_slicing,
     }
     base_config = super(PositionEmbedding, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))
@@ -71,8 +72,7 @@ class PositionEmbedding(tf.keras.layers.Layer):
     dimension_list = input_shape.as_list()
 
     if len(dimension_list) != 3:
-      raise ValueError("PositionEmbedding expects a 3-dimensional input tensor "
-                       "of shape [batch, sequence, width]")
+      raise ValueError("PositionEmbedding expects a 3-dimensional input tensor of shape [batch, sequence, width]")
     seq_length = dimension_list[1]
     width = dimension_list[2]
 
@@ -81,15 +81,15 @@ class PositionEmbedding(tf.keras.layers.Layer):
     if not self._use_dynamic_slicing:
       if seq_length is None:
         raise ValueError(
-            "PositionEmbedding must have `use_dynamic_slicing` set "
-            "to True (and max_sequence_length set) when the "
-            "sequence (1st) dimension of the input is None."
+          "PositionEmbedding must have `use_dynamic_slicing` set "
+          "to True (and max_sequence_length set) when the "
+          "sequence (1st) dimension of the input is None."
         )
       if self._max_sequence_length is not None:
         raise ValueError(
-            "When `use_dynamic_slicing` is False, max_sequence_length should "
-            "not be specified and we ought to use seq_length to get the "
-            "variable shape."
+          "When `use_dynamic_slicing` is False, max_sequence_length should "
+          "not be specified and we ought to use seq_length to get the "
+          "variable shape."
         )
 
     if self._max_sequence_length is not None:
@@ -98,7 +98,7 @@ class PositionEmbedding(tf.keras.layers.Layer):
       weight_sequence_length = seq_length
 
     self._position_embeddings = self.add_weight(
-        "embeddings", shape=[weight_sequence_length, width], initializer=self._initializer
+      "embeddings", shape=[weight_sequence_length, width], initializer=self._initializer
     )
 
     super(PositionEmbedding, self).build(input_shape)

@@ -19,14 +19,14 @@ def runner(argv=None):
 
   if len(argv) <= 1:
     argv = [
-        sys.argv[0],
-        "--batch_size=2048",
-        "--epochs=1",
-        "--train_data=/workspaces/dataset/ali_display_ad_click/output/*.parquet",
-        "--feature_map=/workspaces/Deepray2/deepray/datasets/ali_display_ad_click/feature_map.csv",
-        # "--white_list=examples/Recommendation/yekuan/data_pipeline/white_list",
-        # f"--feature_map={dir_path}/bz_search_1to3.csv",
-        "--label=label",
+      sys.argv[0],
+      "--batch_size=2048",
+      "--epochs=1",
+      "--train_data=/workspaces/dataset/ali_display_ad_click/output/*.parquet",
+      "--feature_map=/workspaces/Deepray2/deepray/datasets/ali_display_ad_click/feature_map.csv",
+      # "--white_list=examples/Recommendation/yekuan/data_pipeline/white_list",
+      # f"--feature_map={dir_path}/bz_search_1to3.csv",
+      "--label=label",
     ]
   if argv:
     FLAGS(argv, known_only=True)
@@ -44,7 +44,7 @@ def runner(argv=None):
     step += 1
     num_examples += FLAGS.batch_size
     step_throughput = _performance_calculator(1, FLAGS.batch_size)
-    print(f'step {step}, Perf {step_throughput} samples/s')
+    print(f"step {step}, Perf {step_throughput} samples/s")
 
   print(num_examples)
   results_perf = _performance_calculator.results

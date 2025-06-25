@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -33,16 +34,17 @@ def _adjust_labels(labels, predictions):
 def _validate_rank(labels, predictions, weights):
   if weights is not None and len(weights.shape) != len(labels.shape):
     raise RuntimeError(
-        ("Weight and label tensors were not of the same rank. weights.shape "
-         "was %s, and labels.shape was %s.") % (predictions.shape, labels.shape)
+      ("Weight and label tensors were not of the same rank. weights.shape was %s, and labels.shape was %s.")
+      % (predictions.shape, labels.shape)
     )
   if (len(predictions.shape) - 1) != len(labels.shape):
     raise RuntimeError(
-        (
-            "Weighted sparse categorical crossentropy expects `labels` to have a "
-            "rank of one less than `predictions`. labels.shape was %s, and "
-            "predictions.shape was %s."
-        ) % (labels.shape, predictions.shape)
+      (
+        "Weighted sparse categorical crossentropy expects `labels` to have a "
+        "rank of one less than `predictions`. labels.shape was %s, and "
+        "predictions.shape was %s."
+      )
+      % (labels.shape, predictions.shape)
     )
 
 

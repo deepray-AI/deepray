@@ -23,32 +23,31 @@ from official.nlp.modeling.networks import fnet
 
 
 class FNetTest(parameterized.TestCase, tf.test.TestCase):
-
   def tearDown(self):
     super(FNetTest, self).tearDown()
     tf.keras.mixed_precision.set_global_policy("float32")
 
   @parameterized.named_parameters(
-      ("fnet", layers.MixingMechanism.FOURIER, ()),
-      ("fnet_hybrid", layers.MixingMechanism.FOURIER, (1, 2)),
-      ("hnet", layers.MixingMechanism.HARTLEY, ()),
-      ("hnet_hybrid", layers.MixingMechanism.HARTLEY, (1, 2)),
-      ("linear", layers.MixingMechanism.LINEAR, ()),
-      ("linear_hybrid", layers.MixingMechanism.LINEAR, (0,)),
-      ("bert", layers.MixingMechanism.FOURIER, (0, 1, 2)),
+    ("fnet", layers.MixingMechanism.FOURIER, ()),
+    ("fnet_hybrid", layers.MixingMechanism.FOURIER, (1, 2)),
+    ("hnet", layers.MixingMechanism.HARTLEY, ()),
+    ("hnet_hybrid", layers.MixingMechanism.HARTLEY, (1, 2)),
+    ("linear", layers.MixingMechanism.LINEAR, ()),
+    ("linear_hybrid", layers.MixingMechanism.LINEAR, (0,)),
+    ("bert", layers.MixingMechanism.FOURIER, (0, 1, 2)),
   )
   def test_network(self, mixing_mechanism: layers.MixingMechanism, attention_layers: Sequence[int]):
     num_layers = 3
     hidden_size = 32
     sequence_length = 21
     test_network = fnet.FNet(
-        vocab_size=100,
-        hidden_size=hidden_size,
-        num_attention_heads=2,
-        max_sequence_length=sequence_length,
-        num_layers=num_layers,
-        mixing_mechanism=mixing_mechanism,
-        attention_layers=attention_layers
+      vocab_size=100,
+      hidden_size=hidden_size,
+      num_attention_heads=2,
+      max_sequence_length=sequence_length,
+      num_layers=num_layers,
+      mixing_mechanism=mixing_mechanism,
+      attention_layers=attention_layers,
     )
 
     # Create the inputs (note that the first dimension is implicit).
@@ -77,11 +76,7 @@ class FNetTest(parameterized.TestCase, tf.test.TestCase):
     hidden_size = 32
     sequence_length = 21
     test_network = fnet.FNet(
-        vocab_size=100,
-        hidden_size=hidden_size,
-        num_attention_heads=2,
-        max_sequence_length=sequence_length,
-        num_layers=3
+      vocab_size=100, hidden_size=hidden_size, num_attention_heads=2, max_sequence_length=sequence_length, num_layers=3
     )
 
     # Create the inputs (note that the first dimension is implicit).

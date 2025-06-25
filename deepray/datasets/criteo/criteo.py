@@ -23,12 +23,11 @@ from deepray.datasets.datapipeline import DataPipeline
 
 
 class Criteo(DataPipeline):
-
   def __init__(self, context: InputContext = None, **kwargs):
     super().__init__(context, **kwargs)
     flags.FLAGS([
-        sys.argv[0],
-        "--num_train_examples=11932672",
+      sys.argv[0],
+      "--num_train_examples=11932672",
     ])
 
   def build_dataset(self, input_file_pattern, batch_size, is_training=True, *args, **kwargs):

@@ -36,10 +36,10 @@ def test_gather_tree_one():
   max_sequence_lengths = [3]
   expected_result = _transpose_batch_time([[[2, 2, 2], [6, 5, 6], [7, 8, 9], [10, 10, 10]]])
   beams = beam_search_decoder.gather_tree(
-      step_ids=step_ids,
-      parent_ids=parent_ids,
-      max_sequence_lengths=max_sequence_lengths,
-      end_token=end_token,
+    step_ids=step_ids,
+    parent_ids=parent_ids,
+    max_sequence_lengths=max_sequence_lengths,
+    end_token=end_token,
   )
   np.testing.assert_equal(expected_result, beams.numpy())
 
@@ -55,10 +55,10 @@ def test_bad_parent_values_on_cpu():
 
   with pytest.raises(tf.errors.InvalidArgumentError, match="parent id"):
     _ = beam_search_decoder.gather_tree(
-        step_ids=step_ids,
-        parent_ids=parent_ids,
-        max_sequence_lengths=max_sequence_lengths,
-        end_token=end_token,
+      step_ids=step_ids,
+      parent_ids=parent_ids,
+      max_sequence_lengths=max_sequence_lengths,
+      end_token=end_token,
     )
 
 
@@ -74,10 +74,10 @@ def test_bad_parent_values_on_gpu():
 
   with pytest.raises(tf.errors.InvalidArgumentError, match="parent id"):
     _ = beam_search_decoder.gather_tree(
-        step_ids=step_ids,
-        parent_ids=parent_ids,
-        max_sequence_lengths=max_sequence_lengths,
-        end_token=end_token,
+      step_ids=step_ids,
+      parent_ids=parent_ids,
+      max_sequence_lengths=max_sequence_lengths,
+      end_token=end_token,
     )
 
 
@@ -93,17 +93,17 @@ def test_gather_tree_batch():
   parent_ids = np.random.randint(0, high=beam_width - 1, size=(max_time, batch_size, beam_width))
 
   beams = beam_search_decoder.gather_tree(
-      step_ids=step_ids.astype(np.int32),
-      parent_ids=parent_ids.astype(np.int32),
-      max_sequence_lengths=max_sequence_lengths,
-      end_token=end_token,
+    step_ids=step_ids.astype(np.int32),
+    parent_ids=parent_ids.astype(np.int32),
+    max_sequence_lengths=max_sequence_lengths,
+    end_token=end_token,
   )
   beams = beams.numpy()
 
   assert (max_time, batch_size, beam_width) == beams.shape
   for b in range(batch_size):
     # Past max_sequence_lengths[b], we emit all end tokens.
-    b_value = beams[max_sequence_lengths[b]:, b, :]
+    b_value = beams[max_sequence_lengths[b] :, b, :]
     np.testing.assert_allclose(b_value, end_token * np.ones_like(b_value))
   for batch, beam in itertools.product(range(batch_size), range(beam_width)):
     v = np.squeeze(beams[:, batch, beam])
@@ -115,5 +115,5 @@ def test_gather_tree_batch():
       # If an end_token is found, everything before it should be a
       # valid id and everything after it should be end_token.
       if found > 0:
-        np.testing.assert_equal(v[:found - 1] >= 0, np.ones_like(v[:found - 1], dtype=bool))
-      np.testing.assert_allclose(v[found + 1:], end_token * np.ones_like(v[found + 1:]))
+        np.testing.assert_equal(v[: found - 1] >= 0, np.ones_like(v[: found - 1], dtype=bool))
+      np.testing.assert_allclose(v[found + 1 :], end_token * np.ones_like(v[found + 1 :]))

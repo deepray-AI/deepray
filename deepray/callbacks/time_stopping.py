@@ -26,11 +26,11 @@ from typeguard import typechecked
 class TimeStopping(Callback):
   """Stop training when a specified amount of time has passed.
 
-    Args:
-        seconds: maximum amount of time before stopping.
-            Defaults to 86400 (1 day).
-        verbose: verbosity mode. Defaults to 0.
-    """
+  Args:
+      seconds: maximum amount of time before stopping.
+          Defaults to 86400 (1 day).
+      verbose: verbosity mode. Defaults to 0.
+  """
 
   @typechecked
   def __init__(self, seconds: int = 86400, verbose: int = 0):
@@ -56,8 +56,8 @@ class TimeStopping(Callback):
 
   def get_config(self):
     config = {
-        "seconds": self.seconds,
-        "verbose": self.verbose,
+      "seconds": self.seconds,
+      "verbose": self.verbose,
     }
 
     base_config = super().get_config()

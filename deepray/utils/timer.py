@@ -4,10 +4,10 @@ from functools import wraps
 
 class Timer:
   """Useage
-    if __name__ == "__main__":
-    with Timer():
-        # ...
-    """
+  if __name__ == "__main__":
+  with Timer():
+      # ...
+  """
 
   def __enter__(self):
     self._enter_time = time.time()
@@ -19,10 +19,10 @@ class Timer:
 
 def timer(func):
   """Useage
-    @timer
-    def your_function():
-        # ...
-    """
+  @timer
+  def your_function():
+      # ...
+  """
 
   @wraps(func)
   def inner(*args, **kwargs):

@@ -6,6 +6,7 @@ Last modified: 2021/07/15
 Description: Training a GAN conditioned on class labels to generate handwritten digits.
 Accelerator: GPU
 """
+
 """
 Generative Adversarial Networks (GANs) let us generate novel image data, video data,
 or audio data from a random input. Typically, the random input is sampled
@@ -57,6 +58,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 import imageio
+
 """
 ## Constants and hyperparameters
 """
@@ -110,34 +112,34 @@ adapted from [this example](https://keras.io/guides/customizing_what_happens_in_
 
 # Create the discriminator.
 discriminator = keras.Sequential(
-    [
-        keras.layers.InputLayer((28, 28, discriminator_in_channels)),
-        layers.Conv2D(64, (3, 3), strides=(2, 2), padding="same"),
-        layers.LeakyReLU(alpha=0.2),
-        layers.Conv2D(128, (3, 3), strides=(2, 2), padding="same"),
-        layers.LeakyReLU(alpha=0.2),
-        layers.GlobalMaxPooling2D(),
-        layers.Dense(1),
-    ],
-    name="discriminator",
+  [
+    keras.layers.InputLayer((28, 28, discriminator_in_channels)),
+    layers.Conv2D(64, (3, 3), strides=(2, 2), padding="same"),
+    layers.LeakyReLU(alpha=0.2),
+    layers.Conv2D(128, (3, 3), strides=(2, 2), padding="same"),
+    layers.LeakyReLU(alpha=0.2),
+    layers.GlobalMaxPooling2D(),
+    layers.Dense(1),
+  ],
+  name="discriminator",
 )
 
 # Create the generator.
 generator = keras.Sequential(
-    [
-        keras.layers.InputLayer((generator_in_channels,)),
-        # We want to generate 128 + num_classes coefficients to reshape into a
-        # 7x7x(128 + num_classes) map.
-        layers.Dense(7 * 7 * generator_in_channels),
-        layers.LeakyReLU(alpha=0.2),
-        layers.Reshape((7, 7, generator_in_channels)),
-        layers.Conv2DTranspose(128, (4, 4), strides=(2, 2), padding="same"),
-        layers.LeakyReLU(alpha=0.2),
-        layers.Conv2DTranspose(128, (4, 4), strides=(2, 2), padding="same"),
-        layers.LeakyReLU(alpha=0.2),
-        layers.Conv2D(1, (7, 7), padding="same", activation="sigmoid"),
-    ],
-    name="generator",
+  [
+    keras.layers.InputLayer((generator_in_channels,)),
+    # We want to generate 128 + num_classes coefficients to reshape into a
+    # 7x7x(128 + num_classes) map.
+    layers.Dense(7 * 7 * generator_in_channels),
+    layers.LeakyReLU(alpha=0.2),
+    layers.Reshape((7, 7, generator_in_channels)),
+    layers.Conv2DTranspose(128, (4, 4), strides=(2, 2), padding="same"),
+    layers.LeakyReLU(alpha=0.2),
+    layers.Conv2DTranspose(128, (4, 4), strides=(2, 2), padding="same"),
+    layers.LeakyReLU(alpha=0.2),
+    layers.Conv2D(1, (7, 7), padding="same", activation="sigmoid"),
+  ],
+  name="generator",
 )
 """
 ## Creating a `ConditionalGAN` model
@@ -145,7 +147,6 @@ generator = keras.Sequential(
 
 
 class ConditionalGAN(keras.Model):
-
   def __init__(self, discriminator, generator, latent_dim):
     super().__init__()
     self.discriminator = discriminator
@@ -220,8 +221,8 @@ class ConditionalGAN(keras.Model):
     self.gen_loss_tracker.update_state(g_loss)
     self.disc_loss_tracker.update_state(d_loss)
     return {
-        "g_loss": self.gen_loss_tracker.result(),
-        "d_loss": self.disc_loss_tracker.result(),
+      "g_loss": self.gen_loss_tracker.result(),
+      "d_loss": self.disc_loss_tracker.result(),
     }
 
 
@@ -231,9 +232,9 @@ class ConditionalGAN(keras.Model):
 
 cond_gan = ConditionalGAN(discriminator=discriminator, generator=generator, latent_dim=latent_dim)
 cond_gan.compile(
-    d_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
-    g_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
-    loss_fn=keras.losses.BinaryCrossentropy(from_logits=True),
+  d_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
+  g_optimizer=keras.optimizers.Adam(learning_rate=0.0003),
+  loss_fn=keras.losses.BinaryCrossentropy(from_logits=True),
 )
 
 cond_gan.fit(dataset, epochs=20)
@@ -264,7 +265,7 @@ def interpolate_class(first_number, second_number):
   # Calculate the interpolation vector between the two labels.
   percent_second_label = tf.linspace(0, 1, num_interpolation)[:, None]
   percent_second_label = tf.cast(percent_second_label, tf.float32)
-  interpolation_labels = (first_label * (1 - percent_second_label) + second_label * percent_second_label)
+  interpolation_labels = first_label * (1 - percent_second_label) + second_label * percent_second_label
 
   # Combine the noise and the labels and run inference with the generator.
   noise_and_labels = tf.concat([interpolation_noise, interpolation_labels], 1)

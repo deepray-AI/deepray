@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -53,26 +54,26 @@ class BertPretrainer(tf.keras.Model):
   """
 
   def __init__(
-      self,
-      network,
-      num_classes,
-      num_token_predictions,
-      float_type,
-      activation=None,
-      output_activation=None,
-      initializer='glorot_uniform',
-      output='logits',
-      **kwargs
+    self,
+    network,
+    num_classes,
+    num_token_predictions,
+    float_type,
+    activation=None,
+    output_activation=None,
+    initializer="glorot_uniform",
+    output="logits",
+    **kwargs,
   ):
     self._self_setattr_tracking = False
     self._config = {
-        'network': network,
-        'num_classes': num_classes,
-        'num_token_predictions': num_token_predictions,
-        'activation': activation,
-        'output_activation': output_activation,
-        'initializer': initializer,
-        'output': output,
+      "network": network,
+      "num_classes": num_classes,
+      "num_token_predictions": num_token_predictions,
+      "activation": activation,
+      "output_activation": output_activation,
+      "initializer": initializer,
+      "output": output,
     }
 
     # We want to use the inputs of the passed network as the inputs to this
@@ -92,33 +93,33 @@ class BertPretrainer(tf.keras.Model):
     sequence_output_length = sequence_output.shape.as_list()[1]
     if sequence_output_length < num_token_predictions:
       raise ValueError(
-          "The passed network's output length is %s, which is less than the "
-          'requested num_token_predictions %s.' % (sequence_output_length, num_token_predictions)
+        "The passed network's output length is %s, which is less than the "
+        "requested num_token_predictions %s." % (sequence_output_length, num_token_predictions)
       )
 
     masked_lm_positions = tf.keras.layers.Input(
-        shape=(num_token_predictions,), name='masked_lm_positions', dtype=tf.int32
+      shape=(num_token_predictions,), name="masked_lm_positions", dtype=tf.int32
     )
     inputs.append(masked_lm_positions)
 
     self.masked_lm = masked_lm.MaskedLM(
-        num_predictions=num_token_predictions,
-        input_width=sequence_output.shape[-1],
-        source_network=network,
-        float_type=float_type,
-        activation=activation,
-        initializer=initializer,
-        output=output,
-        name='masked_lm'
+      num_predictions=num_token_predictions,
+      input_width=sequence_output.shape[-1],
+      source_network=network,
+      float_type=float_type,
+      activation=activation,
+      initializer=initializer,
+      output=output,
+      name="masked_lm",
     )
     lm_outputs = self.masked_lm([sequence_output, masked_lm_positions])
 
     self.classification = classification.Classification(
-        input_width=cls_output.shape[-1],
-        num_classes=num_classes,
-        initializer=initializer,
-        output=output,
-        name='classification'
+      input_width=cls_output.shape[-1],
+      num_classes=num_classes,
+      initializer=initializer,
+      output=output,
+      name="classification",
     )
     sentence_outputs = self.classification(cls_output)
 

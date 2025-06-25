@@ -27,24 +27,24 @@ def test_base_esn():
 
   const_initializer = tf.constant_initializer(0.5)
   cell = ESNCell(
-      units=units,
-      connectivity=1,
-      leaky=1,
-      spectral_radius=0.9,
-      use_norm2=True,
-      use_bias=True,
-      activation=None,
-      kernel_initializer=const_initializer,
-      recurrent_initializer=const_initializer,
-      bias_initializer=const_initializer,
+    units=units,
+    connectivity=1,
+    leaky=1,
+    spectral_radius=0.9,
+    use_norm2=True,
+    use_bias=True,
+    activation=None,
+    kernel_initializer=const_initializer,
+    recurrent_initializer=const_initializer,
+    bias_initializer=const_initializer,
   )
 
   inputs = tf.constant(
-      np.array(
-          [[1.0, 1.0, 1.0, 1.0], [2.0, 2.0, 2.0, 2.0], [3.0, 3.0, 3.0, 3.0]],
-          dtype=np.float32,
-      ),
-      dtype=tf.float32,
+    np.array(
+      [[1.0, 1.0, 1.0, 1.0], [2.0, 2.0, 2.0, 2.0], [3.0, 3.0, 3.0, 3.0]],
+      dtype=np.float32,
+    ),
+    dtype=tf.float32,
   )
   state_value = tf.constant(0.3 * np.ones((units, units), dtype=np.float32), dtype=tf.float32)
   init_state = [state_value, state_value]
@@ -58,10 +58,10 @@ def test_esn_echo_state_property_eig():
   use_norm2 = False
   units = 3
   cell = ESNCell(
-      units=units,
-      use_norm2=use_norm2,
-      recurrent_initializer="ones",
-      connectivity=1.0,
+    units=units,
+    use_norm2=use_norm2,
+    recurrent_initializer="ones",
+    connectivity=1.0,
   )
   cell.build((3, 3))
   recurrent_weights = tf.constant(cell.get_weights()[0], dtype=tf.float32)
@@ -83,10 +83,10 @@ def test_esn_connectivity():
   units = 1000
   connectivity = 0.5
   cell = ESNCell(
-      units=units,
-      connectivity=connectivity,
-      use_norm2=True,
-      recurrent_initializer="ones",
+    units=units,
+    connectivity=connectivity,
+    use_norm2=True,
+    recurrent_initializer="ones",
   )
   cell.build((3, 3))
   recurrent_weights = tf.constant(cell.get_weights()[0])
@@ -117,33 +117,33 @@ def test_esn_keras_rnn_e2e():
 
 def test_esn_config():
   cell = ESNCell(
-      units=3,
-      connectivity=1,
-      leaky=1,
-      spectral_radius=0.9,
-      use_norm2=False,
-      use_bias=True,
-      activation="tanh",
-      kernel_initializer="glorot_uniform",
-      recurrent_initializer="glorot_uniform",
-      bias_initializer="glorot_uniform",
-      name="esn_cell_3",
+    units=3,
+    connectivity=1,
+    leaky=1,
+    spectral_radius=0.9,
+    use_norm2=False,
+    use_bias=True,
+    activation="tanh",
+    kernel_initializer="glorot_uniform",
+    recurrent_initializer="glorot_uniform",
+    bias_initializer="glorot_uniform",
+    name="esn_cell_3",
   )
 
   expected_config = {
-      "name": "esn_cell_3",
-      "trainable": True,
-      "dtype": "float32",
-      "units": 3,
-      "connectivity": 1,
-      "leaky": 1,
-      "spectral_radius": 0.9,
-      "use_norm2": False,
-      "use_bias": True,
-      "activation": tf.keras.activations.serialize(tf.keras.activations.get("tanh")),
-      "kernel_initializer": tf.keras.initializers.serialize(tf.keras.initializers.get("glorot_uniform")),
-      "recurrent_initializer": tf.keras.initializers.serialize(tf.keras.initializers.get("glorot_uniform")),
-      "bias_initializer": tf.keras.initializers.serialize(tf.keras.initializers.get("glorot_uniform")),
+    "name": "esn_cell_3",
+    "trainable": True,
+    "dtype": "float32",
+    "units": 3,
+    "connectivity": 1,
+    "leaky": 1,
+    "spectral_radius": 0.9,
+    "use_norm2": False,
+    "use_bias": True,
+    "activation": tf.keras.activations.serialize(tf.keras.activations.get("tanh")),
+    "kernel_initializer": tf.keras.initializers.serialize(tf.keras.initializers.get("glorot_uniform")),
+    "recurrent_initializer": tf.keras.initializers.serialize(tf.keras.initializers.get("glorot_uniform")),
+    "bias_initializer": tf.keras.initializers.serialize(tf.keras.initializers.get("glorot_uniform")),
   }
   config = cell.get_config()
   assert config == expected_config

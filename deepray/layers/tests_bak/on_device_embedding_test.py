@@ -29,7 +29,6 @@ from deepray.layers import on_device_embedding
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class OnDeviceEmbeddingTest(keras_parameterized.TestCase):
-
   def test_layer_creation(self):
     vocab_size = 31
     embedding_width = 27
@@ -49,7 +48,7 @@ class OnDeviceEmbeddingTest(keras_parameterized.TestCase):
     vocab_size = 31
     embedding_width = 27
     test_layer = on_device_embedding.OnDeviceEmbedding(
-        vocab_size=vocab_size, embedding_width=embedding_width, dtype="float16"
+      vocab_size=vocab_size, embedding_width=embedding_width, dtype="float16"
     )
     # Create a 2-dimensional input (the first dimension is implicit).
     sequence_length = 23
@@ -85,7 +84,7 @@ class OnDeviceEmbeddingTest(keras_parameterized.TestCase):
     vocab_size = 31
     embedding_width = 27
     test_layer = on_device_embedding.OnDeviceEmbedding(
-        vocab_size=vocab_size, embedding_width=embedding_width, dtype="float16"
+      vocab_size=vocab_size, embedding_width=embedding_width, dtype="float16"
     )
     # Create a 2-dimensional input (the first dimension is implicit).
     sequence_length = 23
@@ -106,7 +105,7 @@ class OnDeviceEmbeddingTest(keras_parameterized.TestCase):
     vocab_size = 31
     embedding_width = 27
     test_layer = on_device_embedding.OnDeviceEmbedding(
-        vocab_size=vocab_size, embedding_width=embedding_width, use_one_hot=True
+      vocab_size=vocab_size, embedding_width=embedding_width, use_one_hot=True
     )
     # Create a 2-dimensional input (the first dimension is implicit).
     sequence_length = 23
@@ -123,7 +122,7 @@ class OnDeviceEmbeddingTest(keras_parameterized.TestCase):
     vocab_size = 31
     embedding_width = 27
     test_layer = on_device_embedding.OnDeviceEmbedding(
-        vocab_size=vocab_size, embedding_width=embedding_width, dtype="float16", use_one_hot=True
+      vocab_size=vocab_size, embedding_width=embedding_width, dtype="float16", use_one_hot=True
     )
     # Create a 2-dimensional input (the first dimension is implicit).
     sequence_length = 23
@@ -140,7 +139,7 @@ class OnDeviceEmbeddingTest(keras_parameterized.TestCase):
     vocab_size = 31
     embedding_width = 27
     test_layer = on_device_embedding.OnDeviceEmbedding(
-        vocab_size=vocab_size, embedding_width=embedding_width, use_one_hot=True
+      vocab_size=vocab_size, embedding_width=embedding_width, use_one_hot=True
     )
     # Create a 2-dimensional input (the first dimension is implicit).
     sequence_length = 23
@@ -161,7 +160,7 @@ class OnDeviceEmbeddingTest(keras_parameterized.TestCase):
     vocab_size = 31
     embedding_width = 27
     test_layer = on_device_embedding.OnDeviceEmbedding(
-        vocab_size=vocab_size, embedding_width=embedding_width, dtype="float16", use_one_hot=True
+      vocab_size=vocab_size, embedding_width=embedding_width, dtype="float16", use_one_hot=True
     )
     # Create a 2-dimensional input (the first dimension is implicit).
     sequence_length = 23

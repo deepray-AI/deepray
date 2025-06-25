@@ -25,21 +25,21 @@ pytestmark = pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize("num_clusters", [1, 4])
 def test_simple(num_clusters):
   test_utils.layer_test(
-      NetVLAD,
-      kwargs={"num_clusters": num_clusters},
-      input_shape=(5, 4, 100),
-      expected_output_shape=(None, num_clusters * 100),
+    NetVLAD,
+    kwargs={"num_clusters": num_clusters},
+    input_shape=(5, 4, 100),
+    expected_output_shape=(None, num_clusters * 100),
   )
 
 
 def test_unknown():
   inputs = np.random.random((5, 4, 100)).astype("float32")
   test_utils.layer_test(
-      NetVLAD,
-      kwargs={"num_clusters": 3},
-      input_shape=(None, None, 100),
-      input_data=inputs,
-      expected_output_shape=(None, 3 * 100),
+    NetVLAD,
+    kwargs={"num_clusters": 3},
+    input_shape=(None, None, 100),
+    input_data=inputs,
+    expected_output_shape=(None, 3 * 100),
   )
 
 

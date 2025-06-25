@@ -103,14 +103,14 @@ class KafkaGroupIODataset(tf.data.Dataset):
   """
 
   def __init__(
-      self,
-      topics,
-      group_id,
-      servers,
-      stream_timeout=0,
-      message_poll_timeout=10000,
-      configuration=None,
-      internal=True,
+    self,
+    topics,
+    group_id,
+    servers,
+    stream_timeout=0,
+    message_poll_timeout=10000,
+    configuration=None,
+    internal=True,
   ):
     """
     Args:
@@ -162,12 +162,12 @@ class KafkaGroupIODataset(tf.data.Dataset):
       self._resource = resource
       dataset = tf.data.Dataset.counter()
       dataset = dataset.map(
-          lambda i: core_ops.io_kafka_group_readable_next(
-              input=self._resource,
-              index=i,
-              message_poll_timeout=message_poll_timeout,
-              stream_timeout=stream_timeout,
-          )
+        lambda i: core_ops.io_kafka_group_readable_next(
+          input=self._resource,
+          index=i,
+          message_poll_timeout=message_poll_timeout,
+          stream_timeout=stream_timeout,
+        )
       )
       dataset = dataset.take_while(lambda v: tf.greater(v.continue_fetch, 0))
       dataset = dataset.map(lambda v: v.message)
@@ -185,17 +185,16 @@ class KafkaGroupIODataset(tf.data.Dataset):
 
 
 class KafkaPipeline(DataPipeline, ABC):
-
   def __init__(
-      self,
-      topics,
-      group_id,
-      servers,
-      stream_timeout=None,
-      configuration=None,
-      compression_type=None,
-      num_client=1,
-      **kwargs
+    self,
+    topics,
+    group_id,
+    servers,
+    stream_timeout=None,
+    configuration=None,
+    compression_type=None,
+    num_client=1,
+    **kwargs,
   ):
     super().__init__(**kwargs)
     self.topics = topics
@@ -207,45 +206,46 @@ class KafkaPipeline(DataPipeline, ABC):
     self.num_client = num_client
 
   def build_dataset(
-      self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
+    self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
     if self.num_client > 1:
       logger.info(f"Using {self.num_client} Kafka clients.")
       clients = tuple(
-          KafkaGroupIODataset(
-              topics=self.topics,
-              group_id=self.group_id,
-              servers=self.servers,
-              stream_timeout=self.stream_timeout,
-              configuration=self.configuration,
-          ) for _ in range(self.num_client)
-      )
-      dataset = tf.data.Dataset.zip(clients)
-      dataset = dataset.map(lambda *x: tf.stack(x, axis=-1)).unbatch()
-    else:
-      dataset = KafkaGroupIODataset(
+        KafkaGroupIODataset(
           topics=self.topics,
           group_id=self.group_id,
           servers=self.servers,
           stream_timeout=self.stream_timeout,
           configuration=self.configuration,
+        )
+        for _ in range(self.num_client)
+      )
+      dataset = tf.data.Dataset.zip(clients)
+      dataset = dataset.map(lambda *x: tf.stack(x, axis=-1)).unbatch()
+    else:
+      dataset = KafkaGroupIODataset(
+        topics=self.topics,
+        group_id=self.group_id,
+        servers=self.servers,
+        stream_timeout=self.stream_timeout,
+        configuration=self.configuration,
       )
       logger.info(
-          "Using only one Kafka client, if there is an IO bottleneck, it is recommended to adjust 'num_client' to increase the number of Kafka clients"
+        "Using only one Kafka client, if there is an IO bottleneck, it is recommended to adjust 'num_client' to increase the number of Kafka clients"
       )
     if self.prebatch_size:
       if batch_size > self.prebatch_size:
         dataset = dataset.batch(
-            batch_size=batch_size // self.prebatch_size,
-            num_parallel_calls=tf.data.AUTOTUNE,
-            deterministic=True,
-            drop_remainder=True
+          batch_size=batch_size // self.prebatch_size,
+          num_parallel_calls=tf.data.AUTOTUNE,
+          deterministic=True,
+          drop_remainder=True,
         )
     else:
       dataset = dataset.batch(batch_size, num_parallel_calls=tf.data.AUTOTUNE, deterministic=True, drop_remainder=True)
     if self.compression_type:
       dataset = dataset.map(
-          lambda v: tf.io.decode_compressed(v, compression_type=self.compression_type), multiprocessing.cpu_count()
+        lambda v: tf.io.decode_compressed(v, compression_type=self.compression_type), multiprocessing.cpu_count()
       )
     if not hasattr(self.parser, "__isabstractmethod__"):
       dataset = dataset.map(self.parser, multiprocessing.cpu_count())

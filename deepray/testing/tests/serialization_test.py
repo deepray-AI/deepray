@@ -19,14 +19,13 @@ def get_random_booleans():
 
 def test_check_metric_serialization_true_negative():
   check_metric_serialization(
-      TrueNegatives(0.8),
-      np.random.uniform(0, 2, size=(2, 2)).astype(bool),
-      np.random.uniform(0, 1, size=(2, 2)).astype(np.float32),
+    TrueNegatives(0.8),
+    np.random.uniform(0, 2, size=(2, 2)).astype(bool),
+    np.random.uniform(0, 1, size=(2, 2)).astype(np.float32),
   )
 
 
 class MyDummyMetric(Metric):
-
   def __init__(self, stuff, name):
     super().__init__(name)
     self.stuff = stuff
@@ -49,7 +48,6 @@ def test_missing_arg():
 
 
 class MyOtherDummyMetric(Metric):
-
   def __init__(self, to_add, name=None, dtype=None):
     super().__init__(name, dtype)
     self.to_add = to_add

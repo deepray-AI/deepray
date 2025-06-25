@@ -24,12 +24,9 @@ from deepray.utils import test_utils
 def test_keras():
   input_data = np.random.random((10, 3, 4)).astype(np.float32)
   test_utils.layer_test(
-      spectral_normalization.SpectralNormalization,
-      kwargs={
-          "layer": tf.keras.layers.Dense(2),
-          "input_shape": (3, 4)
-      },
-      input_data=input_data,
+    spectral_normalization.SpectralNormalization,
+    kwargs={"layer": tf.keras.layers.Dense(2), "input_shape": (3, 4)},
+    input_data=input_data,
   )
 
 
@@ -61,16 +58,16 @@ def test_save_load_model(tmpdir):
 
 
 @pytest.mark.parametrize(
-    "base_layer_fn, input_shape, output_shape",
-    [
-        (lambda: tf.keras.layers.Dense(2), [3, 2], [3, 2]),
-        (
-            lambda: tf.keras.layers.Conv2D(3, (2, 2), padding="same"),
-            [4, 4, 3],
-            [4, 4, 3],
-        ),
-        (lambda: tf.keras.layers.Embedding(2, 10), [2], [2, 10]),
-    ],
+  "base_layer_fn, input_shape, output_shape",
+  [
+    (lambda: tf.keras.layers.Dense(2), [3, 2], [3, 2]),
+    (
+      lambda: tf.keras.layers.Conv2D(3, (2, 2), padding="same"),
+      [4, 4, 3],
+      [4, 4, 3],
+    ),
+    (lambda: tf.keras.layers.Embedding(2, 10), [2], [2, 10]),
+  ],
 )
 def test_model_fit(base_layer_fn, input_shape, output_shape):
   inputs = tf.keras.layers.Input(shape=input_shape)
@@ -82,23 +79,23 @@ def test_model_fit(base_layer_fn, input_shape, output_shape):
 
   model.compile(optimizer=tf.keras.optimizers.RMSprop(learning_rate=0.001), loss="mse")
   model.fit(
-      np.random.random((2, *input_shape)),
-      np.random.random((2, *output_shape)),
-      epochs=3,
-      batch_size=10,
-      verbose=0,
+    np.random.random((2, *input_shape)),
+    np.random.random((2, *output_shape)),
+    epochs=3,
+    batch_size=10,
+    verbose=0,
   )
   assert hasattr(model.layers[0], "u")
 
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.parametrize(
-    "base_layer_fn, input_shape",
-    [
-        (lambda: tf.keras.layers.Dense(2), [3, 2]),
-        (lambda: tf.keras.layers.Conv2D(3, (2, 2), padding="same"), [4, 4, 3]),
-        (lambda: tf.keras.layers.Embedding(2, 10), [2]),
-    ],
+  "base_layer_fn, input_shape",
+  [
+    (lambda: tf.keras.layers.Dense(2), [3, 2]),
+    (lambda: tf.keras.layers.Conv2D(3, (2, 2), padding="same"), [4, 4, 3]),
+    (lambda: tf.keras.layers.Embedding(2, 10), [2]),
+  ],
 )
 def test_model_build(base_layer_fn, input_shape):
   inputs = tf.keras.layers.Input(shape=input_shape)
@@ -136,8 +133,8 @@ def test_normalization():
 def test_apply_layer():
   images = tf.ones((1, 2, 2, 1))
   sn_wrapper = spectral_normalization.SpectralNormalization(
-      tf.keras.layers.Conv2D(1, [2, 2], kernel_initializer=tf.constant_initializer(value=1)),
-      input_shape=(2, 2, 1),
+    tf.keras.layers.Conv2D(1, [2, 2], kernel_initializer=tf.constant_initializer(value=1)),
+    input_shape=(2, 2, 1),
   )
 
   result = sn_wrapper(images, training=False)

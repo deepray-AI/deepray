@@ -36,25 +36,25 @@ logger = logging_util.get_logger()
 class Progbar:
   """Displays a progress bar.
 
-    Args:
-        target: Total number of steps expected, None if unknown.
-        width: Progress bar width on screen.
-        verbose: Verbosity mode, 0 (silent), 1 (verbose), 2 (semi-verbose)
-        stateful_metrics: Iterable of string names of metrics that should *not*
-          be averaged over time. Metrics in this list will be displayed as-is.
-          All others will be averaged by the progbar before display.
-        interval: Minimum visual progress update interval (in seconds).
-        unit_name: Display name for step counts (usually "step" or "sample").
-    """
+  Args:
+      target: Total number of steps expected, None if unknown.
+      width: Progress bar width on screen.
+      verbose: Verbosity mode, 0 (silent), 1 (verbose), 2 (semi-verbose)
+      stateful_metrics: Iterable of string names of metrics that should *not*
+        be averaged over time. Metrics in this list will be displayed as-is.
+        All others will be averaged by the progbar before display.
+      interval: Minimum visual progress update interval (in seconds).
+      unit_name: Display name for step counts (usually "step" or "sample").
+  """
 
   def __init__(
-      self,
-      target,
-      width=30,
-      verbose=1,
-      interval=0.05,
-      stateful_metrics=None,
-      unit_name="step",
+    self,
+    target,
+    width=30,
+    verbose=1,
+    interval=0.05,
+    stateful_metrics=None,
+    unit_name="step",
   ):
     self.target = target
     self.width = width
@@ -67,8 +67,10 @@ class Progbar:
       self.stateful_metrics = set()
 
     self._dynamic_display = (
-        (hasattr(sys.stdout, "isatty") and sys.stdout.isatty()) or "ipykernel" in sys.modules or
-        "posix" in sys.modules or "PYCHARM_HOSTED" in os.environ
+      (hasattr(sys.stdout, "isatty") and sys.stdout.isatty())
+      or "ipykernel" in sys.modules
+      or "posix" in sys.modules
+      or "PYCHARM_HOSTED" in os.environ
     )
     self._total_width = 0
     self._seen_so_far = 0
@@ -85,15 +87,15 @@ class Progbar:
   def update(self, current, values=None, finalize=None):
     """Updates the progress bar.
 
-        Args:
-            current: Index of current step.
-            values: List of tuples: `(name, value_for_last_step)`. If `name` is
-              in `stateful_metrics`, `value_for_last_step` will be displayed
-              as-is. Else, an average of the metric over time will be
-              displayed.
-            finalize: Whether this is the last update for the progress bar. If
-              `None`, uses `current >= self.target`. Defaults to `None`.
-        """
+    Args:
+        current: Index of current step.
+        values: List of tuples: `(name, value_for_last_step)`. If `name` is
+          in `stateful_metrics`, `value_for_last_step` will be displayed
+          as-is. Else, an average of the metric over time will be
+          displayed.
+        finalize: Whether this is the last update for the progress bar. If
+          `None`, uses `current >= self.target`. Defaults to `None`.
+    """
     if finalize is None:
       if self.target is None:
         finalize = False
@@ -166,9 +168,9 @@ class Progbar:
         eta = time_per_unit * (self.target - current)
         if eta > 3600:
           eta_format = "%d:%02d:%02d" % (
-              eta // 3600,
-              (eta % 3600) // 60,
-              eta % 60,
+            eta // 3600,
+            (eta % 3600) // 60,
+            eta % 60,
           )
         elif eta > 60:
           eta_format = "%d:%02d" % (eta // 60, eta % 60)
@@ -213,7 +215,7 @@ class Progbar:
           else:
             info += f" {avg:.4e}"
         if self._time_at_epoch_end:
-          time_per_epoch = (self._time_at_epoch_end - self._time_at_epoch_start)
+          time_per_epoch = self._time_at_epoch_end - self._time_at_epoch_start
           avg_time_per_step = time_per_epoch / self.target
           self._time_at_epoch_start = now
           self._time_at_epoch_end = None
@@ -232,14 +234,14 @@ class Progbar:
   def _format_time(self, time_per_unit, unit_name):
     """format a given duration to display to the user.
 
-        Given the duration, this function formats it in either milliseconds
-        or seconds and displays the unit (i.e. ms/step or s/epoch)
-        Args:
-          time_per_unit: the duration to display
-          unit_name: the name of the unit to display
-        Returns:
-          a string with the correctly formatted duration and units
-        """
+    Given the duration, this function formats it in either milliseconds
+    or seconds and displays the unit (i.e. ms/step or s/epoch)
+    Args:
+      time_per_unit: the duration to display
+      unit_name: the name of the unit to display
+    Returns:
+      a string with the correctly formatted duration and units
+    """
     formatted = ""
     if time_per_unit >= 1 or time_per_unit == 0:
       formatted += f" {time_per_unit:.0f}s/{unit_name}"
@@ -252,19 +254,19 @@ class Progbar:
   def _estimate_step_duration(self, current, now):
     """Estimate the duration of a single step.
 
-        Given the step number `current` and the corresponding time `now` this
-        function returns an estimate for how long a single step takes. If this
-        is called before one step has been completed (i.e. `current == 0`) then
-        zero is given as an estimate. The duration estimate ignores the duration
-        of the (assumed to be non-representative) first step for estimates when
-        more steps are available (i.e. `current>1`).
+    Given the step number `current` and the corresponding time `now` this
+    function returns an estimate for how long a single step takes. If this
+    is called before one step has been completed (i.e. `current == 0`) then
+    zero is given as an estimate. The duration estimate ignores the duration
+    of the (assumed to be non-representative) first step for estimates when
+    more steps are available (i.e. `current>1`).
 
-        Args:
-          current: Index of current step.
-          now: The current time.
+    Args:
+      current: Index of current step.
+      now: The current time.
 
-        Returns: Estimate of the duration of a single step.
-        """
+    Returns: Estimate of the duration of a single step.
+    """
     if current:
       # there are a few special scenarios here:
       # 1) somebody is calling the progress bar without ever supplying
@@ -290,19 +292,19 @@ class Progbar:
 class ProgbarLogger(Callback):
   """Callback that prints metrics to stdout.
 
-    Args:
-        count_mode: One of `"steps"` or `"samples"`.
-            Whether the progress bar should
-            count samples seen or steps (batches) seen.
-        stateful_metrics: Iterable of string names of metrics that
-            should *not* be averaged over an epoch.
-            Metrics in this list will be logged as-is.
-            All others will be averaged over time (e.g. loss, etc).
-            If not provided, defaults to the `Model`'s metrics.
+  Args:
+      count_mode: One of `"steps"` or `"samples"`.
+          Whether the progress bar should
+          count samples seen or steps (batches) seen.
+      stateful_metrics: Iterable of string names of metrics that
+          should *not* be averaged over an epoch.
+          Metrics in this list will be logged as-is.
+          All others will be averaged over time (e.g. loss, etc).
+          If not provided, defaults to the `Model`'s metrics.
 
-    Raises:
-        ValueError: In case of invalid `count_mode`.
-    """
+  Raises:
+      ValueError: In case of invalid `count_mode`.
+  """
 
   def __init__(self, count_mode: str = "samples", stateful_metrics=None):
     super().__init__()
@@ -312,10 +314,9 @@ class ProgbarLogger(Callback):
     elif count_mode == "steps":
       self.use_steps = True
     else:
-      raise ValueError(f"Unknown `count_mode`: {count_mode}. "
-                       'Expected values are ["samples", "steps"]')
+      raise ValueError(f'Unknown `count_mode`: {count_mode}. Expected values are ["samples", "steps"]')
     # Defaults to all Model's metrics except for loss.
-    self.stateful_metrics = (set(stateful_metrics) if stateful_metrics else set())
+    self.stateful_metrics = set(stateful_metrics) if stateful_metrics else set()
 
     self.seen = 0
     self.progbar = None
@@ -336,9 +337,7 @@ class ProgbarLogger(Callback):
     elif not self.use_steps and "samples" in params:
       self.target = params["samples"]
     else:
-      self.target = (
-          None  # Will be inferred at the end of the first epoch.
-      )
+      self.target = None  # Will be inferred at the end of the first epoch.
 
     self._call_batch_hooks = self.verbose == 1
     if self.target is None:
@@ -395,7 +394,7 @@ class ProgbarLogger(Callback):
 
   def _maybe_init_progbar(self):
     """Instantiate a `Progbar` if not yet, and update the stateful
-        metrics."""
+    metrics."""
     # TODO(rchao): Legacy TF1 code path may use list for
     # `self.stateful_metrics`. Remove "cast to set" when TF1 support is
     # dropped.
@@ -409,10 +408,10 @@ class ProgbarLogger(Callback):
 
     if self.progbar is None:
       self.progbar = Progbar(
-          target=self.target,
-          verbose=self.verbose,
-          stateful_metrics=self.stateful_metrics,
-          unit_name="step" if self.use_steps else "sample",
+        target=self.target,
+        verbose=self.verbose,
+        stateful_metrics=self.stateful_metrics,
+        unit_name="step" if self.use_steps else "sample",
       )
 
     self.progbar._update_stateful_metrics(self.stateful_metrics)

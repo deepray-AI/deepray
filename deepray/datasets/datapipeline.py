@@ -22,11 +22,10 @@ os.environ["TF_CPP_VMODULE"] = "dataset=1"  # let hybridbackend logs reading fil
 
 ROOT_PATH = os.path.dirname(deepray.__file__)
 
-IS_TRAINING = Enum('is_training', ('Train', 'Valid', 'Test'))
+IS_TRAINING = Enum("is_training", ("Train", "Valid", "Test"))
 
 
 class DataPipeline(object):
-
   def __init__(self, context: tf.distribute.InputContext = None, **kwargs):
     # super().__init__(**kwargs)
     self.built = False
@@ -64,7 +63,7 @@ class DataPipeline(object):
 
   @abc.abstractmethod
   def build_dataset(
-      self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
+    self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
     """
     must be defined in subclass
@@ -74,12 +73,12 @@ class DataPipeline(object):
   def __call__(self, batch_size=None, input_file_pattern=None, is_training=True, *args, **kwargs):
     """Gets a closure to create a dataset."""
     return self.build_dataset(
-        batch_size=self.context.get_per_replica_batch_size(batch_size) if self.context else batch_size,
-        input_file_pattern=input_file_pattern,
-        is_training=is_training,
-        epochs=1,
-        *args,
-        **kwargs
+      batch_size=self.context.get_per_replica_batch_size(batch_size) if self.context else batch_size,
+      input_file_pattern=input_file_pattern,
+      is_training=is_training,
+      epochs=1,
+      *args,
+      **kwargs,
     )
 
   def maybe_download(self, filename, expected_bytes):
@@ -101,7 +100,7 @@ class DataPipeline(object):
     # containing a single path, disable auto sharding so that
     # same input file is sent to all workers.
     if isinstance(input_files, str) or len(input_files) == 1:
-      options.experimental_distribute.auto_shard_policy = (tf.data.experimental.AutoShardPolicy.OFF)
+      options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF
     else:
       """ Constructs tf.data.Options for this dataset. """
       options.experimental_optimization.parallel_batch = True
@@ -113,6 +112,7 @@ class DataPipeline(object):
 
   def train_test_split(self, arrays, test_size=0.33, shuffle=False):
     from sklearn.model_selection import train_test_split
+
     random_state = flags.FLAGS.random_seed if flags.FLAGS.random_seed else 1024
     X_train, X_test = train_test_split(arrays, test_size=test_size, shuffle=shuffle, random_state=random_state)
     return X_train, X_test

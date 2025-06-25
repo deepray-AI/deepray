@@ -30,7 +30,8 @@ import yaml
 # key-value pair string. It splits each k-v pair on the = sign, and
 # matches on values that are within single quotes, double quotes, single
 # values (e.g. floats, ints, etc.), and a lists within brackets.
-_PARAM_RE = re.compile(r"""
+_PARAM_RE = re.compile(
+  r"""
   (?P<name>[a-zA-Z][\w\.]*)    # variable name: "var" or "x"
   \s*=\s*
   ((?P<val>\'(.*?)\'           # single quote
@@ -40,13 +41,15 @@ _PARAM_RE = re.compile(r"""
   [^,\[]*                      # single value
   |
   \[[^\]]*\]))                 # list of values
-  ($|,\s*)""", re.VERBOSE)
+  ($|,\s*)""",
+  re.VERBOSE,
+)
 
 
 class ParamsDict(object):
   """A hyperparameter container class."""
 
-  RESERVED_ATTR = ['_locked', '_restrictions']
+  RESERVED_ATTR = ["_locked", "_restrictions"]
 
   def __init__(self, default_params=None, restrictions=None):
     """Instantiate a ParamsDict.
@@ -93,12 +96,11 @@ class ParamsDict(object):
     """
     if k not in ParamsDict.RESERVED_ATTR:
       if k not in self.__dict__.keys():
-        raise KeyError('The key `%{}` does not exist. '
-                       'To extend the existing keys, use '
-                       '`override` with `is_strict` = True.'.format(k))
+        raise KeyError(
+          "The key `%{}` does not exist. To extend the existing keys, use `override` with `is_strict` = True.".format(k)
+        )
       if self._locked:
-        raise ValueError('The ParamsDict has been locked. '
-                         'No change is allowed.')
+        raise ValueError("The ParamsDict has been locked. No change is allowed.")
     self._set(k, v)
 
   def __getattr__(self, k):
@@ -114,7 +116,7 @@ class ParamsDict(object):
       KeyError: if k is not defined in the ParamsDict.
     """
     if k not in self.__dict__.keys():
-      raise KeyError('The key `{}` does not exist. '.format(k))
+      raise KeyError("The key `{}` does not exist. ".format(k))
     return self.__dict__[k]
 
   def __contains__(self, key):
@@ -138,7 +140,7 @@ class ParamsDict(object):
         be extended to include the new keys.
     """
     if self._locked:
-      raise ValueError('The ParamsDict has been locked. No change is allowed.')
+      raise ValueError("The ParamsDict has been locked. No change is allowed.")
     if isinstance(override_params, ParamsDict):
       override_params = override_params.as_dict()
     self._override(override_params, is_strict)  # pylint: disable=protected-access
@@ -147,13 +149,14 @@ class ParamsDict(object):
     """The implementation of `override`."""
     for k, v in six.iteritems(override_dict):
       if k in ParamsDict.RESERVED_ATTR:
-        raise KeyError('The key `%{}` is internally reserved. '
-                       'Can not be overridden.')
+        raise KeyError("The key `%{}` is internally reserved. Can not be overridden.")
       if k not in self.__dict__.keys():
         if is_strict:
-          raise KeyError('The key `{}` does not exist. '
-                         'To extend the existing keys, use '
-                         '`override` with `is_strict` = False.'.format(k))
+          raise KeyError(
+            "The key `{}` does not exist. To extend the existing keys, use `override` with `is_strict` = False.".format(
+              k
+            )
+          )
         else:
           self._set(k, v)
       else:
@@ -219,8 +222,9 @@ class ParamsDict(object):
         (2) any inconsistency violating the restriction is found.
       ValueError: if the restriction defined in the string is not supported.
     """
+
     def _get_kv(dotted_string, params_dict):
-      tokenized_params = dotted_string.split('.')
+      tokenized_params = dotted_string.split(".")
       v = params_dict
       for t in tokenized_params:
         v = v[t]
@@ -228,7 +232,7 @@ class ParamsDict(object):
 
     def _get_kvs(tokens, params_dict):
       if len(tokens) != 2:
-        raise ValueError('Only support binary relation in restriction.')
+        raise ValueError("Only support binary relation in restriction.")
       stripped_tokens = [t.strip() for t in tokens]
       left_k, left_v = _get_kv(stripped_tokens[0], params_dict)
       right_k, right_v = _get_kv(stripped_tokens[1], params_dict)
@@ -236,61 +240,55 @@ class ParamsDict(object):
 
     params_dict = self.as_dict()
     for restriction in self._restrictions:
-      if '==' in restriction:
-        tokens = restriction.split('==')
+      if "==" in restriction:
+        tokens = restriction.split("==")
         _, left_v, _, right_v = _get_kvs(tokens, params_dict)
         if left_v != right_v:
-          raise KeyError('Found inconsistncy between key `{}` and key `{}`.'
-                         .format(tokens[0], tokens[1]))
-      elif '!=' in restriction:
-        tokens = restriction.split('!=')
+          raise KeyError("Found inconsistncy between key `{}` and key `{}`.".format(tokens[0], tokens[1]))
+      elif "!=" in restriction:
+        tokens = restriction.split("!=")
         _, left_v, _, right_v = _get_kvs(tokens, params_dict)
         if left_v == right_v:
-          raise KeyError('Found inconsistncy between key `{}` and key `{}`.'
-                         .format(tokens[0], tokens[1]))
-      elif '<' in restriction:
-        tokens = restriction.split('<')
+          raise KeyError("Found inconsistncy between key `{}` and key `{}`.".format(tokens[0], tokens[1]))
+      elif "<" in restriction:
+        tokens = restriction.split("<")
         _, left_v, _, right_v = _get_kvs(tokens, params_dict)
         if left_v >= right_v:
-          raise KeyError('Found inconsistncy between key `{}` and key `{}`.'
-                         .format(tokens[0], tokens[1]))
-      elif '<=' in restriction:
-        tokens = restriction.split('<=')
+          raise KeyError("Found inconsistncy between key `{}` and key `{}`.".format(tokens[0], tokens[1]))
+      elif "<=" in restriction:
+        tokens = restriction.split("<=")
         _, left_v, _, right_v = _get_kvs(tokens, params_dict)
         if left_v > right_v:
-          raise KeyError('Found inconsistncy between key `{}` and key `{}`.'
-                         .format(tokens[0], tokens[1]))
-      elif '>' in restriction:
-        tokens = restriction.split('>')
+          raise KeyError("Found inconsistncy between key `{}` and key `{}`.".format(tokens[0], tokens[1]))
+      elif ">" in restriction:
+        tokens = restriction.split(">")
         _, left_v, _, right_v = _get_kvs(tokens, params_dict)
         if left_v <= right_v:
-          raise KeyError('Found inconsistncy between key `{}` and key `{}`.'
-                         .format(tokens[0], tokens[1]))
-      elif '>=' in restriction:
-        tokens = restriction.split('>=')
+          raise KeyError("Found inconsistncy between key `{}` and key `{}`.".format(tokens[0], tokens[1]))
+      elif ">=" in restriction:
+        tokens = restriction.split(">=")
         _, left_v, _, right_v = _get_kvs(tokens, params_dict)
         if left_v < right_v:
-          raise KeyError('Found inconsistncy between key `{}` and key `{}`.'
-                         .format(tokens[0], tokens[1]))
+          raise KeyError("Found inconsistncy between key `{}` and key `{}`.".format(tokens[0], tokens[1]))
       else:
-        raise ValueError('Unsupported relation in restriction.')
+        raise ValueError("Unsupported relation in restriction.")
 
 
 def read_yaml_to_params_dict(file_path):
   """Reads a YAML file to a ParamsDict."""
-  with tf.io.gfile.GFile(file_path, 'r') as f:
+  with tf.io.gfile.GFile(file_path, "r") as f:
     params_dict = yaml.load(f)
     return ParamsDict(params_dict)
 
 
 def save_params_dict_to_yaml(params, file_path):
   """Saves the input ParamsDict to a YAML file."""
-  with tf.io.gfile.GFile(file_path, 'w') as f:
+  with tf.io.gfile.GFile(file_path, "w") as f:
 
     def _my_list_rep(dumper, data):
       # u'tag:yaml.org,2002:seq' is the YAML internal tag for sequence.
-      return dumper.represent_sequence(
-          u'tag:yaml.org,2002:seq', data, flow_style=True)
+      return dumper.represent_sequence("tag:yaml.org,2002:seq", data, flow_style=True)
+
     yaml.add_representer(list, _my_list_rep)
     yaml.dump(params.as_dict(), f, default_flow_style=False)
 
@@ -329,7 +327,7 @@ def nested_csv_str_to_json_str(csv_str):
       if the string is formatted incorrectly.
   """
   if not csv_str:
-    return ''
+    return ""
 
   formatted_entries = []
   nested_map = collections.defaultdict(list)
@@ -337,32 +335,31 @@ def nested_csv_str_to_json_str(csv_str):
   while pos < len(csv_str):
     m = _PARAM_RE.match(csv_str, pos)
     if not m:
-      raise ValueError('Malformed hyperparameter value while parsing '
-                       'CSV string: %s' % csv_str[pos:])
+      raise ValueError("Malformed hyperparameter value while parsing CSV string: %s" % csv_str[pos:])
     pos = m.end()
     # Parse the values.
     m_dict = m.groupdict()
-    name = m_dict['name']
-    v = m_dict['val']
+    name = m_dict["name"]
+    v = m_dict["val"]
 
     # If a GCS path (e.g. gs://...) is provided, wrap this in quotes
     # as yaml.load would otherwise throw an exception
-    if re.match(r'(?=[^\"\'])(?=[gs://])', v):
-      v = '\'{}\''.format(v)
+    if re.match(r"(?=[^\"\'])(?=[gs://])", v):
+      v = "'{}'".format(v)
 
-    name_nested = name.split('.')
+    name_nested = name.split(".")
     if len(name_nested) > 1:
       grouping = name_nested[0]
-      value = '.'.join(name_nested[1:]) + '=' + v
+      value = ".".join(name_nested[1:]) + "=" + v
       nested_map[grouping].append(value)
     else:
-      formatted_entries.append('%s : %s' % (name, v))
+      formatted_entries.append("%s : %s" % (name, v))
 
   for grouping, value in nested_map.items():
-    value = ','.join(value)
+    value = ",".join(value)
     value = nested_csv_str_to_json_str(value)
-    formatted_entries.append('%s : %s' % (grouping, value))
-  return '{' + ', '.join(formatted_entries) + '}'
+    formatted_entries.append("%s : %s" % (grouping, value))
+  return "{" + ", ".join(formatted_entries) + "}"
 
 
 def override_params_dict(params, dict_or_string_or_yaml_file, is_strict):
@@ -395,8 +392,7 @@ def override_params_dict(params, dict_or_string_or_yaml_file, is_strict):
     params.override(dict_or_string_or_yaml_file, is_strict)
   elif isinstance(dict_or_string_or_yaml_file, six.string_types):
     try:
-      dict_or_string_or_yaml_file = (
-          nested_csv_str_to_json_str(dict_or_string_or_yaml_file))
+      dict_or_string_or_yaml_file = nested_csv_str_to_json_str(dict_or_string_or_yaml_file)
     except ValueError:
       pass
     params_dict = yaml.load(dict_or_string_or_yaml_file)
@@ -406,5 +402,5 @@ def override_params_dict(params, dict_or_string_or_yaml_file, is_strict):
       with tf.io.gfile.GFile(dict_or_string_or_yaml_file) as f:
         params.override(yaml.load(f), is_strict)
   else:
-    raise ValueError('Unknown input type to parse.')
+    raise ValueError("Unknown input type to parse.")
   return params

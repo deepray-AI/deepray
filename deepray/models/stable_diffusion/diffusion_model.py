@@ -16,19 +16,18 @@ import tensorflow as tf
 from tensorflow import keras
 
 from .__internal__.layers.padded_conv2d import (
-    PaddedConv2D,
+  PaddedConv2D,
 )
 
 
 class DiffusionModel(keras.Model):
-
   def __init__(
-      self,
-      img_height,
-      img_width,
-      max_text_length,
-      name=None,
-      download_weights=True,
+    self,
+    img_height,
+    img_width,
+    max_text_length,
+    name=None,
+    download_weights=True,
   ):
     context = keras.layers.Input((max_text_length, 768))
     t_embed_input = keras.layers.Input((320,))
@@ -109,21 +108,20 @@ class DiffusionModel(keras.Model):
 
     if download_weights:
       diffusion_model_weights_fpath = keras.utils.get_file(
-          origin="https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_diffusion_model.h5",  # noqa: E501
-          file_hash="8799ff9763de13d7f30a683d653018e114ed24a6a819667da4f5ee10f9e805fe",  # noqa: E501
+        origin="https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_diffusion_model.h5",  # noqa: E501
+        file_hash="8799ff9763de13d7f30a683d653018e114ed24a6a819667da4f5ee10f9e805fe",  # noqa: E501
       )
       self.load_weights(diffusion_model_weights_fpath)
 
 
 class DiffusionModelV2(keras.Model):
-
   def __init__(
-      self,
-      img_height,
-      img_width,
-      max_text_length,
-      name=None,
-      download_weights=True,
+    self,
+    img_height,
+    img_width,
+    max_text_length,
+    name=None,
+    download_weights=True,
   ):
     context = keras.layers.Input((max_text_length, 1024))
     t_embed_input = keras.layers.Input((320,))
@@ -204,30 +202,29 @@ class DiffusionModelV2(keras.Model):
 
     if download_weights:
       diffusion_model_weights_fpath = keras.utils.get_file(
-          origin="https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/diffusion_model_v2_1.h5",  # noqa: E501
-          file_hash="c31730e91111f98fe0e2dbde4475d381b5287ebb9672b1821796146a25c5132d",  # noqa: E501
+        origin="https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/diffusion_model_v2_1.h5",  # noqa: E501
+        file_hash="c31730e91111f98fe0e2dbde4475d381b5287ebb9672b1821796146a25c5132d",  # noqa: E501
       )
       self.load_weights(diffusion_model_weights_fpath)
 
 
 class ResBlock(keras.layers.Layer):
-
   def __init__(self, output_dim, **kwargs):
     super().__init__(**kwargs)
     self.output_dim = output_dim
     self.entry_flow = [
-        keras.layers.GroupNormalization(epsilon=1e-5),
-        keras.layers.Activation("swish"),
-        PaddedConv2D(output_dim, 3, padding=1),
+      keras.layers.GroupNormalization(epsilon=1e-5),
+      keras.layers.Activation("swish"),
+      PaddedConv2D(output_dim, 3, padding=1),
     ]
     self.embedding_flow = [
-        keras.layers.Activation("swish"),
-        keras.layers.Dense(output_dim),
+      keras.layers.Activation("swish"),
+      keras.layers.Dense(output_dim),
     ]
     self.exit_flow = [
-        keras.layers.GroupNormalization(epsilon=1e-5),
-        keras.layers.Activation("swish"),
-        PaddedConv2D(output_dim, 3, padding=1),
+      keras.layers.GroupNormalization(epsilon=1e-5),
+      keras.layers.Activation("swish"),
+      PaddedConv2D(output_dim, 3, padding=1),
     ]
 
   def build(self, input_shape):
@@ -250,7 +247,6 @@ class ResBlock(keras.layers.Layer):
 
 
 class SpatialTransformer(keras.layers.Layer):
-
   def __init__(self, num_heads, head_size, fully_connected=False, **kwargs):
     super().__init__(**kwargs)
     self.norm = keras.layers.GroupNormalization(epsilon=1e-5)
@@ -277,7 +273,6 @@ class SpatialTransformer(keras.layers.Layer):
 
 
 class BasicTransformerBlock(keras.layers.Layer):
-
   def __init__(self, dim, num_heads, head_size, **kwargs):
     super().__init__(**kwargs)
     self.norm1 = keras.layers.LayerNormalization(epsilon=1e-5)
@@ -296,7 +291,6 @@ class BasicTransformerBlock(keras.layers.Layer):
 
 
 class CrossAttention(keras.layers.Layer):
-
   def __init__(self, num_heads, head_size, **kwargs):
     super().__init__(**kwargs)
     self.to_q = keras.layers.Dense(num_heads * head_size, use_bias=False)
@@ -328,7 +322,6 @@ class CrossAttention(keras.layers.Layer):
 
 
 class Upsample(keras.layers.Layer):
-
   def __init__(self, channels, **kwargs):
     super().__init__(**kwargs)
     self.ups = keras.layers.UpSampling2D(2)
@@ -339,7 +332,6 @@ class Upsample(keras.layers.Layer):
 
 
 class GEGLU(keras.layers.Layer):
-
   def __init__(self, output_dim, **kwargs):
     super().__init__(**kwargs)
     self.output_dim = output_dim
@@ -347,7 +339,7 @@ class GEGLU(keras.layers.Layer):
 
   def call(self, inputs):
     x = self.dense(inputs)
-    x, gate = x[..., :self.output_dim], x[..., self.output_dim:]
+    x, gate = x[..., : self.output_dim], x[..., self.output_dim :]
     tanh_res = keras.activations.tanh(gate * 0.7978845608 * (1 + 0.044715 * (gate**2)))
     return x * 0.5 * gate * (1 + tanh_res)
 

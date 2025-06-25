@@ -22,12 +22,12 @@ import tensorflow as tf
 
 from deepray.custom_ops.simple_hash_table import simple_hash_table
 from tensorflow.python.eager import def_function
+
 # This pylint disable is only needed for internal google users
 from tensorflow.python.framework import test_util  # pylint: disable=g-direct-tensorflow-import
 
 
 class SimpleHashTableTest(tf.test.TestCase, parameterized.TestCase):
-
   # Helper function using "create, find, insert, find, remove, find
   def _use_table(self, key_dtype, value_dtype):
     hash_table = simple_hash_table.SimpleHashTable(key_dtype, value_dtype, 111)
@@ -40,7 +40,7 @@ class SimpleHashTableTest(tf.test.TestCase, parameterized.TestCase):
     return results  # expect [-999, 100, -999]
 
   # Test of "create, find, insert, find" in eager mode.
-  @parameterized.named_parameters(('int32_float', tf.int32, float), ('int64_int32', tf.int64, tf.int32))
+  @parameterized.named_parameters(("int32_float", tf.int32, float), ("int64_int32", tf.int64, tf.int32))
   def test_find_insert_find_eager(self, key_dtype, value_dtype):
     results = self._use_table(key_dtype, value_dtype)
     self.assertAllClose(results, [-999, 100, -999])
@@ -48,16 +48,16 @@ class SimpleHashTableTest(tf.test.TestCase, parameterized.TestCase):
   # Test of "create, find, insert, find" in a tf.function. Note that the
   # creation and use of the ref-counted resource occurs inside a single
   # self.evaluate.
-  @parameterized.named_parameters(('int32_float', tf.int32, float), ('int64_int32', tf.int64, tf.int32))
+  @parameterized.named_parameters(("int32_float", tf.int32, float), ("int64_int32", tf.int64, tf.int32))
   def test_find_insert_find_tf_function(self, key_dtype, value_dtype):
     results = def_function.function(lambda: self._use_table(key_dtype, value_dtype))
     self.assertAllClose(self.evaluate(results), [-999.0, 100.0, -999.0])
 
   # strings for key and value
   def test_find_insert_find_strings_eager(self):
-    default = 'Default'
-    foo = 'Foo'
-    bar = 'Bar'
+    default = "Default"
+    foo = "Foo"
+    bar = "Bar"
     hash_table = simple_hash_table.SimpleHashTable(tf.string, tf.string, default)
     result1 = hash_table.find(foo, default)
     self.assertEqual(result1, default)
@@ -86,8 +86,8 @@ class SimpleHashTableTest(tf.test.TestCase, parameterized.TestCase):
 
   @test_util.run_v2_only
   def testSavedModelSaveRestore(self):
-    save_dir = os.path.join(self.get_temp_dir(), 'save_restore')
-    save_path = os.path.join(tempfile.mkdtemp(prefix=save_dir), 'hash')
+    save_dir = os.path.join(self.get_temp_dir(), "save_restore")
+    save_path = os.path.join(tempfile.mkdtemp(prefix=save_dir), "hash")
 
     # TODO(b/203097231) is there an alternative that is not __internal__?
     root = tf.__internal__.tracking.AutoTrackable()
@@ -114,5 +114,5 @@ class SimpleHashTableTest(tf.test.TestCase, parameterized.TestCase):
     self.assertEqual(loaded.lookup(10), -1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

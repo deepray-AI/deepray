@@ -42,7 +42,7 @@ def inf(dtype):
     # exist for some reason.
     return np.finfo(np.float16).max  # pylint: disable=no-member
   else:
-    raise AssertionError('Invalid dtype: %s' % dtype)
+    raise AssertionError("Invalid dtype: %s" % dtype)
 
 
 class _StateKeys(object):
@@ -79,16 +79,18 @@ class _StateKeys(object):
 class SequenceBeamSearch(object):
   """Implementation of beam search loop."""
 
-  def __init__(self,
-               symbols_to_logits_fn,
-               vocab_size,
-               batch_size,
-               beam_size,
-               alpha,
-               max_decode_length,
-               eos_id,
-               padded_decode,
-               dtype=tf.float32):
+  def __init__(
+    self,
+    symbols_to_logits_fn,
+    vocab_size,
+    batch_size,
+    beam_size,
+    alpha,
+    max_decode_length,
+    eos_id,
+    padded_decode,
+    dtype=tf.float32,
+  ):
     """Initialize sequence beam search.
 
     Args:
@@ -129,8 +131,13 @@ class SequenceBeamSearch(object):
     state, state_shapes = self._create_initial_state(initial_ids, initial_cache)
 
     finished_state = tf.while_loop(
-        self._continue_search, self._search_step, loop_vars=[state],
-        shape_invariants=[state_shapes], parallel_iterations=1, back_prop=False)
+      self._continue_search,
+      self._search_step,
+      loop_vars=[state],
+      shape_invariants=[state_shapes],
+      parallel_iterations=1,
+      back_prop=False,
+    )
     finished_state = finished_state[0]
 
     alive_seq = finished_state[_StateKeys.ALIVE_SEQ]
@@ -142,10 +149,8 @@ class SequenceBeamSearch(object):
     # Account for corner case where there are no finished sequences for a
     # particular batch item. In that case, return alive sequences for that batch
     # item.
-    finished_seq = tf.where(
-        tf.reduce_any(finished_flags, 1), finished_seq, alive_seq)
-    finished_scores = tf.where(
-        tf.reduce_any(finished_flags, 1), finished_scores, alive_log_probs)
+    finished_seq = tf.where(tf.reduce_any(finished_flags, 1), finished_seq, alive_seq)
+    finished_scores = tf.where(tf.reduce_any(finished_flags, 1), finished_scores, alive_log_probs)
     return finished_seq, finished_scores
 
   def _create_initial_state(self, initial_ids, initial_cache):
@@ -164,9 +169,9 @@ class SequenceBeamSearch(object):
       for inner_value in nest.flatten(value):
         if inner_value.dtype != self.dtype:
           raise TypeError(
-              "initial_cache element for key '%s' has dtype %s that does not "
-              "match SequenceBeamSearch's dtype of %s. Value: %s" %
-              (key, value.dtype.name, self.dtype.name, inner_value))
+            "initial_cache element for key '%s' has dtype %s that does not "
+            "match SequenceBeamSearch's dtype of %s. Value: %s" % (key, value.dtype.name, self.dtype.name, inner_value)
+          )
 
     # Current loop index (starts at 0)
     cur_index = tf.constant(0)
@@ -179,34 +184,31 @@ class SequenceBeamSearch(object):
 
     # Create tensor for storing initial log probabilities.
     # Assume initial_ids are prob 1.0
-    initial_log_probs = tf.constant(
-        [[0.] + [-float("inf")] * (self.beam_size - 1)], dtype=self.dtype)
+    initial_log_probs = tf.constant([[0.0] + [-float("inf")] * (self.beam_size - 1)], dtype=self.dtype)
     alive_log_probs = tf.tile(initial_log_probs, [self.batch_size, 1])
 
     # Expand all values stored in the dictionary to the beam size, so that each
     # beam has a separate cache.
-    alive_cache = nest.map_structure(
-        lambda t: _expand_to_beam_size(t, self.beam_size), initial_cache)
+    alive_cache = nest.map_structure(lambda t: _expand_to_beam_size(t, self.beam_size), initial_cache)
 
     # Initialize tensor storing finished sequences with filler values.
     finished_seq = tf.zeros(tf.shape(alive_seq), tf.int32)
 
     # Set scores of the initial finished seqs to negative infinity.
-    finished_scores = tf.ones([self.batch_size, self.beam_size],
-                              dtype=self.dtype) * -inf(self.dtype)
+    finished_scores = tf.ones([self.batch_size, self.beam_size], dtype=self.dtype) * -inf(self.dtype)
 
     # Initialize finished flags with all False values.
     finished_flags = tf.zeros([self.batch_size, self.beam_size], tf.bool)
 
     # Create state dictionary
     state = {
-        _StateKeys.CUR_INDEX: cur_index,
-        _StateKeys.ALIVE_SEQ: alive_seq,
-        _StateKeys.ALIVE_LOG_PROBS: alive_log_probs,
-        _StateKeys.ALIVE_CACHE: alive_cache,
-        _StateKeys.FINISHED_SEQ: finished_seq,
-        _StateKeys.FINISHED_SCORES: finished_scores,
-        _StateKeys.FINISHED_FLAGS: finished_flags
+      _StateKeys.CUR_INDEX: cur_index,
+      _StateKeys.ALIVE_SEQ: alive_seq,
+      _StateKeys.ALIVE_LOG_PROBS: alive_log_probs,
+      _StateKeys.ALIVE_CACHE: alive_cache,
+      _StateKeys.FINISHED_SEQ: finished_seq,
+      _StateKeys.FINISHED_SCORES: finished_scores,
+      _StateKeys.FINISHED_FLAGS: finished_flags,
     }
 
     # Create state invariants for each value in the state dictionary. Each
@@ -216,41 +218,23 @@ class SequenceBeamSearch(object):
     #   2) the dimension may have different values on different iterations.
     if self.padded_decode:
       state_shape_invariants = {
-          _StateKeys.CUR_INDEX:
-              tf.TensorShape([]),
-          _StateKeys.ALIVE_SEQ:
-              tf.TensorShape(
-                  [self.batch_size, self.beam_size,
-                   self.max_decode_length + 1]),
-          _StateKeys.ALIVE_LOG_PROBS:
-              tf.TensorShape([self.batch_size, self.beam_size]),
-          _StateKeys.ALIVE_CACHE:
-              nest.map_structure(_get_shape, alive_cache),
-          _StateKeys.FINISHED_SEQ:
-              tf.TensorShape(
-                  [self.batch_size, self.beam_size,
-                   self.max_decode_length + 1]),
-          _StateKeys.FINISHED_SCORES:
-              tf.TensorShape([self.batch_size, self.beam_size]),
-          _StateKeys.FINISHED_FLAGS:
-              tf.TensorShape([self.batch_size, self.beam_size])
+        _StateKeys.CUR_INDEX: tf.TensorShape([]),
+        _StateKeys.ALIVE_SEQ: tf.TensorShape([self.batch_size, self.beam_size, self.max_decode_length + 1]),
+        _StateKeys.ALIVE_LOG_PROBS: tf.TensorShape([self.batch_size, self.beam_size]),
+        _StateKeys.ALIVE_CACHE: nest.map_structure(_get_shape, alive_cache),
+        _StateKeys.FINISHED_SEQ: tf.TensorShape([self.batch_size, self.beam_size, self.max_decode_length + 1]),
+        _StateKeys.FINISHED_SCORES: tf.TensorShape([self.batch_size, self.beam_size]),
+        _StateKeys.FINISHED_FLAGS: tf.TensorShape([self.batch_size, self.beam_size]),
       }
     else:
       state_shape_invariants = {
-          _StateKeys.CUR_INDEX:
-              tf.TensorShape([]),
-          _StateKeys.ALIVE_SEQ:
-              tf.TensorShape([None, self.beam_size, None]),
-          _StateKeys.ALIVE_LOG_PROBS:
-              tf.TensorShape([None, self.beam_size]),
-          _StateKeys.ALIVE_CACHE:
-              nest.map_structure(_get_shape_keep_last_dim, alive_cache),
-          _StateKeys.FINISHED_SEQ:
-              tf.TensorShape([None, self.beam_size, None]),
-          _StateKeys.FINISHED_SCORES:
-              tf.TensorShape([None, self.beam_size]),
-          _StateKeys.FINISHED_FLAGS:
-              tf.TensorShape([None, self.beam_size])
+        _StateKeys.CUR_INDEX: tf.TensorShape([]),
+        _StateKeys.ALIVE_SEQ: tf.TensorShape([None, self.beam_size, None]),
+        _StateKeys.ALIVE_LOG_PROBS: tf.TensorShape([None, self.beam_size]),
+        _StateKeys.ALIVE_CACHE: nest.map_structure(_get_shape_keep_last_dim, alive_cache),
+        _StateKeys.FINISHED_SEQ: tf.TensorShape([None, self.beam_size, None]),
+        _StateKeys.FINISHED_SCORES: tf.TensorShape([None, self.beam_size]),
+        _StateKeys.FINISHED_FLAGS: tf.TensorShape([None, self.beam_size]),
       }
 
     return state, state_shape_invariants
@@ -279,31 +263,24 @@ class SequenceBeamSearch(object):
     not_at_max_decode_length = tf.less(i, self.max_decode_length)
 
     # Calculate largest length penalty (the larger penalty, the better score).
-    max_length_norm = _length_normalization(self.alpha, self.max_decode_length,
-                                            dtype=self.dtype)
+    max_length_norm = _length_normalization(self.alpha, self.max_decode_length, dtype=self.dtype)
     # Get the best possible scores from alive sequences.
     best_alive_scores = alive_log_probs[:, 0] / max_length_norm
 
     # Compute worst score in finished sequences for each batch element
-    finished_scores *= tf.cast(finished_flags,
-                               self.dtype)  # set filler scores to zero
+    finished_scores *= tf.cast(finished_flags, self.dtype)  # set filler scores to zero
     lowest_finished_scores = tf.reduce_min(finished_scores, axis=1)
 
     # If there are no finished sequences in a batch element, then set the lowest
     # finished score to -INF for that element.
     finished_batches = tf.reduce_any(finished_flags, 1)
-    lowest_finished_scores += ((1.0 -
-                                tf.cast(finished_batches, self.dtype)) *
-                               -inf(self.dtype))
+    lowest_finished_scores += (1.0 - tf.cast(finished_batches, self.dtype)) * -inf(self.dtype)
 
     worst_finished_score_better_than_best_alive_score = tf.reduce_all(
-        tf.greater(lowest_finished_scores, best_alive_scores)
+      tf.greater(lowest_finished_scores, best_alive_scores)
     )
 
-    return tf.logical_and(
-        not_at_max_decode_length,
-        tf.logical_not(worst_finished_score_better_than_best_alive_score)
-    )
+    return tf.logical_and(not_at_max_decode_length, tf.logical_not(worst_finished_score_better_than_best_alive_score))
 
   def _search_step(self, state):
     """Beam search loop body.
@@ -326,13 +303,11 @@ class SequenceBeamSearch(object):
     new_seq, new_log_probs, topk_ids, new_cache = self._grow_alive_seq(state)
     new_finished_flags = tf.equal(topk_ids, self.eos_id)
     # Collect top beam_size alive sequences
-    alive_state = self._get_new_alive_state(new_seq, new_log_probs,
-                                            new_finished_flags, new_cache)
+    alive_state = self._get_new_alive_state(new_seq, new_log_probs, new_finished_flags, new_cache)
 
     # Combine newly finished sequences with existing finished sequences, and
     # collect the top k scoring sequences.
-    finished_state = self._get_new_finished_state(state, new_seq, new_log_probs,
-                                                  new_finished_flags)
+    finished_state = self._get_new_finished_state(state, new_seq, new_log_probs, new_finished_flags)
 
     # Increment loop index and create new state dictionary
     new_state = {_StateKeys.CUR_INDEX: state[_StateKeys.CUR_INDEX] + 1}
@@ -366,8 +341,8 @@ class SequenceBeamSearch(object):
     # cache values at the same time.
     if self.padded_decode:
       flat_ids = tf.reshape(
-          tf.slice(alive_seq, [0, 0, i], [self.batch_size, self.beam_size, 1]),
-          [self.batch_size * self.beam_size, -1])
+        tf.slice(alive_seq, [0, 0, i], [self.batch_size, self.beam_size, 1]), [self.batch_size * self.beam_size, -1]
+      )
     else:
       flat_ids = _flatten_beam_dim(alive_seq)  # [batch_size * beam_size]
     flat_cache = nest.map_structure(_flatten_beam_dim, alive_cache)
@@ -376,9 +351,7 @@ class SequenceBeamSearch(object):
 
     # Unflatten logits to shape [batch_size, beam_size, vocab_size]
     logits = _unflatten_beam_dim(flat_logits, self.batch_size, self.beam_size)
-    new_cache = nest.map_structure(
-        lambda t: _unflatten_beam_dim(t, self.batch_size, self.beam_size),
-        flat_cache)
+    new_cache = nest.map_structure(lambda t: _unflatten_beam_dim(t, self.batch_size, self.beam_size), flat_cache)
 
     # Convert logits to normalized log probs
     candidate_log_probs = _log_prob_from_logits(logits)
@@ -390,31 +363,26 @@ class SequenceBeamSearch(object):
 
     # Each batch item has beam_size * vocab_size candidate sequences. For each
     # batch item, get the k candidates with the highest log probabilities.
-    flat_log_probs = tf.reshape(log_probs,
-                                [-1, self.beam_size * self.vocab_size])
+    flat_log_probs = tf.reshape(log_probs, [-1, self.beam_size * self.vocab_size])
     topk_log_probs, topk_indices = tf.nn.top_k(flat_log_probs, k=beams_to_keep)
 
     # Extract the alive sequences that generate the highest log probabilities
     # after being extended.
     topk_beam_indices = topk_indices // self.vocab_size
-    topk_seq, new_cache = _gather_beams(
-        [alive_seq, new_cache], topk_beam_indices, self.batch_size,
-        beams_to_keep)
+    topk_seq, new_cache = _gather_beams([alive_seq, new_cache], topk_beam_indices, self.batch_size, beams_to_keep)
 
     # Append the most probable IDs to the topk sequences
     topk_ids = topk_indices % self.vocab_size
     if self.padded_decode:
       topk_seq = tf.transpose(topk_seq, perm=[2, 0, 1])
       # TODO(b/145533236, hongkuny): Reverts once TF fix the validation.
-      topk_seq = tf.tensor_scatter_nd_update(topk_seq, [[i + 1]],
-                                             tf.expand_dims(topk_ids, axis=0))
+      topk_seq = tf.tensor_scatter_nd_update(topk_seq, [[i + 1]], tf.expand_dims(topk_ids, axis=0))
       topk_seq = tf.transpose(topk_seq, perm=[1, 2, 0])
     else:
       topk_seq = tf.concat([topk_seq, tf.expand_dims(topk_ids, axis=2)], axis=2)
     return topk_seq, topk_log_probs, topk_ids, new_cache
 
-  def _get_new_alive_state(self, new_seq, new_log_probs, new_finished_flags,
-                           new_cache):
+  def _get_new_alive_state(self, new_seq, new_log_probs, new_finished_flags, new_cache):
     """Gather the top k sequences that are still alive.
 
     Args:
@@ -436,17 +404,16 @@ class SequenceBeamSearch(object):
     new_log_probs += tf.cast(new_finished_flags, self.dtype) * -inf(self.dtype)
 
     top_alive_seq, top_alive_log_probs, top_alive_cache = _gather_topk_beams(
-        [new_seq, new_log_probs, new_cache], new_log_probs, self.batch_size,
-        self.beam_size)
+      [new_seq, new_log_probs, new_cache], new_log_probs, self.batch_size, self.beam_size
+    )
 
     return {
-        _StateKeys.ALIVE_SEQ: top_alive_seq,
-        _StateKeys.ALIVE_LOG_PROBS: top_alive_log_probs,
-        _StateKeys.ALIVE_CACHE: top_alive_cache
+      _StateKeys.ALIVE_SEQ: top_alive_seq,
+      _StateKeys.ALIVE_LOG_PROBS: top_alive_log_probs,
+      _StateKeys.ALIVE_CACHE: top_alive_cache,
     }
 
-  def _get_new_finished_state(self, state, new_seq, new_log_probs,
-                              new_finished_flags):
+  def _get_new_finished_state(self, state, new_seq, new_log_probs, new_finished_flags):
     """Combine new and old finished sequences, and gather the top k sequences.
 
     Args:
@@ -472,19 +439,14 @@ class SequenceBeamSearch(object):
     # First append a column of 0-ids to finished_seq to increment the length.
     # New shape of finished_seq: [batch_size, beam_size, i + 1]
     if not self.padded_decode:
-      finished_seq = tf.concat([
-          finished_seq,
-          tf.zeros([self.batch_size, self.beam_size, 1], tf.int32)
-      ],
-                               axis=2)
+      finished_seq = tf.concat([finished_seq, tf.zeros([self.batch_size, self.beam_size, 1], tf.int32)], axis=2)
 
     # Calculate new seq scores from log probabilities.
     length_norm = _length_normalization(self.alpha, i + 1, dtype=self.dtype)
     new_scores = new_log_probs / length_norm
 
     # Set the scores of the still-alive seq in new_seq to large negative values.
-    new_scores += ((1. - tf.cast(new_finished_flags, self.dtype)) *
-                   -inf(self.dtype))
+    new_scores += (1.0 - tf.cast(new_finished_flags, self.dtype)) * -inf(self.dtype)
 
     # Combine sequences, scores, and flags.
     finished_seq = tf.concat([finished_seq, new_seq], axis=1)
@@ -492,20 +454,28 @@ class SequenceBeamSearch(object):
     finished_flags = tf.concat([finished_flags, new_finished_flags], axis=1)
 
     # Return the finished sequences with the best scores.
-    top_finished_seq, top_finished_scores, top_finished_flags = (
-        _gather_topk_beams([finished_seq, finished_scores, finished_flags],
-                           finished_scores, self.batch_size, self.beam_size))
+    top_finished_seq, top_finished_scores, top_finished_flags = _gather_topk_beams(
+      [finished_seq, finished_scores, finished_flags], finished_scores, self.batch_size, self.beam_size
+    )
 
     return {
-        _StateKeys.FINISHED_SEQ: top_finished_seq,
-        _StateKeys.FINISHED_SCORES: top_finished_scores,
-        _StateKeys.FINISHED_FLAGS: top_finished_flags
+      _StateKeys.FINISHED_SEQ: top_finished_seq,
+      _StateKeys.FINISHED_SCORES: top_finished_scores,
+      _StateKeys.FINISHED_FLAGS: top_finished_flags,
     }
 
 
 def sequence_beam_search(
-    symbols_to_logits_fn, initial_ids, initial_cache, vocab_size, beam_size,
-    alpha, max_decode_length, eos_id, padded_decode=False):
+  symbols_to_logits_fn,
+  initial_ids,
+  initial_cache,
+  vocab_size,
+  beam_size,
+  alpha,
+  max_decode_length,
+  eos_id,
+  padded_decode=False,
+):
   """Search for sequence of subtoken ids with the largest probability.
 
   Args:
@@ -536,12 +506,10 @@ def sequence_beam_search(
     Top decoded sequences [batch_size, beam_size, max_decode_length]
     sequence scores [batch_size, beam_size]
   """
-  batch_size = (
-      initial_ids.shape.as_list()[0] if padded_decode else
-      tf.shape(initial_ids)[0])
-  sbs = SequenceBeamSearch(symbols_to_logits_fn, vocab_size, batch_size,
-                           beam_size, alpha, max_decode_length, eos_id,
-                           padded_decode)
+  batch_size = initial_ids.shape.as_list()[0] if padded_decode else tf.shape(initial_ids)[0]
+  sbs = SequenceBeamSearch(
+    symbols_to_logits_fn, vocab_size, batch_size, beam_size, alpha, max_decode_length, eos_id, padded_decode
+  )
   return sbs.search(initial_ids, initial_cache)
 
 
@@ -551,7 +519,7 @@ def _log_prob_from_logits(logits):
 
 def _length_normalization(alpha, length, dtype=tf.float32):
   """Return length normalization factor."""
-  return tf.pow(((5. + tf.cast(length, dtype)) / 6.), alpha)
+  return tf.pow(((5.0 + tf.cast(length, dtype)) / 6.0), alpha)
 
 
 def _expand_to_beam_size(tensor, beam_size):
@@ -665,8 +633,7 @@ def _gather_beams(nested, beam_indices, batch_size, new_beam_size):
   # the (i, j) gathering coordinates.
   coordinates = tf.stack([batch_pos, beam_indices], axis=2)
 
-  return nest.map_structure(
-      lambda state: tf.gather_nd(state, coordinates), nested)
+  return nest.map_structure(lambda state: tf.gather_nd(state, coordinates), nested)
 
 
 def _gather_topk_beams(nested, score_or_log_prob, batch_size, beam_size):

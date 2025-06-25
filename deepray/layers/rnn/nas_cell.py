@@ -16,6 +16,7 @@
 
 import tensorflow as tf
 from packaging.version import parse
+
 if parse(tf.__version__) > parse("2.16.0"):
   from tf_keras.src.layers.rnn.abstract_rnn_cell import AbstractRNNCell
 else:
@@ -23,9 +24,9 @@ else:
 from typeguard import typechecked
 
 from deepray.utils.types import (
-    FloatTensorLike,
-    TensorLike,
-    Initializer,
+  FloatTensorLike,
+  TensorLike,
+  Initializer,
 )
 from typing import Optional
 
@@ -34,59 +35,59 @@ from typing import Optional
 class NASCell(AbstractRNNCell):
   """Neural Architecture Search (NAS) recurrent network cell.
 
-    This implements the recurrent cell from the paper:
+  This implements the recurrent cell from the paper:
 
-      https://arxiv.org/abs/1611.01578
+    https://arxiv.org/abs/1611.01578
 
-    Barret Zoph and Quoc V. Le.
-    "Neural Architecture Search with Reinforcement Learning" Proc. ICLR 2017.
+  Barret Zoph and Quoc V. Le.
+  "Neural Architecture Search with Reinforcement Learning" Proc. ICLR 2017.
 
-    The class uses an optional projection layer.
+  The class uses an optional projection layer.
 
-    Example:
+  Example:
 
-    >>> inputs = np.random.random([30,23,9]).astype(np.float32)
-    >>> NASCell = dp.rnn.NASCell(4)
-    >>> rnn = tf.keras.layers.RNN(NASCell, return_sequences=True, return_state=True)
-    >>> outputs, memory_state, carry_state = rnn(inputs)
-    >>> outputs.shape
-    TensorShape([30, 23, 4])
-    >>> memory_state.shape
-    TensorShape([30, 4])
-    >>> carry_state.shape
-    TensorShape([30, 4])
-    """
+  >>> inputs = np.random.random([30,23,9]).astype(np.float32)
+  >>> NASCell = dp.rnn.NASCell(4)
+  >>> rnn = tf.keras.layers.RNN(NASCell, return_sequences=True, return_state=True)
+  >>> outputs, memory_state, carry_state = rnn(inputs)
+  >>> outputs.shape
+  TensorShape([30, 23, 4])
+  >>> memory_state.shape
+  TensorShape([30, 4])
+  >>> carry_state.shape
+  TensorShape([30, 4])
+  """
 
   # NAS cell's architecture base.
   _NAS_BASE = 8
 
   @typechecked
   def __init__(
-      self,
-      units: TensorLike,
-      projection: Optional[FloatTensorLike] = None,
-      use_bias: bool = False,
-      kernel_initializer: Initializer = "glorot_uniform",
-      recurrent_initializer: Initializer = "glorot_uniform",
-      projection_initializer: Initializer = "glorot_uniform",
-      bias_initializer: Initializer = "zeros",
-      **kwargs,
+    self,
+    units: TensorLike,
+    projection: Optional[FloatTensorLike] = None,
+    use_bias: bool = False,
+    kernel_initializer: Initializer = "glorot_uniform",
+    recurrent_initializer: Initializer = "glorot_uniform",
+    projection_initializer: Initializer = "glorot_uniform",
+    bias_initializer: Initializer = "zeros",
+    **kwargs,
   ):
     """Initialize the parameters for a NAS cell.
 
-        Args:
-          units: int, The number of units in the NAS cell.
-          projection: (optional) int, The output dimensionality for the
-            projection matrices.  If None, no projection is performed.
-          use_bias: (optional) bool, If True then use biases within the cell.
-            This is False by default.
-          kernel_initializer: Initializer for kernel weight.
-          recurrent_initializer: Initializer for recurrent kernel weight.
-          projection_initializer: Initializer for projection weight, used when
-            projection is not None.
-          bias_initializer: Initializer for bias, used when use_bias is True.
-          **kwargs: Additional keyword arguments.
-        """
+    Args:
+      units: int, The number of units in the NAS cell.
+      projection: (optional) int, The output dimensionality for the
+        projection matrices.  If None, no projection is performed.
+      use_bias: (optional) bool, If True then use biases within the cell.
+        This is False by default.
+      kernel_initializer: Initializer for kernel weight.
+      recurrent_initializer: Initializer for recurrent kernel weight.
+      projection_initializer: Initializer for projection weight, used when
+        projection is not None.
+      bias_initializer: Initializer for bias, used when use_bias is True.
+      **kwargs: Additional keyword arguments.
+    """
     super().__init__(**kwargs)
     self.units = units
     self.projection = projection
@@ -120,28 +121,28 @@ class NASCell(AbstractRNNCell):
     # multiplying the hidden state and `kernel` is all matrices multiplying
     # the inputs.
     self.recurrent_kernel = self.add_weight(
-        name="recurrent_kernel",
-        shape=[self.output_size, self._NAS_BASE * self.units],
-        initializer=self.recurrent_initializer,
+      name="recurrent_kernel",
+      shape=[self.output_size, self._NAS_BASE * self.units],
+      initializer=self.recurrent_initializer,
     )
     self.kernel = self.add_weight(
-        name="kernel",
-        shape=[input_size, self._NAS_BASE * self.units],
-        initializer=self.kernel_initializer,
+      name="kernel",
+      shape=[input_size, self._NAS_BASE * self.units],
+      initializer=self.kernel_initializer,
     )
 
     if self.use_bias:
       self.bias = self.add_weight(
-          name="bias",
-          shape=[self._NAS_BASE * self.units],
-          initializer=self.bias_initializer,
+        name="bias",
+        shape=[self._NAS_BASE * self.units],
+        initializer=self.bias_initializer,
       )
     # Projection layer if specified
     if self.projection is not None:
       self.projection_weights = self.add_weight(
-          name="projection_weights",
-          shape=[self.units, self.projection],
-          initializer=self.projection_initializer,
+        name="projection_weights",
+        shape=[self.units, self.projection],
+        initializer=self.projection_initializer,
       )
 
     self.built = True
@@ -149,26 +150,26 @@ class NASCell(AbstractRNNCell):
   def call(self, inputs, state):
     """Run one step of NAS Cell.
 
-        Args:
-          inputs: input Tensor, 2D, batch x num_units.
-          state: This must be a list of state Tensors, both `2-D`, with column
-            sizes `c_state` and `m_state`.
+    Args:
+      inputs: input Tensor, 2D, batch x num_units.
+      state: This must be a list of state Tensors, both `2-D`, with column
+        sizes `c_state` and `m_state`.
 
-        Returns:
-          A tuple containing:
-          - A `2-D, [batch x output_dim]`, Tensor representing the output of
-            the NAS Cell after reading `inputs` when previous state was
-            `state`.
-            Here output_dim is:
-               projection if projection was set, units otherwise.
-          - Tensor(s) representing the new state of NAS Cell after reading
-            `inputs` when the previous state was `state`.  Same type and
-            shape(s) as `state`.
+    Returns:
+      A tuple containing:
+      - A `2-D, [batch x output_dim]`, Tensor representing the output of
+        the NAS Cell after reading `inputs` when previous state was
+        `state`.
+        Here output_dim is:
+           projection if projection was set, units otherwise.
+      - Tensor(s) representing the new state of NAS Cell after reading
+        `inputs` when the previous state was `state`.  Same type and
+        shape(s) as `state`.
 
-        Raises:
-          ValueError: If input size cannot be inferred from inputs via
-            static shape inference.
-        """
+    Raises:
+      ValueError: If input size cannot be inferred from inputs via
+        static shape inference.
+    """
     sigmoid = tf.math.sigmoid
     tanh = tf.math.tanh
     relu = tf.nn.relu
@@ -222,13 +223,13 @@ class NASCell(AbstractRNNCell):
 
   def get_config(self):
     config = {
-        "units": self.units,
-        "projection": self.projection,
-        "use_bias": self.use_bias,
-        "kernel_initializer": self.kernel_initializer,
-        "recurrent_initializer": self.recurrent_initializer,
-        "bias_initializer": self.bias_initializer,
-        "projection_initializer": self.projection_initializer,
+      "units": self.units,
+      "projection": self.projection,
+      "use_bias": self.use_bias,
+      "kernel_initializer": self.kernel_initializer,
+      "recurrent_initializer": self.recurrent_initializer,
+      "bias_initializer": self.bias_initializer,
+      "projection_initializer": self.projection_initializer,
     }
     base_config = super().get_config()
     return {**base_config, **config}

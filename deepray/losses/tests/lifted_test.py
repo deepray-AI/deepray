@@ -25,16 +25,16 @@ from deepray.utils import test_utils
 def pairwise_distance_np(feature, squared=False):
   """Computes the pairwise distance matrix in numpy.
 
-    Args:
-      feature: 2-D numpy array of size [number of data, feature dimension]
-      squared: Boolean. If true, output is the pairwise squared euclidean
-        distance matrix; else, output is the pairwise euclidean distance
-        matrix.
+  Args:
+    feature: 2-D numpy array of size [number of data, feature dimension]
+    squared: Boolean. If true, output is the pairwise squared euclidean
+      distance matrix; else, output is the pairwise euclidean distance
+      matrix.
 
-    Returns:
-      pairwise_distances: 2-D numpy array of size
-        [number of data, number of data].
-    """
+  Returns:
+    pairwise_distances: 2-D numpy array of size
+      [number of data, number of data].
+  """
   triu = np.triu_indices(feature.shape[0], 1)
   upper_tri_pdists = np.linalg.norm(feature[triu[1]] - feature[triu[0]], axis=1)
   if squared:
@@ -43,7 +43,7 @@ def pairwise_distance_np(feature, squared=False):
   pairwise_distances = np.zeros((num_data, num_data))
   pairwise_distances[np.triu_indices(num_data, 1)] = upper_tri_pdists
   # Make symmetrical.
-  pairwise_distances = (pairwise_distances + pairwise_distances.T - np.diag(pairwise_distances.diagonal()))
+  pairwise_distances = pairwise_distances + pairwise_distances.T - np.diag(pairwise_distances.diagonal())
   return pairwise_distances
 
 

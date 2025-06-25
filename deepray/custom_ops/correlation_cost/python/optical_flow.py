@@ -22,58 +22,58 @@ gen_correlation_cost_ops = LazySO("custom_ops/correlation_cost/_correlation_cost
 
 
 def _correlation_cost(
-    input_a,
-    input_b,
-    kernel_size,
-    max_displacement,
-    stride_1,
-    stride_2,
-    pad,
-    data_format="channels_last",
-    name=None,
+  input_a,
+  input_b,
+  kernel_size,
+  max_displacement,
+  stride_1,
+  stride_2,
+  pad,
+  data_format="channels_last",
+  name=None,
 ):
   """Correlation Cost Volume computation.
 
-    See [FlowNet: Learning Optical Flow with Convolutional Networks](https://arxiv.org/abs/1504.06852).
+  See [FlowNet: Learning Optical Flow with Convolutional Networks](https://arxiv.org/abs/1504.06852).
 
-    Computes a cost volume using correlation for two inputs. For feature
-    maps A, B with spatial dimensions w, h, c it computes
+  Computes a cost volume using correlation for two inputs. For feature
+  maps A, B with spatial dimensions w, h, c it computes
 
-      output(a, b) = sum_{l in [-k,k]**2}  < I(a+l), J(b+l) >
+    output(a, b) = sum_{l in [-k,k]**2}  < I(a+l), J(b+l) >
 
-    where the patches of size K=2d + 1 are centered in position a resp. b.
+  where the patches of size K=2d + 1 are centered in position a resp. b.
 
-    The output shape is [B, C', H', W'], where
+  The output shape is [B, C', H', W'], where
 
-      r = max_displacement / stride_2;
-      bd = max_displacement + (kernel_size - 1) / 2
-      C' = (2 * r + 1) ** 2
-      H' = H + 2 * (pad - bd) / stride_1
-      W' = W + 2 * (pad - bd) / stride_1
+    r = max_displacement / stride_2;
+    bd = max_displacement + (kernel_size - 1) / 2
+    C' = (2 * r + 1) ** 2
+    H' = H + 2 * (pad - bd) / stride_1
+    W' = W + 2 * (pad - bd) / stride_1
 
-    Note: When the data_format requests "channels_last", an additional explicit
-      transpose operation is executed.
+  Note: When the data_format requests "channels_last", an additional explicit
+    transpose operation is executed.
 
-    Args:
-      input_a: A `Tensor` of the format specified by `data_format`.
-      input_b: A `Tensor` of the format specified by `data_format`.
-      kernel_size: An integer specifying the height and width of the
-          patch used to compute the per-patch costs.
-      max_displacement: An integer specifying the maximum search radius
-          for each position.
-      stride_1: An integer specifying the stride length in the input.
-      stride_2: An integer specifying the stride length in the patch.
-      pad: An integer specifying the paddings in height and width.
-      data_format: Specifies the data format.
-          Possible values are:
-          "channels_last" float [batch, height, width, channels]
-          "channels_first" float [batch, channels, height, width]
-          Defaults to `"channels_last"`.
-      name: A name for the operation (optional).
+  Args:
+    input_a: A `Tensor` of the format specified by `data_format`.
+    input_b: A `Tensor` of the format specified by `data_format`.
+    kernel_size: An integer specifying the height and width of the
+        patch used to compute the per-patch costs.
+    max_displacement: An integer specifying the maximum search radius
+        for each position.
+    stride_1: An integer specifying the stride length in the input.
+    stride_2: An integer specifying the stride length in the patch.
+    pad: An integer specifying the paddings in height and width.
+    data_format: Specifies the data format.
+        Possible values are:
+        "channels_last" float [batch, height, width, channels]
+        "channels_first" float [batch, channels, height, width]
+        Defaults to `"channels_last"`.
+    name: A name for the operation (optional).
 
-    Returns:
-      A `Tensor` of the format specified by `data_format`.
-    """
+  Returns:
+    A `Tensor` of the format specified by `data_format`.
+  """
 
   with tf.name_scope(name or "correlation_cost"):
     op_call = gen_correlation_cost_ops.ops.deepray_correlation_cost
@@ -83,18 +83,17 @@ def _correlation_cost(
     elif data_format == "channels_first":
       op_data_format = "NCHW"
     else:
-      raise ValueError("`data_format` must be either `channels_last` or"
-                       "`channels_first`")
+      raise ValueError("`data_format` must be either `channels_last` or`channels_first`")
 
     ret = op_call(
-        input_a,
-        input_b,
-        kernel_size=kernel_size,
-        max_displacement=max_displacement,
-        stride_1=stride_1,
-        stride_2=stride_2,
-        pad=pad,
-        data_format=op_data_format,
+      input_a,
+      input_b,
+      kernel_size=kernel_size,
+      max_displacement=max_displacement,
+      stride_1=stride_1,
+      stride_2=stride_2,
+      pad=pad,
+      data_format=op_data_format,
     )
     if data_format == "channels_last":
       # this is easier to maintain without
@@ -118,15 +117,15 @@ def _correlation_cost_grad(op, grad_output):
 
   op_call = gen_correlation_cost_ops.ops.deepray_correlation_cost_grad
   grads = op_call(
-      input_a,
-      input_b,
-      grad_output_tensor,
-      kernel_size=kernel_size,
-      max_displacement=max_displacement,
-      stride_1=stride_1,
-      stride_2=stride_2,
-      pad=pad,
-      data_format=data_format,
+    input_a,
+    input_b,
+    grad_output_tensor,
+    kernel_size=kernel_size,
+    max_displacement=max_displacement,
+    stride_1=stride_1,
+    stride_2=stride_2,
+    pad=pad,
+    data_format=data_format,
   )
 
   grad_input_a = tf.convert_to_tensor(grads[0], name="grad_input_a")
@@ -138,34 +137,34 @@ def _correlation_cost_grad(op, grad_output):
 class CorrelationCost(tf.keras.layers.Layer):
   """Correlation Cost Layer.
 
-    This layer implements the correlation operation from [FlowNet Learning
-    Optical Flow with Convolutional Networks](https://arxiv.org/abs/1504.06852)(Fischer et al.).
+  This layer implements the correlation operation from [FlowNet Learning
+  Optical Flow with Convolutional Networks](https://arxiv.org/abs/1504.06852)(Fischer et al.).
 
-    Args:
-        kernel_size: An integer specifying the height and width of the
-            patch used to compute the per-patch costs.
-        max_displacement: An integer specifying the maximum search radius
-            for each position.
-        stride_1: An integer specifying the stride length in the input.
-        stride_2: An integer specifying the stride length in the patch.
-        pad: An integer specifying the paddings in height and width.
-        data_format: Specifies the data format.
-            Possible values are:
-                "channels_last" float [batch, height, width, channels]
-                "channels_first" float [batch, channels, height, width]
-                Defaults to `"channels_last"`.
-    """
+  Args:
+      kernel_size: An integer specifying the height and width of the
+          patch used to compute the per-patch costs.
+      max_displacement: An integer specifying the maximum search radius
+          for each position.
+      stride_1: An integer specifying the stride length in the input.
+      stride_2: An integer specifying the stride length in the patch.
+      pad: An integer specifying the paddings in height and width.
+      data_format: Specifies the data format.
+          Possible values are:
+              "channels_last" float [batch, height, width, channels]
+              "channels_first" float [batch, channels, height, width]
+              Defaults to `"channels_last"`.
+  """
 
   @typechecked
   def __init__(
-      self,
-      kernel_size: int,
-      max_displacement: int,
-      stride_1: int,
-      stride_2: int,
-      pad: int,
-      data_format: str,
-      **kwargs,
+    self,
+    kernel_size: int,
+    max_displacement: int,
+    stride_1: int,
+    stride_2: int,
+    pad: int,
+    data_format: str,
+    **kwargs,
   ):
     self.kernel_size = kernel_size
     self.max_displacement = max_displacement
@@ -174,10 +173,7 @@ class CorrelationCost(tf.keras.layers.Layer):
     self.pad = pad
 
     if data_format != "channels_last" and data_format != "channels_first":
-      raise ValueError(
-          "`data_format` must be either `channels_last` or"
-          "`channels_first`, instead got %s" % data_format
-      )
+      raise ValueError("`data_format` must be either `channels_last` or`channels_first`, instead got %s" % data_format)
 
     self.data_format = data_format
 
@@ -196,14 +192,14 @@ class CorrelationCost(tf.keras.layers.Layer):
     input_b = tf.convert_to_tensor(inputs[1])
 
     return _correlation_cost(
-        input_a,
-        input_b,
-        kernel_size=self.kernel_size,
-        max_displacement=self.max_displacement,
-        stride_1=self.stride_1,
-        stride_2=self.stride_2,
-        pad=self.pad,
-        data_format=self.data_format,
+      input_a,
+      input_b,
+      kernel_size=self.kernel_size,
+      max_displacement=self.max_displacement,
+      stride_1=self.stride_1,
+      stride_2=self.stride_2,
+      pad=self.pad,
+      data_format=self.data_format,
     )
 
   def compute_output_shape(self, input_shape):
@@ -220,7 +216,7 @@ class CorrelationCost(tf.keras.layers.Layer):
     n = input_shape[0][0]
     r = self.max_displacement // self.stride_2
     bd = self.max_displacement + (self.kernel_size - 1) // 2
-    output_c = (2 * r + 1)**2
+    output_c = (2 * r + 1) ** 2
 
     if self.data_format == "channels_first":
       output_h = input_shape[0][2] + 2 * (self.pad - bd) // self.stride_1
@@ -232,17 +228,16 @@ class CorrelationCost(tf.keras.layers.Layer):
       output_w = input_shape[0][2] + 2 * (self.pad - bd) // self.stride_1
       return [(n, output_h, output_w, output_c)]
     else:
-      raise ValueError("`data_format` must be either `channels_last` or"
-                       "`channels_first`")
+      raise ValueError("`data_format` must be either `channels_last` or`channels_first`")
 
   def get_config(self):
     config = {
-        "kernel_size": self.kernel_size,
-        "max_displacement": self.max_displacement,
-        "stride_1": self.stride_1,
-        "stride_2": self.stride_2,
-        "pad": self.pad,
-        "data_format": self.data_format,
+      "kernel_size": self.kernel_size,
+      "max_displacement": self.max_displacement,
+      "stride_1": self.stride_1,
+      "stride_2": self.stride_2,
+      "pad": self.pad,
+      "data_format": self.data_format,
     }
 
     base_config = super().get_config()

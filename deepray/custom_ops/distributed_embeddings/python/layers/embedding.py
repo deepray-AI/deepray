@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Embedding layers"""
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import constraints
@@ -26,23 +27,22 @@ from distributed_embeddings.python.ops import embedding_lookup_ops
 
 
 class CPUInitializer(tf.keras.initializers.Initializer):
-  """ initializer wrapper to force one-time init onto CPU, avoiding OOM
-  """
+  """initializer wrapper to force one-time init onto CPU, avoiding OOM"""
 
   def __init__(self, initializer):
     self._initializer = initializer
 
   def __call__(self, shape, dtype=None, **kwargs):
-    with tf.device('/CPU:0'):
+    with tf.device("/CPU:0"):
       res = self._initializer(shape, **kwargs)
     return res
 
 
 def _embedding_lookup_native(param, ids, combiner=None):
   t = tf.nn.embedding_lookup(param, ids)
-  if combiner == 'sum':
+  if combiner == "sum":
     t = tf.reduce_sum(t, axis=1)
-  elif combiner == 'mean':
+  elif combiner == "mean":
     t = tf.reduce_mean(t, axis=1)
   return t
 
@@ -70,27 +70,27 @@ class Embedding(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      input_dim,
-      output_dim,
-      embeddings_initializer='uniform',
-      embeddings_regularizer=None,
-      activity_regularizer=None,
-      embeddings_constraint=None,
-      combiner=None,
-      use_custom_kernel=True,
-      **kwargs
+    self,
+    input_dim,
+    output_dim,
+    embeddings_initializer="uniform",
+    embeddings_regularizer=None,
+    activity_regularizer=None,
+    embeddings_constraint=None,
+    combiner=None,
+    use_custom_kernel=True,
+    **kwargs,
   ):
-    if 'input_shape' not in kwargs:
-      kwargs['input_shape'] = (None,)
+    if "input_shape" not in kwargs:
+      kwargs["input_shape"] = (None,)
     if input_dim <= 0 or output_dim <= 0:
-      raise ValueError(f'Both input_dim and output_dim should be positive, found {input_dim} and {output_dim}')
-    if (not base_layer_utils.v2_dtype_behavior_enabled() and 'dtype' not in kwargs):
+      raise ValueError(f"Both input_dim and output_dim should be positive, found {input_dim} and {output_dim}")
+    if not base_layer_utils.v2_dtype_behavior_enabled() and "dtype" not in kwargs:
       # In TF1, the dtype defaults to the input dtype which is typically int32,
       # so explicitly set it to floatx
-      kwargs['dtype'] = backend.floatx()
+      kwargs["dtype"] = backend.floatx()
     # No autocast.
-    kwargs['autocast'] = False
+    kwargs["autocast"] = False
     super().__init__(**kwargs)
     self.input_dim = input_dim
     self.output_dim = output_dim
@@ -105,12 +105,12 @@ class Embedding(tf.keras.layers.Layer):
   @tf_utils.shape_type_conversion
   def build(self, input_shape):  # pylint: disable=unused-argument
     self.embeddings = self.add_weight(
-        shape=(self.input_dim, self.output_dim),
-        initializer=self.embeddings_initializer_cpu,
-        name='embeddings',
-        regularizer=self.embeddings_regularizer,
-        constraint=self.embeddings_constraint,
-        experimental_autocast=False
+      shape=(self.input_dim, self.output_dim),
+      initializer=self.embeddings_initializer_cpu,
+      name="embeddings",
+      regularizer=self.embeddings_regularizer,
+      constraint=self.embeddings_constraint,
+      experimental_autocast=False,
     )
     self.built = True
 
@@ -122,8 +122,8 @@ class Embedding(tf.keras.layers.Layer):
 
   def call(self, inputs):  # pylint: disable=missing-function-docstring
     dtype = backend.dtype(inputs)
-    if dtype not in ['int64', 'int32']:
-      inputs = tf.cast(inputs, 'int32')
+    if dtype not in ["int64", "int32"]:
+      inputs = tf.cast(inputs, "int32")
     # For needed case, compute output shape and replace leading possible None with -1
     out_shape = None
     if len(inputs.shape) != 2:
@@ -131,11 +131,11 @@ class Embedding(tf.keras.layers.Layer):
     # check for unsupported cases and reshape non-2D dense inputs
     if isinstance(inputs, ragged_tensor.RaggedTensor):
       if len(inputs.shape) > 2:
-        raise ValueError('Ragged input should be 2D. Nested ragged is not supported.')
+        raise ValueError("Ragged input should be 2D. Nested ragged is not supported.")
     else:
       if len(inputs.shape) == 1:
         if self.combiner is not None:
-          raise ValueError('1D input with combiner is ambiguous. Please create batch dimension.')
+          raise ValueError("1D input with combiner is ambiguous. Please create batch dimension.")
         inputs = tf.reshape(inputs, [-1, 1])
       if len(inputs.shape) > 2:
         inputs = tf.reshape(inputs, [-1, inputs.shape[-1]])
@@ -151,14 +151,14 @@ class Embedding(tf.keras.layers.Layer):
 
   def get_config(self):  # pylint: disable=missing-function-docstring
     config = {
-        'input_dim': self.input_dim,
-        'output_dim': self.output_dim,
-        'embeddings_initializer': initializers.serialize(self.embeddings_initializer),
-        'embeddings_regularizer': regularizers.serialize(self.embeddings_regularizer),
-        'activity_regularizer': regularizers.serialize(self.activity_regularizer),
-        'embeddings_constraint': constraints.serialize(self.embeddings_constraint),
-        'combiner': self.combiner,
-        'use_custom_kernel': self.use_custom_kernel
+      "input_dim": self.input_dim,
+      "output_dim": self.output_dim,
+      "embeddings_initializer": initializers.serialize(self.embeddings_initializer),
+      "embeddings_regularizer": regularizers.serialize(self.embeddings_regularizer),
+      "activity_regularizer": regularizers.serialize(self.activity_regularizer),
+      "embeddings_constraint": constraints.serialize(self.embeddings_constraint),
+      "combiner": self.combiner,
+      "use_custom_kernel": self.use_custom_kernel,
     }
     base_config = super().get_config()
     return dict(list(base_config.items()) + list(config.items()))
@@ -168,8 +168,8 @@ class Embedding(tf.keras.layers.Layer):
     """Creates a layer from its config.
     Overriding this to enable instantiating fast embedding from keras embedding configs
     """
-    config.pop('mask_zero', None)
-    config.pop('input_length', None)
+    config.pop("mask_zero", None)
+    config.pop("input_length", None)
     return super().from_config(config)
 
 
@@ -226,9 +226,9 @@ class IntegerLookup(tf.keras.layers.Layer):
       # 1.5x load factor, 2x keys + values
       self.table = tf.Variable(tf.zeros((2 * int(1.5 * self.capacity),), tf.int64), trainable=False)
     else:
-      with tf.device('/CPU'):
+      with tf.device("/CPU"):
         self.table = tf.lookup.experimental.DenseHashTable(
-            key_dtype=tf.int64, value_dtype=tf.int64, default_value=0, empty_key=-2, deleted_key=-3
+          key_dtype=tf.int64, value_dtype=tf.int64, default_value=0, empty_key=-2, deleted_key=-3
         )
 
         # TODO(deyuf): benchmark code that handles max_token for cpu table
@@ -239,13 +239,13 @@ class IntegerLookup(tf.keras.layers.Layer):
     if self.use_gpu:
       return embedding_lookup_ops.integer_lookup(self.table, self.count, inputs, self.capacity)
     # This is efficient on cpu, especially with power law distribution data
-    with tf.device('/CPU'):
+    with tf.device("/CPU"):
       input_shape = tf.shape(inputs)
       inputs = tf.reshape(inputs, [-1])
       if self.num_empty_slot > 0:
         keys, _ = tf.unique(inputs)
         vals = self.table.lookup(keys)
-        new_keys = tf.gather(keys, tf.reshape(tf.where(vals <= 0), [-1]))[:self.num_empty_slot]
+        new_keys = tf.gather(keys, tf.reshape(tf.where(vals <= 0), [-1]))[: self.num_empty_slot]
         num_insert = tf.shape(new_keys, out_type=tf.int64)[0]
         self.num_empty_slot -= num_insert
         self.table.insert(new_keys, tf.range(self.table.size(), self.table.size() + num_insert))

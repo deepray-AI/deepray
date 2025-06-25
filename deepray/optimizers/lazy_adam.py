@@ -37,69 +37,69 @@ else:
 @keras.utils.register_keras_serializable(package="Deepray")
 class LazyAdam(adam_optimizer_class):
   """Variant of the Adam optimizer that handles sparse updates more
-    efficiently.
+  efficiently.
 
-    The original Adam algorithm maintains two moving-average accumulators for
-    each trainable variable; the accumulators are updated at every step.
-    This class provides lazier handling of gradient updates for sparse
-    variables.  It only updates moving-average accumulators for sparse variable
-    indices that appear in the current batch, rather than updating the
-    accumulators for all indices. Compared with the original Adam optimizer,
-    it can provide large improvements in model training throughput for some
-    applications. However, it provides slightly different semantics than the
-    original Adam algorithm, and may lead to different empirical results.
+  The original Adam algorithm maintains two moving-average accumulators for
+  each trainable variable; the accumulators are updated at every step.
+  This class provides lazier handling of gradient updates for sparse
+  variables.  It only updates moving-average accumulators for sparse variable
+  indices that appear in the current batch, rather than updating the
+  accumulators for all indices. Compared with the original Adam optimizer,
+  it can provide large improvements in model training throughput for some
+  applications. However, it provides slightly different semantics than the
+  original Adam algorithm, and may lead to different empirical results.
 
-    Note, amsgrad is currently not supported and the argument can only be
-    False.
-    """
+  Note, amsgrad is currently not supported and the argument can only be
+  False.
+  """
 
   @typechecked
   def __init__(
-      self,
-      learning_rate: Union[FloatTensorLike, Callable] = 0.001,
-      beta_1: FloatTensorLike = 0.9,
-      beta_2: FloatTensorLike = 0.999,
-      epsilon: FloatTensorLike = 1e-7,
-      amsgrad: bool = False,
-      name: str = "LazyAdam",
-      **kwargs,
+    self,
+    learning_rate: Union[FloatTensorLike, Callable] = 0.001,
+    beta_1: FloatTensorLike = 0.9,
+    beta_2: FloatTensorLike = 0.999,
+    epsilon: FloatTensorLike = 1e-7,
+    amsgrad: bool = False,
+    name: str = "LazyAdam",
+    **kwargs,
   ):
     """Constructs a new LazyAdam optimizer.
 
-        Args:
-          learning_rate: A `Tensor` or a floating point value. or a schedule
-            that is a `keras.optimizers.schedules.LearningRateSchedule`
-            The learning rate.
-          beta_1: A `float` value or a constant `float` tensor.
-            The exponential decay rate for the 1st moment estimates.
-          beta_2: A `float` value or a constant `float` tensor.
-            The exponential decay rate for the 2nd moment estimates.
-          epsilon: A small constant for numerical stability.
-            This epsilon is "epsilon hat" in
-            [Adam: A Method for Stochastic Optimization. Kingma et al., 2014]
-            (http://arxiv.org/abs/1412.6980) (in the formula just
-            before Section 2.1), not the epsilon in Algorithm 1 of the paper.
-          amsgrad: `boolean`. Whether to apply AMSGrad variant of this
-            algorithm from the paper "On the Convergence of Adam and beyond".
-            Note that this argument is currently not supported and the
-            argument can only be `False`.
-          name: Optional name for the operations created when applying
-            gradients. Defaults to "LazyAdam".
-          **kwargs: keyword arguments. Allowed to be {`clipnorm`, `clipvalue`,
-            `lr`, `decay`}. `clipnorm` is clip gradients by norm; `clipvalue`
-            is clip gradients by value, `decay` is included for backward
-            compatibility to allow time inverse decay of learning rate. `lr`
-            is included for backward compatibility, recommended to use
-            `learning_rate` instead.
-        """
+    Args:
+      learning_rate: A `Tensor` or a floating point value. or a schedule
+        that is a `keras.optimizers.schedules.LearningRateSchedule`
+        The learning rate.
+      beta_1: A `float` value or a constant `float` tensor.
+        The exponential decay rate for the 1st moment estimates.
+      beta_2: A `float` value or a constant `float` tensor.
+        The exponential decay rate for the 2nd moment estimates.
+      epsilon: A small constant for numerical stability.
+        This epsilon is "epsilon hat" in
+        [Adam: A Method for Stochastic Optimization. Kingma et al., 2014]
+        (http://arxiv.org/abs/1412.6980) (in the formula just
+        before Section 2.1), not the epsilon in Algorithm 1 of the paper.
+      amsgrad: `boolean`. Whether to apply AMSGrad variant of this
+        algorithm from the paper "On the Convergence of Adam and beyond".
+        Note that this argument is currently not supported and the
+        argument can only be `False`.
+      name: Optional name for the operations created when applying
+        gradients. Defaults to "LazyAdam".
+      **kwargs: keyword arguments. Allowed to be {`clipnorm`, `clipvalue`,
+        `lr`, `decay`}. `clipnorm` is clip gradients by norm; `clipvalue`
+        is clip gradients by value, `decay` is included for backward
+        compatibility to allow time inverse decay of learning rate. `lr`
+        is included for backward compatibility, recommended to use
+        `learning_rate` instead.
+    """
     super().__init__(
-        learning_rate=learning_rate,
-        beta_1=beta_1,
-        beta_2=beta_2,
-        epsilon=epsilon,
-        amsgrad=amsgrad,
-        name=name,
-        **kwargs,
+      learning_rate=learning_rate,
+      beta_1=beta_1,
+      beta_2=beta_2,
+      epsilon=epsilon,
+      amsgrad=amsgrad,
+      name=name,
+      **kwargs,
     )
 
   def _resource_apply_sparse(self, grad, var, indices):
@@ -137,9 +137,9 @@ class LazyAdam(adam_optimizer_class):
 
   def _resource_scatter_operate(self, resource, indices, update, resource_scatter_op):
     resource_update_kwargs = {
-        "resource": resource.handle,
-        "indices": indices,
-        "updates": update,
+      "resource": resource.handle,
+      "indices": indices,
+      "updates": update,
     }
 
     return resource_scatter_op(**resource_update_kwargs)

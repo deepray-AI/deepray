@@ -37,11 +37,11 @@ def test_cell_output():
 
   def single_cell():
     return LayerNormLSTMCell(
-        units=2,
-        kernel_initializer=const_initializer,
-        recurrent_initializer=const_initializer,
-        bias_initializer=const_initializer,
-        norm_epsilon=1e-12,
+      units=2,
+      kernel_initializer=const_initializer,
+      recurrent_initializer=const_initializer,
+      bias_initializer=const_initializer,
+      norm_epsilon=1e-12,
     )
 
   cell = keras.layers.StackedRNNCells([single_cell() for _ in range(2)])
@@ -70,11 +70,11 @@ def test_cell_output():
   h = tf.constant(0.1 * np.asarray([[2, 3]]), dtype=tf.float32)
   state = [h, c]
   cell = LayerNormLSTMCell(
-      units=2,
-      kernel_initializer=const_initializer,
-      recurrent_initializer=const_initializer,
-      bias_initializer=const_initializer,
-      norm_epsilon=1e-12,
+    units=2,
+    kernel_initializer=const_initializer,
+    recurrent_initializer=const_initializer,
+    bias_initializer=const_initializer,
+    norm_epsilon=1e-12,
   )
   output_v, output_states_v = cell(x, state)
   expected_h = np.array([[-0.47406167, 0.47406143]])
@@ -85,71 +85,61 @@ def test_cell_output():
 
 
 @pytest.mark.skipif(
-    Version(tf.__version__) < Version("2.13"),
-    reason="TF2.13 Serialization method doesn't support legacy method on parent class",
+  Version(tf.__version__) < Version("2.13"),
+  reason="TF2.13 Serialization method doesn't support legacy method on parent class",
 )
 def test_config_layer_norm_legacy():
   cell = LayerNormLSTMCell(10, name="layer_norm_lstm_cell_3")
 
   expected_config = {
-      "dtype": "float32",
-      "name": "layer_norm_lstm_cell_3",
-      "trainable": True,
-      "units": 10,
-      "activation": "tanh",
-      "recurrent_activation": "sigmoid",
-      "use_bias": True,
-      "kernel_initializer":
-          {
-              "class_name": "GlorotUniform",
-              "config": {
-                  "seed": None
-              },
-              "module": "keras.initializers",
-              "registered_name": None,
-          },
-      "recurrent_initializer":
-          {
-              "class_name": "Orthogonal",
-              "config": {
-                  "seed": None,
-                  "gain": 1.0
-              },
-              "module": "keras.initializers",
-              "registered_name": None,
-          },
-      "bias_initializer":
-          {
-              "class_name": "Zeros",
-              "config": {},
-              "module": "keras.initializers",
-              "registered_name": None,
-          },
-      "unit_forget_bias": True,
-      "kernel_regularizer": None,
-      "recurrent_regularizer": None,
-      "bias_regularizer": None,
-      "kernel_constraint": None,
-      "recurrent_constraint": None,
-      "bias_constraint": None,
-      "dropout": 0.0,
-      "recurrent_dropout": 0.0,
-      "implementation": 2,
-      "norm_gamma_initializer":
-          {
-              "class_name": "Ones",
-              "config": {},
-              "module": "keras.initializers",
-              "registered_name": None,
-          },
-      "norm_beta_initializer":
-          {
-              "class_name": "Zeros",
-              "config": {},
-              "module": "keras.initializers",
-              "registered_name": None,
-          },
-      "norm_epsilon": 1e-3,
+    "dtype": "float32",
+    "name": "layer_norm_lstm_cell_3",
+    "trainable": True,
+    "units": 10,
+    "activation": "tanh",
+    "recurrent_activation": "sigmoid",
+    "use_bias": True,
+    "kernel_initializer": {
+      "class_name": "GlorotUniform",
+      "config": {"seed": None},
+      "module": "keras.initializers",
+      "registered_name": None,
+    },
+    "recurrent_initializer": {
+      "class_name": "Orthogonal",
+      "config": {"seed": None, "gain": 1.0},
+      "module": "keras.initializers",
+      "registered_name": None,
+    },
+    "bias_initializer": {
+      "class_name": "Zeros",
+      "config": {},
+      "module": "keras.initializers",
+      "registered_name": None,
+    },
+    "unit_forget_bias": True,
+    "kernel_regularizer": None,
+    "recurrent_regularizer": None,
+    "bias_regularizer": None,
+    "kernel_constraint": None,
+    "recurrent_constraint": None,
+    "bias_constraint": None,
+    "dropout": 0.0,
+    "recurrent_dropout": 0.0,
+    "implementation": 2,
+    "norm_gamma_initializer": {
+      "class_name": "Ones",
+      "config": {},
+      "module": "keras.initializers",
+      "registered_name": None,
+    },
+    "norm_beta_initializer": {
+      "class_name": "Zeros",
+      "config": {},
+      "module": "keras.initializers",
+      "registered_name": None,
+    },
+    "norm_epsilon": 1e-3,
   }
   config = cell.get_config()
   assert config == expected_config
@@ -160,56 +150,42 @@ def test_config_layer_norm_legacy():
 
 
 @pytest.mark.skipif(
-    Version(tf.__version__) >= Version("2.13"),
-    reason="TF2.13 Serialization method doesn't support legacy method on parent class",
+  Version(tf.__version__) >= Version("2.13"),
+  reason="TF2.13 Serialization method doesn't support legacy method on parent class",
 )
 def test_config_layer_norm():
   cell = LayerNormLSTMCell(10, name="layer_norm_lstm_cell_3")
 
   expected_config = {
-      "dtype": "float32",
-      "name": "layer_norm_lstm_cell_3",
-      "trainable": True,
-      "units": 10,
-      "activation": "tanh",
-      "recurrent_activation": "sigmoid",
-      "use_bias": True,
-      "kernel_initializer": {
-          "class_name": "GlorotUniform",
-          "config": {
-              "seed": None
-          },
-      },
-      "recurrent_initializer": {
-          "class_name": "Orthogonal",
-          "config": {
-              "seed": None,
-              "gain": 1.0
-          },
-      },
-      "bias_initializer": {
-          "class_name": "Zeros",
-          "config": {}
-      },
-      "unit_forget_bias": True,
-      "kernel_regularizer": None,
-      "recurrent_regularizer": None,
-      "bias_regularizer": None,
-      "kernel_constraint": None,
-      "recurrent_constraint": None,
-      "bias_constraint": None,
-      "dropout": 0.0,
-      "recurrent_dropout": 0.0,
-      "implementation": 2,
-      "norm_gamma_initializer": {
-          "class_name": "Ones",
-          "config": {}
-      },
-      "norm_beta_initializer": {
-          "class_name": "Zeros",
-          "config": {}
-      },
-      "norm_epsilon": 1e-3,
+    "dtype": "float32",
+    "name": "layer_norm_lstm_cell_3",
+    "trainable": True,
+    "units": 10,
+    "activation": "tanh",
+    "recurrent_activation": "sigmoid",
+    "use_bias": True,
+    "kernel_initializer": {
+      "class_name": "GlorotUniform",
+      "config": {"seed": None},
+    },
+    "recurrent_initializer": {
+      "class_name": "Orthogonal",
+      "config": {"seed": None, "gain": 1.0},
+    },
+    "bias_initializer": {"class_name": "Zeros", "config": {}},
+    "unit_forget_bias": True,
+    "kernel_regularizer": None,
+    "recurrent_regularizer": None,
+    "bias_regularizer": None,
+    "kernel_constraint": None,
+    "recurrent_constraint": None,
+    "bias_constraint": None,
+    "dropout": 0.0,
+    "recurrent_dropout": 0.0,
+    "implementation": 2,
+    "norm_gamma_initializer": {"class_name": "Ones", "config": {}},
+    "norm_beta_initializer": {"class_name": "Zeros", "config": {}},
+    "norm_epsilon": 1e-3,
   }
   config = cell.get_config()
   assert config == expected_config
@@ -222,8 +198,8 @@ def test_config_layer_norm():
 def test_build():
   cell = LayerNormLSTMCell(10, name="layer_norm_lstm_cell")
   cell(
-      inputs=tf.ones((12, 20)),
-      states=cell.get_initial_state(batch_size=12, dtype=tf.float32),
+    inputs=tf.ones((12, 20)),
+    states=cell.get_initial_state(batch_size=12, dtype=tf.float32),
   )
   assert len(cell.weights) == 9
   assert cell.weights[0].name == "layer_norm_lstm_cell/kernel:0"

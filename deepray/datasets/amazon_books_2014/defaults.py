@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-REMAINDER_FILENAME = 'remainder.tfrecord'
+REMAINDER_FILENAME = "remainder.tfrecord"
 
-USER_FEATURES_CHANNEL = 'user_features'
-TARGET_ITEM_FEATURES_CHANNEL = 'target_item_features'
-POSITIVE_HISTORY_CHANNEL = 'positive_history'
-NEGATIVE_HISTORY_CHANNEL = 'negative_history'
-LABEL_CHANNEL = 'label'
+USER_FEATURES_CHANNEL = "user_features"
+TARGET_ITEM_FEATURES_CHANNEL = "target_item_features"
+POSITIVE_HISTORY_CHANNEL = "positive_history"
+NEGATIVE_HISTORY_CHANNEL = "negative_history"
+LABEL_CHANNEL = "label"
 
 TRAIN_MAPPING = "train"
 TEST_MAPPING = "test"
@@ -27,4 +27,4 @@ FILES_SELECTOR = "files"
 
 DTYPE_SELECTOR = "dtype"
 CARDINALITY_SELECTOR = "cardinality"
-DIMENSIONS_SELECTOR = 'dimensions'
+DIMENSIONS_SELECTOR = "dimensions"

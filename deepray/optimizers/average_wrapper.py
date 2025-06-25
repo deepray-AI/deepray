@@ -23,18 +23,17 @@ from typeguard import typechecked
 
 
 class AveragedOptimizerWrapper(KerasLegacyOptimizer, metaclass=abc.ABCMeta):
-
   @typechecked
   def __init__(
-      self,
-      optimizer: types.Optimizer,
-      name: str = "AverageOptimizer",
-      **kwargs,
+    self,
+    optimizer: types.Optimizer,
+    name: str = "AverageOptimizer",
+    **kwargs,
   ):
     super().__init__(name, **kwargs)
 
     if isinstance(optimizer, str):
-      if (hasattr(tf.keras.optimizers, "legacy") and KerasLegacyOptimizer == tf.keras.optimizers.legacy.Optimizer):
+      if hasattr(tf.keras.optimizers, "legacy") and KerasLegacyOptimizer == tf.keras.optimizers.legacy.Optimizer:
         optimizer = tf.keras.optimizers.get(optimizer, use_legacy_optimizer=True)
       else:
         optimizer = tf.keras.optimizers.get(optimizer)
@@ -99,41 +98,43 @@ class AveragedOptimizerWrapper(KerasLegacyOptimizer, metaclass=abc.ABCMeta):
   def assign_average_vars(self, var_list):
     """Assign variables in var_list with their respective averages.
 
-        Args:
-            var_list: List of model variables to be assigned to their average.
+    Args:
+        var_list: List of model variables to be assigned to their average.
 
-        Returns:
-            assign_op: The op corresponding to the assignment operation of
-            variables to their average.
+    Returns:
+        assign_op: The op corresponding to the assignment operation of
+        variables to their average.
 
-        Example:
-        ```python
-        model = tf.Sequential([...])
-        opt = dp.optimizers.SWA(
-                tf.keras.optimizers.SGD(lr=2.0), 100, 10)
-        model.compile(opt, ...)
-        model.fit(x, y, ...)
+    Example:
+    ```python
+    model = tf.Sequential([...])
+    opt = dp.optimizers.SWA(
+            tf.keras.optimizers.SGD(lr=2.0), 100, 10)
+    model.compile(opt, ...)
+    model.fit(x, y, ...)
 
-        # Update the weights to their mean before saving
-        opt.assign_average_vars(model.variables)
+    # Update the weights to their mean before saving
+    opt.assign_average_vars(model.variables)
 
-        model.save('model.h5')
-        ```
-        """
+    model.save('model.h5')
+    ```
+    """
     assign_ops = []
     for var in var_list:
       try:
-        assign_ops.append(var.assign(
+        assign_ops.append(
+          var.assign(
             self.get_slot(var, "average"),
             use_locking=self._use_locking,
-        ))
+          )
+        )
       except Exception as e:
         warnings.warn("Unable to assign average slot to {} : {}".format(var, e))
     return tf.group(assign_ops)
 
   def get_config(self):
     config = {
-        "optimizer": tf.keras.optimizers.serialize(self._optimizer),
+      "optimizer": tf.keras.optimizers.serialize(self._optimizer),
     }
     base_config = super().get_config()
     return {**base_config, **config}

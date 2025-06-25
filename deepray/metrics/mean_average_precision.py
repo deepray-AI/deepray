@@ -73,7 +73,7 @@ class MeanAveragePrecisionMetric(_RankingMetric):
   def get_config(self):
     base_config = super(MeanAveragePrecisionMetric, self).get_config()
     config = {
-        "topn": self._topn,
+      "topn": self._topn,
     }
     config.update(base_config)
     return config

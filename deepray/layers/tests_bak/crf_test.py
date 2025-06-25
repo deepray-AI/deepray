@@ -29,53 +29,47 @@ from deepray.utils import test_utils
 
 
 def get_test_data():
-  x = np.array(
-      [
-          [
-              # O   B-X  I-X  B-Y  I-Y
-              [0.0, 1.0, 0.0, 0.0, 0.0],
-              [0.0, 0.0, 1.0, 0.0, 0.0],
-              [0.0, 0.0, 1.0, 0.0, 0.0],
-          ],
-          [
-              # O   B-X  I-X  B-Y  I-Y
-              [0.0, 1.0, 0.0, 0.0, 0.0],
-              [0.0, 1.0, 0.0, 0.0, 0.0],
-              [0.0, 1.0, 0.0, 0.0, 0.0],
-          ],
-      ]
-  )
+  x = np.array([
+    [
+      # O   B-X  I-X  B-Y  I-Y
+      [0.0, 1.0, 0.0, 0.0, 0.0],
+      [0.0, 0.0, 1.0, 0.0, 0.0],
+      [0.0, 0.0, 1.0, 0.0, 0.0],
+    ],
+    [
+      # O   B-X  I-X  B-Y  I-Y
+      [0.0, 1.0, 0.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0, 0.0, 0.0],
+    ],
+  ])
   y = np.array([[1, 2, 2], [1, 1, 1]])  # B-X  I-X  I-X  # B-X  B-X  B-X
   return x, y
 
 
 def get_test_data_extended():
-  logits = np.array(
-      [
-          [[0, 0, 0.5, 0.5, 0.2], [0, 0, 0.3, 0.3, 0.1], [0, 0, 0.9, 10, 1]],
-          [[0, 0, 0.2, 0.5, 0.2], [0, 0, 3, 0.3, 0.1], [0, 0, 0.9, 1, 1]],
-      ]
-  )
+  logits = np.array([
+    [[0, 0, 0.5, 0.5, 0.2], [0, 0, 0.3, 0.3, 0.1], [0, 0, 0.9, 10, 1]],
+    [[0, 0, 0.2, 0.5, 0.2], [0, 0, 3, 0.3, 0.1], [0, 0, 0.9, 1, 1]],
+  ])
   tags = np.array([[2, 3, 4], [3, 2, 2]])
 
-  transitions = np.array(
-      [
-          [0.1, 0.2, 0.3, 0.4, 0.5],
-          [0.8, 0.3, 0.1, 0.7, 0.9],
-          [-0.3, 2.1, -5.6, 3.4, 4.0],
-          [0.2, 0.4, 0.6, -0.3, -0.4],
-          [1.0, 1.0, 1.0, 1.0, 1.0],
-      ]
-  )
+  transitions = np.array([
+    [0.1, 0.2, 0.3, 0.4, 0.5],
+    [0.8, 0.3, 0.1, 0.7, 0.9],
+    [-0.3, 2.1, -5.6, 3.4, 4.0],
+    [0.2, 0.4, 0.6, -0.3, -0.4],
+    [1.0, 1.0, 1.0, 1.0, 1.0],
+  ])
 
   boundary_values = np.ones((5,))
   crf_layer = CRF(
-      units=5,
-      use_kernel=False,  # disable kernel transform
-      chain_initializer=tf.keras.initializers.Constant(transitions),
-      use_boundary=True,
-      boundary_initializer=tf.keras.initializers.Constant(boundary_values),
-      name="crf_layer",
+    units=5,
+    use_kernel=False,  # disable kernel transform
+    chain_initializer=tf.keras.initializers.Constant(transitions),
+    use_boundary=True,
+    boundary_initializer=tf.keras.initializers.Constant(boundary_values),
+    name="crf_layer",
   )
   return logits, tags, transitions, boundary_values, crf_layer
 
@@ -100,11 +94,11 @@ def test_unmasked_viterbi_decode():
   boundary_value = np.ones(5)
 
   layer = CRF(
-      units=5,
-      use_kernel=False,  # disable kernel transform
-      chain_initializer=tf.keras.initializers.Constant(transitions),
-      use_boundary=True,
-      boundary_initializer=tf.keras.initializers.Constant(boundary_value),
+    units=5,
+    use_kernel=False,  # disable kernel transform
+    chain_initializer=tf.keras.initializers.Constant(transitions),
+    use_boundary=True,
+    boundary_initializer=tf.keras.initializers.Constant(boundary_value),
   )
 
   decoded_sequence, _, _, _ = layer(x_np)
@@ -303,8 +297,7 @@ def compute_log_likelihood(logits, tags, transitions, boundary_values):
   for logits_i, tags_i in zip(logits, tags):
     numerator = score_logits(logits_i, tags_i, transitions, boundary_values)
     all_scores = [
-        score_logits(logits_i, tags_j, transitions, boundary_values)
-        for tags_j in itertools.product(range(5), repeat=3)
+      score_logits(logits_i, tags_j, transitions, boundary_values) for tags_j in itertools.product(range(5), repeat=3)
     ]
     denominator = math.log(sum(math.exp(score) for score in all_scores))
     # And include them in the manual calculation.
@@ -315,7 +308,7 @@ def compute_log_likelihood(logits, tags, transitions, boundary_values):
 
 def score_logits(logits, tags, transitions, boundary_values):
   """Computes the likelihood score for the given sequence of tags, given
-    the provided logits (and the transition weights in the CRF model)"""
+  the provided logits (and the transition weights in the CRF model)"""
   # Start with transitions from START and to END
   total = boundary_values[tags[0]] + boundary_values[tags[-1]]
   # Add in all the intermediate transitions

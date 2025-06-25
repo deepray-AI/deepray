@@ -21,61 +21,60 @@ from pubmed.PubMedDownloader import PubMedDownloader
 
 
 class Downloader:
-
   def __init__(self, dataset_name, save_path):
     self.dataset_name = dataset_name
     self.save_path = save_path
 
   def download(self):
-    if self.dataset_name == 'bookscorpus':
+    if self.dataset_name == "bookscorpus":
       self.download_bookscorpus()
 
-    elif self.dataset_name == 'wikicorpus_en':
-      self.download_wikicorpus('en')
+    elif self.dataset_name == "wikicorpus_en":
+      self.download_wikicorpus("en")
 
-    elif self.dataset_name == 'wikicorpus_zh':
-      self.download_wikicorpus('zh')
+    elif self.dataset_name == "wikicorpus_zh":
+      self.download_wikicorpus("zh")
 
-    elif self.dataset_name == 'pubmed_baseline':
-      self.download_pubmed('baseline')
+    elif self.dataset_name == "pubmed_baseline":
+      self.download_pubmed("baseline")
 
-    elif self.dataset_name == 'pubmed_daily_update':
-      self.download_pubmed('daily_update')
+    elif self.dataset_name == "pubmed_daily_update":
+      self.download_pubmed("daily_update")
 
-    elif self.dataset_name == 'pubmed_fulltext':
-      self.download_pubmed('fulltext')
+    elif self.dataset_name == "pubmed_fulltext":
+      self.download_pubmed("fulltext")
 
-    elif self.dataset_name == 'pubmed_open_access':
-      self.download_pubmed('open_access')
+    elif self.dataset_name == "pubmed_open_access":
+      self.download_pubmed("open_access")
 
-    elif self.dataset_name == 'google_pretrained_weights':
+    elif self.dataset_name == "google_pretrained_weights":
       self.download_google_pretrained_weights()
 
-    elif self.dataset_name == 'nvidia_pretrained_weights':
+    elif self.dataset_name == "nvidia_pretrained_weights":
       self.download_nvidia_pretrained_weights()
 
-    elif self.dataset_name == 'mrpc':
+    elif self.dataset_name == "mrpc":
       self.download_glue(self.dataset_name)
 
-    elif self.dataset_name == 'mnli':
+    elif self.dataset_name == "mnli":
       self.download_glue(self.dataset_name)
 
-    elif self.dataset_name == 'cola':
+    elif self.dataset_name == "cola":
       self.download_glue(self.dataset_name)
-    elif self.dataset_name == 'sst-2':
+    elif self.dataset_name == "sst-2":
       self.download_glue(self.dataset_name)
 
-    elif self.dataset_name == 'squad':
+    elif self.dataset_name == "squad":
       self.download_squad()
 
-    elif self.dataset_name == 'all':
+    elif self.dataset_name == "all":
       self.download_bookscorpus()
-      self.download_wikicorpus('en')
-      self.download_wikicorpus('zh')
-      self.download_pubmed('baseline')
-      self.download_pubmed('daily_update')
-      self.download_pubmed('fulltext')
-      self.download_pubmed('open_access')
+      self.download_wikicorpus("en")
+      self.download_wikicorpus("zh")
+      self.download_pubmed("baseline")
+      self.download_pubmed("daily_update")
+      self.download_pubmed("fulltext")
+      self.download_pubmed("open_access")
       self.download_google_pretrained_weights()
       self.download_nvidia_pretrained_weights()
       self.download_glue("cola")
@@ -86,7 +85,7 @@ class Downloader:
 
     else:
       print(self.dataset_name)
-      assert False, 'Unknown dataset_name provided to downloader'
+      assert False, "Unknown dataset_name provided to downloader"
 
   def download_bookscorpus(self):
     downloader = BooksDownloader(self.save_path)

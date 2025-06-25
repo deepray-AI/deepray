@@ -26,60 +26,60 @@ from deepray.utils.types import Number
 class WeightedKappaLoss(tf.keras.losses.Loss):
   r"""Implements the Weighted Kappa loss function.
 
-    Weighted Kappa loss was introduced in the
-    [Weighted kappa loss function for multi-class classification
-    of ordinal data in deep learning]
-    (https://www.sciencedirect.com/science/article/abs/pii/S0167865517301666).
-    Weighted Kappa is widely used in Ordinal Classification Problems.
-    The loss value lies in $ [-\infty, \log 2] $, where $ \log 2 $
-    means the random prediction.
+  Weighted Kappa loss was introduced in the
+  [Weighted kappa loss function for multi-class classification
+  of ordinal data in deep learning]
+  (https://www.sciencedirect.com/science/article/abs/pii/S0167865517301666).
+  Weighted Kappa is widely used in Ordinal Classification Problems.
+  The loss value lies in $ [-\infty, \log 2] $, where $ \log 2 $
+  means the random prediction.
 
-    Usage:
+  Usage:
 
-    >>> kappa_loss = dp.losses.WeightedKappaLoss(num_classes=4)
-    >>> y_true = tf.constant([[0, 0, 1, 0], [0, 1, 0, 0],
-    ...                  [1, 0, 0, 0], [0, 0, 0, 1]])
-    >>> y_pred = tf.constant([[0.1, 0.2, 0.6, 0.1], [0.1, 0.5, 0.3, 0.1],
-    ...                  [0.8, 0.05, 0.05, 0.1], [0.01, 0.09, 0.1, 0.8]])
-    >>> loss = kappa_loss(y_true, y_pred)
-    >>> loss
-    <tf.Tensor: shape=(), dtype=float32, numpy=-1.1611925>
+  >>> kappa_loss = dp.losses.WeightedKappaLoss(num_classes=4)
+  >>> y_true = tf.constant([[0, 0, 1, 0], [0, 1, 0, 0],
+  ...                  [1, 0, 0, 0], [0, 0, 0, 1]])
+  >>> y_pred = tf.constant([[0.1, 0.2, 0.6, 0.1], [0.1, 0.5, 0.3, 0.1],
+  ...                  [0.8, 0.05, 0.05, 0.1], [0.01, 0.09, 0.1, 0.8]])
+  >>> loss = kappa_loss(y_true, y_pred)
+  >>> loss
+  <tf.Tensor: shape=(), dtype=float32, numpy=-1.1611925>
 
-    Usage with `tf.keras` API:
+  Usage with `tf.keras` API:
 
-    >>> model = tf.keras.Model()
-    >>> model.compile('sgd', loss=dp.losses.WeightedKappaLoss(num_classes=4))
+  >>> model = tf.keras.Model()
+  >>> model.compile('sgd', loss=dp.losses.WeightedKappaLoss(num_classes=4))
 
-    <... outputs should be softmax results
-    if you want to weight the samples, just multiply the outputs
-    by the sample weight ...>
+  <... outputs should be softmax results
+  if you want to weight the samples, just multiply the outputs
+  by the sample weight ...>
 
-    """
+  """
 
   @typechecked
   def __init__(
-      self,
-      num_classes: int,
-      weightage: Optional[str] = "quadratic",
-      name: Optional[str] = "cohen_kappa_loss",
-      epsilon: Optional[Number] = 1e-6,
-      reduction: str = tf.keras.losses.Reduction.NONE,
+    self,
+    num_classes: int,
+    weightage: Optional[str] = "quadratic",
+    name: Optional[str] = "cohen_kappa_loss",
+    epsilon: Optional[Number] = 1e-6,
+    reduction: str = tf.keras.losses.Reduction.NONE,
   ):
     r"""Creates a `WeightedKappaLoss` instance.
 
-        Args:
-          num_classes: Number of unique classes in your dataset.
-          weightage: (Optional) Weighting to be considered for calculating
-            kappa statistics. A valid value is one of
-            ['linear', 'quadratic']. Defaults to 'quadratic'.
-          name: (Optional) String name of the metric instance.
-          epsilon: (Optional) increment to avoid log zero,
-            so the loss will be $ \log(1 - k + \epsilon) $, where $ k $ lies
-            in $ [-1, 1] $. Defaults to 1e-6.
-        Raises:
-          ValueError: If the value passed for `weightage` is invalid
-            i.e. not any one of ['linear', 'quadratic']
-        """
+    Args:
+      num_classes: Number of unique classes in your dataset.
+      weightage: (Optional) Weighting to be considered for calculating
+        kappa statistics. A valid value is one of
+        ['linear', 'quadratic']. Defaults to 'quadratic'.
+      name: (Optional) String name of the metric instance.
+      epsilon: (Optional) increment to avoid log zero,
+        so the loss will be $ \log(1 - k + \epsilon) $, where $ k $ lies
+        in $ [-1, 1] $. Defaults to 1e-6.
+    Raises:
+      ValueError: If the value passed for `weightage` is invalid
+        i.e. not any one of ['linear', 'quadratic']
+    """
 
     super().__init__(name=name, reduction=reduction)
 
@@ -97,7 +97,7 @@ class WeightedKappaLoss(tf.keras.losses.Loss):
     if weightage == "linear":
       self.weight_mat = tf.abs(col_mat - row_mat)
     else:
-      self.weight_mat = (col_mat - row_mat)**2
+      self.weight_mat = (col_mat - row_mat) ** 2
 
   def call(self, y_true, y_pred):
     y_true = tf.cast(y_true, dtype=self.col_label_vec.dtype)
@@ -109,7 +109,7 @@ class WeightedKappaLoss(tf.keras.losses.Loss):
     if self.weightage == "linear":
       weight = tf.abs(cat_label_mat - row_label_mat)
     else:
-      weight = (cat_label_mat - row_label_mat)**2
+      weight = (cat_label_mat - row_label_mat) ** 2
     numerator = tf.reduce_sum(weight * y_pred)
     label_dist = tf.reduce_sum(y_true, axis=0, keepdims=True)
     pred_dist = tf.reduce_sum(y_pred, axis=0, keepdims=True)
@@ -121,9 +121,9 @@ class WeightedKappaLoss(tf.keras.losses.Loss):
 
   def get_config(self):
     config = {
-        "num_classes": self.num_classes,
-        "weightage": self.weightage,
-        "epsilon": self.epsilon,
+      "num_classes": self.num_classes,
+      "weightage": self.weightage,
+      "epsilon": self.epsilon,
     }
     base_config = super().get_config()
     return {**base_config, **config}

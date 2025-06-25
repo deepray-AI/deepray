@@ -29,13 +29,12 @@ from official.nlp.modeling.networks import transformer_encoder
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class TransformerEncoderTest(keras_parameterized.TestCase):
-
   def test_network_creation(self):
     hidden_size = 32
     sequence_length = 21
     # Create a small TransformerEncoder for testing.
     test_network = transformer_encoder.TransformerEncoder(
-        vocab_size=100, hidden_size=hidden_size, sequence_length=sequence_length, num_attention_heads=2, num_layers=3
+      vocab_size=100, hidden_size=hidden_size, sequence_length=sequence_length, num_attention_heads=2, num_layers=3
     )
     # Create the inputs (note that the first dimension is implicit).
     word_ids = tf.keras.Input(shape=(sequence_length,), dtype=tf.int32)
@@ -58,12 +57,12 @@ class TransformerEncoderTest(keras_parameterized.TestCase):
     tf.keras.mixed_precision.experimental.set_policy("mixed_float16")
     # Create a small TransformerEncoder for testing.
     test_network = transformer_encoder.TransformerEncoder(
-        vocab_size=100,
-        hidden_size=hidden_size,
-        sequence_length=sequence_length,
-        num_attention_heads=2,
-        num_layers=3,
-        float_dtype="float16"
+      vocab_size=100,
+      hidden_size=hidden_size,
+      sequence_length=sequence_length,
+      num_attention_heads=2,
+      num_layers=3,
+      float_dtype="float16",
     )
     # Create the inputs (note that the first dimension is implicit).
     word_ids = tf.keras.Input(shape=(sequence_length,), dtype=tf.int32)
@@ -88,12 +87,12 @@ class TransformerEncoderTest(keras_parameterized.TestCase):
     tf.keras.mixed_precision.experimental.set_policy("float32")
     # Create a small TransformerEncoder for testing.
     test_network = transformer_encoder.TransformerEncoder(
-        vocab_size=vocab_size,
-        hidden_size=hidden_size,
-        sequence_length=sequence_length,
-        num_attention_heads=2,
-        num_layers=3,
-        type_vocab_size=num_types
+      vocab_size=vocab_size,
+      hidden_size=hidden_size,
+      sequence_length=sequence_length,
+      num_attention_heads=2,
+      num_layers=3,
+      type_vocab_size=num_types,
     )
     self.assertTrue(test_network._position_embedding_layer._use_dynamic_slicing)
     # Create the inputs (note that the first dimension is implicit).
@@ -116,13 +115,13 @@ class TransformerEncoderTest(keras_parameterized.TestCase):
     # Creates a TransformerEncoder with max_sequence_length != sequence_length
     max_sequence_length = 128
     test_network = transformer_encoder.TransformerEncoder(
-        vocab_size=vocab_size,
-        hidden_size=hidden_size,
-        sequence_length=sequence_length,
-        max_sequence_length=max_sequence_length,
-        num_attention_heads=2,
-        num_layers=3,
-        type_vocab_size=num_types
+      vocab_size=vocab_size,
+      hidden_size=hidden_size,
+      sequence_length=sequence_length,
+      max_sequence_length=max_sequence_length,
+      num_attention_heads=2,
+      num_layers=3,
+      type_vocab_size=num_types,
     )
     self.assertTrue(test_network._position_embedding_layer._use_dynamic_slicing)
     model = tf.keras.Model([word_ids, mask, type_ids], [data, pooled])
@@ -131,28 +130,28 @@ class TransformerEncoderTest(keras_parameterized.TestCase):
   def test_serialize_deserialize(self):
     # Create a network object that sets all of its config options.
     kwargs = dict(
-        vocab_size=100,
-        hidden_size=32,
-        num_layers=3,
-        num_attention_heads=2,
-        sequence_length=21,
-        max_sequence_length=21,
-        type_vocab_size=12,
-        intermediate_size=1223,
-        activation="relu",
-        dropout_rate=0.05,
-        attention_dropout_rate=0.22,
-        initializer="glorot_uniform",
-        float_dtype="float16"
+      vocab_size=100,
+      hidden_size=32,
+      num_layers=3,
+      num_attention_heads=2,
+      sequence_length=21,
+      max_sequence_length=21,
+      type_vocab_size=12,
+      intermediate_size=1223,
+      activation="relu",
+      dropout_rate=0.05,
+      attention_dropout_rate=0.22,
+      initializer="glorot_uniform",
+      float_dtype="float16",
     )
     network = transformer_encoder.TransformerEncoder(**kwargs)
 
     expected_config = dict(kwargs)
     expected_config["activation"] = tf.keras.activations.serialize(
-        tf.keras.activations.get(expected_config["activation"])
+      tf.keras.activations.get(expected_config["activation"])
     )
     expected_config["initializer"] = tf.keras.initializers.serialize(
-        tf.keras.initializers.get(expected_config["initializer"])
+      tf.keras.initializers.get(expected_config["initializer"])
     )
     self.assertEqual(network.get_config(), expected_config)
 
@@ -167,5 +166,5 @@ class TransformerEncoderTest(keras_parameterized.TestCase):
 
 
 if __name__ == "__main__":
-  assert tf.version.VERSION.startswith('2.')
+  assert tf.version.VERSION.startswith("2.")
   tf.test.main()

@@ -14,7 +14,6 @@ from deepray.utils.data.feature_map import FeatureMap
 
 
 class KMaxPooling(Layer):
-
   def __init__(self, k, dim):
     super(KMaxPooling, self).__init__()
     self.k = k
@@ -27,13 +26,12 @@ class KMaxPooling(Layer):
 
 
 class CCPM(keras.Model):
-  """
-  """
+  """ """
 
   def __init__(self, conv_kernel_width=(6, 5, 3), conv_filters=(4, 4, 4), embed_reg=1e-6, *args, **kwargs):
     super(CCPM, self).__init__()
     self.feature_map = FeatureMap(feature_map=FLAGS.feature_map, black_list=FLAGS.black_list).feature_map
-    self.sparse_feat_len = self.feature_map[(self.feature_map['ftype'] == "Categorical")].shape[0]
+    self.sparse_feat_len = self.feature_map[(self.feature_map["ftype"] == "Categorical")].shape[0]
     self.conv_len = len(conv_filters)  # 卷积层数
 
     # KMaxPooling
@@ -48,7 +46,7 @@ class CCPM(keras.Model):
 
     self.padding_list = [ZeroPadding2D(padding=(0, conv_kernel_width[i] - 1)) for i in range(self.conv_len)]
     self.conv_list = [
-        Conv2D(filters=conv_filters[i], kernel_size=(1, conv_kernel_width[i])) for i in range(self.conv_len)
+      Conv2D(filters=conv_filters[i], kernel_size=(1, conv_kernel_width[i])) for i in range(self.conv_len)
     ]
 
     self.flatten = Flatten()
@@ -57,24 +55,24 @@ class CCPM(keras.Model):
   def build(self, input_shape):
     self.embedding_layers = {}
     self.hash_long_kernel = {}
-    for name, dim, voc_size, hash_size, dtype in self.feature_map[(self.feature_map['ftype'] == "Categorical")][[
-        "name", "dim", "voc_size", "hash_size", "dtype"
-    ]].values:
+    for name, dim, voc_size, hash_size, dtype in self.feature_map[(self.feature_map["ftype"] == "Categorical")][
+      ["name", "dim", "voc_size", "hash_size", "dtype"]
+    ].values:
       if not math.isnan(hash_size):
         self.hash_long_kernel[name] = Hash(int(hash_size))
         voc_size = int(hash_size)
 
       if not FLAGS.use_horovod:
         self.embedding_layers[name] = DynamicEmbedding(
-            embedding_size=dim,
-            # mini_batch_regularizer=l2(feature.emb_reg_l2),
-            # mask_value=feature.default_value,
-            key_dtype=dtype,
-            value_dtype=tf.float32,
-            initializer=tf.keras.initializers.GlorotUniform(),
-            name='embedding_' + name,
-            # init_capacity=800000,
-            kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver())
+          embedding_size=dim,
+          # mini_batch_regularizer=l2(feature.emb_reg_l2),
+          # mask_value=feature.default_value,
+          key_dtype=dtype,
+          value_dtype=tf.float32,
+          initializer=tf.keras.initializers.GlorotUniform(),
+          name="embedding_" + name,
+          # init_capacity=800000,
+          kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver()),
         )
       else:
         import horovod.tensorflow as hvd
@@ -83,15 +81,15 @@ class CCPM(keras.Model):
         mpi_size = hvd.size()
         mpi_rank = hvd.rank()
         self.embedding_layers[name] = de.keras.layers.HvdAllToAllEmbedding(
-            # mpi_size=mpi_size,
-            embedding_size=dim,
-            key_dtype=dtype,
-            value_dtype=tf.float32,
-            initializer=tf.keras.initializers.GlorotUniform(),
-            devices=gpu_device,
-            init_capacity=800000,
-            name='embedding_' + name,
-            kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank))
+          # mpi_size=mpi_size,
+          embedding_size=dim,
+          key_dtype=dtype,
+          value_dtype=tf.float32,
+          initializer=tf.keras.initializers.GlorotUniform(),
+          devices=gpu_device,
+          init_capacity=800000,
+          name="embedding_" + name,
+          kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank)),
         )
 
       # self.embedding_layers[name] = Embedding(
@@ -101,7 +99,7 @@ class CCPM(keras.Model):
 
   def call(self, inputs, training=None, mask=None):
     embedding_out = []
-    for name, hash_size in self.feature_map[(self.feature_map['ftype'] == "Categorical")][["name", "hash_size"]].values:
+    for name, hash_size in self.feature_map[(self.feature_map["ftype"] == "Categorical")][["name", "hash_size"]].values:
       input_tensor = inputs[name]
       if not math.isnan(hash_size):
         input_tensor = self.hash_long_kernel[name](input_tensor)

@@ -42,25 +42,25 @@ def save(multiplex_op, path):
   example_cond, example_a, example_b = _get_example_tensors()
 
   class UseMultiplex(tf.Module):
-
     @tf.function(
-        input_signature=[
-            tf.TensorSpec.from_tensor(example_cond),
-            tf.TensorSpec.from_tensor(example_a),
-            tf.TensorSpec.from_tensor(example_b)
-        ]
+      input_signature=[
+        tf.TensorSpec.from_tensor(example_cond),
+        tf.TensorSpec.from_tensor(example_a),
+        tf.TensorSpec.from_tensor(example_b),
+      ]
     )
     def use_multiplex(self, cond, a, b):
       return multiplex_op(cond, a, b)
 
   model = UseMultiplex()
   tf.saved_model.save(
-      model,
-      path,
-      signatures=model.use_multiplex.get_concrete_function(
-          tf.TensorSpec.from_tensor(example_cond), tf.TensorSpec.from_tensor(example_a),
-          tf.TensorSpec.from_tensor(example_b)
-      )
+    model,
+    path,
+    signatures=model.use_multiplex.get_concrete_function(
+      tf.TensorSpec.from_tensor(example_cond),
+      tf.TensorSpec.from_tensor(example_a),
+      tf.TensorSpec.from_tensor(example_b),
+    ),
   )
 
 

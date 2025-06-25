@@ -23,13 +23,12 @@ from absl import flags
 from deepray.datasets.datapipeline import DataPipeline
 
 FLAGS([
-    sys.argv[0],
-    "--num_train_examples=60000",
+  sys.argv[0],
+  "--num_train_examples=60000",
 ])
 
 
 class Openwebtext(DataPipeline):
-
   def __init__(self, max_seq_length, **kwargs):
     super().__init__(**kwargs)
     self._max_seq_length = max_seq_length
@@ -39,9 +38,9 @@ class Openwebtext(DataPipeline):
     input_files = tf.io.gfile.glob(input_file_pattern)
 
     name_to_features = {
-        "input_ids": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
-        "input_mask": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
-        "segment_ids": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
+      "input_ids": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
+      "input_mask": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
+      "segment_ids": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
     }
 
     d = tf.data.Dataset.from_tensor_slices(tf.constant(input_files))
@@ -54,9 +53,7 @@ class Openwebtext(DataPipeline):
     # `sloppy` mode means that the interleaving is not exact. This adds
     # even more randomness to the training pipeline.
     d = d.apply(
-        tf.data.experimental.parallel_interleave(
-            tf.data.TFRecordDataset, sloppy=is_training, cycle_length=cycle_length
-        )
+      tf.data.experimental.parallel_interleave(tf.data.TFRecordDataset, sloppy=is_training, cycle_length=cycle_length)
     )
     d = d.shuffle(buffer_size=100)
 
@@ -65,12 +62,12 @@ class Openwebtext(DataPipeline):
     # and we *don"t* want to drop the remainder, otherwise we wont cover
     # every sample.
     d = d.apply(
-        tf.data.experimental.map_and_batch(
-            lambda record: self.parser(record, name_to_features),
-            batch_size=batch_size,
-            num_parallel_batches=multiprocessing.cpu_count(),
-            drop_remainder=True
-        )
+      tf.data.experimental.map_and_batch(
+        lambda record: self.parser(record, name_to_features),
+        batch_size=batch_size,
+        num_parallel_batches=multiprocessing.cpu_count(),
+        drop_remainder=True,
+      )
     )
     return d
 

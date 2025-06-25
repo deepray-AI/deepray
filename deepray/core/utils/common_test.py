@@ -19,7 +19,6 @@ import tensorflow as tf
 
 
 class UtilsTest(tf.test.TestCase):
-
   def test_create_global_step(self):
     step = common.create_global_step()
     self.assertEqual(step.name, "global_step:0")

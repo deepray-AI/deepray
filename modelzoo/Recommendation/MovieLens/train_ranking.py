@@ -10,7 +10,6 @@ from deepray.layers.embedding_variable import EmbeddingVariable
 
 
 class RankingModel(tf.keras.Model):
-
   def __init__(self, embedding_dimension=32):
     super().__init__()
     # Compute embeddings for users.
@@ -18,15 +17,13 @@ class RankingModel(tf.keras.Model):
     self.movie_embeddings = EmbeddingVariable(embedding_dim=embedding_dimension)
 
     # Compute predictions.
-    self.ratings = tf.keras.Sequential(
-        [
-            # Learn multiple dense layers.
-            tf.keras.layers.Dense(256, activation="relu"),
-            tf.keras.layers.Dense(64, activation="relu"),
-            # Make rating predictions in the final layer.
-            tf.keras.layers.Dense(1)
-        ]
-    )
+    self.ratings = tf.keras.Sequential([
+      # Learn multiple dense layers.
+      tf.keras.layers.Dense(256, activation="relu"),
+      tf.keras.layers.Dense(64, activation="relu"),
+      # Make rating predictions in the final layer.
+      tf.keras.layers.Dense(1),
+    ])
 
   def call(self, inputs: Dict[str, tf.Tensor]) -> tf.Tensor:
     user_id, movie_title = inputs["user_id"], inputs["movie_title"]
@@ -45,18 +42,18 @@ test_dataset = data_pipe(flags.FLAGS.batch_size, is_training=True)
 optimizer = dp.optimizers.Adagrad(0.1)
 model = RankingModel()
 
-score = model(
-    {
-        "user_id": data_pipe.user_ids_vocabulary("42"),
-        "movie_title": data_pipe.movie_titles_vocabulary("One Flew Over the Cuckoo's Nest (1975)")
-    }
-)
+score = model({
+  "user_id": data_pipe.user_ids_vocabulary("42"),
+  "movie_title": data_pipe.movie_titles_vocabulary("One Flew Over the Cuckoo's Nest (1975)"),
+})
 print(score)
 
-trainer = Trainer(model=model,
-                  optimizer=optimizer,
-                  loss=tf.keras.losses.MeanSquaredError(), 
-                  metrics=[tf.keras.metrics.RootMeanSquaredError()])
+trainer = Trainer(
+  model=model,
+  optimizer=optimizer,
+  loss=tf.keras.losses.MeanSquaredError(),
+  metrics=[tf.keras.metrics.RootMeanSquaredError()],
+)
 
 
 cached_train = train_dataset.cache()
@@ -69,12 +66,10 @@ trainer.evaluate(cached_test, return_dict=True)
 test_ratings = {}
 test_movie_titles = ["M*A*S*H (1970)", "Dances with Wolves (1990)", "Speed (1994)"]
 for movie_title in test_movie_titles:
-  test_ratings[movie_title] = model(
-      {
-          "user_id": data_pipe.user_ids_vocabulary("42"),
-          "movie_title": data_pipe.movie_titles_vocabulary(movie_title)
-      }
-  )
+  test_ratings[movie_title] = model({
+    "user_id": data_pipe.user_ids_vocabulary("42"),
+    "movie_title": data_pipe.movie_titles_vocabulary(movie_title),
+  })
 
 print("Ratings:")
 for title, score in sorted(test_ratings.items(), key=lambda x: x[1], reverse=True):

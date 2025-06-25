@@ -29,17 +29,17 @@ def layer_test_esn(dtype):
 
   const_initializer = tf.constant_initializer(0.5)
   kwargs = {
-      "units": 3,
-      "connectivity": 1,
-      "leaky": 1,
-      "spectral_radius": 0.9,
-      "use_norm2": True,
-      "use_bias": True,
-      "activation": None,
-      "kernel_initializer": const_initializer,
-      "recurrent_initializer": const_initializer,
-      "bias_initializer": const_initializer,
-      "dtype": dtype,
+    "units": 3,
+    "connectivity": 1,
+    "leaky": 1,
+    "spectral_radius": 0.9,
+    "use_norm2": True,
+    "use_bias": True,
+    "activation": None,
+    "kernel_initializer": const_initializer,
+    "recurrent_initializer": const_initializer,
+    "bias_initializer": const_initializer,
+    "dtype": dtype,
   }
 
   test_utils.layer_test(ESN, kwargs=kwargs, input_data=inp, expected_output=out)
@@ -48,16 +48,16 @@ def layer_test_esn(dtype):
 @pytest.mark.parametrize("dtype", [np.float16, np.float32, np.float64])
 def test_serialization(dtype):
   esn = ESN(
-      units=3,
-      connectivity=1,
-      leaky=1,
-      spectral_radius=0.9,
-      use_norm2=False,
-      use_bias=True,
-      activation=None,
-      kernel_initializer="ones",
-      recurrent_initializer="ones",
-      bias_initializer="ones",
+    units=3,
+    connectivity=1,
+    leaky=1,
+    spectral_radius=0.9,
+    use_norm2=False,
+    use_bias=True,
+    activation=None,
+    kernel_initializer="ones",
+    recurrent_initializer="ones",
+    bias_initializer="ones",
   )
   serialized_esn = tf.keras.layers.serialize(esn)
   new_layer = tf.keras.layers.deserialize(serialized_esn)

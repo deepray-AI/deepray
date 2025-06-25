@@ -109,7 +109,7 @@ class XnliProcessor(DataProcessor):
     """See base class."""
     lines = self._read_tsv(os.path.join(data_dir, "multinli", "multinli.train.%s.tsv" % self.language))
     examples = []
-    for (i, line) in enumerate(lines):
+    for i, line in enumerate(lines):
       if i == 0:
         continue
       guid = "train-%d" % (i)
@@ -125,7 +125,7 @@ class XnliProcessor(DataProcessor):
     """See base class."""
     lines = self._read_tsv(os.path.join(data_dir, "xnli.dev.tsv"))
     examples = []
-    for (i, line) in enumerate(lines):
+    for i, line in enumerate(lines):
       if i == 0:
         continue
       guid = "dev-%d" % (i)
@@ -175,7 +175,7 @@ class MnliProcessor(DataProcessor):
   def _create_examples(self, lines, set_type):
     """Creates examples for the training and dev sets."""
     examples = []
-    for (i, line) in enumerate(lines):
+    for i, line in enumerate(lines):
       if i == 0:
         continue
       guid = "%s-%s" % (set_type, self.process_text_fn(line[0]))
@@ -216,7 +216,7 @@ class MrpcProcessor(DataProcessor):
   def _create_examples(self, lines, set_type):
     """Creates examples for the training and dev sets."""
     examples = []
-    for (i, line) in enumerate(lines):
+    for i, line in enumerate(lines):
       if i == 0:
         continue
       guid = "%s-%s" % (set_type, i)
@@ -257,7 +257,7 @@ class ColaProcessor(DataProcessor):
   def _create_examples(self, lines, set_type):
     """Creates examples for the training and dev sets."""
     examples = []
-    for (i, line) in enumerate(lines):
+    for i, line in enumerate(lines):
       # Only the test set has a header
       if set_type == "test" and i == 0:
         continue
@@ -299,7 +299,7 @@ class SstProcessor(DataProcessor):
   def _create_examples(self, lines, set_type):
     """Creates examples for the training and dev sets."""
     examples = []
-    for (i, line) in enumerate(lines):
+    for i, line in enumerate(lines):
       if i == 0:
         continue
       guid = "%s-%s" % (set_type, i)
@@ -340,7 +340,7 @@ class QnliProcessor(DataProcessor):
   def _create_examples(self, lines, set_type):
     """Creates examples for the training and dev sets."""
     examples = []
-    for (i, line) in enumerate(lines):
+    for i, line in enumerate(lines):
       if i == 0:
         continue
       guid = "%s-%s" % (set_type, 1)
@@ -359,7 +359,7 @@ class QnliProcessor(DataProcessor):
 def convert_single_example(ex_index, example, label_list, max_seq_length, tokenizer):
   """Converts a single `InputExample` into a single `InputFeatures`."""
   label_map = {}
-  for (i, label) in enumerate(label_list):
+  for i, label in enumerate(label_list):
     label_map[label] = i
 
   tokens_a = tokenizer.tokenize(example.text_a)
@@ -375,7 +375,7 @@ def convert_single_example(ex_index, example, label_list, max_seq_length, tokeni
   else:
     # Account for [CLS] and [SEP] with "- 2"
     if len(tokens_a) > max_seq_length - 2:
-      tokens_a = tokens_a[0:(max_seq_length - 2)]
+      tokens_a = tokens_a[0 : (max_seq_length - 2)]
 
   # The convention in BERT is:
   # (a) For sequence pairs:
@@ -439,7 +439,7 @@ def convert_single_example(ex_index, example, label_list, max_seq_length, tokeni
     logging.info("label: %s (id = %d)", example.label, label_id)
 
   feature = InputFeatures(
-      input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_id=label_id, is_real_example=True
+    input_ids=input_ids, input_mask=input_mask, segment_ids=segment_ids, label_id=label_id, is_real_example=True
   )
   return feature
 
@@ -449,7 +449,7 @@ def file_based_convert_examples_to_features(examples, label_list, max_seq_length
 
   writer = tf.io.TFRecordWriter(output_file)
 
-  for (ex_index, example) in enumerate(examples):
+  for ex_index, example in enumerate(examples):
     if ex_index % 10000 == 0:
       logging.info("Writing example %d of %d", ex_index, len(examples))
 
@@ -489,7 +489,7 @@ def _truncate_seq_pair(tokens_a, tokens_b, max_length):
 
 
 def generate_tf_record_from_data_file(
-    processor, data_dir, tokenizer, train_data_output_path=None, eval_data_output_path=None, max_seq_length=128
+  processor, data_dir, tokenizer, train_data_output_path=None, eval_data_output_path=None, max_seq_length=128
 ):
   """Generates and saves training data into a tf record file.
 
@@ -515,22 +515,22 @@ def generate_tf_record_from_data_file(
   assert train_data_output_path
   train_input_data_examples = processor.get_train_examples(data_dir)
   file_based_convert_examples_to_features(
-      train_input_data_examples, label_list, max_seq_length, tokenizer, train_data_output_path
+    train_input_data_examples, label_list, max_seq_length, tokenizer, train_data_output_path
   )
   num_training_data = len(train_input_data_examples)
 
   if eval_data_output_path:
     eval_input_data_examples = processor.get_dev_examples(data_dir)
     file_based_convert_examples_to_features(
-        eval_input_data_examples, label_list, max_seq_length, tokenizer, eval_data_output_path
+      eval_input_data_examples, label_list, max_seq_length, tokenizer, eval_data_output_path
     )
 
   meta_data = {
-      "task_type": "bert_classification",
-      "processor_type": processor.get_processor_name(),
-      "num_labels": len(processor.get_labels()),
-      "train_data_size": num_training_data,
-      "max_seq_length": max_seq_length,
+    "task_type": "bert_classification",
+    "processor_type": processor.get_processor_name(),
+    "num_labels": len(processor.get_labels()),
+    "train_data_size": num_training_data,
+    "max_seq_length": max_seq_length,
   }
 
   if eval_data_output_path:

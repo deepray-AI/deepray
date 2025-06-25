@@ -15,30 +15,30 @@ import glob
 import os
 import pubmed_parser as pmp
 
+
 class PubMedTextFormatting:
-    def __init__(self, pubmed_path, output_filename, recursive = False):
-        self.pubmed_path = pubmed_path
-        self.recursive = recursive
-        self.output_filename = output_filename
+  def __init__(self, pubmed_path, output_filename, recursive=False):
+    self.pubmed_path = pubmed_path
+    self.recursive = recursive
+    self.output_filename = output_filename
 
+  # This puts one article per line
+  def merge(self):
+    print("PubMed path:", self.pubmed_path)
 
-    # This puts one article per line
-    def merge(self):
-        print('PubMed path:', self.pubmed_path)
-
-        with open(self.output_filename, mode='w', newline='\n') as ofile:
-            for filename in glob.glob(self.pubmed_path + '/*.xml*', recursive=self.recursive):
-                print('file:', filename)
-                dicts_out = pmp.parse_medline_xml(filename)
-                for dict_out in dicts_out:
-                    if not dict_out['abstract']:
-                        continue
-                    try:
-                        for line in dict_out['abstract'].splitlines():
-                            if len(line) < 30:
-                                continue
-                            ofile.write(line.strip() + " ")
-                        ofile.write("\n\n")
-                    except:
-                        ofile.write("\n\n")
-                        continue
+    with open(self.output_filename, mode="w", newline="\n") as ofile:
+      for filename in glob.glob(self.pubmed_path + "/*.xml*", recursive=self.recursive):
+        print("file:", filename)
+        dicts_out = pmp.parse_medline_xml(filename)
+        for dict_out in dicts_out:
+          if not dict_out["abstract"]:
+            continue
+          try:
+            for line in dict_out["abstract"].splitlines():
+              if len(line) < 30:
+                continue
+              ofile.write(line.strip() + " ")
+            ofile.write("\n\n")
+          except:
+            ofile.write("\n\n")
+            continue

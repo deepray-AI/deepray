@@ -28,14 +28,14 @@ logger = logging_util.get_logger()
 class TrainingSpeed(Callback):
   """Callback that prints metrics to stdout.
 
-    Args:
-        count_mode: One of `"steps"` or `"samples"`.
-            Whether the progress bar should
-            count samples seen or steps (batches) seen.
+  Args:
+      count_mode: One of `"steps"` or `"samples"`.
+          Whether the progress bar should
+          count samples seen or steps (batches) seen.
 
-    Raises:
-        ValueError: In case of invalid `count_mode`.
-    """
+  Raises:
+      ValueError: In case of invalid `count_mode`.
+  """
 
   def __init__(self, batch_size: int = None):
     super().__init__()
@@ -140,7 +140,7 @@ class TrainingSpeed(Callback):
     delta_steps = self.seen - self.last_step
 
     step_throughput = self.performance_calculator(delta_steps, self.global_batch_size)
-    logger.info('Perf %.2f samples/s' % step_throughput)
+    logger.info("Perf %.2f samples/s" % step_throughput)
 
     if batch > self._first_steps + delta_steps * 2:
       self._perf_wo += step_throughput

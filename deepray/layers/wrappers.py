@@ -23,37 +23,37 @@ from typeguard import typechecked
 class WeightNormalization(tf.keras.layers.Wrapper):
   """Performs weight normalization.
 
-    This wrapper reparameterizes a layer by decoupling the weight's
-    magnitude and direction.
-    This speeds up convergence by improving the
-    conditioning of the optimization problem.
+  This wrapper reparameterizes a layer by decoupling the weight's
+  magnitude and direction.
+  This speeds up convergence by improving the
+  conditioning of the optimization problem.
 
-    See [Weight Normalization: A Simple Reparameterization to Accelerate Training of Deep Neural Networks](https://arxiv.org/abs/1602.07868).
+  See [Weight Normalization: A Simple Reparameterization to Accelerate Training of Deep Neural Networks](https://arxiv.org/abs/1602.07868).
 
-    Wrap `tf.keras.layers.Conv2D`:
+  Wrap `tf.keras.layers.Conv2D`:
 
-    >>> x = np.random.rand(1, 10, 10, 1)
-    >>> conv2d = WeightNormalization(tf.keras.layers.Conv2D(2, 2), data_init=False)
-    >>> y = conv2d(x)
-    >>> y.shape
-    TensorShape([1, 9, 9, 2])
+  >>> x = np.random.rand(1, 10, 10, 1)
+  >>> conv2d = WeightNormalization(tf.keras.layers.Conv2D(2, 2), data_init=False)
+  >>> y = conv2d(x)
+  >>> y.shape
+  TensorShape([1, 9, 9, 2])
 
-    Wrap `tf.keras.layers.Dense`:
+  Wrap `tf.keras.layers.Dense`:
 
-    >>> x = np.random.rand(1, 10, 10, 1)
-    >>> dense = WeightNormalization(tf.keras.layers.Dense(10), data_init=False)
-    >>> y = dense(x)
-    >>> y.shape
-    TensorShape([1, 10, 10, 10])
+  >>> x = np.random.rand(1, 10, 10, 1)
+  >>> dense = WeightNormalization(tf.keras.layers.Dense(10), data_init=False)
+  >>> y = dense(x)
+  >>> y.shape
+  TensorShape([1, 10, 10, 10])
 
-    Args:
-      layer: A `tf.keras.layers.Layer` instance.
-      data_init: If `True` use data dependent variable initialization.
-    Raises:
-      ValueError: If not initialized with a `Layer` instance.
-      ValueError: If `Layer` does not contain a `kernel` of weights.
-      NotImplementedError: If `data_init` is True and running graph execution.
-    """
+  Args:
+    layer: A `tf.keras.layers.Layer` instance.
+    data_init: If `True` use data dependent variable initialization.
+  Raises:
+    ValueError: If not initialized with a `Layer` instance.
+    ValueError: If `Layer` does not contain a `kernel` of weights.
+    NotImplementedError: If `data_init` is True and running graph execution.
+  """
 
   @typechecked
   def __init__(self, layer: tf.keras.layers, data_init: bool = True, **kwargs):
@@ -64,8 +64,7 @@ class WeightNormalization(tf.keras.layers.Wrapper):
 
     if self.data_init and self.is_rnn:
       logging.warning(
-          "WeightNormalization: Using `data_init=True` with RNNs "
-          "is advised against by the paper. Use `data_init=False`."
+        "WeightNormalization: Using `data_init=True` with RNNs is advised against by the paper. Use `data_init=False`."
       )
 
   def build(self, input_shape):
@@ -79,8 +78,7 @@ class WeightNormalization(tf.keras.layers.Wrapper):
     kernel_layer = self.layer.cell if self.is_rnn else self.layer
 
     if not hasattr(kernel_layer, "kernel"):
-      raise ValueError("`WeightNormalization` must wrap a layer that"
-                       " contains a `kernel` for weights")
+      raise ValueError("`WeightNormalization` must wrap a layer that contains a `kernel` for weights")
 
     if self.is_rnn:
       kernel = kernel_layer.recurrent_kernel
@@ -92,20 +90,20 @@ class WeightNormalization(tf.keras.layers.Wrapper):
     self.kernel_norm_axes = list(range(kernel.shape.rank - 1))
 
     self.g = self.add_weight(
-        name="g",
-        shape=(self.layer_depth,),
-        initializer="ones",
-        dtype=kernel.dtype,
-        trainable=True,
+      name="g",
+      shape=(self.layer_depth,),
+      initializer="ones",
+      dtype=kernel.dtype,
+      trainable=True,
     )
     self.v = kernel
 
     self._initialized = self.add_weight(
-        name="initialized",
-        shape=None,
-        initializer="zeros",
-        dtype=tf.dtypes.bool,
-        trainable=False,
+      name="initialized",
+      shape=None,
+      initializer="zeros",
+      dtype=tf.dtypes.bool,
+      trainable=False,
     )
 
     if self.data_init:
@@ -156,16 +154,14 @@ class WeightNormalization(tf.keras.layers.Wrapper):
   def _initialize_weights(self, inputs):
     """Initialize weight g.
 
-        The initial value of g could either from the initial value in v,
-        or by the input value if self.data_init is True.
-        """
-    with tf.control_dependencies(
-        [
-            tf.debugging.assert_equal(  # pylint: disable=bad-continuation
-                self._initialized, False, message="The layer has been initialized."
-            )
-        ]
-    ):
+    The initial value of g could either from the initial value in v,
+    or by the input value if self.data_init is True.
+    """
+    with tf.control_dependencies([
+      tf.debugging.assert_equal(  # pylint: disable=bad-continuation
+        self._initialized, False, message="The layer has been initialized."
+      )
+    ]):
       if self.data_init:
         assign_tensors = self._data_dep_init(inputs)
       else:
@@ -213,8 +209,8 @@ class WeightNormalization(tf.keras.layers.Wrapper):
 
   def remove(self):
     kernel = tf.Variable(
-        tf.nn.l2_normalize(self.v, axis=self.kernel_norm_axes) * self.g,
-        name="recurrent_kernel" if self.is_rnn else "kernel",
+      tf.nn.l2_normalize(self.v, axis=self.kernel_norm_axes) * self.g,
+      name="recurrent_kernel" if self.is_rnn else "kernel",
     )
 
     if self.is_rnn:

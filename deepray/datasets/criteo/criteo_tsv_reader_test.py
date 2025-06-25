@@ -15,12 +15,12 @@ def runner(argv=None):
   dir_path = os.path.dirname(os.path.realpath(__file__))
   if len(argv) <= 1:
     argv = [
-        sys.argv[0],
-        "--batch_size=4096",
-        "-epochs=1",
-        # "--train_data=/Users/admin/Downloads/train.csv",
-        f"--feature_map={dir_path}/feature_map_small.csv",
-        "--prefetch_buffer=64",
+      sys.argv[0],
+      "--batch_size=4096",
+      "-epochs=1",
+      # "--train_data=/Users/admin/Downloads/train.csv",
+      f"--feature_map={dir_path}/feature_map_small.csv",
+      "--prefetch_buffer=64",
     ]
   if argv:
     FLAGS(argv, known_only=True)
@@ -38,7 +38,7 @@ def runner(argv=None):
     step_throughput = _performance_calculator(1, FLAGS.batch_size)
 
     if num_examples % 100 == 0:
-      print(f'step {step}, Perf {step_throughput} samples/s')
+      print(f"step {step}, Perf {step_throughput} samples/s")
 
   print(x)
   print(num_examples)

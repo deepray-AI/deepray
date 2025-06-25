@@ -1,5 +1,6 @@
 # -*- coding:utf-8 -*-
 """Dynamic Embedding layer."""
+
 import typing
 
 import horovod.tensorflow as hvd
@@ -18,13 +19,13 @@ from deepray.utils.horovod_utils import get_world_size
 logger = logging_util.get_logger()
 
 StorageType = {
-    "HBM": config_pb2.StorageType.HBM,
-    "DRAM": config_pb2.StorageType.DRAM,
-    "HBM_DRAM": config_pb2.StorageType.HBM_DRAM,
-    "LEVELDB": config_pb2.StorageType.LEVELDB,
-    "SSDHASH": config_pb2.StorageType.SSDHASH,
-    "DRAM_LEVELDB": config_pb2.StorageType.DRAM_LEVELDB,
-    "DRAM_SSDHASH": config_pb2.StorageType.DRAM_SSDHASH
+  "HBM": config_pb2.StorageType.HBM,
+  "DRAM": config_pb2.StorageType.DRAM,
+  "HBM_DRAM": config_pb2.StorageType.HBM_DRAM,
+  "LEVELDB": config_pb2.StorageType.LEVELDB,
+  "SSDHASH": config_pb2.StorageType.SSDHASH,
+  "DRAM_LEVELDB": config_pb2.StorageType.DRAM_LEVELDB,
+  "DRAM_SSDHASH": config_pb2.StorageType.DRAM_SSDHASH,
 }
 
 CacheStrategy = {"LFU": config_pb2.CacheStrategy.LFU, "LRU": config_pb2.CacheStrategy.LRU}
@@ -49,26 +50,25 @@ def int64_partition_fn(keys, shard_num):
 
 def partition_fn_v2(keys, shard_num):
   return tf.cast(
-      tf.strings.to_hash_bucket_fast(
-          tf.strings.as_string(keys),  # 将 int 转为 string 再哈希
-          num_buckets=shard_num
-      ),
-      tf.int32
+    tf.strings.to_hash_bucket_fast(
+      tf.strings.as_string(keys),  # 将 int 转为 string 再哈希
+      num_buckets=shard_num,
+    ),
+    tf.int32,
   )
 
 
 class EmbeddingVariable(tf.keras.layers.Layer):
-
   def __init__(
-      self,
-      embedding_dim: int,
-      key_dtype=dtypes.int64,
-      value_dtype: str = None,
-      initializer=None,
-      name: str = '',
-      with_unique=False,
-      partition_fn: typing.Callable[[typing.Any, typing.Any], typing.Any] = None,
-      **kwargs
+    self,
+    embedding_dim: int,
+    key_dtype=dtypes.int64,
+    value_dtype: str = None,
+    initializer=None,
+    name: str = "",
+    with_unique=False,
+    partition_fn: typing.Callable[[typing.Any, typing.Any], typing.Any] = None,
+    **kwargs,
   ):
     super(EmbeddingVariable, self).__init__(name=name)
     self.embedding_size = embedding_dim
@@ -84,23 +84,23 @@ class EmbeddingVariable(tf.keras.layers.Layer):
     storage_type = kwargs.get("storage_type", None)
     if storage_type:
       ev_option = ev_variables.EmbeddingVariableOption(
-          storage_option=ev_variables.StorageOption(
-              storage_type=StorageType[storage_type],
-              storage_path=kwargs.get("storage_path", None),
-              storage_size=kwargs.get("storage_size", [1024 * 1024 * 1024]),
-              cache_strategy=CacheStrategy[kwargs.get("cache_strategy", "LFU")]
-          )
+        storage_option=ev_variables.StorageOption(
+          storage_type=StorageType[storage_type],
+          storage_path=kwargs.get("storage_path", None),
+          storage_size=kwargs.get("storage_size", [1024 * 1024 * 1024]),
+          cache_strategy=CacheStrategy[kwargs.get("cache_strategy", "LFU")],
+        )
       )
     else:
       ev_option = ev_variables.EmbeddingVariableOption()
 
     self.embedding_variable = get_embedding_variable(
-        embedding_dim=embedding_dim,
-        key_dtype=key_dtype,
-        value_dtype=value_dtype,
-        initializer=initializer,
-        name=name,
-        ev_option=ev_option,
+      embedding_dim=embedding_dim,
+      key_dtype=key_dtype,
+      value_dtype=value_dtype,
+      initializer=initializer,
+      name=name,
+      ev_option=ev_option,
     )
 
     self.partition_fn = partition_fn
@@ -170,7 +170,7 @@ class EmbeddingVariable(tf.keras.layers.Layer):
       relocs_tensor = tf.concat(ids_partitions, axis=0)
       # Provide a unique name for the first alltoall operation
       flat_reloc_ids, remote_sizes = hvd.alltoall(
-          relocs_tensor, splits=partitions_sizes, name=f"{self.name}_alltoall_ids"
+        relocs_tensor, splits=partitions_sizes, name=f"{self.name}_alltoall_ids"
       )
 
       lookup_result = self.read(flat_reloc_ids)
@@ -200,7 +200,7 @@ class EmbeddingVariable(tf.keras.layers.Layer):
   def get_config(self):
     config = super().get_config()
     config.update({
-        "world_size": self.world_size,
-        "name": self.name,
+      "world_size": self.world_size,
+      "name": self.name,
     })
     return config

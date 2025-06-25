@@ -25,25 +25,25 @@ from typing import Union, Optional
 def hamming_distance(actuals: TensorLike, predictions: TensorLike) -> tf.Tensor:
   """Computes hamming distance.
 
-    Hamming distance is for comparing two binary strings.
-    It is the number of bit positions in which two bits
-    are different.
+  Hamming distance is for comparing two binary strings.
+  It is the number of bit positions in which two bits
+  are different.
 
-    Args:
-        actuals: actual target value.
-        predictions: predicted value.
+  Args:
+      actuals: actual target value.
+      predictions: predicted value.
 
-    Returns:
-        hamming distance: float.
+  Returns:
+      hamming distance: float.
 
-    Usage:
+  Usage:
 
-    >>> y_true = np.array([1, 1, 0, 0, 1, 0, 1, 0, 0, 1], dtype=np.int32)
-    >>> y_pred = np.array([1, 0, 0, 0, 1, 0, 0, 1, 0, 1], dtype=np.int32)
-    >>> hamming_distance(y_true, y_pred).numpy()
-    0.3
+  >>> y_true = np.array([1, 1, 0, 0, 1, 0, 1, 0, 0, 1], dtype=np.int32)
+  >>> y_pred = np.array([1, 0, 0, 0, 1, 0, 0, 1, 0, 1], dtype=np.int32)
+  >>> hamming_distance(y_true, y_pred).numpy()
+  0.3
 
-    """
+  """
   result = tf.not_equal(actuals, predictions)
   not_eq = tf.reduce_sum(tf.cast(result, tf.float32))
   ham_distance = tf.math.divide_no_nan(not_eq, len(result))
@@ -51,32 +51,32 @@ def hamming_distance(actuals: TensorLike, predictions: TensorLike) -> tf.Tensor:
 
 
 def hamming_loss_fn(
-    y_true: TensorLike,
-    y_pred: TensorLike,
-    threshold: Union[FloatTensorLike, None],
-    mode: str,
+  y_true: TensorLike,
+  y_pred: TensorLike,
+  threshold: Union[FloatTensorLike, None],
+  mode: str,
 ) -> tf.Tensor:
   """Computes hamming loss.
 
-    Hamming loss is the fraction of wrong labels to the total number
-    of labels.
+  Hamming loss is the fraction of wrong labels to the total number
+  of labels.
 
-    In multi-class classification, hamming loss is calculated as the
-    hamming distance between `y_true` and `y_pred`.
-    In multi-label classification, hamming loss penalizes only the
-    individual labels.
+  In multi-class classification, hamming loss is calculated as the
+  hamming distance between `y_true` and `y_pred`.
+  In multi-label classification, hamming loss penalizes only the
+  individual labels.
 
-    Args:
-        y_true: actual target value.
-        y_pred: predicted target value.
-        threshold: Elements of `y_pred` greater than threshold are
-            converted to be 1, and the rest 0. If threshold is
-            None, the argmax is converted to 1, and the rest 0.
-        mode: multi-class or multi-label.
+  Args:
+      y_true: actual target value.
+      y_pred: predicted target value.
+      threshold: Elements of `y_pred` greater than threshold are
+          converted to be 1, and the rest 0. If threshold is
+          None, the argmax is converted to 1, and the rest 0.
+      mode: multi-class or multi-label.
 
-    Returns:
-        hamming loss: float.
-    """
+  Returns:
+      hamming loss: float.
+  """
   if mode not in ["multiclass", "multilabel"]:
     raise TypeError("mode must be either multiclass or multilabel]")
 
@@ -103,59 +103,59 @@ def hamming_loss_fn(
 class HammingLoss(MeanMetricWrapper):
   """Computes hamming loss.
 
-    Hamming loss is the fraction of wrong labels to the total number
-    of labels.
+  Hamming loss is the fraction of wrong labels to the total number
+  of labels.
 
-    In multi-class classification, hamming loss is calculated as the
-    hamming distance between `y_true` and `y_pred`.
-    In multi-label classification, hamming loss penalizes only the
-    individual labels.
+  In multi-class classification, hamming loss is calculated as the
+  hamming distance between `y_true` and `y_pred`.
+  In multi-label classification, hamming loss penalizes only the
+  individual labels.
 
-    Args:
-        threshold: Elements of `y_pred` greater than threshold are
-            converted to be 1, and the rest 0. If threshold is
-            None, the argmax is converted to 1, and the rest 0.
-        mode: multi-class or multi-label.
-        name: (Optional) string name of the metric instance.
-        dtype: (Optional) data type of the metric result.
+  Args:
+      threshold: Elements of `y_pred` greater than threshold are
+          converted to be 1, and the rest 0. If threshold is
+          None, the argmax is converted to 1, and the rest 0.
+      mode: multi-class or multi-label.
+      name: (Optional) string name of the metric instance.
+      dtype: (Optional) data type of the metric result.
 
-    Usage:
+  Usage:
 
-    >>> # multi-class hamming loss
-    >>> metric = HammingLoss(mode='multiclass', threshold=0.6)
-    >>> y_true = np.array([[1.0, 0.0, 0.0, 0.0],
-    ...                    [0.0, 0.0, 1.0, 0.0],
-    ...                    [0.0, 0.0, 0.0, 1.0],
-    ...                    [0.0, 1.0, 0.0, 0.0]], dtype=np.float32)
-    >>> y_pred = np.array([[0.8, 0.1, 0.1, 0.0],
-    ...                    [0.2, 0.0, 0.8, 0.0],
-    ...                    [0.05, 0.05, 0.1, 0.8],
-    ...                    [1.0, 0.0, 0.0, 0.0]], dtype=np.float32)
-    >>> metric.update_state(y_true, y_pred)
-    <tf.Variable 'UnreadVariable' shape=() dtype=float32, numpy=4.0>
-    >>> metric.result().numpy()
-    0.25
-    >>> # multi-label hamming loss
-    >>> metric = HammingLoss(mode='multilabel', threshold=0.8)
-    >>> y_true = np.array([[1, 0, 1, 0],
-    ...                    [0, 1, 0, 1],
-    ...                    [0, 0, 0, 1]], dtype=np.int32)
-    >>> y_pred = np.array([[0.82, 0.5, 0.90, 0],
-    ...                    [0, 1, 0.4, 0.98],
-    ...                    [0.89, 0.79, 0, 0.3]], dtype=np.float32)
-    >>> metric.update_state(y_true, y_pred)
-    <tf.Variable 'UnreadVariable' shape=() dtype=float32, numpy=3.0>
-    >>> metric.result().numpy()
-    0.16666667
-    """
+  >>> # multi-class hamming loss
+  >>> metric = HammingLoss(mode='multiclass', threshold=0.6)
+  >>> y_true = np.array([[1.0, 0.0, 0.0, 0.0],
+  ...                    [0.0, 0.0, 1.0, 0.0],
+  ...                    [0.0, 0.0, 0.0, 1.0],
+  ...                    [0.0, 1.0, 0.0, 0.0]], dtype=np.float32)
+  >>> y_pred = np.array([[0.8, 0.1, 0.1, 0.0],
+  ...                    [0.2, 0.0, 0.8, 0.0],
+  ...                    [0.05, 0.05, 0.1, 0.8],
+  ...                    [1.0, 0.0, 0.0, 0.0]], dtype=np.float32)
+  >>> metric.update_state(y_true, y_pred)
+  <tf.Variable 'UnreadVariable' shape=() dtype=float32, numpy=4.0>
+  >>> metric.result().numpy()
+  0.25
+  >>> # multi-label hamming loss
+  >>> metric = HammingLoss(mode='multilabel', threshold=0.8)
+  >>> y_true = np.array([[1, 0, 1, 0],
+  ...                    [0, 1, 0, 1],
+  ...                    [0, 0, 0, 1]], dtype=np.int32)
+  >>> y_pred = np.array([[0.82, 0.5, 0.90, 0],
+  ...                    [0, 1, 0.4, 0.98],
+  ...                    [0.89, 0.79, 0, 0.3]], dtype=np.float32)
+  >>> metric.update_state(y_true, y_pred)
+  <tf.Variable 'UnreadVariable' shape=() dtype=float32, numpy=3.0>
+  >>> metric.result().numpy()
+  0.16666667
+  """
 
   @typechecked
   def __init__(
-      self,
-      mode: str,
-      name: str = "hamming_loss",
-      threshold: Optional[FloatTensorLike] = None,
-      dtype: AcceptableDTypes = None,
-      **kwargs,
+    self,
+    mode: str,
+    name: str = "hamming_loss",
+    threshold: Optional[FloatTensorLike] = None,
+    dtype: AcceptableDTypes = None,
+    **kwargs,
   ):
     super().__init__(hamming_loss_fn, name=name, dtype=dtype, mode=mode, threshold=threshold)

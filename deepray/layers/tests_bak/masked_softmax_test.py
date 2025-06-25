@@ -29,7 +29,6 @@ from deepray.layers import masked_softmax
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class MaskedSoftmaxLayerTest(keras_parameterized.TestCase):
-
   def test_non_masked_softmax(self):
     test_layer = masked_softmax.MaskedSoftmax()
     input_tensor = tf.keras.Input(shape=(4, 8))
@@ -84,5 +83,5 @@ class MaskedSoftmaxLayerTest(keras_parameterized.TestCase):
     self.assertAllEqual(expected_zeros, is_zeros)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

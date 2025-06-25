@@ -25,7 +25,6 @@ from deepray.utils.horovod_utils import get_rank, get_world_size
 
 
 class Squad(DataPipeline):
-
   def __init__(self, max_seq_length, input_pipeline_context=None, **kwargs):
     super().__init__(**kwargs)
     self.max_seq_length = max_seq_length
@@ -66,11 +65,11 @@ class Squad(DataPipeline):
   def build_dataset(self, input_file_pattern, batch_size, is_training=True, epochs=1, shuffle=False, *args, **kwargs):
     """Creates input dataset from (tf)records files for train/eval."""
     name_to_features = {
-        'input_ids': tf.io.FixedLenFeature([self.max_seq_length], tf.int64),
-        'input_mask': tf.io.FixedLenFeature([self.max_seq_length], tf.int64),
-        'segment_ids': tf.io.FixedLenFeature([self.max_seq_length], tf.int64),
-        'label_ids': tf.io.FixedLenFeature([], tf.int64),
-        'is_real_example': tf.io.FixedLenFeature([], tf.int64),
+      "input_ids": tf.io.FixedLenFeature([self.max_seq_length], tf.int64),
+      "input_mask": tf.io.FixedLenFeature([self.max_seq_length], tf.int64),
+      "segment_ids": tf.io.FixedLenFeature([self.max_seq_length], tf.int64),
+      "label_ids": tf.io.FixedLenFeature([], tf.int64),
+      "is_real_example": tf.io.FixedLenFeature([], tf.int64),
     }
     dataset = self.single_file_dataset(input_file_pattern, name_to_features)
 
@@ -78,16 +77,16 @@ class Squad(DataPipeline):
     # num_input_pipelines is the number of hosts rather than number of cores.
     if self.input_pipeline_context and self.input_pipeline_context.num_input_pipelines > 1:
       dataset = dataset.shard(
-          self.input_pipeline_context.num_input_pipelines, self.input_pipeline_context.input_pipeline_id
+        self.input_pipeline_context.num_input_pipelines, self.input_pipeline_context.input_pipeline_id
       )
 
     def parser(record):
       x = {
-          'input_word_ids': record['input_ids'],
-          'input_mask': record['input_mask'],
-          'input_type_ids': record['segment_ids']
+        "input_word_ids": record["input_ids"],
+        "input_mask": record["input_mask"],
+        "input_type_ids": record["segment_ids"],
       }
-      y = record['label_ids']
+      y = record["label_ids"]
       return x, y
 
     dataset = dataset.map(parser)

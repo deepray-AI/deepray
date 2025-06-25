@@ -33,7 +33,7 @@ CARDINALITY_SELECTOR = "cardinality"
 
 def get_categorical_feature_type(size: int):
   """This function works both when max value and cardinality is passed.
-        Consistency by the user is required"""
+  Consistency by the user is required"""
   types = (np.int8, np.int16, np.int32)
 
   for numpy_type in types:

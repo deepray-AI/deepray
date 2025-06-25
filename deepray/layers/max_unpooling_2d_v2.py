@@ -51,32 +51,32 @@ def _max_unpooling_2d_v2(updates, mask, output_size):
 class MaxUnpooling2DV2(tf.keras.layers.Layer):
   """Unpool the outputs of a maximum pooling operation.
 
-    This differs from MaxUnpooling2D in that it uses output_size rather than strides and padding
-    to calculate the unpooled tensor. This is because MaxPoolingWithArgMax can map several input
-    sizes to the same output size, and specifying the output size avoids ambiguity in the
-    inversion process.
+  This differs from MaxUnpooling2D in that it uses output_size rather than strides and padding
+  to calculate the unpooled tensor. This is because MaxPoolingWithArgMax can map several input
+  sizes to the same output size, and specifying the output size avoids ambiguity in the
+  inversion process.
 
-    This function currently does not support outputs of MaxPoolingWithArgMax in following cases:
-    - include_batch_in_index equals true.
-    - The max pooling operation results in duplicate values in updates and mask.
+  This function currently does not support outputs of MaxPoolingWithArgMax in following cases:
+  - include_batch_in_index equals true.
+  - The max pooling operation results in duplicate values in updates and mask.
 
-    Args:
-      output_size: A tuple/list of 4 integers specifying (batch_size, height, width, channel).
-        The targeted output size.
-    Call Args:
-      updates: A 4D tensor of shape `(batch_size, height, width, channel)`.
-        The pooling result from max pooling.
-      mask: A 4D tensor of shape `(batch_size, height, width, channel)`.
-        The indices of the maximal values.
-    Output shape:
-      4D tensor with the same shape as output_size.
-    """
+  Args:
+    output_size: A tuple/list of 4 integers specifying (batch_size, height, width, channel).
+      The targeted output size.
+  Call Args:
+    updates: A 4D tensor of shape `(batch_size, height, width, channel)`.
+      The pooling result from max pooling.
+    mask: A 4D tensor of shape `(batch_size, height, width, channel)`.
+      The indices of the maximal values.
+  Output shape:
+    4D tensor with the same shape as output_size.
+  """
 
   @typechecked
   def __init__(
-      self,
-      output_size: Iterable[int],
-      **kwargs,
+    self,
+    output_size: Iterable[int],
+    **kwargs,
   ):
     super(MaxUnpooling2DV2, self).__init__(**kwargs)
 

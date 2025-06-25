@@ -4,7 +4,7 @@ from deepray.metrics import utils
 
 _DEFAULT_GAIN_FN = lambda label: tf.pow(2.0, label) - 1
 
-_DEFAULT_RANK_DISCOUNT_FN = lambda rank: tf.math.log(2.) / tf.math.log1p(rank)
+_DEFAULT_RANK_DISCOUNT_FN = lambda rank: tf.math.log(2.0) / tf.math.log1p(rank)
 
 
 class _RankingMetric(tf.keras.metrics.Mean):
@@ -47,7 +47,7 @@ class _RankingMetric(tf.keras.metrics.Mean):
   def get_config(self):
     config = super(_RankingMetric, self).get_config()
     config.update({
-        "ragged": self._ragged,
+      "ragged": self._ragged,
     })
     return config
 
@@ -117,15 +117,15 @@ class NDCGMetric(_RankingMetric):
     self._gain_fn = gain_fn or utils.pow_minus_1
     self._rank_discount_fn = rank_discount_fn or utils.log2_inverse
     self._metric = metrics_impl.NDCGMetric(
-        name=name, topn=topn, gain_fn=self._gain_fn, rank_discount_fn=self._rank_discount_fn, ragged=ragged
+      name=name, topn=topn, gain_fn=self._gain_fn, rank_discount_fn=self._rank_discount_fn, ragged=ragged
     )
 
   def get_config(self):
     base_config = super(NDCGMetric, self).get_config()
     config = {
-        "topn": self._topn,
-        "gain_fn": self._gain_fn,
-        "rank_discount_fn": self._rank_discount_fn,
+      "topn": self._topn,
+      "gain_fn": self._gain_fn,
+      "rank_discount_fn": self._rank_discount_fn,
     }
     config.update(base_config)
     return config

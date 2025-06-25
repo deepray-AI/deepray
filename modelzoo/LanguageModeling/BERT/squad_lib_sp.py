@@ -18,6 +18,7 @@ The file is forked from:
 
 https://github.com/google-research/ALBERT/blob/master/run_squad_sp.py
 """
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -36,17 +37,19 @@ import tokenization
 class SquadExample(object):
   """A single training/test example for simple sequence classification.
 
-     For examples without an answer, the start and end position are -1.
+  For examples without an answer, the start and end position are -1.
   """
 
-  def __init__(self,
-               qas_id,
-               question_text,
-               paragraph_text,
-               orig_answer_text=None,
-               start_position=None,
-               end_position=None,
-               is_impossible=False):
+  def __init__(
+    self,
+    qas_id,
+    question_text,
+    paragraph_text,
+    orig_answer_text=None,
+    start_position=None,
+    end_position=None,
+    is_impossible=False,
+  ):
     self.qas_id = qas_id
     self.question_text = question_text
     self.paragraph_text = paragraph_text
@@ -61,8 +64,7 @@ class SquadExample(object):
   def __repr__(self):
     s = ""
     s += "qas_id: %s" % (tokenization.printable_text(self.qas_id))
-    s += ", question_text: %s" % (
-        tokenization.printable_text(self.question_text))
+    s += ", question_text: %s" % (tokenization.printable_text(self.question_text))
     s += ", paragraph_text: [%s]" % (" ".join(self.paragraph_text))
     if self.start_position:
       s += ", start_position: %d" % (self.start_position)
@@ -76,21 +78,23 @@ class SquadExample(object):
 class InputFeatures(object):
   """A single set of features of data."""
 
-  def __init__(self,
-               unique_id,
-               example_index,
-               doc_span_index,
-               tok_start_to_orig_index,
-               tok_end_to_orig_index,
-               token_is_max_context,
-               tokens,
-               input_ids,
-               input_mask,
-               segment_ids,
-               paragraph_len,
-               start_position=None,
-               end_position=None,
-               is_impossible=None):
+  def __init__(
+    self,
+    unique_id,
+    example_index,
+    doc_span_index,
+    tok_start_to_orig_index,
+    tok_end_to_orig_index,
+    token_is_max_context,
+    tokens,
+    input_ids,
+    input_mask,
+    segment_ids,
+    paragraph_len,
+    start_position=None,
+    end_position=None,
+    is_impossible=None,
+  ):
     self.unique_id = unique_id
     self.example_index = example_index
     self.doc_span_index = doc_span_index
@@ -128,8 +132,7 @@ def read_squad_examples(input_file, is_training, version_2_with_negative):
         if is_training:
           is_impossible = qa.get("is_impossible", False)
           if (len(qa["answers"]) != 1) and (not is_impossible):
-            raise ValueError(
-                "For training, each question should have exactly 1 answer.")
+            raise ValueError("For training, each question should have exactly 1 answer.")
           if not is_impossible:
             answer = qa["answers"][0]
             orig_answer_text = answer["text"]
@@ -139,12 +142,13 @@ def read_squad_examples(input_file, is_training, version_2_with_negative):
             orig_answer_text = ""
 
         example = SquadExample(
-            qas_id=qas_id,
-            question_text=question_text,
-            paragraph_text=paragraph_text,
-            orig_answer_text=orig_answer_text,
-            start_position=start_position,
-            is_impossible=is_impossible)
+          qas_id=qas_id,
+          question_text=question_text,
+          paragraph_text=paragraph_text,
+          orig_answer_text=orig_answer_text,
+          start_position=start_position,
+          is_impossible=is_impossible,
+        )
         examples.append(example)
 
   return examples
@@ -188,15 +192,17 @@ def _convert_index(index, pos, m=None, is_start=True):
       return index[front]
 
 
-def convert_examples_to_features(examples,
-                                 tokenizer,
-                                 max_seq_length,
-                                 doc_stride,
-                                 max_query_length,
-                                 is_training,
-                                 output_fn,
-                                 do_lower_case,
-                                 batch_size=None):
+def convert_examples_to_features(
+  examples,
+  tokenizer,
+  max_seq_length,
+  doc_stride,
+  max_query_length,
+  is_training,
+  output_fn,
+  do_lower_case,
+  batch_size=None,
+):
   """Loads a data file into a list of `InputBatch`s."""
   cnt_pos, cnt_neg = 0, 0
   base_id = 1000000000
@@ -204,25 +210,21 @@ def convert_examples_to_features(examples,
   max_n, max_m = 1024, 1024
   f = np.zeros((max_n, max_m), dtype=np.float32)
 
-  for (example_index, example) in enumerate(examples):
-
+  for example_index, example in enumerate(examples):
     if example_index % 100 == 0:
-      logging.info("Converting %d/%d pos %d neg %d", example_index,
-                   len(examples), cnt_pos, cnt_neg)
+      logging.info("Converting %d/%d pos %d neg %d", example_index, len(examples), cnt_pos, cnt_neg)
 
     query_tokens = tokenization.encode_ids(
-        tokenizer.sp_model,
-        tokenization.preprocess_text(
-            example.question_text, lower=do_lower_case))
+      tokenizer.sp_model, tokenization.preprocess_text(example.question_text, lower=do_lower_case)
+    )
 
     if len(query_tokens) > max_query_length:
       query_tokens = query_tokens[0:max_query_length]
 
     paragraph_text = example.paragraph_text
     para_tokens = tokenization.encode_pieces(
-        tokenizer.sp_model,
-        tokenization.preprocess_text(
-            example.paragraph_text, lower=do_lower_case))
+      tokenizer.sp_model, tokenization.preprocess_text(example.paragraph_text, lower=do_lower_case)
+    )
 
     chartok_to_tok_index = []
     tok_start_to_chartok_index = []
@@ -235,8 +237,7 @@ def convert_examples_to_features(examples,
       char_cnt += len(new_token)
       tok_end_to_chartok_index.append(char_cnt - 1)
 
-    tok_cat_text = "".join(para_tokens).replace(tokenization.SPIECE_UNDERLINE,
-                                                " ")
+    tok_cat_text = "".join(para_tokens).replace(tokenization.SPIECE_UNDERLINE, " ")
     n, m = len(paragraph_text), len(tok_cat_text)
 
     if n > max_n or m > max_m:
@@ -245,6 +246,7 @@ def convert_examples_to_features(examples,
       f = np.zeros((max_n, max_m), dtype=np.float32)
 
     g = {}
+
     # pylint: disable=cell-var-from-loop
     def _lcs_match(max_dist, n=n, m=m):
       """Longest-common-substring algorithm."""
@@ -254,7 +256,6 @@ def convert_examples_to_features(examples,
       ### longest common sub sequence
       # f[i, j] = max(f[i - 1, j], f[i, j - 1], f[i - 1, j - 1] + match(i, j))
       for i in range(n):
-
         # unlike standard LCS, this is specifically optimized for the setting
         # because the mismatch between sentence pieces and original text will
         # be small
@@ -271,11 +272,13 @@ def convert_examples_to_features(examples,
             f[i, j] = f[i, j - 1]
 
           f_prev = f[i - 1, j - 1] if i > 0 and j > 0 else 0
-          if (tokenization.preprocess_text(
-              paragraph_text[i], lower=do_lower_case,
-              remove_space=False) == tok_cat_text[j] and f_prev + 1 > f[i, j]):
+          if (
+            tokenization.preprocess_text(paragraph_text[i], lower=do_lower_case, remove_space=False) == tok_cat_text[j]
+            and f_prev + 1 > f[i, j]
+          ):
             g[(i, j)] = 2
             f[i, j] = f_prev + 1
+
     # pylint: enable=cell-var-from-loop
 
     max_dist = abs(n - m) + 5
@@ -300,8 +303,7 @@ def convert_examples_to_features(examples,
       else:
         i = i - 1
 
-    if (all(v is None for v in orig_to_chartok_index) or
-        f[n - 1, m - 1] < 0.8 * n):
+    if all(v is None for v in orig_to_chartok_index) or f[n - 1, m - 1] < 0.8 * n:
       logging.info("MISMATCH DETECTED!")
       continue
 
@@ -310,10 +312,8 @@ def convert_examples_to_features(examples,
     for i in range(len(para_tokens)):
       start_chartok_pos = tok_start_to_chartok_index[i]
       end_chartok_pos = tok_end_to_chartok_index[i]
-      start_orig_pos = _convert_index(
-          chartok_to_orig_index, start_chartok_pos, n, is_start=True)
-      end_orig_pos = _convert_index(
-          chartok_to_orig_index, end_chartok_pos, n, is_start=False)
+      start_orig_pos = _convert_index(chartok_to_orig_index, start_chartok_pos, n, is_start=True)
+      end_orig_pos = _convert_index(chartok_to_orig_index, end_chartok_pos, n, is_start=False)
 
       tok_start_to_orig_index.append(start_orig_pos)
       tok_end_to_orig_index.append(end_orig_pos)
@@ -329,12 +329,10 @@ def convert_examples_to_features(examples,
       start_position = example.start_position
       end_position = start_position + len(example.orig_answer_text) - 1
 
-      start_chartok_pos = _convert_index(
-          orig_to_chartok_index, start_position, is_start=True)
+      start_chartok_pos = _convert_index(orig_to_chartok_index, start_position, is_start=True)
       tok_start_position = chartok_to_tok_index[start_chartok_pos]
 
-      end_chartok_pos = _convert_index(
-          orig_to_chartok_index, end_position, is_start=False)
+      end_chartok_pos = _convert_index(orig_to_chartok_index, end_position, is_start=False)
       tok_end_position = chartok_to_tok_index[end_chartok_pos]
       assert tok_start_position <= tok_end_position
 
@@ -350,7 +348,8 @@ def convert_examples_to_features(examples,
     # To deal with this we do a sliding window approach, where we take chunks
     # of the up to our max length with a stride of `doc_stride`.
     _DocSpan = collections.namedtuple(  # pylint: disable=invalid-name
-        "DocSpan", ["start", "length"])
+      "DocSpan", ["start", "length"]
+    )
     doc_spans = []
     start_offset = 0
     while start_offset < len(all_doc_tokens):
@@ -362,7 +361,7 @@ def convert_examples_to_features(examples,
         break
       start_offset += min(length, doc_stride)
 
-    for (doc_span_index, doc_span) in enumerate(doc_spans):
+    for doc_span_index, doc_span in enumerate(doc_spans):
       tokens = []
       token_is_max_context = {}
       segment_ids = []
@@ -381,13 +380,10 @@ def convert_examples_to_features(examples,
       for i in range(doc_span.length):
         split_token_index = doc_span.start + i
 
-        cur_tok_start_to_orig_index.append(
-            tok_start_to_orig_index[split_token_index])
-        cur_tok_end_to_orig_index.append(
-            tok_end_to_orig_index[split_token_index])
+        cur_tok_start_to_orig_index.append(tok_start_to_orig_index[split_token_index])
+        cur_tok_end_to_orig_index.append(tok_end_to_orig_index[split_token_index])
 
-        is_max_context = _check_is_max_context(doc_spans, doc_span_index,
-                                               split_token_index)
+        is_max_context = _check_is_max_context(doc_spans, doc_span_index, split_token_index)
         token_is_max_context[len(tokens)] = is_max_context
         tokens.append(all_doc_tokens[split_token_index])
         segment_ids.append(1)
@@ -420,8 +416,7 @@ def convert_examples_to_features(examples,
         doc_start = doc_span.start
         doc_end = doc_span.start + doc_span.length - 1
         out_of_span = False
-        if not (tok_start_position >= doc_start and
-                tok_end_position <= doc_end):
+        if not (tok_start_position >= doc_start and tok_end_position <= doc_end):
           out_of_span = True
         if out_of_span:
           # continue
@@ -442,16 +437,12 @@ def convert_examples_to_features(examples,
         logging.info("unique_id: %s", (unique_id))
         logging.info("example_index: %s", (example_index))
         logging.info("doc_span_index: %s", (doc_span_index))
-        logging.info("tok_start_to_orig_index: %s",
-                     " ".join([str(x) for x in cur_tok_start_to_orig_index]))
-        logging.info("tok_end_to_orig_index: %s",
-                     " ".join([str(x) for x in cur_tok_end_to_orig_index]))
+        logging.info("tok_start_to_orig_index: %s", " ".join([str(x) for x in cur_tok_start_to_orig_index]))
+        logging.info("tok_end_to_orig_index: %s", " ".join([str(x) for x in cur_tok_end_to_orig_index]))
         logging.info(
-            "token_is_max_context: %s", " ".join(
-                ["%d:%s" % (x, y) for (x, y) in token_is_max_context.items()]))
-        logging.info(
-            "input_pieces: %s",
-            " ".join([tokenizer.sp_model.IdToPiece(x) for x in tokens]))
+          "token_is_max_context: %s", " ".join(["%d:%s" % (x, y) for (x, y) in token_is_max_context.items()])
+        )
+        logging.info("input_pieces: %s", " ".join([tokenizer.sp_model.IdToPiece(x) for x in tokens]))
         logging.info("input_ids: %s", " ".join([str(x) for x in input_ids]))
         logging.info("input_mask: %s", " ".join([str(x) for x in input_mask]))
         logging.info("segment_ids: %s", " ".join([str(x) for x in segment_ids]))
@@ -460,10 +451,7 @@ def convert_examples_to_features(examples,
           logging.info("impossible example span")
 
         if is_training and not span_is_impossible:
-          pieces = [
-              tokenizer.sp_model.IdToPiece(token)
-              for token in tokens[start_position:(end_position + 1)]
-          ]
+          pieces = [tokenizer.sp_model.IdToPiece(token) for token in tokens[start_position : (end_position + 1)]]
           answer_text = tokenizer.sp_model.DecodePieces(pieces)
           logging.info("start_position: %d", (start_position))
           logging.info("end_position: %d", (end_position))
@@ -479,20 +467,21 @@ def convert_examples_to_features(examples,
         feat_example_index = example_index
 
       feature = InputFeatures(
-          unique_id=unique_id,
-          example_index=feat_example_index,
-          doc_span_index=doc_span_index,
-          tok_start_to_orig_index=cur_tok_start_to_orig_index,
-          tok_end_to_orig_index=cur_tok_end_to_orig_index,
-          token_is_max_context=token_is_max_context,
-          tokens=[tokenizer.sp_model.IdToPiece(x) for x in tokens],
-          input_ids=input_ids,
-          input_mask=input_mask,
-          segment_ids=segment_ids,
-          paragraph_len=paragraph_len,
-          start_position=start_position,
-          end_position=end_position,
-          is_impossible=span_is_impossible)
+        unique_id=unique_id,
+        example_index=feat_example_index,
+        doc_span_index=doc_span_index,
+        tok_start_to_orig_index=cur_tok_start_to_orig_index,
+        tok_end_to_orig_index=cur_tok_end_to_orig_index,
+        token_is_max_context=token_is_max_context,
+        tokens=[tokenizer.sp_model.IdToPiece(x) for x in tokens],
+        input_ids=input_ids,
+        input_mask=input_mask,
+        segment_ids=segment_ids,
+        paragraph_len=paragraph_len,
+        start_position=start_position,
+        end_position=end_position,
+        is_impossible=span_is_impossible,
+      )
 
       # Run callback
       if is_training:
@@ -520,8 +509,7 @@ def convert_examples_to_features(examples,
       output_fn(feature, is_padding=True)
       unique_id += 1
 
-  logging.info("Total number of instances: %d = pos %d neg %d",
-               cnt_pos + cnt_neg, cnt_pos, cnt_neg)
+  logging.info("Total number of instances: %d = pos %d neg %d", cnt_pos + cnt_neg, cnt_pos, cnt_neg)
   return unique_id - base_id
 
 
@@ -546,7 +534,7 @@ def _check_is_max_context(doc_spans, cur_span_index, position):
   # and 0 right context.
   best_score = None
   best_span_index = None
-  for (span_index, doc_span) in enumerate(doc_spans):
+  for span_index, doc_span in enumerate(doc_spans):
     end = doc_span.start + doc_span.length - 1
     if position < doc_span.start:
       continue
@@ -562,22 +550,23 @@ def _check_is_max_context(doc_spans, cur_span_index, position):
   return cur_span_index == best_span_index
 
 
-RawResult = collections.namedtuple("RawResult",
-                                   ["unique_id", "start_logits", "end_logits"])
+RawResult = collections.namedtuple("RawResult", ["unique_id", "start_logits", "end_logits"])
 
 
-def write_predictions(all_examples,
-                      all_features,
-                      all_results,
-                      n_best_size,
-                      max_answer_length,
-                      do_lower_case,
-                      output_prediction_file,
-                      output_nbest_file,
-                      output_null_log_odds_file,
-                      version_2_with_negative=False,
-                      null_score_diff_threshold=0.0,
-                      verbose=False):
+def write_predictions(
+  all_examples,
+  all_features,
+  all_results,
+  n_best_size,
+  max_answer_length,
+  do_lower_case,
+  output_prediction_file,
+  output_nbest_file,
+  output_null_log_odds_file,
+  version_2_with_negative=False,
+  null_score_diff_threshold=0.0,
+  verbose=False,
+):
   """Write final predictions to the json file and log-odds of null if needed."""
   del do_lower_case, verbose
   logging.info("Writing predictions to: %s", (output_prediction_file))
@@ -592,14 +581,14 @@ def write_predictions(all_examples,
     unique_id_to_result[result.unique_id] = result
 
   _PrelimPrediction = collections.namedtuple(  # pylint: disable=invalid-name
-      "PrelimPrediction",
-      ["feature_index", "start_index", "end_index", "start_logit", "end_logit"])
+    "PrelimPrediction", ["feature_index", "start_index", "end_index", "start_logit", "end_logit"]
+  )
 
   all_predictions = collections.OrderedDict()
   all_nbest_json = collections.OrderedDict()
   scores_diff_json = collections.OrderedDict()
 
-  for (example_index, example) in enumerate(all_examples):
+  for example_index, example in enumerate(all_examples):
     features = example_index_to_features[example_index]
 
     prelim_predictions = []
@@ -608,7 +597,7 @@ def write_predictions(all_examples,
     min_null_feature_index = 0  # the paragraph slice with min mull score
     null_start_logit = 0  # the start logit at the slice with min null score
     null_end_logit = 0  # the end logit at the slice with min null score
-    for (feature_index, feature) in enumerate(features):
+    for feature_index, feature in enumerate(features):
       result = unique_id_to_result[feature.unique_id]
       start_indexes = _get_best_indexes(result.start_logits, n_best_size)
       end_indexes = _get_best_indexes(result.end_logits, n_best_size)
@@ -642,28 +631,30 @@ def write_predictions(all_examples,
           if length > max_answer_length:
             continue
           prelim_predictions.append(
-              _PrelimPrediction(
-                  feature_index=feature_index,
-                  start_index=start_index - doc_offset,
-                  end_index=end_index - doc_offset,
-                  start_logit=result.start_logits[start_index],
-                  end_logit=result.end_logits[end_index]))
+            _PrelimPrediction(
+              feature_index=feature_index,
+              start_index=start_index - doc_offset,
+              end_index=end_index - doc_offset,
+              start_logit=result.start_logits[start_index],
+              end_logit=result.end_logits[end_index],
+            )
+          )
 
     if version_2_with_negative:
       prelim_predictions.append(
-          _PrelimPrediction(
-              feature_index=min_null_feature_index,
-              start_index=-1,
-              end_index=-1,
-              start_logit=null_start_logit,
-              end_logit=null_end_logit))
-    prelim_predictions = sorted(
-        prelim_predictions,
-        key=lambda x: (x.start_logit + x.end_logit),
-        reverse=True)
+        _PrelimPrediction(
+          feature_index=min_null_feature_index,
+          start_index=-1,
+          end_index=-1,
+          start_logit=null_start_logit,
+          end_logit=null_end_logit,
+        )
+      )
+    prelim_predictions = sorted(prelim_predictions, key=lambda x: (x.start_logit + x.end_logit), reverse=True)
 
     _NbestPrediction = collections.namedtuple(  # pylint: disable=invalid-name
-        "NbestPrediction", ["text", "start_logit", "end_logit"])
+      "NbestPrediction", ["text", "start_logit", "end_logit"]
+    )
 
     seen_predictions = {}
     nbest = []
@@ -678,7 +669,7 @@ def write_predictions(all_examples,
         end_orig_pos = tok_end_to_orig_index[pred.end_index]
 
         paragraph_text = example.paragraph_text
-        final_text = paragraph_text[start_orig_pos:end_orig_pos + 1].strip()
+        final_text = paragraph_text[start_orig_pos : end_orig_pos + 1].strip()
         if final_text in seen_predictions:
           continue
 
@@ -687,24 +678,16 @@ def write_predictions(all_examples,
         final_text = ""
         seen_predictions[final_text] = True
 
-      nbest.append(
-          _NbestPrediction(
-              text=final_text,
-              start_logit=pred.start_logit,
-              end_logit=pred.end_logit))
+      nbest.append(_NbestPrediction(text=final_text, start_logit=pred.start_logit, end_logit=pred.end_logit))
 
     # if we didn't inlude the empty option in the n-best, inlcude it
     if version_2_with_negative:
       if "" not in seen_predictions:
-        nbest.append(
-            _NbestPrediction(
-                text="", start_logit=null_start_logit,
-                end_logit=null_end_logit))
+        nbest.append(_NbestPrediction(text="", start_logit=null_start_logit, end_logit=null_end_logit))
     # In very rare edge cases we could have no valid predictions. So we
     # just create a nonce prediction in this case to avoid failure.
     if not nbest:
-      nbest.append(
-          _NbestPrediction(text="empty", start_logit=0.0, end_logit=0.0))
+      nbest.append(_NbestPrediction(text="empty", start_logit=0.0, end_logit=0.0))
 
     assert len(nbest) >= 1
 
@@ -719,7 +702,7 @@ def write_predictions(all_examples,
     probs = _compute_softmax(total_scores)
 
     nbest_json = []
-    for (i, entry) in enumerate(nbest):
+    for i, entry in enumerate(nbest):
       output = collections.OrderedDict()
       output["text"] = entry.text
       output["probability"] = probs[i]
@@ -734,8 +717,7 @@ def write_predictions(all_examples,
     else:
       assert best_non_null_entry is not None
       # predict "" iff the null score - the score of best non-null > threshold
-      score_diff = score_null - best_non_null_entry.start_logit - (
-          best_non_null_entry.end_logit)
+      score_diff = score_null - best_non_null_entry.start_logit - (best_non_null_entry.end_logit)
       scores_diff_json[example.qas_id] = score_diff
       if score_diff > null_score_diff_threshold:
         all_predictions[example.qas_id] = ""
@@ -804,8 +786,7 @@ class FeatureWriter(object):
     self.num_features += 1
 
     def create_int_feature(values):
-      feature = tf.train.Feature(
-          int64_list=tf.train.Int64List(value=list(values)))
+      feature = tf.train.Feature(int64_list=tf.train.Int64List(value=list(values)))
       return feature
 
     features = collections.OrderedDict()
@@ -829,40 +810,41 @@ class FeatureWriter(object):
     self._writer.close()
 
 
-def generate_tf_record_from_json_file(input_file_path,
-                                      sp_model_file,
-                                      output_path,
-                                      max_seq_length=384,
-                                      do_lower_case=True,
-                                      max_query_length=64,
-                                      doc_stride=128,
-                                      version_2_with_negative=False):
+def generate_tf_record_from_json_file(
+  input_file_path,
+  sp_model_file,
+  output_path,
+  max_seq_length=384,
+  do_lower_case=True,
+  max_query_length=64,
+  doc_stride=128,
+  version_2_with_negative=False,
+):
   """Generates and saves training data into a tf record file."""
   train_examples = read_squad_examples(
-      input_file=input_file_path,
-      is_training=True,
-      version_2_with_negative=version_2_with_negative)
-  tokenizer = tokenization.FullSentencePieceTokenizer(
-      sp_model_file=sp_model_file)
+    input_file=input_file_path, is_training=True, version_2_with_negative=version_2_with_negative
+  )
+  tokenizer = tokenization.FullSentencePieceTokenizer(sp_model_file=sp_model_file)
   train_writer = FeatureWriter(filename=output_path, is_training=True)
   number_of_examples = convert_examples_to_features(
-      examples=train_examples,
-      tokenizer=tokenizer,
-      max_seq_length=max_seq_length,
-      doc_stride=doc_stride,
-      max_query_length=max_query_length,
-      is_training=True,
-      output_fn=train_writer.process_feature,
-      do_lower_case=do_lower_case)
+    examples=train_examples,
+    tokenizer=tokenizer,
+    max_seq_length=max_seq_length,
+    doc_stride=doc_stride,
+    max_query_length=max_query_length,
+    is_training=True,
+    output_fn=train_writer.process_feature,
+    do_lower_case=do_lower_case,
+  )
   train_writer.close()
 
   meta_data = {
-      "task_type": "bert_squad",
-      "train_data_size": number_of_examples,
-      "max_seq_length": max_seq_length,
-      "max_query_length": max_query_length,
-      "doc_stride": doc_stride,
-      "version_2_with_negative": version_2_with_negative,
+    "task_type": "bert_squad",
+    "train_data_size": number_of_examples,
+    "max_seq_length": max_seq_length,
+    "max_query_length": max_query_length,
+    "doc_stride": doc_stride,
+    "version_2_with_negative": version_2_with_negative,
   }
 
   return meta_data

@@ -28,7 +28,6 @@ from deepray.utils import test_utils
 @pytest.mark.parametrize("maximum_iterations", [None, 1, tf.constant(1, dtype=tf.int32)])
 @pytest.mark.parametrize("time_major", [True, False])
 def test_dynamic_decode_rnn(time_major, maximum_iterations):
-
   sequence_length = [3, 4, 3, 1, 0]
   batch_size = 5
   max_time = 8
@@ -39,17 +38,17 @@ def test_dynamic_decode_rnn(time_major, maximum_iterations):
   cell = tf.keras.layers.LSTMCell(cell_depth)
   sampler = sampler_py.TrainingSampler(time_major=time_major)
   my_decoder = basic_decoder.BasicDecoder(
-      cell=cell,
-      sampler=sampler,
-      output_time_major=time_major,
-      maximum_iterations=maximum_iterations,
+    cell=cell,
+    sampler=sampler,
+    output_time_major=time_major,
+    maximum_iterations=maximum_iterations,
   )
 
   @tf.function(
-      input_signature=(
-          tf.TensorSpec([None, None, input_depth], dtype=tf.float32),
-          tf.TensorSpec([None], dtype=tf.int32),
-      )
+    input_signature=(
+      tf.TensorSpec([None, None, input_depth], dtype=tf.float32),
+      tf.TensorSpec([None], dtype=tf.int32),
+    )
   )
   def _decode(inputs, sequence_length):
     batch_size_t = tf.shape(sequence_length)[0]
@@ -93,27 +92,27 @@ def test_dynamic_decode_tflite_conversion():
     batch_size = tf.size(start_tokens)
     initial_state = cell.get_initial_state(batch_size=batch_size, dtype=tf.float32)
     return decoder.dynamic_decode(
-        my_decoder,
-        maximum_iterations=5,
-        enable_tflite_convertible=True,
-        decoder_init_input=embeddings,
-        decoder_init_kwargs=dict(
-            initial_state=initial_state,
-            start_tokens=start_tokens,
-            end_token=end_token,
-        ),
+      my_decoder,
+      maximum_iterations=5,
+      enable_tflite_convertible=True,
+      decoder_init_input=embeddings,
+      decoder_init_kwargs=dict(
+        initial_state=initial_state,
+        start_tokens=start_tokens,
+        end_token=end_token,
+      ),
     )
 
   concrete_function = _decode.get_concrete_function(
-      tf.TensorSpec([1], dtype=tf.int32), tf.TensorSpec([], dtype=tf.int32)
+    tf.TensorSpec([1], dtype=tf.int32), tf.TensorSpec([], dtype=tf.int32)
   )
   if tf.__version__[:3] >= "2.7":
     converter = tf.lite.TFLiteConverter.from_concrete_functions([concrete_function], _decode)
   else:
     converter = tf.lite.TFLiteConverter.from_concrete_functions([concrete_function])
   converter.target_spec.supported_ops = [
-      tf.lite.OpsSet.TFLITE_BUILTINS,
-      tf.lite.OpsSet.SELECT_TF_OPS,
+    tf.lite.OpsSet.TFLITE_BUILTINS,
+    tf.lite.OpsSet.SELECT_TF_OPS,
   ]
   _ = converter.convert()
 
@@ -123,7 +122,9 @@ def test_dynamic_decode_tflite_conversion():
 
 
 @pytest.mark.parametrize("use_sequence_length", [True, False])
-def test_dynamic_decode_rnn_with_training_helper_matches_dynamic_rnn(use_sequence_length,):
+def test_dynamic_decode_rnn_with_training_helper_matches_dynamic_rnn(
+  use_sequence_length,
+):
   sequence_length = [3, 4, 3, 1, 0]
   batch_size = 5
   max_time = 8
@@ -139,11 +140,12 @@ def test_dynamic_decode_rnn_with_training_helper_matches_dynamic_rnn(use_sequenc
   sampler = sampler_py.TrainingSampler()
   my_decoder = basic_decoder.BasicDecoder(cell=cell, sampler=sampler, impute_finished=use_sequence_length)
 
-  (final_decoder_outputs, final_decoder_state,
-   _) = my_decoder(inputs, initial_state=zero_state, sequence_length=sequence_length)
+  (final_decoder_outputs, final_decoder_state, _) = my_decoder(
+    inputs, initial_state=zero_state, sequence_length=sequence_length
+  )
 
   rnn = tf.keras.layers.RNN(cell, return_sequences=True, return_state=True)
-  mask = (tf.sequence_mask(sequence_length, maxlen=max_time) if use_sequence_length else None)
+  mask = tf.sequence_mask(sequence_length, maxlen=max_time) if use_sequence_length else None
   outputs = rnn(inputs, mask=mask, initial_state=zero_state)
   final_rnn_outputs = outputs[0]
   final_rnn_state = outputs[1:]

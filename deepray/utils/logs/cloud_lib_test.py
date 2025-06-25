@@ -27,7 +27,6 @@ from official.utils.logs import cloud_lib
 
 
 class CloudLibTest(unittest.TestCase):
-
   @mock.patch("requests.get")
   def test_on_gcp(self, mock_requests_get):
     mock_response = mock.MagicMock()

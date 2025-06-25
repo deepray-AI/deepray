@@ -29,7 +29,6 @@ from deepray.layers import position_embedding
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class PositionEmbeddingLayerTest(keras_parameterized.TestCase):
-
   def test_static_layer_output_shape(self):
     test_layer = position_embedding.PositionEmbedding()
     # Create a 3-dimensional input (the first dimension is implicit).

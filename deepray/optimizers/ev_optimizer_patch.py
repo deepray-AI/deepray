@@ -41,11 +41,13 @@ import functools
 from deepray.custom_ops.embedding_variable.python import kv_variable_ops
 
 from tensorflow.core.framework import attr_value_pb2
-from deepray.custom_ops.embedding_variable.variable_scope import get_embedding_variable_internal, get_embedding_variable_v2_internal
+from deepray.custom_ops.embedding_variable.variable_scope import (
+  get_embedding_variable_internal,
+  get_embedding_variable_v2_internal,
+)
 
 
 class SlotConfig:
-
   def __init__(self, slot_num=1, slot_index=0, slot_type=config_pb2.SlotType.EMBEDDING_VARIABLE):
     self.slot_num = slot_num
     self.slot_index = slot_index
@@ -87,8 +89,8 @@ def add_slot(self, var, slot_name, initializer="zeros", shape=None, slot_config=
     if isinstance(initializer, str) or callable(initializer):
       initializer = keras.initializers.get(initializer)
       if isinstance(
-          initializer,
-          tf.__internal__.tracking.CheckpointInitialValueCallable,
+        initializer,
+        tf.__internal__.tracking.CheckpointInitialValueCallable,
       ) or (shape is not None):
         slot_shape = shape
       else:
@@ -100,15 +102,15 @@ def add_slot(self, var, slot_name, initializer="zeros", shape=None, slot_config=
     if isinstance(var, kv_variable_ops.EmbeddingVariable):
       if slot_config is None:
         weight = get_embedding_variable_internal(
-            name=f"{var._shared_name}/{slot_name}",
-            initializer=initializer,
-            trainable=False,
-            embedding_dim=slot_shape,
-            key_dtype=var._invalid_key_type,
-            value_dtype=var.dtype,
-            validate_shape=slot_shape.is_fully_defined(),
-            steps_to_live=var._steps_to_live,
-            ht_partition_num=var._ht_partition_num
+          name=f"{var._shared_name}/{slot_name}",
+          initializer=initializer,
+          trainable=False,
+          embedding_dim=slot_shape,
+          key_dtype=var._invalid_key_type,
+          value_dtype=var.dtype,
+          validate_shape=slot_shape.is_fully_defined(),
+          steps_to_live=var._steps_to_live,
+          ht_partition_num=var._ht_partition_num,
         )
         # _set_init_op_embedding_type_attr(weight, config_pb2.EmbeddingVariableType.MUTABLE)
       else:
@@ -116,10 +118,10 @@ def add_slot(self, var, slot_name, initializer="zeros", shape=None, slot_config=
         if var._filter_freq != 0:
           if var._max_element_size != 0:
             filter_strategy = ev_variables.CBFFilter(
-                filter_freq=var._filter_freq,
-                max_element_size=var._max_element_size,
-                false_positive_probability=var._false_positive_probability,
-                counter_type=var._counter_type
+              filter_freq=var._filter_freq,
+              max_element_size=var._max_element_size,
+              false_positive_probability=var._false_positive_probability,
+              counter_type=var._counter_type,
             )
           else:
             filter_strategy = ev_variables.CounterFilter(filter_freq=var._filter_freq)
@@ -130,57 +132,57 @@ def add_slot(self, var, slot_name, initializer="zeros", shape=None, slot_config=
           if var.block_num > 1:
             var = var._primary
           weight = get_embedding_variable_v2_internal(
-              name=f"{var._shared_name}/{slot_name}",
-              initializer=initializer,
-              trainable=False,
-              embedding_dim=slot_shape,
-              key_dtype=var._invalid_key_type,
-              value_dtype=var.dtype,
-              validate_shape=slot_shape.is_fully_defined(),
-              evconfig=ev_variables.EmbeddingVariableConfig(
-                  steps_to_live=var._steps_to_live,
-                  handle_name=var._block_handle_name,
-                  emb_index=emb_index,
-                  block_num=var.block_num,
-                  slot_index=slot_config.slot_index,
-                  primary=var._primary,
-                  slot_num=slot_config.slot_num,
-                  storage_type=var.storage_type,
-                  storage_path=var._storage_path,
-                  storage_size=var._storage_size,
-                  storage_cache_strategy=var._storage_cache_strategy,
-                  layout=var._layout,
-                  l2_weight_threshold=var._l2_weight_threshold,
-                  filter_strategy=filter_strategy
-              )
+            name=f"{var._shared_name}/{slot_name}",
+            initializer=initializer,
+            trainable=False,
+            embedding_dim=slot_shape,
+            key_dtype=var._invalid_key_type,
+            value_dtype=var.dtype,
+            validate_shape=slot_shape.is_fully_defined(),
+            evconfig=ev_variables.EmbeddingVariableConfig(
+              steps_to_live=var._steps_to_live,
+              handle_name=var._block_handle_name,
+              emb_index=emb_index,
+              block_num=var.block_num,
+              slot_index=slot_config.slot_index,
+              primary=var._primary,
+              slot_num=slot_config.slot_num,
+              storage_type=var.storage_type,
+              storage_path=var._storage_path,
+              storage_size=var._storage_size,
+              storage_cache_strategy=var._storage_cache_strategy,
+              layout=var._layout,
+              l2_weight_threshold=var._l2_weight_threshold,
+              filter_strategy=filter_strategy,
+            ),
           )
         else:
           weight = tf.Variable(
-              name=f"{var._shared_name}/{slot_name}",
-              dtype=var.dtype,
-              trainable=False,
-              initial_value=initial_value,
+            name=f"{var._shared_name}/{slot_name}",
+            dtype=var.dtype,
+            trainable=False,
+            initial_value=initial_value,
           )
     else:
       with self._distribution_strategy_scope():
         strategy = tf.distribute.get_strategy()
         if not strategy.extended.variable_created_in_scope(var):
           raise ValueError(
-              "Trying to create optimizer slot variable under the "
-              "scope for tf.distribute.Strategy ({}), which is "
-              "different from the scope used for the original "
-              "variable ({}). Make sure the slot variables are "
-              "created under the same strategy scope. This may "
-              "happen if you're restoring from a checkpoint "
-              "outside the scope.".format(strategy, var)
+            "Trying to create optimizer slot variable under the "
+            "scope for tf.distribute.Strategy ({}), which is "
+            "different from the scope used for the original "
+            "variable ({}). Make sure the slot variables are "
+            "created under the same strategy scope. This may "
+            "happen if you're restoring from a checkpoint "
+            "outside the scope.".format(strategy, var)
           )
 
         with strategy.extended.colocate_vars_with(var):
           weight = tf.Variable(
-              name=f"{var._shared_name}/{slot_name}",
-              dtype=var.dtype,
-              trainable=False,
-              initial_value=initial_value,
+            name=f"{var._shared_name}/{slot_name}",
+            dtype=var.dtype,
+            trainable=False,
+            initial_value=initial_value,
           )
 
     backend.track_variable(weight)
@@ -193,8 +195,9 @@ def add_slot(self, var, slot_name, initializer="zeros", shape=None, slot_config=
 def _deduplicate_indexed_slices_with_counts(values, indices):
   """Sums `values` associated with any non-unique `indices`
   and return counts of each count in `values`."""
-  unique_indices, new_index_positions, indices_counts = \
-      gen_array_ops.deepray_unique_with_counts(indices, out_idx=dtypes.int64)
+  unique_indices, new_index_positions, indices_counts = gen_array_ops.deepray_unique_with_counts(
+    indices, out_idx=dtypes.int64
+  )
   summed_values = math_ops.unsorted_segment_sum(values, new_index_positions, array_ops.shape(unique_indices)[0])
   return summed_values, unique_indices, indices_counts
 
@@ -202,8 +205,9 @@ def _deduplicate_indexed_slices_with_counts(values, indices):
 def _deduplicate_indexed_slices_with_counts_reduction(values, indices, extra_counts, extra_indices):
   """Sums `values` associated with any non-unique `indices`
   and return counts of each count in `values`."""
-  unique_indices, new_index_positions, summed_counts = \
-      gen_array_ops.deepray_unique_with_extra_counts(indices, extra_indices, extra_counts)
+  unique_indices, new_index_positions, summed_counts = gen_array_ops.deepray_unique_with_extra_counts(
+    indices, extra_indices, extra_counts
+  )
   summed_values = math_ops.unsorted_segment_sum(values, new_index_positions, array_ops.shape(unique_indices)[0])
   return summed_values, unique_indices, summed_counts
 
@@ -230,11 +234,12 @@ def _resource_apply_sparse_duplicate_indices(self, grad, handle, indices, **kwar
     An `Operation` which updates the value of the variable.
   """
   from deepray.custom_ops.embedding_variable import kv_variable_ops
+
   if isinstance(handle, kv_variable_ops.EmbeddingVariable) and handle.need_counts():
     if len(handle._counts_tensor.keys()) == 0:
-      summed_grad, unique_indices, indices_counts = \
-          _deduplicate_indexed_slices_with_counts(
-              values=grad, indices=indices)
+      summed_grad, unique_indices, indices_counts = _deduplicate_indexed_slices_with_counts(
+        values=grad, indices=indices
+      )
     else:
       extra_counts, extra_indices = [], []
       if indices.op.type == "ConcatV2":
@@ -249,11 +254,11 @@ def _resource_apply_sparse_duplicate_indices(self, grad, handle, indices, **kwar
         if indices_tensor in handle._counts_tensor:
           extra_counts.append(handle._counts_tensor[indices_tensor])
           extra_indices.append(indices_tensor)
-      summed_grad, unique_indices, indices_counts = \
-          _deduplicate_indexed_slices_with_counts_reduction(
-              grad, indices, extra_counts, extra_indices)
+      summed_grad, unique_indices, indices_counts = _deduplicate_indexed_slices_with_counts_reduction(
+        grad, indices, extra_counts, extra_indices
+      )
     return self._resource_apply_sparse(
-        grad=summed_grad, var=handle, indices=unique_indices, indices_counts=indices_counts, **kwargs
+      grad=summed_grad, var=handle, indices=unique_indices, indices_counts=indices_counts, **kwargs
     )
   else:
     summed_grad, unique_indices = _deduplicate_indexed_slices(values=grad, indices=indices)

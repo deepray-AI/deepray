@@ -15,12 +15,12 @@
 """Additional layers that conform to Keras API."""
 
 from deepray.layers.adaptive_pooling import (
-    AdaptiveAveragePooling1D,
-    AdaptiveMaxPooling1D,
-    AdaptiveAveragePooling2D,
-    AdaptiveMaxPooling2D,
-    AdaptiveAveragePooling3D,
-    AdaptiveMaxPooling3D,
+  AdaptiveAveragePooling1D,
+  AdaptiveMaxPooling1D,
+  AdaptiveAveragePooling2D,
+  AdaptiveMaxPooling2D,
+  AdaptiveAveragePooling3D,
+  AdaptiveMaxPooling3D,
 )
 
 from deepray.layers.embedding import Embedding

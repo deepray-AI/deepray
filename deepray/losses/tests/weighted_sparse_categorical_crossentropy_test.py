@@ -29,16 +29,15 @@ from deepray.losses import weighted_sparse_categorical_crossentropy
 
 @keras_parameterized.run_all_keras_modes
 class ClassificationLossTest(keras_parameterized.TestCase):
-
   def create_lm_model(self, vocab_size, sequence_length, hidden_size, num_predictions, output="predictions"):
     # First, create a transformer stack that we can use to get the LM's
     # vocabulary weight.
     xformer_stack = networks.TransformerEncoder(
-        vocab_size=vocab_size,
-        num_layers=1,
-        sequence_length=sequence_length,
-        hidden_size=hidden_size,
-        num_attention_heads=4,
+      vocab_size=vocab_size,
+      num_layers=1,
+      sequence_length=sequence_length,
+      hidden_size=hidden_size,
+      num_attention_heads=4,
     )
     word_ids = tf.keras.Input(shape=(sequence_length,), dtype=tf.int32)
     mask = tf.keras.Input(shape=(sequence_length,), dtype=tf.int32)
@@ -47,7 +46,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
 
     # Create a maskedLM from the transformer stack.
     test_network = networks.MaskedLM(
-        num_predictions=num_predictions, input_width=lm_outputs.shape[-1], source_network=xformer_stack, output=output
+      num_predictions=num_predictions, input_width=lm_outputs.shape[-1], source_network=xformer_stack, output=output
     )
 
     # Create a model from the masked LM layer.
@@ -70,10 +69,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     hidden_size = 64
     num_predictions = 21
     model = self.create_lm_model(
-        vocab_size=vocab_size,
-        sequence_length=sequence_length,
-        hidden_size=hidden_size,
-        num_predictions=num_predictions
+      vocab_size=vocab_size, sequence_length=sequence_length, hidden_size=hidden_size, num_predictions=num_predictions
     )
 
     # Get the output of the masked LM.
@@ -85,7 +81,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     # Calculate per-example loss.
     labels = np.random.randint(vocab_size, size=(batch_size, num_predictions))
     per_example_loss_data = weighted_sparse_categorical_crossentropy.per_example_loss(
-        predictions=output_data, labels=labels
+      predictions=output_data, labels=labels
     )
 
     # Per-example loss data should have one value per prediction, and those
@@ -108,7 +104,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     # Calculate per example loss.
     labels = np.random.randint(num_classes, size=(batch_size))
     per_example_loss_data = weighted_sparse_categorical_crossentropy.per_example_loss(
-        predictions=output_data, labels=labels
+      predictions=output_data, labels=labels
     )
 
     # Per-example loss data should have one value per batch item, and those
@@ -123,10 +119,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     hidden_size = 64
     num_predictions = 21
     model = self.create_lm_model(
-        vocab_size=vocab_size,
-        sequence_length=sequence_length,
-        hidden_size=hidden_size,
-        num_predictions=num_predictions
+      vocab_size=vocab_size, sequence_length=sequence_length, hidden_size=hidden_size, num_predictions=num_predictions
     )
 
     # Get the output of the masked LM.
@@ -140,7 +133,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     weights = np.random.randint(2, size=(batch_size, num_predictions))
 
     per_example_loss_data = weighted_sparse_categorical_crossentropy.per_example_loss(
-        predictions=output_data, labels=labels, weights=weights
+      predictions=output_data, labels=labels, weights=weights
     )
 
     # Weighted per-example loss data should be equivalent to multiplying the
@@ -164,7 +157,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     weights = np.random.randint(2, size=(batch_size))
 
     per_example_loss_data = weighted_sparse_categorical_crossentropy.per_example_loss(
-        predictions=output_data, labels=labels, weights=weights
+      predictions=output_data, labels=labels, weights=weights
     )
 
     # Weighted per-example loss data should be equivalent to multiplying the
@@ -179,10 +172,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     hidden_size = 64
     num_predictions = 21
     model = self.create_lm_model(
-        vocab_size=vocab_size,
-        sequence_length=sequence_length,
-        hidden_size=hidden_size,
-        num_predictions=num_predictions
+      vocab_size=vocab_size, sequence_length=sequence_length, hidden_size=hidden_size, num_predictions=num_predictions
     )
 
     # Get the output of the masked LM.
@@ -195,7 +185,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     labels = np.random.randint(vocab_size, size=(batch_size, num_predictions))
     weights = np.random.randint(2, size=(batch_size, num_predictions))
     per_example_loss_data = weighted_sparse_categorical_crossentropy.loss(
-        predictions=output_data, labels=labels, weights=weights
+      predictions=output_data, labels=labels, weights=weights
     )
 
     # Total loss data should have one value, and that value shouldn't be zero
@@ -230,10 +220,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     hidden_size = 64
     num_predictions = 21
     model = self.create_lm_model(
-        vocab_size=vocab_size,
-        sequence_length=sequence_length,
-        hidden_size=hidden_size,
-        num_predictions=num_predictions
+      vocab_size=vocab_size, sequence_length=sequence_length, hidden_size=hidden_size, num_predictions=num_predictions
     )
 
     # Get the output of the masked LM.
@@ -246,7 +233,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     labels = np.random.randint(vocab_size, size=(batch_size, num_predictions))
     null_weights = np.zeros((batch_size, num_predictions))
     weighted_loss_data = weighted_sparse_categorical_crossentropy.loss(
-        predictions=output_data, labels=labels, weights=null_weights
+      predictions=output_data, labels=labels, weights=null_weights
     )
 
     # Because the tensor is fully masked, the loss should be 0.
@@ -267,7 +254,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     labels = np.random.randint(num_classes, size=(batch_size))
     null_weights = np.zeros((batch_size))
     weighted_loss_data = weighted_sparse_categorical_crossentropy.loss(
-        predictions=output_data, labels=labels, weights=null_weights
+      predictions=output_data, labels=labels, weights=null_weights
     )
 
     # Because the tensor is fully masked, the loss should be 0.
@@ -291,7 +278,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
 
     with self.assertRaisesRegex(RuntimeError, ".*of the same rank.*"):
       _ = weighted_sparse_categorical_crossentropy.per_example_loss(
-          predictions=output_data, labels=labels, weights=weights
+        predictions=output_data, labels=labels, weights=weights
       )
     with self.assertRaisesRegex(RuntimeError, ".*of the same rank.*"):
       _ = weighted_sparse_categorical_crossentropy.loss(predictions=output_data, labels=labels, weights=weights)
@@ -307,7 +294,7 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     # we can in fact pass tensors to these functions without causing runtime
     # errors from the shape checking code.
     _ = weighted_sparse_categorical_crossentropy.per_example_loss(
-        predictions=output_data, labels=labels, weights=weights
+      predictions=output_data, labels=labels, weights=weights
     )
     _ = weighted_sparse_categorical_crossentropy.loss(predictions=output_data, labels=labels, weights=weights)
 
@@ -318,27 +305,25 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     #   vocab_size = 5
     #   sequence_length = 4
     #   num_predictions = 2
-    output_data = np.array(
-        [
-            [
-                [-2.5286622, -1.0963473, -1.4925185, -2.4451098, -1.2923571],
-                [-2.7117882, -1.1205841, -4.02187, -0.9966936, -1.5119683]
-            ],
-            [
-                [-2.5379114, -0.82479054, -2.287932, -1.3747153, -2.053741],
-                [-2.5379114, -0.82479054, -2.287932, -1.3747153, -2.053741]
-            ],
-            [
-                [-2.7760355, -1.8219438, -3.0924666, -1.0779881, -0.9407509],
-                [-2.7760355, -1.8219438, -3.0924666, -1.0779881, -0.9407509]
-            ]
-        ]
-    )
+    output_data = np.array([
+      [
+        [-2.5286622, -1.0963473, -1.4925185, -2.4451098, -1.2923571],
+        [-2.7117882, -1.1205841, -4.02187, -0.9966936, -1.5119683],
+      ],
+      [
+        [-2.5379114, -0.82479054, -2.287932, -1.3747153, -2.053741],
+        [-2.5379114, -0.82479054, -2.287932, -1.3747153, -2.053741],
+      ],
+      [
+        [-2.7760355, -1.8219438, -3.0924666, -1.0779881, -0.9407509],
+        [-2.7760355, -1.8219438, -3.0924666, -1.0779881, -0.9407509],
+      ],
+    ])
     labels = np.array([[4, 0], [2, 2], [2, 1]])
 
     # Validate that per_example loss calculations are the same.
     per_example_loss_data = weighted_sparse_categorical_crossentropy.per_example_loss(
-        predictions=output_data, labels=labels
+      predictions=output_data, labels=labels
     )
     expected_per_example_loss_data = [[1.2923571, 2.7117882], [2.287932, 2.287932], [3.0924666, 1.8219438]]
     self.assertAllClose(expected_per_example_loss_data, per_example_loss_data)
@@ -354,14 +339,15 @@ class ClassificationLossTest(keras_parameterized.TestCase):
     # This is the empirical output of a classifier with the following params:
     #   batch_size = 2
     #   num_classes = 3
-    output_data = np.array(
-        [[-1.6094601e-03, -1.0966038e+01, -6.4434357e+00], [-1.6975292e-03, -6.4009643e+00, -1.0226612e+01]]
-    )
+    output_data = np.array([
+      [-1.6094601e-03, -1.0966038e01, -6.4434357e00],
+      [-1.6975292e-03, -6.4009643e00, -1.0226612e01],
+    ])
     labels = np.array([2, 1])
 
     # Validate that per_example loss calculations are the same.
     per_example_loss_data = weighted_sparse_categorical_crossentropy.per_example_loss(
-        predictions=output_data, labels=labels
+      predictions=output_data, labels=labels
     )
     expected_per_example_loss_data = [6.4434357, 6.4009643]
     self.assertAllClose(expected_per_example_loss_data, per_example_loss_data)

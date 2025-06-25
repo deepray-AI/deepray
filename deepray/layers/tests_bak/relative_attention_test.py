@@ -22,17 +22,17 @@ from deepray.layers import relative_attention
 
 
 def _create_mock_attention_data(
-    num_heads,
-    key_dim,
-    value_dim,
-    seq_length,
-    batch_size,
-    memory_length=0,
-    num_predictions=2,
-    two_stream=False,
-    include_state=False,
-    include_mask=False,
-    include_segment=False
+  num_heads,
+  key_dim,
+  value_dim,
+  seq_length,
+  batch_size,
+  memory_length=0,
+  num_predictions=2,
+  two_stream=False,
+  include_state=False,
+  include_mask=False,
+  include_segment=False,
 ):
   """Creates mock testing data.
 
@@ -59,24 +59,24 @@ def _create_mock_attention_data(
   attention_bias_shape = (num_heads, key_dim)
 
   data = dict(
-      relative_position_encoding=tf.random.normal(shape=encoding_shape),
-      content_attention_bias=tf.random.normal(shape=attention_bias_shape),
-      positional_attention_bias=tf.random.normal(shape=attention_bias_shape)
+    relative_position_encoding=tf.random.normal(shape=encoding_shape),
+    content_attention_bias=tf.random.normal(shape=attention_bias_shape),
+    positional_attention_bias=tf.random.normal(shape=attention_bias_shape),
   )
 
   if two_stream:
     query_stream_shape = (batch_size, num_predictions, key_dim)
     target_mapping_shape = (batch_size, num_predictions, seq_length)
     stream_data = dict(
-        content_stream=tf.random.normal(shape=query_shape),
-        query_stream=tf.random.normal(shape=query_stream_shape),
-        target_mapping=tf.random.normal(shape=target_mapping_shape)
+      content_stream=tf.random.normal(shape=query_shape),
+      query_stream=tf.random.normal(shape=query_stream_shape),
+      target_mapping=tf.random.normal(shape=target_mapping_shape),
     )
   else:
     stream_data = dict(
-        query=tf.random.normal(shape=query_shape),
-        value=tf.random.normal(shape=value_shape),
-        key=tf.random.normal(shape=value_shape)
+      query=tf.random.normal(shape=query_shape),
+      value=tf.random.normal(shape=value_shape),
+      key=tf.random.normal(shape=value_shape),
     )
 
   data.update(stream_data)
@@ -102,9 +102,9 @@ def _create_mock_attention_data(
     segment_matrix = np.random.randint(2, size=(batch_size, seq_length, total_seq_length))
     segment_matrix = tf.math.equal(segment_matrix, 1)
     segment_data = dict(
-        segment_attention_bias=tf.random.normal(shape=attention_bias_shape),
-        segment_encoding=tf.random.normal(shape=segment_encoding_shape),
-        segment_matrix=segment_matrix
+      segment_attention_bias=tf.random.normal(shape=attention_bias_shape),
+      segment_encoding=tf.random.normal(shape=segment_encoding_shape),
+      segment_matrix=segment_matrix,
     )
     data.update(segment_data)
 
@@ -112,59 +112,60 @@ def _create_mock_attention_data(
 
 
 class MultiHeadRelativeAttentionTest(tf.test.TestCase, parameterized.TestCase):
-
   @combinations.generate(
-      combinations.combine(
-          value_dim=[32, 64], memory_length=[0, 4], state=[True, False], mask=[True, False], segment=[True, False]
-      )
+    combinations.combine(
+      value_dim=[32, 64], memory_length=[0, 4], state=[True, False], mask=[True, False], segment=[True, False]
+    )
   )
   def test_attention_scores(self, value_dim, memory_length, state, mask, segment):
     """Tests combinations of attention score calculations."""
     batch_size, num_heads, key_dim, seq_length = 2, 12, 64, 8
     test_layer = relative_attention.MultiHeadRelativeAttention(
-        num_heads=num_heads, key_dim=key_dim, value_dim=value_dim
+      num_heads=num_heads, key_dim=key_dim, value_dim=value_dim
     )
     data = _create_mock_attention_data(
-        num_heads=num_heads,
-        key_dim=key_dim,
-        value_dim=value_dim,
-        seq_length=seq_length,
-        memory_length=memory_length,
-        two_stream=False,
-        batch_size=batch_size,
-        include_state=state,
-        include_mask=mask,
-        include_segment=segment
+      num_heads=num_heads,
+      key_dim=key_dim,
+      value_dim=value_dim,
+      seq_length=seq_length,
+      memory_length=memory_length,
+      two_stream=False,
+      batch_size=batch_size,
+      include_state=state,
+      include_mask=mask,
+      include_segment=segment,
     )
     output = test_layer(**data)
     self.assertEqual(output.shape, [batch_size, seq_length, key_dim])
 
 
 class TwoStreamRelativeAttentionTest(tf.test.TestCase, parameterized.TestCase):
-
   @combinations.generate(
-      combinations.combine(
-          num_predictions=[2, 10], memory_length=[0, 4], state=[True, False], mask=[True, False], segment=[True, False]
-      )
+    combinations.combine(
+      num_predictions=[2, 10], memory_length=[0, 4], state=[True, False], mask=[True, False], segment=[True, False]
+    )
   )
   def test_attention_scores(self, num_predictions, memory_length, state, mask, segment):
     """Tests combinations of attention score calculations."""
     batch_size, num_heads, key_dim, seq_length = 2, 12, 64, 8
     test_layer = relative_attention.TwoStreamRelativeAttention(num_heads=num_heads, key_dim=key_dim, value_dim=key_dim)
     data = _create_mock_attention_data(
-        num_heads=num_heads,
-        key_dim=key_dim,
-        value_dim=key_dim,
-        seq_length=seq_length,
-        memory_length=memory_length,
-        num_predictions=num_predictions,
-        two_stream=True,
-        batch_size=batch_size,
-        include_state=state,
-        include_mask=mask,
-        include_segment=segment
+      num_heads=num_heads,
+      key_dim=key_dim,
+      value_dim=key_dim,
+      seq_length=seq_length,
+      memory_length=memory_length,
+      num_predictions=num_predictions,
+      two_stream=True,
+      batch_size=batch_size,
+      include_state=state,
+      include_mask=mask,
+      include_segment=segment,
     )
-    content_output, query_output, = test_layer(**data)
+    (
+      content_output,
+      query_output,
+    ) = test_layer(**data)
     self.assertEqual(content_output.shape, [batch_size, seq_length, key_dim])
     self.assertEqual(query_output.shape, [batch_size, num_predictions, key_dim])
 

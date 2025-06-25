@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Parse time op tests."""
+
 import platform
 
 import numpy as np
@@ -24,28 +25,28 @@ from deepray import text
 IS_WINDOWS = platform.system() == "Windows"
 
 pytestmark = pytest.mark.skipif(
-    IS_WINDOWS,
-    reason="Doesn't work on Windows, see https://github.com/tensorflow/deepray/issues/782",
+  IS_WINDOWS,
+  reason="Doesn't work on Windows, see https://github.com/tensorflow/deepray/issues/782",
 )
 
 
 def test_parse_time():
   time_format = "%Y-%m-%dT%H:%M:%E*S%Ez"
   items = [
-      ("2019-05-17T23:56:09.05Z", time_format, "NANOSECOND", 1558137369050000000),
-      ("2019-05-17T23:56:09.05Z", time_format, "MICROSECOND", 1558137369050000),
-      ("2019-05-17T23:56:09.05Z", time_format, "MILLISECOND", 1558137369050),
-      ("2019-05-17T23:56:09.05Z", time_format, "SECOND", 1558137369),
-      (
-          [
-              "2019-05-17T23:56:09.05Z",
-              "2019-05-20T11:22:33.44Z",
-              "2019-05-30T22:33:44.55Z",
-          ],
-          time_format,
-          "MILLISECOND",
-          [1558137369050, 1558351353440, 1559255624550],
-      ),
+    ("2019-05-17T23:56:09.05Z", time_format, "NANOSECOND", 1558137369050000000),
+    ("2019-05-17T23:56:09.05Z", time_format, "MICROSECOND", 1558137369050000),
+    ("2019-05-17T23:56:09.05Z", time_format, "MILLISECOND", 1558137369050),
+    ("2019-05-17T23:56:09.05Z", time_format, "SECOND", 1558137369),
+    (
+      [
+        "2019-05-17T23:56:09.05Z",
+        "2019-05-20T11:22:33.44Z",
+        "2019-05-30T22:33:44.55Z",
+      ],
+      time_format,
+      "MILLISECOND",
+      [1558137369050, 1558351353440, 1559255624550],
+    ),
   ]
   for time_string, time_format, output_unit, expected in items:
     result = text.parse_time(time_string=time_string, time_format=time_format, output_unit=output_unit)
@@ -56,25 +57,25 @@ def test_invalid_output_unit():
   errors = (ValueError, tf.errors.InvalidArgumentError)
   with pytest.raises(errors):
     text.parse_time(
-        time_string="2019-05-17T23:56:09.05Z",
-        time_format="%Y-%m-%dT%H:%M:%E*S%Ez",
-        output_unit="INVALID",
+      time_string="2019-05-17T23:56:09.05Z",
+      time_format="%Y-%m-%dT%H:%M:%E*S%Ez",
+      output_unit="INVALID",
     )
 
 
 def test_invalid_time_format():
   with pytest.raises(tf.errors.InvalidArgumentError):
     text.parse_time(
-        time_string="2019-05-17T23:56:09.05Z",
-        time_format="INVALID",
-        output_unit="SECOND",
+      time_string="2019-05-17T23:56:09.05Z",
+      time_format="INVALID",
+      output_unit="SECOND",
     )
 
 
 def test_invalid_time_string():
   with pytest.raises(tf.errors.InvalidArgumentError):
     text.parse_time(
-        time_string="INVALID",
-        time_format="%Y-%m-%dT%H:%M:%E*S%Ez",
-        output_unit="SECOND",
+      time_string="INVALID",
+      time_format="%Y-%m-%dT%H:%M:%E*S%Ez",
+      output_unit="SECOND",
     )

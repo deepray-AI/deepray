@@ -25,16 +25,16 @@ from deepray.utils import test_utils
 def pairwise_distance_np(feature, squared=False):
   """Computes the pairwise distance matrix in numpy.
 
-    Args:
-      feature: 2-D numpy array of size [number of data, feature dimension]
-      squared: Boolean. If true, output is the pairwise squared euclidean
-        distance matrix; else, output is the pairwise euclidean distance
-        matrix.
+  Args:
+    feature: 2-D numpy array of size [number of data, feature dimension]
+    squared: Boolean. If true, output is the pairwise squared euclidean
+      distance matrix; else, output is the pairwise euclidean distance
+      matrix.
 
-    Returns:
-      pairwise_distances: 2-D numpy array of size
-        [number of data, number of data].
-    """
+  Returns:
+    pairwise_distances: 2-D numpy array of size
+      [number of data, number of data].
+  """
   triu = np.triu_indices(feature.shape[0], 1)
   upper_tri_pdists = np.linalg.norm(feature[triu[1]] - feature[triu[0]], axis=1)
   if squared:
@@ -43,7 +43,7 @@ def pairwise_distance_np(feature, squared=False):
   pairwise_distances = np.zeros((num_data, num_data))
   pairwise_distances[np.triu_indices(num_data, 1)] = upper_tri_pdists
   # Make symmetrical.
-  pairwise_distances = (pairwise_distances + pairwise_distances.T - np.diag(pairwise_distances.diagonal()))
+  pairwise_distances = pairwise_distances + pairwise_distances.T - np.diag(pairwise_distances.diagonal())
   return pairwise_distances
 
 
@@ -57,12 +57,12 @@ def l_2_dists(embs):
 
 def angular_distance_np(feature):
   """Computes the angular distance matrix in numpy.
-    Args:
-      feature: 2-D numpy array of size [number of data, feature dimension]
-    Returns:
-      angular_distances: 2-D numpy array of size
-        [number of data, number of data].
-    """
+  Args:
+    feature: 2-D numpy array of size [number of data, feature dimension]
+  Returns:
+    angular_distances: 2-D numpy array of size
+      [number of data, number of data].
+  """
 
   # l2-normalize all features
   normed = feature / np.linalg.norm(feature, ord=2, axis=1, keepdims=True)
@@ -147,12 +147,12 @@ def triplet_hard_loss_np(labels, embedding, margin, dist_func, soft=False):
 # triplet semihard
 @pytest.mark.parametrize("dtype", [tf.float32, tf.float16, tf.bfloat16])
 @pytest.mark.parametrize(
-    "dist_func, dist_metric",
-    [
-        (angular_distance_np, "angular"),
-        (squared_l_2_dists, "squared-L2"),
-        (l_2_dists, "L2"),
-    ],
+  "dist_func, dist_metric",
+  [
+    (angular_distance_np, "angular"),
+    (squared_l_2_dists, "squared-L2"),
+    (l_2_dists, "L2"),
+  ],
 )
 def test_semihard_tripled_loss_angular(dtype, dist_func, dist_metric):
   num_data = 10
@@ -188,12 +188,12 @@ def test_serialization_semihard():
 @pytest.mark.parametrize("dtype", [tf.float32, tf.float16, tf.bfloat16])
 @pytest.mark.parametrize("soft", [False, True])
 @pytest.mark.parametrize(
-    "dist_func, dist_metric",
-    [
-        (angular_distance_np, "angular"),
-        (squared_l_2_dists, "squared-L2"),
-        (l_2_dists, "L2"),
-    ],
+  "dist_func, dist_metric",
+  [
+    (angular_distance_np, "angular"),
+    (squared_l_2_dists, "squared-L2"),
+    (l_2_dists, "L2"),
+  ],
 )
 def test_hard_tripled_loss_angular(dtype, soft, dist_func, dist_metric):
   num_data = 20

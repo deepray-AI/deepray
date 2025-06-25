@@ -92,10 +92,10 @@ def get_activation(identifier):
   """
   if isinstance(identifier, six.string_types):
     name_to_fn = {
-        "gelu": tf.keras.activations.gelu,
-        "simple_swish": swish.simple_swish,
-        "hard_swish": swish.hard_swish,
-        "identity": swish.identity,
+      "gelu": tf.keras.activations.gelu,
+      "simple_swish": swish.simple_swish,
+      "hard_swish": swish.hard_swish,
+      "identity": swish.identity,
     }
     identifier = str(identifier).lower()
     if identifier in name_to_fn:
@@ -124,7 +124,7 @@ def get_shape_list(tensor, expected_rank=None, name=None):
   shape = tensor.shape.as_list()
 
   non_static_indexes = []
-  for (index, dim) in enumerate(shape):
+  for index, dim in enumerate(shape):
     if dim is None:
       non_static_indexes.append(index)
 
@@ -158,6 +158,6 @@ def assert_rank(tensor, expected_rank, name=None):
   actual_rank = tensor.shape.ndims
   if actual_rank not in expected_rank_dict:
     raise ValueError(
-        "For the tensor `%s`, the actual tensor rank `%d` (shape = %s) is not "
-        "equal to the expected tensor rank `%s`" % (name, actual_rank, str(tensor.shape), str(expected_rank))
+      "For the tensor `%s`, the actual tensor rank `%d` (shape = %s) is not "
+      "equal to the expected tensor rank `%s`" % (name, actual_rank, str(tensor.shape), str(expected_rank))
     )

@@ -18,7 +18,7 @@ logger = logging_util.get_logger()
 
 
 def define_flags():
-  flags.mark_flag_as_required('model_dir')
+  flags.mark_flag_as_required("model_dir")
   flags.FLAGS(sys.argv)
 
 
@@ -28,6 +28,7 @@ def main():
   # input("pid: " + str(pid) +", press enter to continue")
   if flags.FLAGS.use_dynamic_embedding:
     from tensorflow_recommenders_addons import dynamic_embedding as de
+
     optimizer = Adam(learning_rate=flags.FLAGS.learning_rate, amsgrad=False)
     optimizer = de.DynamicEmbeddingOptimizer(optimizer, synchronous=flags.FLAGS.use_horovod)
   else:
@@ -39,42 +40,42 @@ def main():
 
   data_pipe = CustomParquetPipeline()
   train_ds = data_pipe(
-      batch_size=flags.FLAGS.batch_size,
-      input_file_pattern=[
-          "/workspaces/datasets/criteo-small-00000.parquet",
-          "/workspaces/datasets/criteo-small-01799.parquet",
-      ]
+    batch_size=flags.FLAGS.batch_size,
+    input_file_pattern=[
+      "/workspaces/datasets/criteo-small-00000.parquet",
+      "/workspaces/datasets/criteo-small-01799.parquet",
+    ],
   )
   valid_ds = data_pipe(
-      batch_size=flags.FLAGS.batch_size,
-      input_file_pattern=[
-          "/workspaces/datasets/criteo-small-01799.parquet",
-      ]
+    batch_size=flags.FLAGS.batch_size,
+    input_file_pattern=[
+      "/workspaces/datasets/criteo-small-01799.parquet",
+    ],
   )
 
   trainer = Trainer(
-      model=model,
-      optimizer=optimizer,
-      loss="binary_crossentropy",
-      metrics=['AUC'],
-      jit_compile=False,
-      run_eagerly=flags.FLAGS.run_eagerly
+    model=model,
+    optimizer=optimizer,
+    loss="binary_crossentropy",
+    metrics=["AUC"],
+    jit_compile=False,
+    run_eagerly=flags.FLAGS.run_eagerly,
   )
   # Create a TensorBoard callback
-  logdir = os.path.join(flags.FLAGS.model_dir, 'tensorboard')
-  tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir, histogram_freq=1, profile_batch='5,52')
+  logdir = os.path.join(flags.FLAGS.model_dir, "tensorboard")
+  tboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir, histogram_freq=1, profile_batch="5,52")
   trainer.fit(
-      x=train_ds,
-      epochs=flags.FLAGS.epochs,
-      # verbose=0,
-      # steps_per_epoch=460,
-      # validation_data=valid_ds,
-      # validation_steps=191/get_world_size()-1,
-      callbacks=[
-          tboard_callback,
-          TrainingSpeed(),
-          ModelCheckpoint(),
-      ],
+    x=train_ds,
+    epochs=flags.FLAGS.epochs,
+    # verbose=0,
+    # steps_per_epoch=460,
+    # validation_data=valid_ds,
+    # validation_steps=191/get_world_size()-1,
+    callbacks=[
+      tboard_callback,
+      TrainingSpeed(),
+      ModelCheckpoint(),
+    ],
   )
   savedmodel_path = export_to_savedmodel(model)
   print(savedmodel_path)

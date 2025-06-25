@@ -11,13 +11,6 @@ on:
       - r*
 
 jobs:
-  yapf-test:
-    name: Yapf Python code format
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Ensure contributor used ("yapf --style=./.yapf -ri ./**/*.py") before commit
-        run: bash tools/run_build.sh yapf-test
   valid_build_files:
     name: Valid build files
     runs-on: ubuntu-latest

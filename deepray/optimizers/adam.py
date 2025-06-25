@@ -51,59 +51,57 @@ class Adam(adam_old.Adam):
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None, indices_counts=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype
-    coefficients = (
-        (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
-    )
-    m = self.get_slot(var, 'm')
-    v = self.get_slot(var, 'v')
+    coefficients = (apply_state or {}).get((var_device, var_dtype)) or self._fallback_apply_state(var_device, var_dtype)
+    m = self.get_slot(var, "m")
+    v = self.get_slot(var, "v")
     if isinstance(var, kv_variable_ops.EmbeddingVariable):
       if indices_counts is not None:
         return gen_kv_variable_ops.kv_resource_sparse_apply_adam_with_counts(
-            var.handle,
-            m.handle,
-            v.handle,
-            coefficients['beta_1_power'],
-            coefficients['beta_2_power'],
-            coefficients['lr_t'],
-            coefficients['beta_1_t'],
-            coefficients['beta_2_t'],
-            coefficients['epsilon'],
-            grad,
-            indices,
-            self.global_step,
-            indices_counts,
-            use_locking=self._use_locking
+          var.handle,
+          m.handle,
+          v.handle,
+          coefficients["beta_1_power"],
+          coefficients["beta_2_power"],
+          coefficients["lr_t"],
+          coefficients["beta_1_t"],
+          coefficients["beta_2_t"],
+          coefficients["epsilon"],
+          grad,
+          indices,
+          self.global_step,
+          indices_counts,
+          use_locking=self._use_locking,
         )
       else:
         return gen_kv_variable_ops.kv_resource_sparse_apply_adam(
-            var.handle,
-            m.handle,
-            v.handle,
-            coefficients['beta_1_power'],
-            coefficients['beta_2_power'],
-            coefficients['lr_t'],
-            coefficients['beta_1_t'],
-            coefficients['beta_2_t'],
-            coefficients['epsilon'],
-            grad,
-            indices,
-            self.global_step,
-            use_locking=self._use_locking
+          var.handle,
+          m.handle,
+          v.handle,
+          coefficients["beta_1_power"],
+          coefficients["beta_2_power"],
+          coefficients["lr_t"],
+          coefficients["beta_1_t"],
+          coefficients["beta_2_t"],
+          coefficients["epsilon"],
+          grad,
+          indices,
+          self.global_step,
+          use_locking=self._use_locking,
         )
     else:
       return gen_training_ops.resource_sparse_apply_adam(
-          var=var.handle,
-          m=m.handle,
-          v=v.handle,
-          beta1_power=coefficients['beta_1_power'],
-          beta2_power=coefficients['beta_2_power'],
-          lr=coefficients['lr_t'],
-          beta1=coefficients['beta_1_t'],
-          beta2=coefficients['beta_2_t'],
-          epsilon=coefficients['epsilon'],
-          grad=grad,
-          indices=indices,
-          use_locking=self._use_locking
+        var=var.handle,
+        m=m.handle,
+        v=v.handle,
+        beta1_power=coefficients["beta_1_power"],
+        beta2_power=coefficients["beta_2_power"],
+        lr=coefficients["lr_t"],
+        beta1=coefficients["beta_1_t"],
+        beta2=coefficients["beta_2_t"],
+        epsilon=coefficients["epsilon"],
+        grad=grad,
+        indices=indices,
+        use_locking=self._use_locking,
       )
 
 

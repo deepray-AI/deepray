@@ -49,11 +49,11 @@ def get_inputs(params):
     num_eval_steps = rconst.SYNTHETIC_BATCHES_PER_EPOCH
   else:
     num_users, num_items, producer = data_preprocessing.instantiate_pipeline(
-        dataset=FLAGS.dataset,
-        data_dir=FLAGS.data_dir,
-        params=params,
-        constructor_type=FLAGS.constructor_type,
-        deterministic=FLAGS.random_seed is not None
+      dataset=FLAGS.dataset,
+      data_dir=FLAGS.data_dir,
+      params=params,
+      constructor_type=FLAGS.constructor_type,
+      deterministic=FLAGS.random_seed is not None,
     )
     num_train_steps = producer.train_batches_per_epoch
     num_eval_steps = producer.eval_batches_per_epoch
@@ -69,7 +69,7 @@ def get_v1_distribution_strategy(params):
       logging.getLogger(name).setLevel(logging.ERROR)
 
     tpu_cluster_resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
-        tpu=params["tpu"], zone=params["tpu_zone"], project=params["tpu_gcp_project"], coordinator_name="coordinator"
+      tpu=params["tpu"], zone=params["tpu_zone"], project=params["tpu_gcp_project"], coordinator_name="coordinator"
     )
 
     logging.info("Issuing reset command to TPU to ensure a clean state.")
@@ -79,9 +79,9 @@ def get_v1_distribution_strategy(params):
     # by reading the `TF_CONFIG` environment variable, and the coordinator
     # is used by StreamingFilesDataset.
     tf_config_env = {
-        "session_master": tpu_cluster_resolver.get_master(),
-        "eval_session_master": tpu_cluster_resolver.get_master(),
-        "coordinator": tpu_cluster_resolver.cluster_spec().as_dict()["coordinator"]
+      "session_master": tpu_cluster_resolver.get_master(),
+      "eval_session_master": tpu_cluster_resolver.get_master(),
+      "coordinator": tpu_cluster_resolver.cluster_spec().as_dict()["coordinator"],
     }
     os.environ["TF_CONFIG"] = json.dumps(tf_config_env)
 

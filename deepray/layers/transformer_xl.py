@@ -86,20 +86,20 @@ class TransformerXLBlock(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      vocab_size,
-      hidden_size,
-      num_attention_heads,
-      head_size,
-      inner_size,
-      dropout_rate,
-      attention_dropout_rate,
-      two_stream=False,
-      norm_epsilon=1e-12,
-      inner_activation="relu",
-      kernel_initializer="variance_scaling",
-      inner_dropout=0.0,
-      **kwargs
+    self,
+    vocab_size,
+    hidden_size,
+    num_attention_heads,
+    head_size,
+    inner_size,
+    dropout_rate,
+    attention_dropout_rate,
+    two_stream=False,
+    norm_epsilon=1e-12,
+    inner_activation="relu",
+    kernel_initializer="variance_scaling",
+    inner_dropout=0.0,
+    **kwargs,
   ):
     """Initializes TransformerXLBlock layer."""
 
@@ -125,8 +125,7 @@ class TransformerXLBlock(tf.keras.layers.Layer):
     input_tensor = input_shape[0] if len(input_shape) == 2 else input_shape
     input_tensor_shape = tf.TensorShape(input_tensor)
     if len(input_tensor_shape.as_list()) != 3:
-      raise ValueError("TransformerLayer expects a three-dimensional input of "
-                       "shape [batch, sequence, width].")
+      raise ValueError("TransformerLayer expects a three-dimensional input of shape [batch, sequence, width].")
     batch_size, sequence_length, hidden_size = input_tensor_shape
 
     if len(input_shape) == 2:
@@ -134,85 +133,84 @@ class TransformerXLBlock(tf.keras.layers.Layer):
       expected_mask_tensor_shape = tf.TensorShape([batch_size, sequence_length, sequence_length])
       if not expected_mask_tensor_shape.is_compatible_with(mask_tensor_shape):
         raise ValueError(
-            "When passing a mask tensor to TransformerXLBlock, "
-            "the mask tensor must be of shape [batch, "
-            "sequence_length, sequence_length] (here %s). Got a "
-            "mask tensor of shape %s." % (expected_mask_tensor_shape, mask_tensor_shape)
+          "When passing a mask tensor to TransformerXLBlock, "
+          "the mask tensor must be of shape [batch, "
+          "sequence_length, sequence_length] (here %s). Got a "
+          "mask tensor of shape %s." % (expected_mask_tensor_shape, mask_tensor_shape)
         )
     if hidden_size % self._num_heads != 0:
       raise ValueError(
-          "The input size (%d) is not a multiple of the number of attention "
-          "heads (%d)" % (hidden_size, self._num_heads)
+        "The input size (%d) is not a multiple of the number of attention heads (%d)" % (hidden_size, self._num_heads)
       )
     self._attention_layer = self._attention_layer_type(
-        num_heads=self._num_heads,
-        key_dim=self._head_size,
-        value_dim=self._head_size,
-        dropout=self._attention_dropout_rate,
-        use_bias=False,
-        kernel_initializer=tf_utils.clone_initializer(self._kernel_initializer),
-        name="rel_attn"
+      num_heads=self._num_heads,
+      key_dim=self._head_size,
+      value_dim=self._head_size,
+      dropout=self._attention_dropout_rate,
+      use_bias=False,
+      kernel_initializer=tf_utils.clone_initializer(self._kernel_initializer),
+      name="rel_attn",
     )
     self._attention_dropout = tf.keras.layers.Dropout(rate=self._attention_dropout_rate)
     self._attention_layer_norm = tf.keras.layers.LayerNormalization(
-        name="self_attention_layer_norm", axis=-1, epsilon=self._norm_epsilon, dtype=tf.float32
+      name="self_attention_layer_norm", axis=-1, epsilon=self._norm_epsilon, dtype=tf.float32
     )
     self._inner_dense = tf.keras.layers.EinsumDense(
-        "abc,cd->abd",
-        output_shape=(None, self._inner_size),
-        bias_axes="d",
-        kernel_initializer=tf_utils.clone_initializer(self._kernel_initializer),
-        name="inner"
+      "abc,cd->abd",
+      output_shape=(None, self._inner_size),
+      bias_axes="d",
+      kernel_initializer=tf_utils.clone_initializer(self._kernel_initializer),
+      name="inner",
     )
 
     self._inner_activation_layer = tf.keras.layers.Activation(self._inner_activation)
     self._inner_dropout_layer = tf.keras.layers.Dropout(rate=self._inner_dropout)
     self._output_dense = tf.keras.layers.EinsumDense(
-        "abc,cd->abd",
-        output_shape=(None, hidden_size),
-        bias_axes="d",
-        name="output",
-        kernel_initializer=tf_utils.clone_initializer(self._kernel_initializer)
+      "abc,cd->abd",
+      output_shape=(None, hidden_size),
+      bias_axes="d",
+      name="output",
+      kernel_initializer=tf_utils.clone_initializer(self._kernel_initializer),
     )
     self._output_dropout = tf.keras.layers.Dropout(rate=self._dropout_rate)
     self._output_layer_norm = tf.keras.layers.LayerNormalization(
-        name="output_layer_norm", axis=-1, epsilon=self._norm_epsilon
+      name="output_layer_norm", axis=-1, epsilon=self._norm_epsilon
     )
 
     super().build(input_shape)
 
   def get_config(self):
     config = {
-        "vocab_size": self._vocab_size,
-        "hidden_size": self._hidden_size,
-        "num_attention_heads": self._num_heads,
-        "head_size": self._head_size,
-        "inner_size": self._inner_size,
-        "dropout_rate": self._dropout_rate,
-        "attention_dropout_rate": self._attention_dropout_rate,
-        "two_stream": self._two_stream,
-        "norm_epsilon": self._norm_epsilon,
-        "inner_activation": self._inner_activation,
-        "kernel_initializer": self._kernel_initializer,
-        "inner_dropout": self._inner_dropout,
+      "vocab_size": self._vocab_size,
+      "hidden_size": self._hidden_size,
+      "num_attention_heads": self._num_heads,
+      "head_size": self._head_size,
+      "inner_size": self._inner_size,
+      "dropout_rate": self._dropout_rate,
+      "attention_dropout_rate": self._attention_dropout_rate,
+      "two_stream": self._two_stream,
+      "norm_epsilon": self._norm_epsilon,
+      "inner_activation": self._inner_activation,
+      "kernel_initializer": self._kernel_initializer,
+      "inner_dropout": self._inner_dropout,
     }
     base_config = super().get_config()
     return dict(list(base_config.items()) + list(config.items()))
 
   def call(
-      self,
-      content_stream,
-      content_attention_bias,
-      positional_attention_bias,
-      relative_position_encoding=None,
-      segment_matrix=None,
-      segment_encoding=None,
-      segment_attention_bias=None,
-      state=None,
-      content_attention_mask=None,
-      query_stream=None,
-      query_attention_mask=None,
-      target_mapping=None
+    self,
+    content_stream,
+    content_attention_bias,
+    positional_attention_bias,
+    relative_position_encoding=None,
+    segment_matrix=None,
+    segment_encoding=None,
+    segment_attention_bias=None,
+    state=None,
+    content_attention_mask=None,
+    query_stream=None,
+    query_attention_mask=None,
+    target_mapping=None,
   ):
     """Implements `call` for the Layer.
 
@@ -253,30 +251,29 @@ class TransformerXLBlock(tf.keras.layers.Layer):
     """
     if not self._two_stream and query_stream is not None:
       logging.warning(
-          "`query_stream` was provided but two stream attention is "
-          "disabled. `query_stream` will be ignored."
+        "`query_stream` was provided but two stream attention is disabled. `query_stream` will be ignored."
       )
     if self._two_stream:
       attention_kwargs = dict(
-          content_stream=content_stream,
-          query_stream=query_stream,
-          query_attention_mask=query_attention_mask,
-          target_mapping=target_mapping,
-          content_attention_mask=content_attention_mask
+        content_stream=content_stream,
+        query_stream=query_stream,
+        query_attention_mask=query_attention_mask,
+        target_mapping=target_mapping,
+        content_attention_mask=content_attention_mask,
       )
     else:
       attention_kwargs = dict(
-          query=content_stream, value=content_stream, key=content_stream, attention_mask=content_attention_mask
+        query=content_stream, value=content_stream, key=content_stream, attention_mask=content_attention_mask
       )
 
     common_attention_kwargs = dict(
-        content_attention_bias=content_attention_bias,
-        relative_position_encoding=relative_position_encoding,
-        positional_attention_bias=positional_attention_bias,
-        segment_matrix=segment_matrix,
-        segment_encoding=segment_encoding,
-        segment_attention_bias=segment_attention_bias,
-        state=state
+      content_attention_bias=content_attention_bias,
+      relative_position_encoding=relative_position_encoding,
+      positional_attention_bias=positional_attention_bias,
+      segment_matrix=segment_matrix,
+      segment_encoding=segment_encoding,
+      segment_attention_bias=segment_attention_bias,
+      state=state,
     )
 
     attention_kwargs.update(common_attention_kwargs)
@@ -341,22 +338,22 @@ class TransformerXL(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      vocab_size,
-      num_layers,
-      hidden_size,
-      num_attention_heads,
-      head_size,
-      inner_size,
-      dropout_rate,
-      attention_dropout_rate,
-      initializer,
-      two_stream=False,
-      tie_attention_biases=True,
-      memory_length=None,
-      reuse_length=None,
-      inner_activation="relu",
-      **kwargs
+    self,
+    vocab_size,
+    num_layers,
+    hidden_size,
+    num_attention_heads,
+    head_size,
+    inner_size,
+    dropout_rate,
+    attention_dropout_rate,
+    initializer,
+    two_stream=False,
+    tie_attention_biases=True,
+    memory_length=None,
+    reuse_length=None,
+    inner_activation="relu",
+    **kwargs,
   ):
     """Initializes TransformerXL."""
     super().__init__(**kwargs)
@@ -383,76 +380,76 @@ class TransformerXL(tf.keras.layers.Layer):
       attention_bias_shape = [self._num_layers, self._num_attention_heads, self._head_size]
 
     self.content_attention_bias = self.add_weight(
-        "content_attention_bias",
-        shape=attention_bias_shape,
-        dtype=tf.float32,
-        initializer=tf_utils.clone_initializer(self._initializer)
+      "content_attention_bias",
+      shape=attention_bias_shape,
+      dtype=tf.float32,
+      initializer=tf_utils.clone_initializer(self._initializer),
     )
     self.positional_attention_bias = self.add_weight(
-        "positional_attention_bias",
-        shape=attention_bias_shape,
-        dtype=tf.float32,
-        initializer=tf_utils.clone_initializer(self._initializer)
+      "positional_attention_bias",
+      shape=attention_bias_shape,
+      dtype=tf.float32,
+      initializer=tf_utils.clone_initializer(self._initializer),
     )
     self.segment_attention_bias = self.add_weight(
-        "segment_attention_bias",
-        shape=attention_bias_shape,
-        dtype=tf.float32,
-        initializer=tf_utils.clone_initializer(self._initializer)
+      "segment_attention_bias",
+      shape=attention_bias_shape,
+      dtype=tf.float32,
+      initializer=tf_utils.clone_initializer(self._initializer),
     )
 
     self.transformer_xl_layers = []
     for i in range(self._num_layers):
       self.transformer_xl_layers.append(
-          TransformerXLBlock(
-              vocab_size=self._vocab_size,
-              hidden_size=self._head_size * self._num_attention_heads,
-              num_attention_heads=self._num_attention_heads,
-              head_size=self._head_size,
-              inner_size=self._inner_size,
-              dropout_rate=self._dropout_rate,
-              attention_dropout_rate=self._attention_dropout_rate,
-              norm_epsilon=1e-12,
-              inner_activation=self._inner_activation,
-              two_stream=self._two_stream,
-              kernel_initializer="variance_scaling",
-              name="layer_%d" % i
-          )
+        TransformerXLBlock(
+          vocab_size=self._vocab_size,
+          hidden_size=self._head_size * self._num_attention_heads,
+          num_attention_heads=self._num_attention_heads,
+          head_size=self._head_size,
+          inner_size=self._inner_size,
+          dropout_rate=self._dropout_rate,
+          attention_dropout_rate=self._attention_dropout_rate,
+          norm_epsilon=1e-12,
+          inner_activation=self._inner_activation,
+          two_stream=self._two_stream,
+          kernel_initializer="variance_scaling",
+          name="layer_%d" % i,
+        )
       )
 
     self.output_dropout = tf.keras.layers.Dropout(rate=self._dropout_rate)
 
   def get_config(self):
     config = {
-        "vocab_size": self._vocab_size,
-        "num_layers": self._num_layers,
-        "hidden_size": self._hidden_size,
-        "num_attention_heads": self._num_attention_heads,
-        "head_size": self._head_size,
-        "inner_size": self._inner_size,
-        "dropout_rate": self._dropout_rate,
-        "attention_dropout_rate": self._attention_dropout_rate,
-        "initializer": self._initializer,
-        "two_stream": self._two_stream,
-        "tie_attention_biases": self._tie_attention_biases,
-        "memory_length": self._memory_length,
-        "reuse_length": self._reuse_length,
-        "inner_activation": self._inner_activation,
+      "vocab_size": self._vocab_size,
+      "num_layers": self._num_layers,
+      "hidden_size": self._hidden_size,
+      "num_attention_heads": self._num_attention_heads,
+      "head_size": self._head_size,
+      "inner_size": self._inner_size,
+      "dropout_rate": self._dropout_rate,
+      "attention_dropout_rate": self._attention_dropout_rate,
+      "initializer": self._initializer,
+      "two_stream": self._two_stream,
+      "tie_attention_biases": self._tie_attention_biases,
+      "memory_length": self._memory_length,
+      "reuse_length": self._reuse_length,
+      "inner_activation": self._inner_activation,
     }
     base_config = super().get_config()
     return dict(list(base_config.items()) + list(config.items()))
 
   def call(
-      self,
-      content_stream,
-      relative_position_encoding,
-      segment_matrix=None,
-      segment_embedding=None,
-      state=None,
-      content_attention_mask=None,
-      query_stream=None,
-      query_attention_mask=None,
-      target_mapping=None
+    self,
+    content_stream,
+    relative_position_encoding,
+    segment_matrix=None,
+    segment_embedding=None,
+    state=None,
+    content_attention_mask=None,
+    query_stream=None,
+    query_attention_mask=None,
+    target_mapping=None,
   ):
     """Implements call() for the layer.
 
@@ -500,30 +497,30 @@ class TransformerXL(tf.keras.layers.Layer):
         segment_encoding = None
       else:
         segment_attention_bias = (
-            self.segment_attention_bias if self._tie_attention_biases else self.segment_attention_bias[i]
+          self.segment_attention_bias if self._tie_attention_biases else self.segment_attention_bias[i]
         )
         segment_encoding = segment_embedding[i]
 
       content_attention_bias = (
-          self.content_attention_bias if self._tie_attention_biases else self.content_attention_bias[i]
+        self.content_attention_bias if self._tie_attention_biases else self.content_attention_bias[i]
       )
       positional_attention_bias = (
-          self.positional_attention_bias if self._tie_attention_biases else self.positional_attention_bias[i]
+        self.positional_attention_bias if self._tie_attention_biases else self.positional_attention_bias[i]
       )
       transformer_xl_layer = self.transformer_xl_layers[i]
       transformer_xl_output = transformer_xl_layer(
-          content_stream=content_stream,
-          content_attention_bias=content_attention_bias,
-          positional_attention_bias=positional_attention_bias,
-          relative_position_encoding=relative_position_encoding,
-          segment_matrix=segment_matrix,
-          segment_encoding=segment_encoding,
-          segment_attention_bias=segment_attention_bias,
-          state=state[i],
-          content_attention_mask=content_attention_mask,
-          query_attention_mask=query_attention_mask,
-          query_stream=query_stream,
-          target_mapping=target_mapping
+        content_stream=content_stream,
+        content_attention_bias=content_attention_bias,
+        positional_attention_bias=positional_attention_bias,
+        relative_position_encoding=relative_position_encoding,
+        segment_matrix=segment_matrix,
+        segment_encoding=segment_encoding,
+        segment_attention_bias=segment_attention_bias,
+        state=state[i],
+        content_attention_mask=content_attention_mask,
+        query_attention_mask=query_attention_mask,
+        query_stream=query_stream,
+        target_mapping=target_mapping,
       )
       content_stream = transformer_xl_output["content_attention"]
       if self._two_stream:

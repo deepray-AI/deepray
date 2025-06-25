@@ -3,7 +3,6 @@ import numpy as np
 
 
 class BaseAttention(tf.keras.layers.Layer):
-
   def __init__(self, **kwargs):
     super().__init__()
     self.mha = tf.keras.layers.MultiHeadAttention(**kwargs)
@@ -26,7 +25,6 @@ def positional_encoding(length, depth):
 
 
 class PositionalEmbedding(tf.keras.layers.Layer):
-
   def __init__(self, vocab_size, d_model):
     super().__init__()
     self.d_model = d_model
@@ -46,7 +44,6 @@ class PositionalEmbedding(tf.keras.layers.Layer):
 
 
 class CrossAttention(BaseAttention):
-
   def call(self, x, context):
     attn_output, attn_scores = self.mha(query=x, key=context, value=context, return_attention_scores=True)
 
@@ -60,7 +57,6 @@ class CrossAttention(BaseAttention):
 
 
 class CausalSelfAttention(BaseAttention):
-
   def call(self, x):
     attn_output = self.mha(query=x, value=x, key=x, use_causal_mask=True)
     x = self.add([x, attn_output])
@@ -69,16 +65,13 @@ class CausalSelfAttention(BaseAttention):
 
 
 class FeedForward(tf.keras.layers.Layer):
-
   def __init__(self, d_model, dff, dropout_rate=0.1):
     super().__init__()
-    self.seq = tf.keras.Sequential(
-        [
-            tf.keras.layers.Dense(dff, activation='relu'),
-            tf.keras.layers.Dense(d_model),
-            tf.keras.layers.Dropout(dropout_rate)
-        ]
-    )
+    self.seq = tf.keras.Sequential([
+      tf.keras.layers.Dense(dff, activation="relu"),
+      tf.keras.layers.Dense(d_model),
+      tf.keras.layers.Dropout(dropout_rate),
+    ])
     self.add = tf.keras.layers.Add()
     self.layer_norm = tf.keras.layers.LayerNormalization()
 
@@ -89,7 +82,6 @@ class FeedForward(tf.keras.layers.Layer):
 
 
 class GlobalSelfAttention(BaseAttention):
-
   def call(self, x):
     attn_output = self.mha(query=x, value=x, key=x)
     x = self.add([x, attn_output])
@@ -98,7 +90,6 @@ class GlobalSelfAttention(BaseAttention):
 
 
 class EncoderLayer(tf.keras.layers.Layer):
-
   def __init__(self, *, d_model, num_heads, dff, dropout_rate=0.1):
     super().__init__()
 
@@ -113,7 +104,6 @@ class EncoderLayer(tf.keras.layers.Layer):
 
 
 class Encoder(tf.keras.layers.Layer):
-
   def __init__(self, *, num_layers, d_model, num_heads, dff, vocab_size, dropout_rate=0.1):
     super().__init__()
 
@@ -123,8 +113,7 @@ class Encoder(tf.keras.layers.Layer):
     self.pos_embedding = PositionalEmbedding(vocab_size=vocab_size, d_model=d_model)
 
     self.enc_layers = [
-        EncoderLayer(d_model=d_model, num_heads=num_heads, dff=dff, dropout_rate=dropout_rate)
-        for _ in range(num_layers)
+      EncoderLayer(d_model=d_model, num_heads=num_heads, dff=dff, dropout_rate=dropout_rate) for _ in range(num_layers)
     ]
     self.dropout = tf.keras.layers.Dropout(dropout_rate)
 
@@ -142,7 +131,6 @@ class Encoder(tf.keras.layers.Layer):
 
 
 class DecoderLayer(tf.keras.layers.Layer):
-
   def __init__(self, *, d_model, num_heads, dff, dropout_rate=0.1):
     super(DecoderLayer, self).__init__()
 
@@ -164,7 +152,6 @@ class DecoderLayer(tf.keras.layers.Layer):
 
 
 class Decoder(tf.keras.layers.Layer):
-
   def __init__(self, *, num_layers, d_model, num_heads, dff, vocab_size, dropout_rate=0.1):
     super(Decoder, self).__init__()
 
@@ -174,8 +161,7 @@ class Decoder(tf.keras.layers.Layer):
     self.pos_embedding = PositionalEmbedding(vocab_size=vocab_size, d_model=d_model)
     self.dropout = tf.keras.layers.Dropout(dropout_rate)
     self.dec_layers = [
-        DecoderLayer(d_model=d_model, num_heads=num_heads, dff=dff, dropout_rate=dropout_rate)
-        for _ in range(num_layers)
+      DecoderLayer(d_model=d_model, num_heads=num_heads, dff=dff, dropout_rate=dropout_rate) for _ in range(num_layers)
     ]
 
     self.last_attn_scores = None
@@ -196,25 +182,24 @@ class Decoder(tf.keras.layers.Layer):
 
 
 class Transformer(tf.keras.Model):
-
   def __init__(self, *, num_layers, d_model, num_heads, dff, input_vocab_size, target_vocab_size, dropout_rate=0.1):
     super().__init__()
     self.encoder = Encoder(
-        num_layers=num_layers,
-        d_model=d_model,
-        num_heads=num_heads,
-        dff=dff,
-        vocab_size=input_vocab_size,
-        dropout_rate=dropout_rate
+      num_layers=num_layers,
+      d_model=d_model,
+      num_heads=num_heads,
+      dff=dff,
+      vocab_size=input_vocab_size,
+      dropout_rate=dropout_rate,
     )
 
     self.decoder = Decoder(
-        num_layers=num_layers,
-        d_model=d_model,
-        num_heads=num_heads,
-        dff=dff,
-        vocab_size=target_vocab_size,
-        dropout_rate=dropout_rate
+      num_layers=num_layers,
+      d_model=d_model,
+      num_heads=num_heads,
+      dff=dff,
+      vocab_size=target_vocab_size,
+      dropout_rate=dropout_rate,
     )
 
     self.final_layer = tf.keras.layers.Dense(target_vocab_size)

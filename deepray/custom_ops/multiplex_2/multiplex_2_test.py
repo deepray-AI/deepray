@@ -19,13 +19,13 @@ import tensorflow as tf
 
 from deepray.custom_ops.multiplex_2 import multiplex_2_op
 from tensorflow.python.framework import errors_impl
+
 # This pylint disable is only needed for internal google users
 from tensorflow.python.framework import test_util  # pylint: disable=g-direct-tensorflow-import
 
 
 @test_util.with_eager_op_as_function
 class MultiplexOpRank1Test(tf.test.TestCase):
-
   @test_util.run_in_graph_and_eager_modes
   def test_multiplex_int(self):
     a = tf.constant([1, 2, 3, 4, 5], dtype=tf.int64)
@@ -52,15 +52,15 @@ class MultiplexOpRank1Test(tf.test.TestCase):
     b = tf.constant([10, 20, 30, 40, 50], dtype=tf.int64)
     cond = tf.constant([True, False, True, False, True], dtype=bool)
     with self.assertRaisesRegex(
-        (errors_impl.InvalidArgumentError, TypeError),
-        # Eager mode raises InvalidArgumentError with the following message
-        r'(cannot compute Examples>MultiplexDense as input #2\(zero-based\) '
-        r'was expected to be a float tensor but is a int64 tensor '
-        r'\[Op:Examples>MultiplexDense\]'
-        r')|('
-        # Graph mode raises TypeError with the following message
-        r"Input 'b' of 'Examples>MultiplexDense' Op has type int64 that "
-        r"does not match type float32 of argument 'a'.)"
+      (errors_impl.InvalidArgumentError, TypeError),
+      # Eager mode raises InvalidArgumentError with the following message
+      r"(cannot compute Examples>MultiplexDense as input #2\(zero-based\) "
+      r"was expected to be a float tensor but is a int64 tensor "
+      r"\[Op:Examples>MultiplexDense\]"
+      r")|("
+      # Graph mode raises TypeError with the following message
+      r"Input 'b' of 'Examples>MultiplexDense' Op has type int64 that "
+      r"does not match type float32 of argument 'a'.)",
     ):
       self.evaluate(multiplex_2_op.multiplex(cond, a, b))
 
@@ -70,15 +70,15 @@ class MultiplexOpRank1Test(tf.test.TestCase):
     b = tf.constant([10, 20], dtype=tf.int64)  # shorter than a
     cond = tf.constant([True, False, True, False, True], dtype=bool)
     with self.assertRaisesRegex(
-        (errors_impl.InvalidArgumentError, ValueError),
-        # Eager mode raises InvalidArgumentError with the following message
-        r'(?s)(a and b must have the same shape. '
-        r'a shape: \[5\] b shape: \[2\].* '
-        r'\[Op:Examples>MultiplexDense\]'
-        r')|('
-        # Graph mode raises ValueError with the following message
-        r'Dimension 0 in both shapes must be equal, but are 5 and 2\. '
-        r'Shapes are \[5\] and \[2\]\.)'
+      (errors_impl.InvalidArgumentError, ValueError),
+      # Eager mode raises InvalidArgumentError with the following message
+      r"(?s)(a and b must have the same shape. "
+      r"a shape: \[5\] b shape: \[2\].* "
+      r"\[Op:Examples>MultiplexDense\]"
+      r")|("
+      # Graph mode raises ValueError with the following message
+      r"Dimension 0 in both shapes must be equal, but are 5 and 2\. "
+      r"Shapes are \[5\] and \[2\]\.)",
     ):
       self.evaluate(multiplex_2_op.multiplex(cond, a, b))
 
@@ -98,17 +98,17 @@ class MultiplexOpRank1Test(tf.test.TestCase):
     b = tf.constant([[10, 20], [30, 40], [50, 60]], dtype=tf.int64)  # shape (3,2)
     cond = tf.constant([[True, False, True], [False, True, False]], dtype=bool)
     with self.assertRaisesRegex(
-        (errors_impl.InvalidArgumentError, ValueError),
-        # Eager mode raises InvalidArgumentError with the following message
-        r'(a and b must have the same shape.'
-        r' a shape: \[2,3\] b shape: \[3,2\]'
-        r')|('
-        # Graph mode raises ValueError with the following message
-        r'Dimension 0 in both shapes must be equal, '
-        r'but are 2 and 3\. Shapes are \[2,3\] and \[3,2\])\.'
+      (errors_impl.InvalidArgumentError, ValueError),
+      # Eager mode raises InvalidArgumentError with the following message
+      r"(a and b must have the same shape."
+      r" a shape: \[2,3\] b shape: \[3,2\]"
+      r")|("
+      # Graph mode raises ValueError with the following message
+      r"Dimension 0 in both shapes must be equal, "
+      r"but are 2 and 3\. Shapes are \[2,3\] and \[3,2\])\.",
     ):
       self.evaluate(multiplex_2_op.multiplex(cond, a, b))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

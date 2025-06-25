@@ -43,7 +43,7 @@ class _RankingMetric(tf.keras.metrics.Mean):
   def get_config(self):
     config = super(_RankingMetric, self).get_config()
     config.update({
-        "ragged": self._ragged,
+      "ragged": self._ragged,
     })
     return config
 
@@ -106,6 +106,6 @@ class MRRMetric(_RankingMetric):
   def get_config(self):
     config = super(MRRMetric, self).get_config()
     config.update({
-        "topn": self._topn,
+      "topn": self._topn,
     })
     return config

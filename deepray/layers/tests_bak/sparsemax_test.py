@@ -55,8 +55,8 @@ def test_sparsemax_layer_against_numpy(dtype):
   z = random.uniform(low=-3, high=3, size=(test_obs, 10)).astype(dtype)
 
   test_utils.layer_test(
-      Sparsemax,
-      kwargs={"dtype": dtype},
-      input_data=z,
-      expected_output=_np_sparsemax(z).astype(dtype),
+    Sparsemax,
+    kwargs={"dtype": dtype},
+    input_data=z,
+    expected_output=_np_sparsemax(z).astype(dtype),
   )

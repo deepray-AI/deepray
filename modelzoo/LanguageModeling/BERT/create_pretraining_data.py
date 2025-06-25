@@ -28,63 +28,51 @@ import tokenization
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_string("input_file", None,
-                    "Input raw text file (or comma-separated list of files).")
+flags.DEFINE_string("input_file", None, "Input raw text file (or comma-separated list of files).")
 
-flags.DEFINE_string(
-    "output_file", None,
-    "Output TF example file (or comma-separated list of files).")
+flags.DEFINE_string("output_file", None, "Output TF example file (or comma-separated list of files).")
 
-flags.DEFINE_string("vocab_file", None,
-                    "The vocabulary file that the BERT model was trained on.")
+flags.DEFINE_string("vocab_file", None, "The vocabulary file that the BERT model was trained on.")
 
 flags.DEFINE_bool(
-    "do_lower_case", True,
-    "Whether to lower case the input text. Should be True for uncased "
-    "models and False for cased models.")
+  "do_lower_case",
+  True,
+  "Whether to lower case the input text. Should be True for uncased models and False for cased models.",
+)
 
-flags.DEFINE_bool(
-    "do_whole_word_mask", False,
-    "Whether to use whole word masking rather than per-WordPiece masking.")
+flags.DEFINE_bool("do_whole_word_mask", False, "Whether to use whole word masking rather than per-WordPiece masking.")
 
 flags.DEFINE_integer(
-    "max_ngram_size", None,
-    "Mask contiguous whole words (n-grams) of up to `max_ngram_size` using a "
-    "weighting scheme to favor shorter n-grams. "
-    "Note: `--do_whole_word_mask=True` must also be set when n-gram masking.")
+  "max_ngram_size",
+  None,
+  "Mask contiguous whole words (n-grams) of up to `max_ngram_size` using a "
+  "weighting scheme to favor shorter n-grams. "
+  "Note: `--do_whole_word_mask=True` must also be set when n-gram masking.",
+)
 
-flags.DEFINE_bool(
-    "gzip_compress", False,
-    "Whether to use `GZIP` compress option to get compressed TFRecord files.")
+flags.DEFINE_bool("gzip_compress", False, "Whether to use `GZIP` compress option to get compressed TFRecord files.")
 
-flags.DEFINE_bool(
-    "use_v2_feature_names", False,
-    "Whether to use the feature names consistent with the models.")
+flags.DEFINE_bool("use_v2_feature_names", False, "Whether to use the feature names consistent with the models.")
 
 flags.DEFINE_integer("max_seq_length", 128, "Maximum sequence length.")
 
-flags.DEFINE_integer("max_predictions_per_seq", 20,
-                     "Maximum number of masked LM predictions per sequence.")
+flags.DEFINE_integer("max_predictions_per_seq", 20, "Maximum number of masked LM predictions per sequence.")
 
 flags.DEFINE_integer("random_seed", 12345, "Random seed for data generation.")
 
-flags.DEFINE_integer(
-    "dupe_factor", 10,
-    "Number of times to duplicate the input data (with different masks).")
+flags.DEFINE_integer("dupe_factor", 10, "Number of times to duplicate the input data (with different masks).")
 
 flags.DEFINE_float("masked_lm_prob", 0.15, "Masked LM probability.")
 
 flags.DEFINE_float(
-    "short_seq_prob", 0.1,
-    "Probability of creating sequences which are shorter than the "
-    "maximum length.")
+  "short_seq_prob", 0.1, "Probability of creating sequences which are shorter than the maximum length."
+)
 
 
 class TrainingInstance(object):
   """A single training instance (sentence pair)."""
 
-  def __init__(self, tokens, segment_ids, masked_lm_positions, masked_lm_labels,
-               is_random_next):
+  def __init__(self, tokens, segment_ids, masked_lm_positions, masked_lm_labels, is_random_next):
     self.tokens = tokens
     self.segment_ids = segment_ids
     self.is_random_next = is_random_next
@@ -93,14 +81,11 @@ class TrainingInstance(object):
 
   def __str__(self):
     s = ""
-    s += "tokens: %s\n" % (" ".join(
-        [tokenization.printable_text(x) for x in self.tokens]))
+    s += "tokens: %s\n" % (" ".join([tokenization.printable_text(x) for x in self.tokens]))
     s += "segment_ids: %s\n" % (" ".join([str(x) for x in self.segment_ids]))
     s += "is_random_next: %s\n" % self.is_random_next
-    s += "masked_lm_positions: %s\n" % (" ".join(
-        [str(x) for x in self.masked_lm_positions]))
-    s += "masked_lm_labels: %s\n" % (" ".join(
-        [tokenization.printable_text(x) for x in self.masked_lm_labels]))
+    s += "masked_lm_positions: %s\n" % (" ".join([str(x) for x in self.masked_lm_positions]))
+    s += "masked_lm_labels: %s\n" % (" ".join([tokenization.printable_text(x) for x in self.masked_lm_labels]))
     s += "\n"
     return s
 
@@ -108,20 +93,18 @@ class TrainingInstance(object):
     return self.__str__()
 
 
-def write_instance_to_example_files(instances, tokenizer, max_seq_length,
-                                    max_predictions_per_seq, output_files,
-                                    gzip_compress, use_v2_feature_names):
+def write_instance_to_example_files(
+  instances, tokenizer, max_seq_length, max_predictions_per_seq, output_files, gzip_compress, use_v2_feature_names
+):
   """Creates TF example files from `TrainingInstance`s."""
   writers = []
   for output_file in output_files:
-    writers.append(
-        tf.io.TFRecordWriter(
-            output_file, options="GZIP" if gzip_compress else ""))
+    writers.append(tf.io.TFRecordWriter(output_file, options="GZIP" if gzip_compress else ""))
 
   writer_index = 0
 
   total_written = 0
-  for (inst_index, instance) in enumerate(instances):
+  for inst_index, instance in enumerate(instances):
     input_ids = tokenizer.convert_tokens_to_ids(instance.tokens)
     input_mask = [1] * len(input_ids)
     segment_ids = list(instance.segment_ids)
@@ -170,8 +153,7 @@ def write_instance_to_example_files(instances, tokenizer, max_seq_length,
 
     if inst_index < 20:
       logging.info("*** Example ***")
-      logging.info("tokens: %s", " ".join(
-          [tokenization.printable_text(x) for x in instance.tokens]))
+      logging.info("tokens: %s", " ".join([tokenization.printable_text(x) for x in instance.tokens]))
 
       for feature_name in features.keys():
         feature = features[feature_name]
@@ -198,16 +180,18 @@ def create_float_feature(values):
   return feature
 
 
-def create_training_instances(input_files,
-                              tokenizer,
-                              max_seq_length,
-                              dupe_factor,
-                              short_seq_prob,
-                              masked_lm_prob,
-                              max_predictions_per_seq,
-                              rng,
-                              do_whole_word_mask=False,
-                              max_ngram_size=None):
+def create_training_instances(
+  input_files,
+  tokenizer,
+  max_seq_length,
+  dupe_factor,
+  short_seq_prob,
+  masked_lm_prob,
+  max_predictions_per_seq,
+  rng,
+  do_whole_word_mask=False,
+  max_ngram_size=None,
+):
   """Create `TrainingInstance`s from raw text."""
   all_documents = [[]]
 
@@ -241,20 +225,36 @@ def create_training_instances(input_files,
   for _ in range(dupe_factor):
     for document_index in range(len(all_documents)):
       instances.extend(
-          create_instances_from_document(
-              all_documents, document_index, max_seq_length, short_seq_prob,
-              masked_lm_prob, max_predictions_per_seq, vocab_words, rng,
-              do_whole_word_mask, max_ngram_size))
+        create_instances_from_document(
+          all_documents,
+          document_index,
+          max_seq_length,
+          short_seq_prob,
+          masked_lm_prob,
+          max_predictions_per_seq,
+          vocab_words,
+          rng,
+          do_whole_word_mask,
+          max_ngram_size,
+        )
+      )
 
   rng.shuffle(instances)
   return instances
 
 
 def create_instances_from_document(
-    all_documents, document_index, max_seq_length, short_seq_prob,
-    masked_lm_prob, max_predictions_per_seq, vocab_words, rng,
-    do_whole_word_mask=False,
-    max_ngram_size=None):
+  all_documents,
+  document_index,
+  max_seq_length,
+  short_seq_prob,
+  masked_lm_prob,
+  max_predictions_per_seq,
+  vocab_words,
+  rng,
+  do_whole_word_mask=False,
+  max_ngram_size=None,
+):
   """Creates `TrainingInstance`s for a single document."""
   document = all_documents[document_index]
 
@@ -350,16 +350,16 @@ def create_instances_from_document(
         tokens.append("[SEP]")
         segment_ids.append(1)
 
-        (tokens, masked_lm_positions,
-         masked_lm_labels) = create_masked_lm_predictions(
-             tokens, masked_lm_prob, max_predictions_per_seq, vocab_words, rng,
-             do_whole_word_mask, max_ngram_size)
+        (tokens, masked_lm_positions, masked_lm_labels) = create_masked_lm_predictions(
+          tokens, masked_lm_prob, max_predictions_per_seq, vocab_words, rng, do_whole_word_mask, max_ngram_size
+        )
         instance = TrainingInstance(
-            tokens=tokens,
-            segment_ids=segment_ids,
-            is_random_next=is_random_next,
-            masked_lm_positions=masked_lm_positions,
-            masked_lm_labels=masked_lm_labels)
+          tokens=tokens,
+          segment_ids=segment_ids,
+          is_random_next=is_random_next,
+          masked_lm_positions=masked_lm_positions,
+          masked_lm_labels=masked_lm_labels,
+        )
         instances.append(instance)
       current_chunk = []
       current_length = 0
@@ -368,8 +368,7 @@ def create_instances_from_document(
   return instances
 
 
-MaskedLmInstance = collections.namedtuple("MaskedLmInstance",
-                                          ["index", "label"])
+MaskedLmInstance = collections.namedtuple("MaskedLmInstance", ["index", "label"])
 
 # A _Gram is a [half-open) interval of token indices which form a word.
 # E.g.,
@@ -464,8 +463,8 @@ def _masking_ngrams(grams, max_ngram_size, max_masked_tokens, rng):
       raise ValueError("overlapping grams: {}".format(grams))
 
   # Build map from n-gram length to list of n-grams.
-  ngrams = {i: [] for i in range(1, max_ngram_size+1)}
-  for gram_size in range(1, max_ngram_size+1):
+  ngrams = {i: [] for i in range(1, max_ngram_size + 1)}
+  for gram_size in range(1, max_ngram_size + 1):
     for g in _window(grams, gram_size):
       if _contiguous(g):
         # Add an n-gram which spans these one-grams.
@@ -477,8 +476,7 @@ def _masking_ngrams(grams, max_ngram_size, max_masked_tokens, rng):
 
   # Create the weighting for n-gram length selection.
   # Stored cummulatively for `random.choices` below.
-  cummulative_weights = list(
-      itertools.accumulate([1./n for n in range(1, max_ngram_size+1)]))
+  cummulative_weights = list(itertools.accumulate([1.0 / n for n in range(1, max_ngram_size + 1)]))
 
   output_ngrams = []
   # Keep a bitmask of which tokens have been masked.
@@ -487,11 +485,9 @@ def _masking_ngrams(grams, max_ngram_size, max_masked_tokens, rng):
   # n-grams of any length.
   # Each code path should ensure one or more elements from `ngrams` are removed
   # to guarentee this loop terminates.
-  while (sum(masked_tokens) < max_masked_tokens and
-         sum(len(s) for s in ngrams.values())):
+  while sum(masked_tokens) < max_masked_tokens and sum(len(s) for s in ngrams.values()):
     # Pick an n-gram size based on our weights.
-    sz = random.choices(range(1, max_ngram_size+1),
-                        cum_weights=cummulative_weights)[0]
+    sz = random.choices(range(1, max_ngram_size + 1), cum_weights=cummulative_weights)[0]
 
     # Ensure this size doesn't result in too many masked tokens.
     # E.g., a two-gram contains _at least_ two tokens.
@@ -507,18 +503,18 @@ def _masking_ngrams(grams, max_ngram_size, max_masked_tokens, rng):
 
     # Choose a random n-gram of the given size.
     gram = ngrams[sz].pop()
-    num_gram_tokens = gram.end-gram.begin
+    num_gram_tokens = gram.end - gram.begin
 
     # Check if this would add too many tokens.
     if num_gram_tokens + sum(masked_tokens) > max_masked_tokens:
       continue
 
     # Check if any of the tokens in this gram have already been masked.
-    if sum(masked_tokens[gram.begin:gram.end]):
+    if sum(masked_tokens[gram.begin : gram.end]):
       continue
 
     # Found a usable n-gram!  Mark its tokens as masked and add it to return.
-    masked_tokens[gram.begin:gram.end] = [True] * (gram.end-gram.begin)
+    masked_tokens[gram.begin : gram.end] = [True] * (gram.end - gram.begin)
     output_ngrams.append(gram)
   return output_ngrams
 
@@ -550,10 +546,9 @@ def _wordpieces_to_grams(tokens):
   return grams
 
 
-def create_masked_lm_predictions(tokens, masked_lm_prob,
-                                 max_predictions_per_seq, vocab_words, rng,
-                                 do_whole_word_mask,
-                                 max_ngram_size=None):
+def create_masked_lm_predictions(
+  tokens, masked_lm_prob, max_predictions_per_seq, vocab_words, rng, do_whole_word_mask, max_ngram_size=None
+):
   """Creates the predictions for the masked LM objective."""
   if do_whole_word_mask:
     grams = _wordpieces_to_grams(tokens)
@@ -561,16 +556,13 @@ def create_masked_lm_predictions(tokens, masked_lm_prob,
     # Here we consider each token to be a word to allow for sub-word masking.
     if max_ngram_size:
       raise ValueError("cannot use ngram masking without whole word masking")
-    grams = [_Gram(i, i+1) for i in range(0, len(tokens))
-             if tokens[i] not in ["[CLS]", "[SEP]"]]
+    grams = [_Gram(i, i + 1) for i in range(0, len(tokens)) if tokens[i] not in ["[CLS]", "[SEP]"]]
 
-  num_to_predict = min(max_predictions_per_seq,
-                       max(1, int(round(len(tokens) * masked_lm_prob))))
+  num_to_predict = min(max_predictions_per_seq, max(1, int(round(len(tokens) * masked_lm_prob))))
   # Generate masks.  If `max_ngram_size` in [0, None] it means we're doing
   # whole word masking or token level masking.  Both of these can be treated
   # as the `max_ngram_size=1` case.
-  masked_grams = _masking_ngrams(grams, max_ngram_size or 1,
-                                 num_to_predict, rng)
+  masked_grams = _masking_ngrams(grams, max_ngram_size or 1, num_to_predict, rng)
   masked_lms = []
   output_tokens = list(tokens)
   for gram in masked_grams:
@@ -620,8 +612,7 @@ def truncate_seq_pair(tokens_a, tokens_b, max_num_tokens, rng):
 
 
 def main(_):
-  tokenizer = tokenization.FullTokenizer(
-      vocab_file=FLAGS.vocab_file, do_lower_case=FLAGS.do_lower_case)
+  tokenizer = tokenization.FullTokenizer(vocab_file=FLAGS.vocab_file, do_lower_case=FLAGS.do_lower_case)
 
   input_files = []
   for input_pattern in FLAGS.input_file.split(","):
@@ -633,19 +624,32 @@ def main(_):
 
   rng = random.Random(FLAGS.random_seed)
   instances = create_training_instances(
-      input_files, tokenizer, FLAGS.max_seq_length, FLAGS.dupe_factor,
-      FLAGS.short_seq_prob, FLAGS.masked_lm_prob, FLAGS.max_predictions_per_seq,
-      rng, FLAGS.do_whole_word_mask, FLAGS.max_ngram_size)
+    input_files,
+    tokenizer,
+    FLAGS.max_seq_length,
+    FLAGS.dupe_factor,
+    FLAGS.short_seq_prob,
+    FLAGS.masked_lm_prob,
+    FLAGS.max_predictions_per_seq,
+    rng,
+    FLAGS.do_whole_word_mask,
+    FLAGS.max_ngram_size,
+  )
 
   output_files = FLAGS.output_file.split(",")
   logging.info("*** Writing to output files ***")
   for output_file in output_files:
     logging.info("  %s", output_file)
 
-  write_instance_to_example_files(instances, tokenizer, FLAGS.max_seq_length,
-                                  FLAGS.max_predictions_per_seq, output_files,
-                                  FLAGS.gzip_compress,
-                                  FLAGS.use_v2_feature_names)
+  write_instance_to_example_files(
+    instances,
+    tokenizer,
+    FLAGS.max_seq_length,
+    FLAGS.max_predictions_per_seq,
+    output_files,
+    FLAGS.gzip_compress,
+    FLAGS.use_v2_feature_names,
+  )
 
 
 if __name__ == "__main__":

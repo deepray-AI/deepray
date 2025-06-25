@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -26,12 +27,12 @@ from deepray.layers import tf_utils
 class SelfAttentionMask(tf.keras.layers.Layer):
   """Create 3D attention mask from a 2D tensor mask.
 
-    inputs[0]: from_tensor: 2D or 3D Tensor of shape
-      [batch_size, from_seq_length, ...].
-    inputs[1]: to_mask: int32 Tensor of shape [batch_size, to_seq_length].
+  inputs[0]: from_tensor: 2D or 3D Tensor of shape
+    [batch_size, from_seq_length, ...].
+  inputs[1]: to_mask: int32 Tensor of shape [batch_size, to_seq_length].
 
-    Returns:
-      float Tensor of shape [batch_size, from_seq_length, to_seq_length].
+  Returns:
+    float Tensor of shape [batch_size, from_seq_length, to_seq_length].
   """
 
   def call(self, inputs):

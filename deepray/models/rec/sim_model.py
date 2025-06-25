@@ -30,20 +30,19 @@ def masked_temporal_mean(sequence_batch, mask):
 
 
 class SIMModel(SequentialRecommenderModel):
-
   def __init__(self, feature_spec, mlp_hidden_dims, embedding_dim=4, k=50, dropout_rate=-1):
     super(SIMModel, self).__init__(feature_spec, embedding_dim)
     self.k = k
     self.stage_one_classifier = CTRClassificationMLP(layer_sizes=mlp_hidden_dims["stage_1"], dropout_rate=dropout_rate)
     self.stage_two_classifier = CTRClassificationMLP(layer_sizes=mlp_hidden_dims["stage_2"], dropout_rate=dropout_rate)
     self.stage_two_auxiliary_net = CTRClassificationMLP(
-        layer_sizes=mlp_hidden_dims["aux"],
-        activation_function=partial(tf.keras.layers.Activation, activation="sigmoid"),
-        dropout_rate=dropout_rate
+      layer_sizes=mlp_hidden_dims["aux"],
+      activation_function=partial(tf.keras.layers.Activation, activation="sigmoid"),
+      dropout_rate=dropout_rate,
     )
 
     self.stage_one_item_seq_interaction = DINItemSequenceInteractionBlock(
-        item_item_interaction=DotItemItemInteraction()
+      item_item_interaction=DotItemItemInteraction()
     )
     self.stage_two_item_seq_interaction = DIENItemSequenceInteractionBlock(hidden_size=embedding_dim * 6)
 
@@ -55,10 +54,10 @@ class SIMModel(SequentialRecommenderModel):
     return best_k_embeddings, top_k_mask
 
   def call(
-      self,
-      inputs,
-      compute_aux_loss=True,
-      training=False,
+    self,
+    inputs,
+    compute_aux_loss=True,
+    training=False,
   ):
     user_features = inputs["user_features"]
     target_item_features = inputs["target_item_features"]
@@ -76,9 +75,11 @@ class SIMModel(SequentialRecommenderModel):
     long_sequence_embeddings = self.embed(long_sequence_features)
     long_sequence_embeddings = long_sequence_embeddings * tf.expand_dims(long_sequence_mask, axis=-1)
 
-    stage_one_interaction_embedding, gsu_scores = self.stage_one_item_seq_interaction(
-        (target_item_embedding, long_sequence_embeddings, long_sequence_mask)
-    )
+    stage_one_interaction_embedding, gsu_scores = self.stage_one_item_seq_interaction((
+      target_item_embedding,
+      long_sequence_embeddings,
+      long_sequence_mask,
+    ))
     # combine all the stage 1 embeddings
     stage_one_embeddings = tf.concat([target_item_embedding, stage_one_interaction_embedding, user_embedding], -1)
     stage_one_logits = self.stage_one_classifier(stage_one_embeddings, training=training)
@@ -93,48 +94,52 @@ class SIMModel(SequentialRecommenderModel):
     # Take embeddings of k best items produced by GSU at Stage 1
     best_k_long_seq_embeddings, top_k_mask = self.select_top_k_items(long_sequence_embeddings, gsu_scores)
     # Run attention mechanism to produce a single representation
-    att_fea, _ = self.stage_one_item_seq_interaction((target_item_embedding, best_k_long_seq_embeddings, top_k_mask),)
+    att_fea, _ = self.stage_one_item_seq_interaction(
+      (target_item_embedding, best_k_long_seq_embeddings, top_k_mask),
+    )
     # Take a mean representation of best_k_long_seq_embeddings
     item_his_sum_emb = masked_temporal_mean(best_k_long_seq_embeddings, top_k_mask)
     # ---- DIEN part
     (
-        stage_two_interaction_embedding,
-        short_features_layer_1,
-    ) = self.stage_two_item_seq_interaction((target_item_embedding, short_sequence_embeddings, short_sequence_mask),)
+      stage_two_interaction_embedding,
+      short_features_layer_1,
+    ) = self.stage_two_item_seq_interaction(
+      (target_item_embedding, short_sequence_embeddings, short_sequence_mask),
+    )
 
     # Compute auxiliary logits for DIEN
     if compute_aux_loss:
       # Embed negative sequence features
       short_neg_sequence_embeddings = self.embed(short_neg_sequence_features)
-      short_neg_sequence_embeddings = (short_neg_sequence_embeddings * tf.expand_dims(short_sequence_mask, axis=-1))
+      short_neg_sequence_embeddings = short_neg_sequence_embeddings * tf.expand_dims(short_sequence_mask, axis=-1)
 
       aux_click_probs = compute_auxiliary_probs(
-          self.stage_two_auxiliary_net,
-          short_features_layer_1,
-          short_sequence_embeddings,
-          training=training,
+        self.stage_two_auxiliary_net,
+        short_features_layer_1,
+        short_sequence_embeddings,
+        training=training,
       )
 
       aux_noclick_probs = compute_auxiliary_probs(
-          self.stage_two_auxiliary_net,
-          short_features_layer_1,
-          short_neg_sequence_embeddings,
-          training=training,
+        self.stage_two_auxiliary_net,
+        short_features_layer_1,
+        short_neg_sequence_embeddings,
+        training=training,
       )
 
       mask_for_aux_loss = short_sequence_mask[:, 1:]
 
       dien_aux_loss = dien_auxiliary_loss_fn(
-          aux_click_probs,
-          aux_noclick_probs,
-          mask=mask_for_aux_loss,
+        aux_click_probs,
+        aux_noclick_probs,
+        mask=mask_for_aux_loss,
       )
       output_dict["auxiliary_logits"] = dien_aux_loss
 
     # combine all the stage 2 embeddings
     stage_two_embeddings = tf.concat(
-        [att_fea, item_his_sum_emb, target_item_embedding, stage_two_interaction_embedding, user_embedding],
-        -1,
+      [att_fea, item_his_sum_emb, target_item_embedding, stage_two_interaction_embedding, user_embedding],
+      -1,
     )
 
     stage_two_logits = self.stage_two_classifier(stage_two_embeddings, training=training)

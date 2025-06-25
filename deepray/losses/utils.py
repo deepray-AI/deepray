@@ -17,9 +17,9 @@ from typing import Callable, Dict, Tuple
 
 import tensorflow as tf
 
-_PADDING_LABEL = -1.
+_PADDING_LABEL = -1.0
 _PADDING_PREDICTION = -1e6
-_PADDING_WEIGHT = 0.
+_PADDING_WEIGHT = 0.0
 
 TensorLike = tf.types.experimental.TensorLike
 TransformationFunction = Callable[[TensorLike], tf.Tensor]
@@ -78,7 +78,7 @@ def gather_per_row(inputs, indices):
 def is_label_valid(labels):
   """Returns a boolean `Tensor` for label validity."""
   labels = tf.convert_to_tensor(value=labels)
-  return tf.greater_equal(labels, 0.)
+  return tf.greater_equal(labels, 0.0)
 
 
 def _get_shuffle_indices(shape, mask=None, shuffle_ties=True, seed=None):
@@ -131,7 +131,7 @@ def sort_by_scores(scores, features_list, topn=None, shuffle_ties=True, seed=Non
   Returns:
     A list of `Tensor`s as the list of sorted features by `scores`.
   """
-  with tf.compat.v1.name_scope(name='sort_by_scores'):
+  with tf.compat.v1.name_scope(name="sort_by_scores"):
     scores = tf.cast(scores, tf.float32)
     scores.get_shape().assert_has_rank(2)
     list_size = tf.shape(input=scores)[1]
@@ -174,7 +174,7 @@ def sorted_ranks(scores, shuffle_ties=True, seed=None):
   Returns:
     A 1-based int `Tensor`s as the ranks.
   """
-  with tf.compat.v1.name_scope(name='sorted_ranks'):
+  with tf.compat.v1.name_scope(name="sorted_ranks"):
     batch_size, list_size = tf.unstack(tf.shape(input=scores))
     # The current position in the list for each score.
     positions = tf.tile(tf.expand_dims(tf.range(list_size), 0), [batch_size, 1])
@@ -210,7 +210,7 @@ def organize_valid_indices(is_valid, shuffle=True, seed=None):
     [batch_size, list_size] tensor. The values in the last dimension are the
     indices for an element in the input tensor.
   """
-  with tf.compat.v1.name_scope(name='organize_valid_indices'):
+  with tf.compat.v1.name_scope(name="organize_valid_indices"):
     is_valid = tf.convert_to_tensor(value=is_valid)
     is_valid.get_shape().assert_has_rank(2)
     output_shape = tf.shape(input=is_valid)
@@ -218,13 +218,13 @@ def organize_valid_indices(is_valid, shuffle=True, seed=None):
     if shuffle:
       values = tf.random.uniform(output_shape, seed=seed)
     else:
-      values = (
-          tf.ones_like(is_valid, tf.float32) * tf.reverse(tf.cast(tf.range(output_shape[1]), dtype=tf.float32), [-1])
+      values = tf.ones_like(is_valid, tf.float32) * tf.reverse(
+        tf.cast(tf.range(output_shape[1]), dtype=tf.float32), [-1]
       )
 
     rand = tf.where(is_valid, values, tf.ones(output_shape) * -1e-6)
     # shape(indices) = [batch_size, list_size]
-    indices = tf.argsort(rand, direction='DESCENDING', stable=True)
+    indices = tf.argsort(rand, direction="DESCENDING", stable=True)
     return _to_nd_indices(indices)
 
 
@@ -240,7 +240,7 @@ def reshape_first_ndims(tensor, first_ndims, new_shape):
     A reshaped `Tensor`.
   """
   assert tensor.get_shape().ndims is None or tensor.get_shape().ndims >= first_ndims, (
-      'Tensor shape is less than {} dims.'.format(first_ndims)
+    "Tensor shape is less than {} dims.".format(first_ndims)
   )
   new_shape = tf.concat([new_shape, tf.shape(input=tensor)[first_ndims:]], 0)
   if isinstance(tensor, tf.SparseTensor):
@@ -251,7 +251,7 @@ def reshape_first_ndims(tensor, first_ndims, new_shape):
 
 def reshape_to_2d(tensor):
   """Converts the given `tensor` to a 2-D `Tensor`."""
-  with tf.compat.v1.name_scope(name='reshape_to_2d'):
+  with tf.compat.v1.name_scope(name="reshape_to_2d"):
     rank = tensor.shape.rank if tensor.shape is not None else None
     if rank is not None and rank != 2:
       if rank >= 3:
@@ -283,7 +283,7 @@ def _circular_indices(size, num_valid_entries):
     A tuple of Tensors (batch_indices, batch_indices_mask). The first has
     shape [batch_size, size] and the second has shape [batch_size, size].
   """
-  with tf.compat.v1.name_scope(name='circular_indices'):
+  with tf.compat.v1.name_scope(name="circular_indices"):
     # shape = [batch_size, size] with value [[0, 1, ...], [0, 1, ...], ...].
     batch_indices = tf.tile(tf.expand_dims(tf.range(size), 0), [tf.shape(input=num_valid_entries)[0], 1])
     num_valid_entries = tf.reshape(num_valid_entries, [-1, 1])
@@ -329,7 +329,7 @@ def padded_nd_indices(is_valid, shuffle=False, seed=None):
     list_size, 2] and it can be used in gather_nd or scatter_nd. The second has
     the shape of [batch_size, list_size] with value True for valid indices.
   """
-  with tf.compat.v1.name_scope(name='nd_indices_with_padding'):
+  with tf.compat.v1.name_scope(name="nd_indices_with_padding"):
     is_valid = tf.convert_to_tensor(value=is_valid)
     list_size = tf.shape(input=is_valid)[1]
     num_valid_entries = tf.reduce_sum(input_tensor=tf.cast(is_valid, dtype=tf.int32), axis=1)
@@ -369,7 +369,7 @@ def de_noise(counts, noise, ratio=0.9):
     not positive.
   """
   if not 0 < ratio < 1:
-    raise ValueError('ratio should be in (0, 1), but get {}'.format(ratio))
+    raise ValueError("ratio should be in (0, 1), but get {}".format(ratio))
   odds = (1 - ratio) / ratio
 
   counts = tf.cast(counts, dtype=tf.float32)
@@ -379,25 +379,26 @@ def de_noise(counts, noise, ratio=0.9):
   noise.get_shape().assert_has_rank(2)
   noise.get_shape().assert_is_compatible_with(counts.get_shape())
 
-  with tf.compat.v1.name_scope(name='de_noise'):
-    counts_nonneg = tf.debugging.assert_greater_equal(counts, 0.)
-    noise_pos = tf.debugging.assert_greater(noise, 0.)
+  with tf.compat.v1.name_scope(name="de_noise"):
+    counts_nonneg = tf.debugging.assert_greater_equal(counts, 0.0)
+    noise_pos = tf.debugging.assert_greater(noise, 0.0)
     with tf.control_dependencies([counts_nonneg, noise_pos]):
       # Normalize noise to be a simplex per row.
       noise = noise / tf.reduce_sum(noise, axis=1, keepdims=True)
-      sorted_idx = tf.argsort(counts / noise, direction='DESCENDING', stable=True)
+      sorted_idx = tf.argsort(counts / noise, direction="DESCENDING", stable=True)
       nd_indices = _to_nd_indices(sorted_idx)
       sorted_counts = tf.gather_nd(counts, nd_indices)
       sorted_noise = tf.gather_nd(noise, nd_indices)
       # Decide whether an entry will have a positive value or 0.
       is_pos = tf.cast(
-          (odds + tf.cumsum(sorted_noise, axis=1)) / tf.cumsum(sorted_counts, axis=1) > sorted_noise / sorted_counts,
-          tf.float32
+        (odds + tf.cumsum(sorted_noise, axis=1)) / tf.cumsum(sorted_counts, axis=1) > sorted_noise / sorted_counts,
+        tf.float32,
       )
       # The lambda in the paper above, which is the lagrangian multiplier for
       # the simplex constraint on the variables.
-      lagrangian_multiplier = tf.reduce_sum(sorted_counts * is_pos, axis=1, keepdims=True
-                                           ) / (1 + tf.reduce_sum(sorted_noise * is_pos, axis=1, keepdims=True) / odds)
+      lagrangian_multiplier = tf.reduce_sum(sorted_counts * is_pos, axis=1, keepdims=True) / (
+        1 + tf.reduce_sum(sorted_noise * is_pos, axis=1, keepdims=True) / odds
+      )
       res = (sorted_counts / lagrangian_multiplier - sorted_noise / odds) * is_pos
       return tf.scatter_nd(nd_indices, res, shape=tf.shape(counts))
 
@@ -418,7 +419,7 @@ def ragged_to_dense(labels, predictions, weights):
     A tuple (labels, predictions, weights, mask) of dense `tf.Tensor`s.
   """
   # TODO: Add checks to validate (ragged) shapes of input tensors.
-  mask = tf.cast(tf.ones_like(labels).to_tensor(0.), dtype=tf.bool)
+  mask = tf.cast(tf.ones_like(labels).to_tensor(0.0), dtype=tf.bool)
   labels = labels.to_tensor(_PADDING_LABEL)
   if predictions is not None:
     predictions = predictions.to_tensor(_PADDING_PREDICTION)
@@ -443,17 +444,17 @@ def parse_keys_and_weights(key: str) -> Dict[str, float]:
   """
 
   def _parse(key_with_weight: str) -> Tuple[str, float]:
-    if ':' in key_with_weight:
-      pair = key_with_weight.split(':')
+    if ":" in key_with_weight:
+      pair = key_with_weight.split(":")
     else:
       pair = [key_with_weight, 1.0]
 
     return pair[0], float(pair[1])
 
   # Remove spaces.
-  key = key.replace(' ', '')
+  key = key.replace(" ", "")
   # Single objective or multiple objectives with weights:
-  keys_to_weights = dict(_parse(loss_key_with_weight) for loss_key_with_weight in key.split(','))
+  keys_to_weights = dict(_parse(loss_key_with_weight) for loss_key_with_weight in key.split(","))
 
   return keys_to_weights
 
@@ -500,7 +501,7 @@ def inverse(rank: TensorLike) -> tf.Tensor:
   Returns:
     A `Tensor` that has each input element transformed as `x` to `1/x`.
   """
-  return tf.math.divide_no_nan(1., rank)
+  return tf.math.divide_no_nan(1.0, rank)
 
 
 @tf.keras.utils.register_keras_serializable(package="deepray.losses")
@@ -516,7 +517,7 @@ def pow_minus_1(label: TensorLike) -> tf.Tensor:
   Returns:
     A `Tensor` that has each input element transformed as `x` to `2**x - 1`.
   """
-  return tf.math.pow(2., label) - 1.
+  return tf.math.pow(2.0, label) - 1.0
 
 
 @tf.keras.utils.register_keras_serializable(package="deepray.losses")
@@ -532,7 +533,7 @@ def log2_inverse(rank: TensorLike) -> tf.Tensor:
   Returns:
     A `Tensor` that has each input element transformed as `x` to `1./log2(1+x)`.
   """
-  return tf.math.divide_no_nan(tf.math.log(2.), tf.math.log1p(rank))
+  return tf.math.divide_no_nan(tf.math.log(2.0), tf.math.log1p(rank))
 
 
 @tf.keras.utils.register_keras_serializable(package="deepray.losses")

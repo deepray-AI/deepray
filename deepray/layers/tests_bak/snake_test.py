@@ -32,11 +32,8 @@ def test_layer(dtype):
   a = np.random.randn()
   val = snake(x, a)
   test_utils.layer_test(
-      Snake,
-      kwargs={
-          "frequency_initializer": tf.constant_initializer(a),
-          "dtype": dtype
-      },
-      input_data=x,
-      expected_output=val,
+    Snake,
+    kwargs={"frequency_initializer": tf.constant_initializer(a), "dtype": dtype},
+    input_data=x,
+    expected_output=val,
   )

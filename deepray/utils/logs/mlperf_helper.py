@@ -54,9 +54,9 @@ _VALUE = r"(.*)"
 ParsedLine = namedtuple("ParsedLine", ["version", "benchmark", "timestamp", "callsite", "tag", "value"])
 
 LINE_PATTERN = re.compile(
-    "^{prefix} {benchmark} {timestamp} {callsite} {tag}(: |$){value}?$".format(
-        prefix=_PREFIX, benchmark=_BENCHMARK, timestamp=_TIMESTAMP, callsite=_CALLSITE, tag=_TAG, value=_VALUE
-    )
+  "^{prefix} {benchmark} {timestamp} {callsite} {tag}(: |$){value}?$".format(
+    prefix=_PREFIX, benchmark=_BENCHMARK, timestamp=_TIMESTAMP, callsite=_CALLSITE, tag=_TAG, value=_VALUE
+  )
 )
 
 
@@ -69,12 +69,12 @@ def parse_line(line):  # type: (str) -> typing.Optional[ParsedLine]
   call_file, call_line, tag, _, value = match.groups()[5:]
 
   return ParsedLine(
-      version=(int(major), int(minor), int(micro)),
-      benchmark=benchmark,
-      timestamp=timestamp,
-      callsite=(call_file, call_line),
-      tag=tag,
-      value=value
+    version=(int(major), int(minor), int(micro)),
+    benchmark=benchmark,
+    timestamp=timestamp,
+    callsite=(call_file, call_line),
+    tag=tag,
+    value=value,
   )
 
 
@@ -83,7 +83,7 @@ def unparse_line(parsed_line):  # type: (ParsedLine) -> str
   callsite_str = "({}:{})".format(*parsed_line.callsite)
   value_str = ": {}".format(parsed_line.value) if parsed_line.value else ""
   return ":::MLPv{} {} {} {} {} {}".format(
-      version_str, parsed_line.benchmark, parsed_line.timestamp, callsite_str, parsed_line.tag, value_str
+    version_str, parsed_line.benchmark, parsed_line.timestamp, callsite_str, parsed_line.tag, value_str
   )
 
 
@@ -95,13 +95,14 @@ def get_mlperf_log():
     def test_mlperf_log_pip_version():
       """Check that mlperf_compliance is up to date."""
       import pkg_resources
+
       version = pkg_resources.get_distribution("mlperf_compliance")
       version = tuple(int(i) for i in version.version.split("."))
       if version < _MIN_VERSION:
         logging.warning(
-            "mlperf_compliance is version {}, must be >= {}".format(
-                ".".join([str(i) for i in version]), ".".join([str(i) for i in _MIN_VERSION])
-            )
+          "mlperf_compliance is version {}, must be >= {}".format(
+            ".".join([str(i) for i in version]), ".".join([str(i) for i in _MIN_VERSION])
+          )
         )
         raise ImportError
       return mlperf_compliance.mlperf_log
@@ -122,7 +123,6 @@ class Logger(object):
   """
 
   class Tags(object):
-
     def __init__(self, mlperf_log):
       self._enabled = False
       self._mlperf_log = mlperf_log
@@ -139,8 +139,7 @@ class Logger(object):
 
   def __call__(self, enable=False):
     if enable and self._mlperf_log is None:
-      raise ImportError("MLPerf logging was requested, but mlperf_compliance "
-                        "module could not be loaded.")
+      raise ImportError("MLPerf logging was requested, but mlperf_compliance module could not be loaded.")
 
     self._enabled = enable
     self.tags._enabled = enable
@@ -164,12 +163,12 @@ class Logger(object):
     return self._enabled
 
   def ncf_print(
-      self, key, value=None, stack_offset=_STACK_OFFSET, deferred=False, extra_print=False, prefix=_NCF_PREFIX
+    self, key, value=None, stack_offset=_STACK_OFFSET, deferred=False, extra_print=False, prefix=_NCF_PREFIX
   ):
     if self._mlperf_log is None or not self.enabled:
       return
     self._mlperf_log.ncf_print(
-        key=key, value=value, stack_offset=stack_offset, deferred=deferred, extra_print=extra_print, prefix=prefix
+      key=key, value=value, stack_offset=stack_offset, deferred=deferred, extra_print=extra_print, prefix=prefix
     )
 
   def set_ncf_root(self, path):

@@ -29,7 +29,6 @@ from official.nlp.modeling.networks import bert_pretrainer
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class BertPretrainerTest(keras_parameterized.TestCase):
-
   def test_bert_trainer(self):
     """Validate that the Keras object can be created."""
     # Build a transformer network to use within the BERT trainer.
@@ -41,7 +40,7 @@ class BertPretrainerTest(keras_parameterized.TestCase):
     num_classes = 3
     num_token_predictions = 2
     bert_trainer_model = bert_pretrainer.BertPretrainer(
-        test_network, num_classes=num_classes, num_token_predictions=num_token_predictions
+      test_network, num_classes=num_classes, num_token_predictions=num_token_predictions
     )
 
     # Create a set of 2-dimensional inputs (the first dimension is implicit).
@@ -100,5 +99,5 @@ class BertPretrainerTest(keras_parameterized.TestCase):
     self.assertAllEqual(bert_trainer_model.get_config(), new_bert_trainer_model.get_config())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

@@ -9,7 +9,6 @@ from .ev_optimizer_patch import add_slot, SlotConfig
 
 
 class FtrlOptimizer(tf.keras.optimizers.legacy.Ftrl):
-
   def __init__(self, learning_rate=0.001, **kwargs):
     super().__init__(learning_rate=learning_rate, **kwargs)
     self.global_step = None
@@ -29,8 +28,9 @@ class FtrlOptimizer(tf.keras.optimizers.legacy.Ftrl):
 
     # Adjust L2 regularization strength to include beta to avoid the
     # underlying TensorFlow ops needing to include it.
-    adjusted_l2_regularization_strength = coefficients["l2_regularization_strength"
-                                                      ] + coefficients["beta"] / (2.0 * coefficients["lr_t"])
+    adjusted_l2_regularization_strength = coefficients["l2_regularization_strength"] + coefficients["beta"] / (
+      2.0 * coefficients["lr_t"]
+    )
 
     accum = self.get_slot(var, "accumulator")
     linear = self.get_slot(var, "linear")
@@ -38,58 +38,58 @@ class FtrlOptimizer(tf.keras.optimizers.legacy.Ftrl):
     if self._l2_shrinkage_regularization_strength <= 0.0:
       if isinstance(var, kv_variable_ops.EmbeddingVariable):
         return gen_kv_variable_ops.kv_resource_sparse_apply_ftrl(
-            var.handle,
-            accum.handle,
-            linear.handle,
-            grad,
-            indices,
-            coefficients["lr_t"],
-            coefficients["l1_regularization_strength"],
-            adjusted_l2_regularization_strength,
-            coefficients["learning_rate_power"],
-            use_locking=self._use_locking
+          var.handle,
+          accum.handle,
+          linear.handle,
+          grad,
+          indices,
+          coefficients["lr_t"],
+          coefficients["l1_regularization_strength"],
+          adjusted_l2_regularization_strength,
+          coefficients["learning_rate_power"],
+          use_locking=self._use_locking,
         )
       else:
         return tf.raw_ops.ResourceSparseApplyFtrl(
-            var=var.handle,
-            accum=accum.handle,
-            linear=linear.handle,
-            grad=grad,
-            indices=indices,
-            lr=coefficients["lr_t"],
-            l1=coefficients["l1_regularization_strength"],
-            l2=adjusted_l2_regularization_strength,
-            lr_power=coefficients["learning_rate_power"],
-            use_locking=self._use_locking,
+          var=var.handle,
+          accum=accum.handle,
+          linear=linear.handle,
+          grad=grad,
+          indices=indices,
+          lr=coefficients["lr_t"],
+          l1=coefficients["l1_regularization_strength"],
+          l2=adjusted_l2_regularization_strength,
+          lr_power=coefficients["learning_rate_power"],
+          use_locking=self._use_locking,
         )
     else:
       if isinstance(var, kv_variable_ops.EmbeddingVariable):
         return gen_kv_variable_ops.kv_resource_sparse_apply_ftrl_v2(
-            var.handle,
-            accum.handle,
-            linear.handle,
-            grad,
-            indices,
-            coefficients["lr_t"],
-            coefficients["l1_regularization_strength"],
-            adjusted_l2_regularization_strength,
-            coefficients["l2_shrinkage_regularization_strength"],
-            coefficients["learning_rate_power"],
-            use_locking=self._use_locking
+          var.handle,
+          accum.handle,
+          linear.handle,
+          grad,
+          indices,
+          coefficients["lr_t"],
+          coefficients["l1_regularization_strength"],
+          adjusted_l2_regularization_strength,
+          coefficients["l2_shrinkage_regularization_strength"],
+          coefficients["learning_rate_power"],
+          use_locking=self._use_locking,
         )
       else:
         return tf.raw_ops.ResourceSparseApplyFtrlV2(
-            var=var.handle,
-            accum=accum.handle,
-            linear=linear.handle,
-            grad=grad,
-            indices=indices,
-            lr=coefficients["lr_t"],
-            l1=coefficients["l1_regularization_strength"],
-            l2=adjusted_l2_regularization_strength,
-            l2_shrinkage=coefficients["l2_shrinkage_regularization_strength"],
-            lr_power=coefficients["learning_rate_power"],
-            use_locking=self._use_locking,
+          var=var.handle,
+          accum=accum.handle,
+          linear=linear.handle,
+          grad=grad,
+          indices=indices,
+          lr=coefficients["lr_t"],
+          l1=coefficients["l1_regularization_strength"],
+          l2=adjusted_l2_regularization_strength,
+          l2_shrinkage=coefficients["l2_shrinkage_regularization_strength"],
+          lr_power=coefficients["learning_rate_power"],
+          use_locking=self._use_locking,
         )
 
 

@@ -29,8 +29,8 @@ def _read_metadata_line(line: str) -> Dict[str, str]:
 
 
 def load_metadata(
-    path: str,
-    n_proc: int,
+  path: str,
+  n_proc: int,
 ) -> cudf.DataFrame:
   metadata = []
   with open(path) as fp:
@@ -51,42 +51,32 @@ def _read_json(*args, **kwargs):
 
 
 def load_review_data(
-    path: str,
-    num_workers: int,
-    dask_scheduler="processes",
+  path: str,
+  num_workers: int,
+  dask_scheduler="processes",
 ) -> cudf.DataFrame:
   ddf = dask.dataframe.read_json(
-      path,
-      lines=True,
-      blocksize=JSON_READ_BLOCKSIZE,
-      engine=_read_json,
+    path,
+    lines=True,
+    blocksize=JSON_READ_BLOCKSIZE,
+    engine=_read_json,
   )
   df = ddf.compute(scheduler=dask_scheduler, num_workers=num_workers)
   return df
 
 
 def save_metadata(
-    number_of_items: int,
-    number_of_categories: int,
-    number_of_users: int,
-    output_path: str,
+  number_of_items: int,
+  number_of_categories: int,
+  number_of_users: int,
+  output_path: str,
 ):
   data = {
-      "cardinalities":
-          [
-              {
-                  "name": "uid",
-                  "value": number_of_users
-              },
-              {
-                  "name": "item",
-                  "value": number_of_items
-              },
-              {
-                  "name": "cat",
-                  "value": number_of_categories
-              },
-          ],
+    "cardinalities": [
+      {"name": "uid", "value": number_of_users},
+      {"name": "item", "value": number_of_items},
+      {"name": "cat", "value": number_of_categories},
+    ],
   }
   with open(output_path, "w") as fp:
     json.dump(data, fp)

@@ -15,22 +15,20 @@ from WikiDownloader import WikiDownloader
 
 
 class Downloader:
-
   def __init__(self, dataset_name, save_path):
     self.dataset_name = dataset_name
     self.save_path = save_path
 
   def download(self):
+    if self.dataset_name == "wikicorpus_en":
+      self.download_wikicorpus("en")
 
-    if self.dataset_name == 'wikicorpus_en':
-      self.download_wikicorpus('en')
-
-    elif self.dataset_name == 'wikicorpus_zh':
-      self.download_wikicorpus('zh')
+    elif self.dataset_name == "wikicorpus_zh":
+      self.download_wikicorpus("zh")
 
     else:
       print(self.dataset_name)
-      assert False, 'Unknown dataset_name provided to downloader'
+      assert False, "Unknown dataset_name provided to downloader"
 
   def download_wikicorpus(self, language):
     downloader = WikiDownloader(language, self.save_path)

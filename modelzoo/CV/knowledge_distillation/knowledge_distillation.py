@@ -6,6 +6,7 @@ Last modified: 2020/09/01
 Description: Implementation of classical Knowledge Distillation.
 Accelerator: GPU
 """
+
 """
 ## Introduction to Knowledge Distillation
 
@@ -31,6 +32,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 import numpy as np
+
 """
 ## Construct `Distiller()` class
 
@@ -55,34 +57,33 @@ In the `test_step` method, we evaluate the student model on the provided dataset
 
 
 class Distiller(keras.Model):
-
   def __init__(self, student, teacher):
     super().__init__()
     self.teacher = teacher
     self.student = student
 
   def compile(
-      self,
-      optimizer,
-      metrics,
-      student_loss_fn,
-      distillation_loss_fn,
-      alpha=0.1,
-      temperature=3,
+    self,
+    optimizer,
+    metrics,
+    student_loss_fn,
+    distillation_loss_fn,
+    alpha=0.1,
+    temperature=3,
   ):
     """Configure the distiller.
 
-        Args:
-            optimizer: Keras optimizer for the student weights
-            metrics: Keras metrics for evaluation
-            student_loss_fn: Loss function of difference between student
-                predictions and ground-truth
-            distillation_loss_fn: Loss function of difference between soft
-                student predictions and soft teacher predictions
-            alpha: weight to student_loss_fn and 1-alpha to distillation_loss_fn
-            temperature: Temperature for softening probability distributions.
-                Larger temperature gives softer distributions.
-        """
+    Args:
+        optimizer: Keras optimizer for the student weights
+        metrics: Keras metrics for evaluation
+        student_loss_fn: Loss function of difference between student
+            predictions and ground-truth
+        distillation_loss_fn: Loss function of difference between soft
+            student predictions and soft teacher predictions
+        alpha: weight to student_loss_fn and 1-alpha to distillation_loss_fn
+        temperature: Temperature for softening probability distributions.
+            Larger temperature gives softer distributions.
+    """
     super().compile(optimizer=optimizer, metrics=metrics)
     self.student_loss_fn = student_loss_fn
     self.distillation_loss_fn = distillation_loss_fn
@@ -107,10 +108,11 @@ class Distiller(keras.Model):
       # The magnitudes of the gradients produced by the soft targets scale
       # as 1/T^2, multiply them by T^2 when using both hard and soft targets.
       distillation_loss = (
-          self.distillation_loss_fn(
-              tf.nn.softmax(teacher_predictions / self.temperature, axis=1),
-              tf.nn.softmax(student_predictions / self.temperature, axis=1),
-          ) * self.temperature**2
+        self.distillation_loss_fn(
+          tf.nn.softmax(teacher_predictions / self.temperature, axis=1),
+          tf.nn.softmax(student_predictions / self.temperature, axis=1),
+        )
+        * self.temperature**2
       )
 
       loss = self.alpha * student_loss + (1 - self.alpha) * distillation_loss
@@ -159,30 +161,30 @@ but could be any Keras model.
 
 # Create the teacher
 teacher = keras.Sequential(
-    [
-        keras.Input(shape=(28, 28, 1)),
-        layers.Conv2D(256, (3, 3), strides=(2, 2), padding="same"),
-        layers.LeakyReLU(alpha=0.2),
-        layers.MaxPooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"),
-        layers.Conv2D(512, (3, 3), strides=(2, 2), padding="same"),
-        layers.Flatten(),
-        layers.Dense(10),
-    ],
-    name="teacher",
+  [
+    keras.Input(shape=(28, 28, 1)),
+    layers.Conv2D(256, (3, 3), strides=(2, 2), padding="same"),
+    layers.LeakyReLU(alpha=0.2),
+    layers.MaxPooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"),
+    layers.Conv2D(512, (3, 3), strides=(2, 2), padding="same"),
+    layers.Flatten(),
+    layers.Dense(10),
+  ],
+  name="teacher",
 )
 
 # Create the student
 student = keras.Sequential(
-    [
-        keras.Input(shape=(28, 28, 1)),
-        layers.Conv2D(16, (3, 3), strides=(2, 2), padding="same"),
-        layers.LeakyReLU(alpha=0.2),
-        layers.MaxPooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"),
-        layers.Conv2D(32, (3, 3), strides=(2, 2), padding="same"),
-        layers.Flatten(),
-        layers.Dense(10),
-    ],
-    name="student",
+  [
+    keras.Input(shape=(28, 28, 1)),
+    layers.Conv2D(16, (3, 3), strides=(2, 2), padding="same"),
+    layers.LeakyReLU(alpha=0.2),
+    layers.MaxPooling2D(pool_size=(2, 2), strides=(1, 1), padding="same"),
+    layers.Conv2D(32, (3, 3), strides=(2, 2), padding="same"),
+    layers.Flatten(),
+    layers.Dense(10),
+  ],
+  name="student",
 )
 
 # Clone student for later comparison
@@ -216,9 +218,9 @@ by training the teacher model on the training set in the usual way.
 
 # Train teacher as usual
 teacher.compile(
-    optimizer=keras.optimizers.Adam(),
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics=[keras.metrics.SparseCategoricalAccuracy()],
+  optimizer=keras.optimizers.Adam(),
+  loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+  metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
 # Train and evaluate teacher on data.
@@ -235,12 +237,12 @@ hyperparameters and optimizer, and distill the teacher to the student.
 # Initialize and compile distiller
 distiller = Distiller(student=student, teacher=teacher)
 distiller.compile(
-    optimizer=keras.optimizers.Adam(),
-    metrics=[keras.metrics.SparseCategoricalAccuracy()],
-    student_loss_fn=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    distillation_loss_fn=keras.losses.KLDivergence(),
-    alpha=0.1,
-    temperature=10,
+  optimizer=keras.optimizers.Adam(),
+  metrics=[keras.metrics.SparseCategoricalAccuracy()],
+  student_loss_fn=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+  distillation_loss_fn=keras.losses.KLDivergence(),
+  alpha=0.1,
+  temperature=10,
 )
 
 # Distill teacher to student
@@ -257,9 +259,9 @@ to evaluate the performance gain obtained by knowledge distillation.
 
 # Train student as doen usually
 student_scratch.compile(
-    optimizer=keras.optimizers.Adam(),
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics=[keras.metrics.SparseCategoricalAccuracy()],
+  optimizer=keras.optimizers.Adam(),
+  loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+  metrics=[keras.metrics.SparseCategoricalAccuracy()],
 )
 
 # Train and evaluate student trained from scratch.

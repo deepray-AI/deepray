@@ -72,134 +72,133 @@ def set_random_seed(random_seed):
   random.seed(random_seed)  # set random seed for python
   np.random.seed(random_seed)  # set random seed for numpy
   tf.random.set_seed(random_seed)  # set random seed for tensorflow-cpu
-  os.environ['TF_DETERMINISTIC_OPS'] = '1'  # set random seed for tensorflow-gpu
+  os.environ["TF_DETERMINISTIC_OPS"] = "1"  # set random seed for tensorflow-gpu
 
 
 @keras_export("keras.Model", "keras.models.Model")
-class Trainer():
+class Trainer:
   """A model grouping layers into an object with training/inference features.
 
-    Args:
-        inputs: The input(s) of the model: a `keras.Input` object or a
-            combination of `keras.Input` objects in a dict, list or tuple.
-        outputs: The output(s) of the model: a tensor that originated from
-            `keras.Input` objects or a combination of such tensors in a dict,
-            list or tuple. See Functional API example below.
-        name: String, the name of the model.
+  Args:
+      inputs: The input(s) of the model: a `keras.Input` object or a
+          combination of `keras.Input` objects in a dict, list or tuple.
+      outputs: The output(s) of the model: a tensor that originated from
+          `keras.Input` objects or a combination of such tensors in a dict,
+          list or tuple. See Functional API example below.
+      name: String, the name of the model.
 
-    There are two ways to instantiate a `Model`:
+  There are two ways to instantiate a `Model`:
 
-    1 - With the "Functional API", where you start from `Input`,
-    you chain layer calls to specify the model's forward pass,
-    and finally you create your model from inputs and outputs:
+  1 - With the "Functional API", where you start from `Input`,
+  you chain layer calls to specify the model's forward pass,
+  and finally you create your model from inputs and outputs:
 
-    ```python
-    import tensorflow as tf
+  ```python
+  import tensorflow as tf
 
-    inputs = tf.keras.Input(shape=(3,))
-    x = tf.keras.layers.Dense(4, activation=tf.nn.relu)(inputs)
-    outputs = tf.keras.layers.Dense(5, activation=tf.nn.softmax)(x)
-    model = tf.keras.Model(inputs=inputs, outputs=outputs)
-    ```
+  inputs = tf.keras.Input(shape=(3,))
+  x = tf.keras.layers.Dense(4, activation=tf.nn.relu)(inputs)
+  outputs = tf.keras.layers.Dense(5, activation=tf.nn.softmax)(x)
+  model = tf.keras.Model(inputs=inputs, outputs=outputs)
+  ```
 
-    Note: Only dicts, lists, and tuples of input tensors are supported. Nested
-    inputs are not supported (e.g. lists of list or dicts of dict).
+  Note: Only dicts, lists, and tuples of input tensors are supported. Nested
+  inputs are not supported (e.g. lists of list or dicts of dict).
 
-    A new Functional API model can also be created by using the
-    intermediate tensors. This enables you to quickly extract sub-components
-    of the model.
+  A new Functional API model can also be created by using the
+  intermediate tensors. This enables you to quickly extract sub-components
+  of the model.
 
-    Example:
+  Example:
 
-    ```python
-    inputs = keras.Input(shape=(None, None, 3))
-    processed = keras.layers.RandomCrop(width=32, height=32)(inputs)
-    conv = keras.layers.Conv2D(filters=2, kernel_size=3)(processed)
-    pooling = keras.layers.GlobalAveragePooling2D()(conv)
-    feature = keras.layers.Dense(10)(pooling)
+  ```python
+  inputs = keras.Input(shape=(None, None, 3))
+  processed = keras.layers.RandomCrop(width=32, height=32)(inputs)
+  conv = keras.layers.Conv2D(filters=2, kernel_size=3)(processed)
+  pooling = keras.layers.GlobalAveragePooling2D()(conv)
+  feature = keras.layers.Dense(10)(pooling)
 
-    full_model = keras.Model(inputs, feature)
-    backbone = keras.Model(processed, conv)
-    activations = keras.Model(conv, feature)
-    ```
+  full_model = keras.Model(inputs, feature)
+  backbone = keras.Model(processed, conv)
+  activations = keras.Model(conv, feature)
+  ```
 
-    Note that the `backbone` and `activations` models are not
-    created with `keras.Input` objects, but with the tensors that are originated
-    from `keras.Input` objects. Under the hood, the layers and weights will
-    be shared across these models, so that user can train the `full_model`, and
-    use `backbone` or `activations` to do feature extraction.
-    The inputs and outputs of the model can be nested structures of tensors as
-    well, and the created models are standard Functional API models that support
-    all the existing APIs.
+  Note that the `backbone` and `activations` models are not
+  created with `keras.Input` objects, but with the tensors that are originated
+  from `keras.Input` objects. Under the hood, the layers and weights will
+  be shared across these models, so that user can train the `full_model`, and
+  use `backbone` or `activations` to do feature extraction.
+  The inputs and outputs of the model can be nested structures of tensors as
+  well, and the created models are standard Functional API models that support
+  all the existing APIs.
 
-    2 - By subclassing the `Model` class: in that case, you should define your
-    layers in `__init__()` and you should implement the model's forward pass
-    in `call()`.
+  2 - By subclassing the `Model` class: in that case, you should define your
+  layers in `__init__()` and you should implement the model's forward pass
+  in `call()`.
 
-    ```python
-    import tensorflow as tf
+  ```python
+  import tensorflow as tf
 
-    class MyModel(tf.keras.Model):
+  class MyModel(tf.keras.Model):
 
-      def __init__(self):
-        super().__init__()
-        self.dense1 = tf.keras.layers.Dense(4, activation=tf.nn.relu)
-        self.dense2 = tf.keras.layers.Dense(5, activation=tf.nn.softmax)
+    def __init__(self):
+      super().__init__()
+      self.dense1 = tf.keras.layers.Dense(4, activation=tf.nn.relu)
+      self.dense2 = tf.keras.layers.Dense(5, activation=tf.nn.softmax)
 
-      def call(self, inputs):
-        x = self.dense1(inputs)
-        return self.dense2(x)
+    def call(self, inputs):
+      x = self.dense1(inputs)
+      return self.dense2(x)
 
-    model = MyModel()
-    ```
+  model = MyModel()
+  ```
 
-    If you subclass `Model`, you can optionally have
-    a `training` argument (boolean) in `call()`, which you can use to specify
-    a different behavior in training and inference:
+  If you subclass `Model`, you can optionally have
+  a `training` argument (boolean) in `call()`, which you can use to specify
+  a different behavior in training and inference:
 
-    ```python
-    import tensorflow as tf
+  ```python
+  import tensorflow as tf
 
-    class MyModel(tf.keras.Model):
+  class MyModel(tf.keras.Model):
 
-      def __init__(self):
-        super().__init__()
-        self.dense1 = tf.keras.layers.Dense(4, activation=tf.nn.relu)
-        self.dense2 = tf.keras.layers.Dense(5, activation=tf.nn.softmax)
-        self.dropout = tf.keras.layers.Dropout(0.5)
+    def __init__(self):
+      super().__init__()
+      self.dense1 = tf.keras.layers.Dense(4, activation=tf.nn.relu)
+      self.dense2 = tf.keras.layers.Dense(5, activation=tf.nn.softmax)
+      self.dropout = tf.keras.layers.Dropout(0.5)
 
-      def call(self, inputs, training=False):
-        x = self.dense1(inputs)
-        if training:
-          x = self.dropout(x, training=training)
-        return self.dense2(x)
+    def call(self, inputs, training=False):
+      x = self.dense1(inputs)
+      if training:
+        x = self.dropout(x, training=training)
+      return self.dense2(x)
 
-    model = MyModel()
-    ```
+  model = MyModel()
+  ```
 
-    Once the model is created, you can config the model with losses and metrics
-    with `model.compile()`, train the model with `model.fit()`, or use the model
-    to do prediction with `model.predict()`.
-    """
+  Once the model is created, you can config the model with losses and metrics
+  with `model.compile()`, train the model with `model.fit()`, or use the model
+  to do prediction with `model.predict()`.
+  """
 
   @tf.__internal__.tracking.no_automatic_dependency_tracking
   @traceback_utils.filter_traceback
   def __init__(
-      self,
-      model: Union[keras.Model, List[keras.Model], Dict[Text, keras.Model]],
-      optimizer="rmsprop",
-      loss=None,
-      metrics=None,
-      loss_weights=None,
-      weighted_metrics=None,
-      run_eagerly=None,
-      steps_per_execution=None,
-      jit_compile=None,
-      pss_evaluation_shards=0,
-      *args,
-      **kwargs
+    self,
+    model: Union[keras.Model, List[keras.Model], Dict[Text, keras.Model]],
+    optimizer="rmsprop",
+    loss=None,
+    metrics=None,
+    loss_weights=None,
+    weighted_metrics=None,
+    run_eagerly=None,
+    steps_per_execution=None,
+    jit_compile=None,
+    pss_evaluation_shards=0,
+    *args,
+    **kwargs,
   ):
-
     self._model = {}
     if isinstance(model, list):
       if len(model) > 0:
@@ -214,12 +213,12 @@ class Trainer():
     elif isinstance(model, dict):
       main_keys = [k for k in model.keys() if "main" in k]
       if len(main_keys) == 1:
-        if (len(model) == 1):
+        if len(model) == 1:
           self._model = {"main": next(iter(model.values()))}
         else:
           self._model = model
       else:
-        raise ValueError(f"Must set only one model with key contains \"main\", found {main_keys}.")
+        raise ValueError(f'Must set only one model with key contains "main", found {main_keys}.')
     elif isinstance(model, (keras.Model, tf.keras.Model)):
       self._model = {"main": model}
     else:
@@ -239,11 +238,11 @@ class Trainer():
     if training_module.is_functional_model_init_params(args, kwargs) and not isinstance(self, functional.Functional):
       # Filter the kwargs for multiple inheritance.
       supported_kwargs = [
-          "inputs",
-          "outputs",
-          "name",
-          "trainable",
-          "skip_init",
+        "inputs",
+        "outputs",
+        "name",
+        "trainable",
+        "skip_init",
       ]
       model_kwargs = {k: kwargs[k] for k in kwargs if k in supported_kwargs}
       other_kwargs = {k: kwargs[k] for k in kwargs if k not in supported_kwargs}
@@ -268,10 +267,7 @@ class Trainer():
       elif other_kwargs:
         # In case there are unused kwargs, we should raise an error to
         # user, in case they have a typo in the param name.
-        raise TypeError(
-            "The following keyword arguments passed to `Model` aren't "
-            "supported: {}.".format(other_kwargs)
-        )
+        raise TypeError("The following keyword arguments passed to `Model` aren't supported: {}.".format(other_kwargs))
       return
 
     # The following are implemented as property functions:
@@ -280,16 +276,16 @@ class Trainer():
     # `inputs` / `outputs` will only appear in kwargs if either are
     # misspelled.
     generic_utils.validate_kwargs(
-        kwargs,
-        {
-            "trainable",
-            "dtype",
-            "dynamic",
-            "name",
-            "autocast",
-            "inputs",
-            "outputs",
-        },
+      kwargs,
+      {
+        "trainable",
+        "dtype",
+        "dynamic",
+        "name",
+        "autocast",
+        "inputs",
+        "outputs",
+      },
     )
     super().__init__(**kwargs)
 
@@ -342,16 +338,16 @@ class Trainer():
     self._jit_compile = None
 
     self.compile(
-        optimizer=optimizer,
-        loss=loss,
-        metrics=metrics,
-        loss_weights=loss_weights,
-        weighted_metrics=weighted_metrics,
-        run_eagerly=run_eagerly,
-        steps_per_execution=steps_per_execution,
-        jit_compile=jit_compile,
-        pss_evaluation_shards=pss_evaluation_shards,
-        **kwargs,
+      optimizer=optimizer,
+      loss=loss,
+      metrics=metrics,
+      loss_weights=loss_weights,
+      weighted_metrics=weighted_metrics,
+      run_eagerly=run_eagerly,
+      steps_per_execution=steps_per_execution,
+      jit_compile=jit_compile,
+      pss_evaluation_shards=pss_evaluation_shards,
+      **kwargs,
     )
 
     if is_main_process():
@@ -393,21 +389,21 @@ class Trainer():
       self._test_counter = self._create_counter_variable(0)
       self._predict_counter = self._create_counter_variable(0)
       if flags.FLAGS.use_horovod:
-        self.first_batch = tf.Variable(True, trainable=False, dtype=tf.bool, name='first_batch')
+        self.first_batch = tf.Variable(True, trainable=False, dtype=tf.bool, name="first_batch")
 
   @traceback_utils.filter_traceback
   def compile(
-      self,
-      optimizer="rmsprop",
-      loss=None,
-      metrics=None,
-      loss_weights=None,
-      weighted_metrics=None,
-      run_eagerly=None,
-      steps_per_execution=None,
-      jit_compile=None,
-      pss_evaluation_shards=0,
-      **kwargs,
+    self,
+    optimizer="rmsprop",
+    loss=None,
+    metrics=None,
+    loss_weights=None,
+    weighted_metrics=None,
+    run_eagerly=None,
+    steps_per_execution=None,
+    jit_compile=None,
+    pss_evaluation_shards=0,
+    **kwargs,
   ):
     """Configures the model for training.
 
@@ -523,21 +519,21 @@ class Trainer():
     if jit_compile and not tf_utils.can_jit_compile(warn=True):
       jit_compile = False
     self._compile_config = serialization_lib.Config(
-        optimizer=optimizer,
-        loss=loss,
-        metrics=metrics,
-        loss_weights=loss_weights,
-        weighted_metrics=weighted_metrics,
-        run_eagerly=run_eagerly,
-        steps_per_execution=steps_per_execution,
-        jit_compile=jit_compile,
+      optimizer=optimizer,
+      loss=loss,
+      metrics=metrics,
+      loss_weights=loss_weights,
+      weighted_metrics=weighted_metrics,
+      run_eagerly=run_eagerly,
+      steps_per_execution=steps_per_execution,
+      jit_compile=jit_compile,
     )
     with self.distribute_strategy.scope():
       if "experimental_steps_per_execution" in kwargs:
         logging.warning(
-            "The argument `steps_per_execution` is no longer "
-            "experimental. Pass `steps_per_execution` instead of "
-            "`experimental_steps_per_execution`."
+          "The argument `steps_per_execution` is no longer "
+          "experimental. Pass `steps_per_execution` instead of "
+          "`experimental_steps_per_execution`."
         )
         if not steps_per_execution:
           steps_per_execution = kwargs.pop("experimental_steps_per_execution")
@@ -563,24 +559,24 @@ class Trainer():
         self.compiled_loss = loss
       else:
         self.compiled_loss = compile_utils.LossesContainer(
-            loss,
-            loss_weights,
-            output_names=self.main_model.output_names,
-            mesh=mesh,
+          loss,
+          loss_weights,
+          output_names=self.main_model.output_names,
+          mesh=mesh,
         )
       self.compiled_metrics = compile_utils.MetricsContainer(
-          metrics,
-          weighted_metrics,
-          output_names=self.main_model.output_names,
-          from_serialized=from_serialized,
-          mesh=mesh,
+        metrics,
+        weighted_metrics,
+        output_names=self.main_model.output_names,
+        from_serialized=from_serialized,
+        mesh=mesh,
       )
 
       if steps_per_execution == "auto":
         if self._steps_per_execution is None:
           self._configure_steps_per_execution(1)
-        self._steps_per_execution_tuner = (
-            steps_per_execution_tuning.StepsPerExecutionTuner(self.optimizer, self._steps_per_execution)
+        self._steps_per_execution_tuner = steps_per_execution_tuning.StepsPerExecutionTuner(
+          self.optimizer, self._steps_per_execution
         )
         self._autotune_steps_per_execution = True
       else:
@@ -593,8 +589,7 @@ class Trainer():
       self._is_compiled = True
       self.loss = loss or {}
       if (self._run_eagerly or self.main_model.dynamic) and jit_compile:
-        raise ValueError("You cannot enable `run_eagerly` and `jit_compile` "
-                         "at the same time.")
+        raise ValueError("You cannot enable `run_eagerly` and `jit_compile` at the same time.")
       else:
         self._jit_compile = jit_compile
 
@@ -744,15 +739,14 @@ class Trainer():
     if self.main_model.dynamic and self._run_eagerly == False:
       # TODO(fchollet): consider using py_func to enable this.
       raise ValueError(
-          "Your model contains layers that can only be "
-          "successfully run in eager execution (layers "
-          "constructed with `dynamic=True`). "
-          "You cannot set `run_eagerly=False`."
+        "Your model contains layers that can only be "
+        "successfully run in eager execution (layers "
+        "constructed with `dynamic=True`). "
+        "You cannot set `run_eagerly=False`."
       )
 
     if self._cluster_coordinator and self._run_eagerly:
-      raise ValueError("When using `Model` with `ParameterServerStrategy`, "
-                       "`run_eagerly` is not supported.")
+      raise ValueError("When using `Model` with `ParameterServerStrategy`, `run_eagerly` is not supported.")
 
     # Run eagerly logic, by priority:
     # (1) Dynamic models must be run eagerly.
@@ -760,8 +754,7 @@ class Trainer():
     # (3) Not explicitly setting run_eagerly defaults to TF's global
     # setting.
     return (
-        self.main_model.dynamic or self._run_eagerly or
-        (tf.config.functions_run_eagerly() and self._run_eagerly is None)
+      self.main_model.dynamic or self._run_eagerly or (tf.config.functions_run_eagerly() and self._run_eagerly is None)
     )
 
   @run_eagerly.setter
@@ -779,8 +772,8 @@ class Trainer():
     if value and self._steps_per_execution_tuner is None:
       if self._steps_per_execution is None:
         self._configure_steps_per_execution(1)
-      self._steps_per_execution_tuner = (
-          steps_per_execution_tuning.StepsPerExecutionTuner(self.optimizer, self._steps_per_execution)
+      self._steps_per_execution_tuner = steps_per_execution_tuning.StepsPerExecutionTuner(
+        self.optimizer, self._steps_per_execution
       )
 
   @property
@@ -861,19 +854,16 @@ class Trainer():
     # exists and target does not.
     if self.loss and y is None:
       raise ValueError(
-          "Target data is missing. Your model was compiled with "
-          f"loss={self.loss}, "
-          "and therefore expects target data to be provided in `fit()`."
+        "Target data is missing. Your model was compiled with "
+        f"loss={self.loss}, "
+        "and therefore expects target data to be provided in `fit()`."
       )
 
     # For training, there must be compiled loss or regularization loss to
     # exist in order to apply the gradients. If one is not found, it means
     # no loss was supplied via `compile` or `add_loss`.
     elif loss is None:
-      raise ValueError(
-          "No loss found. You may have forgotten to provide a `loss` "
-          "argument in the `compile()` method."
-      )
+      raise ValueError("No loss found. You may have forgotten to provide a `loss` argument in the `compile()` method.")
 
   def train_step(self, data):
     """The logic for one training step.
@@ -1119,18 +1109,17 @@ class Trainer():
       for metric in self.metrics:
         if metric.name not in shard_result.keys():
           logging.log_first_n(
-              logging.WARN,
-              f"No matching result found for metric {metric.name}. "
-              "This metric's computed result may be incorrect.",
-              3,
+            logging.WARN,
+            f"No matching result found for metric {metric.name}. This metric's computed result may be incorrect.",
+            3,
           )
           continue
         metric_result = shard_result[metric.name]
         if len(metric_result) != len(metric.weights):
           raise ValueError(
-              f"Expected {len(metric.weights)} variables in result "
-              f"for metric {metric.name}, but found "
-              f"{len(metric_result)}."
+            f"Expected {len(metric.weights)} variables in result "
+            f"for metric {metric.name}, but found "
+            f"{len(metric_result)}."
           )
         for weight, val in zip(metric.weights, metric_result):
           weight.assign_add(val)
@@ -1179,16 +1168,17 @@ class Trainer():
       data = next(iterator)
       outputs = self.distribute_strategy.run(run_step, args=(data,))
       outputs = training_module.reduce_per_replica(
-          outputs,
-          self.distribute_strategy,
-          reduction=self.distribute_reduction_method,
+        outputs,
+        self.distribute_strategy,
+        reduction=self.distribute_reduction_method,
       )
       return outputs
 
     # Special case if steps_per_execution is one.
     if (
-        self._steps_per_execution is None or
-        self._steps_per_execution.numpy().item() == 1 and not self.autotune_steps_per_execution
+      self._steps_per_execution is None
+      or self._steps_per_execution.numpy().item() == 1
+      and not self.autotune_steps_per_execution
     ):
 
       def train_function(iterator):
@@ -1200,7 +1190,7 @@ class Trainer():
         self.train_tf_function = train_function
 
       if self._cluster_coordinator:
-        self.train_function = (lambda it: self._cluster_coordinator.schedule(train_function, args=(it,)))
+        self.train_function = lambda it: self._cluster_coordinator.schedule(train_function, args=(it,))
       else:
         self.train_function = train_function
 
@@ -1220,7 +1210,7 @@ class Trainer():
         self.train_tf_function = train_function
 
       self.train_function = lambda it: self._cluster_coordinator.schedule(
-          train_function, args=(it, self._steps_per_execution.value())
+        train_function, args=(it, self._steps_per_execution.value())
       )
     else:
 
@@ -1270,16 +1260,18 @@ class Trainer():
 
       def do_broadcast():
         model_broadcast_vars = [
-            x for x in self.main_model.variables
-            if not isinstance(x, (TrainableWrapper, DEResourceVariable, kv_variable_ops.EmbeddingVariable))
+          x
+          for x in self.main_model.variables
+          if not isinstance(x, (TrainableWrapper, DEResourceVariable, kv_variable_ops.EmbeddingVariable))
         ]
         opt_broadcast_vars = [
-            x for x in self.optimizer.variables()
-            if not isinstance(x, (TrainableWrapper, DEResourceVariable, kv_variable_ops.EmbeddingVariable))
+          x
+          for x in self.optimizer.variables()
+          if not isinstance(x, (TrainableWrapper, DEResourceVariable, kv_variable_ops.EmbeddingVariable))
         ]
         print_op = tf.print(
-            f"Broadcasting {len(model_broadcast_vars)} model variables & {len(opt_broadcast_vars)} optimizer variables...",
-            output_stream=sys.stdout
+          f"Broadcasting {len(model_broadcast_vars)} model variables & {len(opt_broadcast_vars)} optimizer variables...",
+          output_stream=sys.stdout,
         )
         with tf.control_dependencies([print_op]):
           hvd.broadcast_variables(model_broadcast_vars + opt_broadcast_vars, root_rank=0)
@@ -1302,8 +1294,9 @@ class Trainer():
 
     # Special case if steps_per_execution is one.
     if (
-        self._steps_per_execution is None or
-        self._steps_per_execution.numpy().item() == 1 and not self.autotune_steps_per_execution
+      self._steps_per_execution is None
+      or self._steps_per_execution.numpy().item() == 1
+      and not self.autotune_steps_per_execution
     ):
 
       def train_function(iterator):
@@ -1332,26 +1325,26 @@ class Trainer():
 
   @traceback_utils.filter_traceback
   def fit(
-      self,
-      x=None,
-      y=None,
-      batch_size=None,
-      epochs=None,
-      verbose="auto",
-      callbacks=[],
-      validation_split=0.0,
-      validation_data=None,
-      shuffle=True,
-      class_weight=None,
-      sample_weight=None,
-      initial_epoch=0,
-      steps_per_epoch=None,
-      validation_steps=None,
-      validation_batch_size=None,
-      validation_freq=1,
-      max_queue_size=10,
-      workers=1,
-      use_multiprocessing=False,
+    self,
+    x=None,
+    y=None,
+    batch_size=None,
+    epochs=None,
+    verbose="auto",
+    callbacks=[],
+    validation_split=0.0,
+    validation_data=None,
+    shuffle=True,
+    class_weight=None,
+    sample_weight=None,
+    initial_epoch=0,
+    steps_per_epoch=None,
+    validation_steps=None,
+    validation_batch_size=None,
+    validation_freq=1,
+    max_queue_size=10,
+    workers=1,
+    use_multiprocessing=False,
   ):
     """Trains the model for a fixed number of epochs (dataset iterations).
 
@@ -1586,12 +1579,13 @@ class Trainer():
     if steps_per_epoch and flags.FLAGS.use_horovod:
       try:
         import horovod.tensorflow as hvd
-        steps_array = hvd.allgather_object(steps_per_epoch, name='check_train_step')
+
+        steps_array = hvd.allgather_object(steps_per_epoch, name="check_train_step")
         logger.debug(f"steps_array = {steps_array}")
         assert max(set(steps_array)) == min(set(steps_array))
       except:
         raise ValueError(
-            f"steps_per_epoch = {steps_per_epoch}, different rank should have same steps when using Horovod."
+          f"steps_per_epoch = {steps_per_epoch}, different rank should have same steps when using Horovod."
         )
     # Legacy graph support is contained in `training_v1.Model`.
     if batch_size is None:
@@ -1616,48 +1610,52 @@ class Trainer():
       # Create the validation data using the training data. Only supported
       # for `Tensor` and `NumPy` input.
       (
+        (
           x,
           y,
           sample_weight,
-      ), validation_data = data_adapter.train_validation_split(
-          (x, y, sample_weight), validation_split=validation_split
-      )
+        ),
+        validation_data,
+      ) = data_adapter.train_validation_split((x, y, sample_weight), validation_split=validation_split)
 
     if validation_data:
       (
-          val_x,
-          val_y,
-          val_sample_weight,
+        val_x,
+        val_y,
+        val_sample_weight,
       ) = data_adapter.unpack_x_y_sample_weight(validation_data)
 
     if self.distribute_strategy._should_use_with_coordinator:
-      self._cluster_coordinator = (tf.distribute.experimental.coordinator.ClusterCoordinator(self.distribute_strategy))
+      self._cluster_coordinator = tf.distribute.experimental.coordinator.ClusterCoordinator(self.distribute_strategy)
 
-    with self.distribute_strategy.scope(), training_utils.RespectCompiledTrainableState(  # noqa: E501
+    with (
+      self.distribute_strategy.scope(),
+      training_utils.RespectCompiledTrainableState(  # noqa: E501
         self
+      ),
     ):
       # Creates a `tf.data.Dataset` and handles batch and epoch iteration.
       data_handler = data_adapter.get_data_handler(
-          x=x,
-          y=y,
-          sample_weight=sample_weight,
-          batch_size=batch_size,
-          steps_per_epoch=steps_per_epoch,
-          initial_epoch=initial_epoch,
-          epochs=epochs,
-          shuffle=shuffle,
-          class_weight=class_weight,
-          max_queue_size=max_queue_size,
-          workers=workers,
-          use_multiprocessing=use_multiprocessing,
-          model=self,
-          steps_per_execution=self._steps_per_execution,
+        x=x,
+        y=y,
+        sample_weight=sample_weight,
+        batch_size=batch_size,
+        steps_per_epoch=steps_per_epoch,
+        initial_epoch=initial_epoch,
+        epochs=epochs,
+        shuffle=shuffle,
+        class_weight=class_weight,
+        max_queue_size=max_queue_size,
+        workers=workers,
+        use_multiprocessing=use_multiprocessing,
+        model=self,
+        steps_per_execution=self._steps_per_execution,
       )
 
       for callback in callbacks:
-        if hasattr(callback, 'set_optimizer') and callable(callback.set_optimizer):
+        if hasattr(callback, "set_optimizer") and callable(callback.set_optimizer):
           callback.set_optimizer(self.optimizer)
-        if hasattr(callback, 'set_models') and callable(callback.set_models):
+        if hasattr(callback, "set_models") and callable(callback.set_models):
           callback.set_models(self._model)
 
       # Container that configures and calls `tf.keras.Callback`s.
@@ -1666,27 +1664,28 @@ class Trainer():
           if is_main_process():
             callbacks += [ProgbarLogger(count_mode="steps")]
           callbacks = HvdCallbackList(
-              callbacks,
-              add_history=True,
-              add_progbar=False,
-              model=self.main_model,
-              verbose=verbose,
-              epochs=epochs,
-              steps=data_handler.inferred_steps,
+            callbacks,
+            add_history=True,
+            add_progbar=False,
+            model=self.main_model,
+            verbose=verbose,
+            epochs=epochs,
+            steps=data_handler.inferred_steps,
           )
         else:
           callbacks = callbacks_module.CallbackList(
-              callbacks,
-              add_history=True,
-              add_progbar=verbose != 0,
-              model=self.main_model,
-              verbose=verbose,
-              epochs=epochs,
-              steps=data_handler.inferred_steps,
+            callbacks,
+            add_history=True,
+            add_progbar=verbose != 0,
+            model=self.main_model,
+            verbose=verbose,
+            epochs=epochs,
+            steps=data_handler.inferred_steps,
           )
 
       self.stop_training = False
-      self.train_function = self.make_train_function() if not flags.FLAGS.use_horovod else self.make_hvd_train_function(
+      self.train_function = (
+        self.make_train_function() if not flags.FLAGS.use_horovod else self.make_hvd_train_function()
       )
       self._train_counter.assign(0)
       callbacks.on_train_begin()
@@ -1696,10 +1695,10 @@ class Trainer():
       # Handle fault-tolerance for multi-worker.
       # TODO(omalleyt): Fix the ordering issues that mean this has to
       # happen after `callbacks.on_train_begin`.
-      steps_per_epoch_inferred = (steps_per_epoch or data_handler.inferred_steps)
+      steps_per_epoch_inferred = steps_per_epoch or data_handler.inferred_steps
       (
-          data_handler._initial_epoch,
-          data_handler._initial_step,
+        data_handler._initial_epoch,
+        data_handler._initial_step,
       ) = self._maybe_load_initial_counters_from_ckpt(steps_per_epoch_inferred, initial_epoch)
       logs = None
       for epoch, iterator in data_handler.enumerate_epochs():
@@ -1708,11 +1707,11 @@ class Trainer():
         with data_handler.catch_stop_iteration():
           for step in data_handler.steps():
             with tf.profiler.experimental.Trace(
-                "train",
-                epoch_num=epoch,
-                step_num=step,
-                batch_size=batch_size,
-                _r=1,
+              "train",
+              epoch_num=epoch,
+              step_num=step,
+              batch_size=batch_size,
+              _r=1,
             ):
               callbacks.on_train_batch_begin(step)
               tmp_logs = self.train_function(iterator)
@@ -1728,14 +1727,14 @@ class Trainer():
         logs = tf_utils.sync_to_numpy_or_python_type(logs)
         if logs is None:
           raise ValueError(
-              "Unexpected result of `train_function` "
-              "(Empty logs). This could be due to issues in input "
-              "pipeline that resulted in an empty dataset. "
-              "Otherwise, please use "
-              "`Model.compile(..., run_eagerly=True)`, or "
-              "`tf.config.run_functions_eagerly(True)` for more "
-              "information of where went wrong, or file a "
-              "issue/bug to `tf.keras`."
+            "Unexpected result of `train_function` "
+            "(Empty logs). This could be due to issues in input "
+            "pipeline that resulted in an empty dataset. "
+            "Otherwise, please use "
+            "`Model.compile(..., run_eagerly=True)`, or "
+            "`tf.config.run_functions_eagerly(True)` for more "
+            "information of where went wrong, or file a "
+            "issue/bug to `tf.keras`."
           )
         # Override with model metrics instead of last step logs
         logs = self._validate_and_get_metrics_result(logs)
@@ -1748,32 +1747,32 @@ class Trainer():
           # Create data_handler for evaluation and cache it.
           if getattr(self, "_eval_data_handler", None) is None:
             self._eval_data_handler = data_adapter.get_data_handler(
-                x=val_x,
-                y=val_y,
-                sample_weight=val_sample_weight,
-                batch_size=validation_batch_size or batch_size,
-                steps_per_epoch=validation_steps,
-                initial_epoch=0,
-                epochs=1,
-                max_queue_size=max_queue_size,
-                workers=workers,
-                use_multiprocessing=use_multiprocessing,
-                model=self,
-                steps_per_execution=self._steps_per_execution,
-                pss_evaluation_shards=self._pss_evaluation_shards,
-            )
-          val_logs = self.evaluate(
               x=val_x,
               y=val_y,
               sample_weight=val_sample_weight,
               batch_size=validation_batch_size or batch_size,
-              steps=validation_steps,
-              callbacks=callbacks,
+              steps_per_epoch=validation_steps,
+              initial_epoch=0,
+              epochs=1,
               max_queue_size=max_queue_size,
               workers=workers,
               use_multiprocessing=use_multiprocessing,
-              return_dict=True,
-              _use_cached_eval_dataset=True,
+              model=self,
+              steps_per_execution=self._steps_per_execution,
+              pss_evaluation_shards=self._pss_evaluation_shards,
+            )
+          val_logs = self.evaluate(
+            x=val_x,
+            y=val_y,
+            sample_weight=val_sample_weight,
+            batch_size=validation_batch_size or batch_size,
+            steps=validation_steps,
+            callbacks=callbacks,
+            max_queue_size=max_queue_size,
+            workers=workers,
+            use_multiprocessing=use_multiprocessing,
+            return_dict=True,
+            _use_cached_eval_dataset=True,
           )
           val_logs = {"val_" + name: val for name, val in val_logs.items()}
           epoch_logs.update(val_logs)
@@ -1829,7 +1828,6 @@ class Trainer():
       return self._shard_test_function
 
     def step_function(batch):
-
       def run_step(data):
         # TODO(b/272050910): Use sample_weight for weighted metrics.
         x, y, sample_weight = data_adapter.unpack_x_y_sample_weight(data)
@@ -1841,9 +1839,9 @@ class Trainer():
 
       outputs = self.distribute_strategy.run(run_step, args=(batch,))
       outputs = training_module.reduce_per_replica(
-          outputs,
-          self.distribute_strategy,
-          reduction=self.distribute_reduction_method,
+        outputs,
+        self.distribute_strategy,
+        reduction=self.distribute_reduction_method,
       )
       return outputs
 
@@ -1874,7 +1872,7 @@ class Trainer():
           for unweighted_metric in local_unweighted_metrics:
             unweighted_metric.update_state(y, y_pred)
           local_loss(y, y_pred, sample_weight)
-      local_metrics = (local_unweighted_metrics + local_weighted_metrics + local_loss.metrics)
+      local_metrics = local_unweighted_metrics + local_weighted_metrics + local_loss.metrics
       outputs = {metric.name: metric.weights for metric in local_metrics}
       with tf.control_dependencies(training_module._minimum_control_deps(outputs)):
         self._test_counter.assign_add(1)
@@ -1883,10 +1881,10 @@ class Trainer():
     if not self.run_eagerly:
       shard_test_function = tf.function(shard_test_function, reduce_retracing=True)
 
-    self._shard_test_function = (lambda *args: self._cluster_coordinator.schedule(
-        shard_test_function,
-        args=args,
-    ))
+    self._shard_test_function = lambda *args: self._cluster_coordinator.schedule(
+      shard_test_function,
+      args=args,
+    )
     return self._shard_test_function
 
   def make_test_function(self, force=False):
@@ -1932,16 +1930,17 @@ class Trainer():
       data = next(iterator)
       outputs = self.distribute_strategy.run(run_step, args=(data,))
       outputs = training_module.reduce_per_replica(
-          outputs,
-          self.distribute_strategy,
-          reduction=self.distribute_reduction_method,
+        outputs,
+        self.distribute_strategy,
+        reduction=self.distribute_reduction_method,
       )
       return outputs
 
     # Special case if steps_per_execution is one.
     if (
-        self._steps_per_execution is None or
-        self._steps_per_execution.numpy().item() == 1 and not self.autotune_steps_per_execution
+      self._steps_per_execution is None
+      or self._steps_per_execution.numpy().item() == 1
+      and not self.autotune_steps_per_execution
     ):
 
       def test_function(iterator):
@@ -1952,7 +1951,7 @@ class Trainer():
         test_function = tf.function(test_function, reduce_retracing=True)
 
       if self._cluster_coordinator:
-        self.test_function = (lambda it: self._cluster_coordinator.schedule(test_function, args=(it,)))
+        self.test_function = lambda it: self._cluster_coordinator.schedule(test_function, args=(it,))
       else:
         self.test_function = test_function
 
@@ -1971,7 +1970,7 @@ class Trainer():
         test_function = tf.function(test_function, reduce_retracing=True)
 
       self.test_function = lambda it: self._cluster_coordinator.schedule(
-          test_function, args=(it, self._steps_per_execution.value())
+        test_function, args=(it, self._steps_per_execution.value())
       )
     else:
 
@@ -1989,19 +1988,19 @@ class Trainer():
 
   @traceback_utils.filter_traceback
   def evaluate(
-      self,
-      x=None,
-      y=None,
-      batch_size=None,
-      verbose="auto",
-      sample_weight=None,
-      steps=None,
-      callbacks=None,
-      max_queue_size=10,
-      workers=1,
-      use_multiprocessing=False,
-      return_dict=False,
-      **kwargs,
+    self,
+    x=None,
+    y=None,
+    batch_size=None,
+    verbose="auto",
+    sample_weight=None,
+    steps=None,
+    callbacks=None,
+    max_queue_size=10,
+    workers=1,
+    use_multiprocessing=False,
+    return_dict=False,
+    **kwargs,
   ):
     """Returns the loss value & metrics values for the model in test mode.
 
@@ -2099,44 +2098,44 @@ class Trainer():
       raise TypeError(f"Invalid keyword arguments: {list(kwargs.keys())}")
 
     if self.distribute_strategy._should_use_with_coordinator:
-      self._cluster_coordinator = (tf.distribute.experimental.coordinator.ClusterCoordinator(self.distribute_strategy))
+      self._cluster_coordinator = tf.distribute.experimental.coordinator.ClusterCoordinator(self.distribute_strategy)
 
     verbose = training_module._get_verbosity(verbose, self.distribute_strategy)
     if self._pss_evaluation_shards:
       self._disallow_exact_eval_with_add_metrics()
     with self.distribute_strategy.scope():
       # Use cached evaluation data only when it's called in `Model.fit`
-      if (use_cached_eval_dataset and getattr(self, "_eval_data_handler", None) is not None):
+      if use_cached_eval_dataset and getattr(self, "_eval_data_handler", None) is not None:
         data_handler = self._eval_data_handler
       else:
         # Creates a `tf.data.Dataset` and handles batch and epoch
         # iteration.
         data_handler = data_adapter.get_data_handler(
-            x=x,
-            y=y,
-            sample_weight=sample_weight,
-            batch_size=batch_size,
-            steps_per_epoch=steps,
-            initial_epoch=0,
-            epochs=1,
-            max_queue_size=max_queue_size,
-            workers=workers,
-            use_multiprocessing=use_multiprocessing,
-            model=self,
-            steps_per_execution=self._steps_per_execution,
-            pss_evaluation_shards=self._pss_evaluation_shards,
+          x=x,
+          y=y,
+          sample_weight=sample_weight,
+          batch_size=batch_size,
+          steps_per_epoch=steps,
+          initial_epoch=0,
+          epochs=1,
+          max_queue_size=max_queue_size,
+          workers=workers,
+          use_multiprocessing=use_multiprocessing,
+          model=self,
+          steps_per_execution=self._steps_per_execution,
+          pss_evaluation_shards=self._pss_evaluation_shards,
         )
 
       # Container that configures and calls `tf.keras.Callback`s.
       if not isinstance(callbacks, callbacks_module.CallbackList):
         callbacks = callbacks_module.CallbackList(
-            callbacks,
-            add_history=True,
-            add_progbar=verbose != 0,
-            model=self,
-            verbose=verbose,
-            epochs=1,
-            steps=data_handler.inferred_steps,
+          callbacks,
+          add_history=True,
+          add_progbar=verbose != 0,
+          model=self,
+          verbose=verbose,
+          epochs=1,
+          steps=data_handler.inferred_steps,
         )
 
       # Initialize to prevent errors if 0 epochs are evaluated.
@@ -2148,8 +2147,8 @@ class Trainer():
       if self.autotune_steps_per_execution:
         self._steps_per_execution_tuner.start()
       for (
-          _,
-          dataset_or_iterator,
+        _,
+        dataset_or_iterator,
       ) in data_handler.enumerate_epochs():  # Single epoch.
         self.reset_metrics()
         with data_handler.catch_stop_iteration():
@@ -2157,10 +2156,10 @@ class Trainer():
             with tf.profiler.experimental.Trace("test", step_num=step, _r=1):
               callbacks.on_test_batch_begin(step)
               logs = test_function_runner.run_step(
-                  dataset_or_iterator,
-                  data_handler,
-                  step,
-                  self._pss_evaluation_shards,
+                dataset_or_iterator,
+                data_handler,
+                step,
+                self._pss_evaluation_shards,
               )
 
       logs = tf_utils.sync_to_numpy_or_python_type(logs)
@@ -2183,10 +2182,10 @@ class Trainer():
     compiled_metrics = self.compiled_metrics.metrics
     if any([metric not in compiled_metrics for metric in metrics_from_add_metric]):
       raise ValueError(
-          "Detected that a metric was added to this model "
-          "via `Model.add_metric`. This is not currently "
-          "supported when using exact evaluation with "
-          "`tf.distribute.ParameterServerStrategy`."
+        "Detected that a metric was added to this model "
+        "via `Model.add_metric`. This is not currently "
+        "supported when using exact evaluation with "
+        "`tf.distribute.ParameterServerStrategy`."
       )
 
   def _infer_exact_eval_shards(self, pss_evaluation_shards):
@@ -2198,7 +2197,7 @@ class Trainer():
     return pss_evaluation_shards
 
   def _get_test_function_runner(self, callbacks):
-    if (self._pss_evaluation_shards and self.distribute_strategy._should_use_with_coordinator):
+    if self._pss_evaluation_shards and self.distribute_strategy._should_use_with_coordinator:
       self.test_function = self._make_test_function_exact()
       test_function_runner = training_module._ExactTestFunction(self.test_function, callbacks)
     else:
@@ -2275,8 +2274,9 @@ class Trainer():
 
     # Special case if steps_per_execution is one.
     if (
-        self._steps_per_execution is None or
-        self._steps_per_execution.numpy().item() == 1 and not self.autotune_steps_per_execution
+      self._steps_per_execution is None
+      or self._steps_per_execution.numpy().item() == 1
+      and not self.autotune_steps_per_execution
     ):
 
       def predict_function(iterator):
@@ -2290,15 +2290,15 @@ class Trainer():
         outputs = step_function(iterator)
         for _ in tf.range(self._steps_per_execution - 1):
           tf.autograph.experimental.set_loop_options(
-              shape_invariants=[
-                  (
-                      outputs,
-                      tf.nest.map_structure(
-                          lambda t: tf_utils.get_tensor_spec(t, dynamic_batch=True).shape,
-                          outputs,
-                      ),
-                  )
-              ]
+            shape_invariants=[
+              (
+                outputs,
+                tf.nest.map_structure(
+                  lambda t: tf_utils.get_tensor_spec(t, dynamic_batch=True).shape,
+                  outputs,
+                ),
+              )
+            ]
           )
           step_outputs = step_function(iterator)
           outputs = tf.nest.map_structure(lambda t1, t2: training_module.concat([t1, t2]), outputs, step_outputs)
@@ -2312,15 +2312,15 @@ class Trainer():
 
   @traceback_utils.filter_traceback
   def predict(
-      self,
-      x,
-      batch_size=None,
-      verbose="auto",
-      steps=None,
-      callbacks=None,
-      max_queue_size=10,
-      workers=1,
-      use_multiprocessing=False,
+    self,
+    x,
+    batch_size=None,
+    verbose="auto",
+    steps=None,
+    callbacks=None,
+    max_queue_size=10,
+    workers=1,
+    use_multiprocessing=False,
   ):
     """Generates output predictions for the input samples.
 
@@ -2434,45 +2434,46 @@ class Trainer():
     with self.distribute_strategy.scope():
       # Creates a `tf.data.Dataset` and handles batch and epoch iteration.
       dataset_types = (tf.compat.v1.data.Dataset, tf.data.Dataset)
-      if (self._in_multi_worker_mode() or
-          training_module._is_tpu_multi_host(self.distribute_strategy)) and isinstance(x, dataset_types):
+      if (self._in_multi_worker_mode() or training_module._is_tpu_multi_host(self.distribute_strategy)) and isinstance(
+        x, dataset_types
+      ):
         try:
           options = tf.data.Options()
           data_option = tf.data.experimental.AutoShardPolicy.DATA
-          options.experimental_distribute.auto_shard_policy = (data_option)
+          options.experimental_distribute.auto_shard_policy = data_option
           x = x.with_options(options)
         except ValueError:
           warnings.warn(
-              "Using Model.predict with MultiWorkerMirroredStrategy "
-              "or TPUStrategy and AutoShardPolicy.FILE might lead to "
-              "out-of-order result. Consider setting it to "
-              "AutoShardPolicy.DATA.",
-              stacklevel=2,
+            "Using Model.predict with MultiWorkerMirroredStrategy "
+            "or TPUStrategy and AutoShardPolicy.FILE might lead to "
+            "out-of-order result. Consider setting it to "
+            "AutoShardPolicy.DATA.",
+            stacklevel=2,
           )
 
       data_handler = data_adapter.get_data_handler(
-          x=x,
-          batch_size=batch_size,
-          steps_per_epoch=steps,
-          initial_epoch=0,
-          epochs=1,
-          max_queue_size=max_queue_size,
-          workers=workers,
-          use_multiprocessing=use_multiprocessing,
-          model=self,
-          steps_per_execution=self._steps_per_execution,
+        x=x,
+        batch_size=batch_size,
+        steps_per_epoch=steps,
+        initial_epoch=0,
+        epochs=1,
+        max_queue_size=max_queue_size,
+        workers=workers,
+        use_multiprocessing=use_multiprocessing,
+        model=self,
+        steps_per_execution=self._steps_per_execution,
       )
 
       # Container that configures and calls `tf.keras.Callback`s.
       if not isinstance(callbacks, callbacks_module.CallbackList):
         callbacks = callbacks_module.CallbackList(
-            callbacks,
-            add_history=True,
-            add_progbar=verbose != 0,
-            model=self,
-            verbose=verbose,
-            epochs=1,
-            steps=data_handler.inferred_steps,
+          callbacks,
+          add_history=True,
+          add_progbar=verbose != 0,
+          model=self,
+          verbose=verbose,
+          epochs=1,
+          steps=data_handler.inferred_steps,
         )
 
       self.predict_function = self.make_predict_function()
@@ -2488,37 +2489,35 @@ class Trainer():
             tmp_batch_outputs = self.predict_function(iterator)
             if data_handler.should_sync:
               context.async_wait()
-            batch_outputs = (
-                tmp_batch_outputs  # No error, now safe to assign.
-            )
+            batch_outputs = tmp_batch_outputs  # No error, now safe to assign.
             if outputs is None:
               outputs = tf.nest.map_structure(
-                  lambda batch_output: [batch_output],
-                  batch_outputs,
+                lambda batch_output: [batch_output],
+                batch_outputs,
               )
             else:
               tf.__internal__.nest.map_structure_up_to(
-                  batch_outputs,
-                  lambda output, batch_output: output.append(batch_output),
-                  outputs,
-                  batch_outputs,
+                batch_outputs,
+                lambda output, batch_output: output.append(batch_output),
+                outputs,
+                batch_outputs,
               )
             end_step = step + data_handler.step_increment
             callbacks.on_predict_batch_end(end_step, {"outputs": batch_outputs})
       if batch_outputs is None:
         raise ValueError(
-            "Unexpected result of `predict_function` "
-            "(Empty batch_outputs). Please use "
-            "`Model.compile(..., run_eagerly=True)`, or "
-            "`tf.config.run_functions_eagerly(True)` for more "
-            "information of where went wrong, or file a "
-            "issue/bug to `tf.keras`."
+          "Unexpected result of `predict_function` "
+          "(Empty batch_outputs). Please use "
+          "`Model.compile(..., run_eagerly=True)`, or "
+          "`tf.config.run_functions_eagerly(True)` for more "
+          "information of where went wrong, or file a "
+          "issue/bug to `tf.keras`."
         )
       if self.autotune_steps_per_execution:
         self._steps_per_execution_tuner.stop()
       callbacks.on_predict_end()
     all_outputs = tf.__internal__.nest.map_structure_up_to(
-        batch_outputs, training_module.potentially_ragged_concat, outputs
+      batch_outputs, training_module.potentially_ragged_concat, outputs
     )
 
     # If originally PSS strategy was used, then replace it back since
@@ -2552,13 +2551,13 @@ class Trainer():
       m.reset_state()
 
   def train_on_batch(
-      self,
-      x,
-      y=None,
-      sample_weight=None,
-      class_weight=None,
-      reset_metrics=True,
-      return_dict=False,
+    self,
+    x,
+    y=None,
+    sample_weight=None,
+    class_weight=None,
+    reset_metrics=True,
+    return_dict=False,
   ):
     """Runs a single gradient update on a single batch of data.
 
@@ -2606,8 +2605,11 @@ class Trainer():
     training_module._disallow_inside_tf_function("train_on_batch")
     if reset_metrics:
       self.reset_metrics()
-    with self.distribute_strategy.scope(), training_utils.RespectCompiledTrainableState(  # noqa: E501
+    with (
+      self.distribute_strategy.scope(),
+      training_utils.RespectCompiledTrainableState(  # noqa: E501
         self
+      ),
     ):
       iterator = data_adapter.single_batch_iterator(self.distribute_strategy, x, y, sample_weight, class_weight)
       self.train_function = self.make_train_function()
@@ -2620,12 +2622,12 @@ class Trainer():
       return training_module.flatten_metrics_in_order(logs, self.metrics_names)
 
   def test_on_batch(
-      self,
-      x,
-      y=None,
-      sample_weight=None,
-      reset_metrics=True,
-      return_dict=False,
+    self,
+    x,
+    y=None,
+    sample_weight=None,
+    reset_metrics=True,
+    return_dict=False,
   ):
     """Test the model on a single batch of samples.
 
@@ -2705,21 +2707,21 @@ class Trainer():
 
   @doc_controls.do_not_generate_docs
   def fit_generator(
-      self,
-      generator,
-      steps_per_epoch=None,
-      epochs=1,
-      verbose=1,
-      callbacks=None,
-      validation_data=None,
-      validation_steps=None,
-      validation_freq=1,
-      class_weight=None,
-      max_queue_size=10,
-      workers=1,
-      use_multiprocessing=False,
-      shuffle=True,
-      initial_epoch=0,
+    self,
+    generator,
+    steps_per_epoch=None,
+    epochs=1,
+    verbose=1,
+    callbacks=None,
+    validation_data=None,
+    validation_steps=None,
+    validation_freq=1,
+    class_weight=None,
+    max_queue_size=10,
+    workers=1,
+    use_multiprocessing=False,
+    shuffle=True,
+    initial_epoch=0,
   ):
     """Fits the model on data yielded batch-by-batch by a Python generator.
 
@@ -2728,38 +2730,38 @@ class Trainer():
       use this endpoint.
     """
     warnings.warn(
-        "`Model.fit_generator` is deprecated and "
-        "will be removed in a future version. "
-        "Please use `Model.fit`, which supports generators.",
-        stacklevel=2,
+      "`Model.fit_generator` is deprecated and "
+      "will be removed in a future version. "
+      "Please use `Model.fit`, which supports generators.",
+      stacklevel=2,
     )
     return self.fit(
-        generator,
-        steps_per_epoch=steps_per_epoch,
-        epochs=epochs,
-        verbose=verbose,
-        callbacks=callbacks,
-        validation_data=validation_data,
-        validation_steps=validation_steps,
-        validation_freq=validation_freq,
-        class_weight=class_weight,
-        max_queue_size=max_queue_size,
-        workers=workers,
-        use_multiprocessing=use_multiprocessing,
-        shuffle=shuffle,
-        initial_epoch=initial_epoch,
+      generator,
+      steps_per_epoch=steps_per_epoch,
+      epochs=epochs,
+      verbose=verbose,
+      callbacks=callbacks,
+      validation_data=validation_data,
+      validation_steps=validation_steps,
+      validation_freq=validation_freq,
+      class_weight=class_weight,
+      max_queue_size=max_queue_size,
+      workers=workers,
+      use_multiprocessing=use_multiprocessing,
+      shuffle=shuffle,
+      initial_epoch=initial_epoch,
     )
 
   @doc_controls.do_not_generate_docs
   def evaluate_generator(
-      self,
-      generator,
-      steps=None,
-      callbacks=None,
-      max_queue_size=10,
-      workers=1,
-      use_multiprocessing=False,
-      verbose=0,
+    self,
+    generator,
+    steps=None,
+    callbacks=None,
+    max_queue_size=10,
+    workers=1,
+    use_multiprocessing=False,
+    verbose=0,
   ):
     """Evaluates the model on a data generator.
 
@@ -2768,33 +2770,33 @@ class Trainer():
       need to use this endpoint.
     """
     warnings.warn(
-        "`Model.evaluate_generator` is deprecated and "
-        "will be removed in a future version. "
-        "Please use `Model.evaluate`, which supports generators.",
-        stacklevel=2,
+      "`Model.evaluate_generator` is deprecated and "
+      "will be removed in a future version. "
+      "Please use `Model.evaluate`, which supports generators.",
+      stacklevel=2,
     )
     self._check_call_args("evaluate_generator")
 
     return self.evaluate(
-        generator,
-        steps=steps,
-        max_queue_size=max_queue_size,
-        workers=workers,
-        use_multiprocessing=use_multiprocessing,
-        verbose=verbose,
-        callbacks=callbacks,
+      generator,
+      steps=steps,
+      max_queue_size=max_queue_size,
+      workers=workers,
+      use_multiprocessing=use_multiprocessing,
+      verbose=verbose,
+      callbacks=callbacks,
     )
 
   @doc_controls.do_not_generate_docs
   def predict_generator(
-      self,
-      generator,
-      steps=None,
-      callbacks=None,
-      max_queue_size=10,
-      workers=1,
-      use_multiprocessing=False,
-      verbose=0,
+    self,
+    generator,
+    steps=None,
+    callbacks=None,
+    max_queue_size=10,
+    workers=1,
+    use_multiprocessing=False,
+    verbose=0,
   ):
     """Generates predictions for the input samples from a data generator.
 
@@ -2803,19 +2805,19 @@ class Trainer():
       need to use this endpoint.
     """
     warnings.warn(
-        "`Model.predict_generator` is deprecated and "
-        "will be removed in a future version. "
-        "Please use `Model.predict`, which supports generators.",
-        stacklevel=2,
+      "`Model.predict_generator` is deprecated and "
+      "will be removed in a future version. "
+      "Please use `Model.predict`, which supports generators.",
+      stacklevel=2,
     )
     return self.predict(
-        generator,
-        steps=steps,
-        max_queue_size=max_queue_size,
-        workers=workers,
-        use_multiprocessing=use_multiprocessing,
-        verbose=verbose,
-        callbacks=callbacks,
+      generator,
+      steps=steps,
+      max_queue_size=max_queue_size,
+      workers=workers,
+      use_multiprocessing=use_multiprocessing,
+      verbose=verbose,
+      callbacks=callbacks,
     )
 
   def _check_call_args(self, method_name):
@@ -2823,7 +2825,7 @@ class Trainer():
     # Always allow first arg, regardless of arg name.
     fullargspec = self.main_model._call_spec.full_argspec
     if fullargspec.defaults:
-      positional_args = fullargspec.args[:-len(fullargspec.defaults)]
+      positional_args = fullargspec.args[: -len(fullargspec.defaults)]
     else:
       positional_args = fullargspec.args
     if "training" in positional_args:
@@ -2833,19 +2835,19 @@ class Trainer():
     if len(positional_args) > 2:
       extra_args = positional_args[2:]
       raise ValueError(
-          f"Models passed to `{method_name}` can only have `training` "
-          "and the first argument in `call()` as positional arguments, "
-          f"found: {extra_args}."
+        f"Models passed to `{method_name}` can only have `training` "
+        "and the first argument in `call()` as positional arguments, "
+        f"found: {extra_args}."
       )
 
   def _validate_compile(self, optimizer, metrics, **kwargs):
     """Performs validation checks for the default `compile()`."""
     if any(isinstance(opt, optimizer_v1.Optimizer) for opt in tf.nest.flatten(optimizer)):
       raise ValueError(
-          f"`tf.compat.v1.keras` Optimizer ({optimizer}) is "
-          "not supported when eager execution is enabled. Use a "
-          "`tf.keras` Optimizer instead, or disable eager "
-          "execution."
+        f"`tf.compat.v1.keras` Optimizer ({optimizer}) is "
+        "not supported when eager execution is enabled. Use a "
+        "`tf.keras` Optimizer instead, or disable eager "
+        "execution."
       )
 
     kwargs.pop("cloning", None)  # Legacy DistStrat argument, never used.
@@ -2853,23 +2855,22 @@ class Trainer():
     distribute_arg = kwargs.pop("distribute", None)
     if distribute_arg is not None:
       raise ValueError(
-          "`distribute` argument in compile is not available in TF 2.0. "
-          "Please create the model under the `strategy.scope()`. "
-          f"Received: {distribute_arg}."
+        "`distribute` argument in compile is not available in TF 2.0. "
+        "Please create the model under the `strategy.scope()`. "
+        f"Received: {distribute_arg}."
       )
     target_tensor_arg = kwargs.pop("target_tensors", None)
     if target_tensor_arg is not None:
       raise ValueError(
-          "`target_tensors` argument is not supported when executing "
-          f"eagerly. Received: {target_tensor_arg}."
+        f"`target_tensors` argument is not supported when executing eagerly. Received: {target_tensor_arg}."
       )
     invalid_kwargs = set(kwargs) - {"sample_weight_mode"}
     if invalid_kwargs:
       raise TypeError(
-          "Invalid keyword argument(s) in `compile()`: "
-          f"{(invalid_kwargs,)}. Valid keyword arguments include "
-          '"cloning", "experimental_run_tf_function", "distribute",'
-          ' "target_tensors", or "sample_weight_mode".'
+        "Invalid keyword argument(s) in `compile()`: "
+        f"{(invalid_kwargs,)}. Valid keyword arguments include "
+        '"cloning", "experimental_run_tf_function", "distribute",'
+        ' "target_tensors", or "sample_weight_mode".'
       )
 
     # Model must be created and compiled with the same DistStrat.
@@ -2878,14 +2879,14 @@ class Trainer():
       for v in self.main_model.variables:
         if not strategy.extended.variable_created_in_scope(v):
           raise ValueError(
-              f"Variable ({v}) was not created in the distribution "
-              f"strategy scope of ({strategy}). It is most likely "
-              "because some layers, model, or optimizer was being "
-              "created outside the distribution strategy scope. Try "
-              "to make sure your code looks similar "
-              "to the following.\nwith strategy.scope():\n"
-              "  model=_create_model()\n"
-              "  model.compile(...)"
+            f"Variable ({v}) was not created in the distribution "
+            f"strategy scope of ({strategy}). It is most likely "
+            "because some layers, model, or optimizer was being "
+            "created outside the distribution strategy scope. Try "
+            "to make sure your code looks similar "
+            "to the following.\nwith strategy.scope():\n"
+            "  model=_create_model()\n"
+            "  model.compile(...)"
           )
 
     # Model metrics must be created in the same distribution strategy scope
@@ -2895,14 +2896,14 @@ class Trainer():
       for v in getattr(metric, "variables", []):
         if not strategy.extended.variable_created_in_scope(v):
           raise ValueError(
-              f"Metric ({metric}) passed to `model.compile` was "
-              "created inside a different distribution strategy "
-              "scope than the model. All metrics must be created "
-              "in the same distribution strategy "
-              f"scope as the model (in this case {strategy}). "
-              "If you pass in a string identifier for a metric to "
-              "compile, the metric will automatically be created "
-              "in the correct distribution strategy scope."
+            f"Metric ({metric}) passed to `model.compile` was "
+            "created inside a different distribution strategy "
+            "scope than the model. All metrics must be created "
+            "in the same distribution strategy "
+            f"scope as the model (in this case {strategy}). "
+            "If you pass in a string identifier for a metric to "
+            "compile, the metric will automatically be created "
+            "in the correct distribution strategy scope."
           )
 
     # Model metrics must be created in the same distribution strategy scope
@@ -2911,14 +2912,14 @@ class Trainer():
       for v in getattr(opt, "_weights", []):
         if not strategy.extended.variable_created_in_scope(v):
           raise ValueError(
-              f"Optimizer ({optimizer}) passed to `model.compile` "
-              "was created inside a different distribution strategy "
-              "scope than the model. All optimizers must be created "
-              "in the same distribution strategy scope as the model "
-              f"(in this case {strategy}). If you pass in a string "
-              "identifier for an optimizer to compile, the optimizer "
-              "will automatically be created in the correct "
-              "distribution strategy scope."
+            f"Optimizer ({optimizer}) passed to `model.compile` "
+            "was created inside a different distribution strategy "
+            "scope than the model. All optimizers must be created "
+            "in the same distribution strategy scope as the model "
+            f"(in this case {strategy}). If you pass in a string "
+            "identifier for an optimizer to compile, the optimizer "
+            "will automatically be created in the correct "
+            "distribution strategy scope."
           )
 
   def _maybe_load_initial_counters_from_ckpt(self, steps_per_epoch, initial_epoch):
@@ -2941,7 +2942,7 @@ class Trainer():
     initial_step = 0
     if self._training_state is not None:
       return self._training_state.maybe_load_initial_counters_from_ckpt(
-          steps_per_epoch, initial_epoch, mode=ModeKeys.TRAIN
+        steps_per_epoch, initial_epoch, mode=ModeKeys.TRAIN
       )
     return (initial_epoch, initial_step)
 
@@ -2951,26 +2952,22 @@ class Trainer():
     # model is compiled
     # (i.e. whether the model is built and its inputs/outputs are set).
     if not self._is_compiled:
-      raise RuntimeError(
-          "You must compile your model before "
-          "training/testing. "
-          "Use `model.compile(optimizer, loss)`."
-      )
+      raise RuntimeError("You must compile your model before training/testing. Use `model.compile(optimizer, loss)`.")
 
   def _check_sample_weight_warning(self, x, sample_weight):
     # Datasets can include sample weight, by returning a tuple with the
     # structure of `(x, y, sample_weight)`.
     sample_weight_present = sample_weight is not None or (
-        isinstance(x, tf.data.Dataset) and isinstance(x.element_spec, tuple) and len(x.element_spec) == 3
+      isinstance(x, tf.data.Dataset) and isinstance(x.element_spec, tuple) and len(x.element_spec) == 3
     )
 
-    if (sample_weight_present and self.compiled_metrics._user_weighted_metrics is None):
+    if sample_weight_present and self.compiled_metrics._user_weighted_metrics is None:
       logging.warning(
-          "`evaluate()` received a value for `sample_weight`, but "
-          "`weighted_metrics` were not provided.  Did you mean to pass "
-          "metrics to `weighted_metrics` in `compile()`?  If this is "
-          "intentional you can pass `weighted_metrics=[]` to `compile()` "
-          "in order to silence this warning."
+        "`evaluate()` received a value for `sample_weight`, but "
+        "`weighted_metrics` were not provided.  Did you mean to pass "
+        "metrics to `weighted_metrics` in `compile()`?  If this is "
+        "intentional you can pass `weighted_metrics=[]` to `compile()` "
+        "in order to silence this warning."
       )
 
   def _should_eval(self, epoch, validation_freq):
@@ -2981,9 +2978,9 @@ class Trainer():
       return epoch in validation_freq
     else:
       raise ValueError(
-          "Expected `validation_freq` to be a list or int. "
-          f"Received: validation_freq={validation_freq} of the "
-          f"type {type(validation_freq)}."
+        "Expected `validation_freq` to be a list or int. "
+        f"Received: validation_freq={validation_freq} of the "
+        f"type {type(validation_freq)}."
       )
 
   ######################################################################
@@ -3012,11 +3009,11 @@ class Trainer():
         saved_weighted_metrics = self.compiled_metrics._weighted_metrics
 
     compile_args = {
-        "optimizer": self.optimizer,
-        "loss": self.compiled_loss._user_losses,
-        "metrics": saved_metrics,
-        "weighted_metrics": saved_weighted_metrics,
-        "loss_weights": self.compiled_loss._user_loss_weights,
+      "optimizer": self.optimizer,
+      "loss": self.compiled_loss._user_losses,
+      "metrics": saved_metrics,
+      "weighted_metrics": saved_weighted_metrics,
+      "loss_weights": self.compiled_loss._user_loss_weights,
     }
     return compile_args
 

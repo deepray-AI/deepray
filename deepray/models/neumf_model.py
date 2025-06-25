@@ -28,6 +28,7 @@ MLP for modeling the user-item latent structures.
 In NeuMF model, it allows GMF and MLP to learn separate embeddings, and combine
 the two models by concatenating their last hidden layer.
 """
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -47,34 +48,33 @@ from absl import flags
 flags.DEFINE_integer(name="num_factors", default=8, help=flags_core.help_wrap("The Embedding size of MF model."))
 # Set the default as a list of strings to be consistent with input arguments
 flags.DEFINE_list(
-    name="layers",
-    default=["64", "32", "16", "8"],
-    help=flags_core.help_wrap(
-        "The sizes of hidden layers for MLP. Example "
-        "to specify different sizes of MLP layers: --layers=32,16,8,4"
-    )
+  name="layers",
+  default=["64", "32", "16", "8"],
+  help=flags_core.help_wrap(
+    "The sizes of hidden layers for MLP. Example to specify different sizes of MLP layers: --layers=32,16,8,4"
+  ),
 )
 flags.DEFINE_float(
-    name="mf_regularization",
-    default=0.,
-    help=flags_core.help_wrap(
-        "The regularization factor for MF embeddings. The factor is used by "
-        "regularizer which allows to apply penalties on layer parameters or "
-        "layer activity during optimization."
-    )
+  name="mf_regularization",
+  default=0.0,
+  help=flags_core.help_wrap(
+    "The regularization factor for MF embeddings. The factor is used by "
+    "regularizer which allows to apply penalties on layer parameters or "
+    "layer activity during optimization."
+  ),
 )
 flags.DEFINE_list(
-    name="mlp_regularization",
-    default=["0.", "0.", "0.", "0."],
-    help=flags_core.help_wrap(
-        "The regularization factor for each MLP layer. See mf_regularization "
-        "help for more info about regularization factor."
-    )
+  name="mlp_regularization",
+  default=["0.", "0.", "0.", "0."],
+  help=flags_core.help_wrap(
+    "The regularization factor for each MLP layer. See mf_regularization "
+    "help for more info about regularization factor."
+  ),
 )
 flags.DEFINE_integer(
-    name="num_neg",
-    default=4,
-    help=flags_core.help_wrap("The Number of negative instances to pair with a positive instance.")
+  name="num_neg",
+  default=4,
+  help=flags_core.help_wrap("The Number of negative instances to pair with a positive instance."),
 )
 
 
@@ -121,12 +121,7 @@ def neumf_model_fn(features, labels, mode, params):
   if mode == tf_estimator.ModeKeys.EVAL:
     duplicate_mask = tf.cast(features[rconst.DUPLICATE_MASK], tf.float32)
     return _get_estimator_spec_with_metrics(
-        logits,
-        softmax_logits,
-        duplicate_mask,
-        params["num_neg"],
-        params["match_mlperf"],
-        use_tpu_spec=params["use_tpu"]
+      logits, softmax_logits, duplicate_mask, params["num_neg"], params["match_mlperf"], use_tpu_spec=params["use_tpu"]
     )
 
   elif mode == tf_estimator.ModeKeys.TRAIN:
@@ -134,13 +129,13 @@ def neumf_model_fn(features, labels, mode, params):
     valid_pt_mask = features[rconst.VALID_POINT_MASK]
 
     optimizer = tf.compat.v1.train.AdamOptimizer(
-        learning_rate=params["learning_rate"], beta1=params["beta1"], beta2=params["beta2"], epsilon=params["epsilon"]
+      learning_rate=params["learning_rate"], beta1=params["beta1"], beta2=params["beta2"], epsilon=params["epsilon"]
     )
     if params["use_tpu"]:
       optimizer = tf.compat.v1.tpu.CrossShardOptimizer(optimizer)
 
     loss = tf.compat.v1.losses.sparse_softmax_cross_entropy(
-        labels=labels, logits=softmax_logits, weights=tf.cast(valid_pt_mask, tf.float32)
+      labels=labels, logits=softmax_logits, weights=tf.cast(valid_pt_mask, tf.float32)
     )
 
     tf.identity(loss, name="cross_entropy")
@@ -164,20 +159,19 @@ def _strip_first_and_last_dimension(x, batch_size):
 
 
 class ConstructModel(tf.keras.layers.Layer):
-
   def __init__(self, params: Dict[Text, Any]):
     """Initialize NeuMF model.
 
-      Args:
-        user_input: keras input layer for users
-        item_input: keras input layer for items
-        params: Dict of hyperparameters.
+    Args:
+      user_input: keras input layer for users
+      item_input: keras input layer for items
+      params: Dict of hyperparameters.
 
-      Raises:
-        ValueError: if the first model layer is not even.
-      Returns:
-        model:  a keras Model for computing the logits
-      """
+    Raises:
+      ValueError: if the first model layer is not even.
+    Returns:
+      model:  a keras Model for computing the logits
+    """
     num_users = params["num_users"]
     num_items = params["num_items"]
     self.model_layers = params["model_layers"]
@@ -192,46 +186,45 @@ class ConstructModel(tf.keras.layers.Layer):
     # Initializer for embedding layers
     embedding_initializer = "glorot_uniform"
     self.emb_layer = tf.keras.layers.Embedding(
-        num_items,
-        self.mf_dim + self.model_layers[0] // 2,
-        embeddings_initializer=embedding_initializer,
-        embeddings_regularizer=tf.keras.regularizers.l2(mf_regularization),
-        input_length=1,
-        name="embedding_item"
+      num_items,
+      self.mf_dim + self.model_layers[0] // 2,
+      embeddings_initializer=embedding_initializer,
+      embeddings_regularizer=tf.keras.regularizers.l2(mf_regularization),
+      input_length=1,
+      name="embedding_item",
     )
     self.user_layer = tf.keras.layers.Embedding(
-        num_users,
-        self.mf_dim + self.model_layers[0] // 2,
-        embeddings_initializer=embedding_initializer,
-        embeddings_regularizer=tf.keras.regularizers.l2(mf_regularization),
-        input_length=1,
-        name="embedding_user"
+      num_users,
+      self.mf_dim + self.model_layers[0] // 2,
+      embeddings_initializer=embedding_initializer,
+      embeddings_regularizer=tf.keras.regularizers.l2(mf_regularization),
+      input_length=1,
+      name="embedding_user",
     )
 
     self.prediction_layer = tf.keras.layers.Dense(
-        1, activation=None, kernel_initializer="lecun_uniform", name=rconst.RATING_COLUMN
+      1, activation=None, kernel_initializer="lecun_uniform", name=rconst.RATING_COLUMN
     )
 
     self.kernel = []
     num_layer = len(self.model_layers)  # Number of layers in the MLP
     for layer in xrange(1, num_layer):
       self.kernel.append(
-          tf.keras.layers.Dense(
-              self.model_layers[layer],
-              kernel_regularizer=tf.keras.regularizers.l2(self.mlp_reg_layers[layer]),
-              activation="relu"
-          )
+        tf.keras.layers.Dense(
+          self.model_layers[layer],
+          kernel_regularizer=tf.keras.regularizers.l2(self.mlp_reg_layers[layer]),
+          activation="relu",
+        )
       )
 
   def call(self, user_input: tf.Tensor, item_input: tf.Tensor, *args, **kwargs):
-
     def mf_slice_fn(x):
       x = tf.squeeze(x, [1])
-      return x[:, :self.mf_dim]
+      return x[:, : self.mf_dim]
 
     def mlp_slice_fn(x):
       x = tf.squeeze(x, [1])
-      return x[:, self.mf_dim:]
+      return x[:, self.mf_dim :]
 
     # It turns out to be significantly more effecient to store the MF and MLP
     # embedding portions in the same table, and then slice as needed.
@@ -277,41 +270,34 @@ class ConstructModel(tf.keras.layers.Layer):
 
 
 def _get_estimator_spec_with_metrics(
-    logits: tf.Tensor,
-    softmax_logits: tf.Tensor,
-    duplicate_mask: tf.Tensor,
-    num_training_neg: int,
-    match_mlperf: bool = False,
-    use_tpu_spec: bool = False
+  logits: tf.Tensor,
+  softmax_logits: tf.Tensor,
+  duplicate_mask: tf.Tensor,
+  num_training_neg: int,
+  match_mlperf: bool = False,
+  use_tpu_spec: bool = False,
 ):
   """Returns a EstimatorSpec that includes the metrics."""
-  cross_entropy, \
-    metric_fn, \
-    in_top_k, \
-    ndcg, \
-    metric_weights = compute_eval_loss_and_metrics_helper(
-    logits,
-    softmax_logits,
-    duplicate_mask,
-    num_training_neg,
-    match_mlperf)
+  cross_entropy, metric_fn, in_top_k, ndcg, metric_weights = compute_eval_loss_and_metrics_helper(
+    logits, softmax_logits, duplicate_mask, num_training_neg, match_mlperf
+  )
 
   if use_tpu_spec:
     return tf_estimator.tpu.TPUEstimatorSpec(
-        mode=tf_estimator.ModeKeys.EVAL, loss=cross_entropy, eval_metrics=(metric_fn, [in_top_k, ndcg, metric_weights])
+      mode=tf_estimator.ModeKeys.EVAL, loss=cross_entropy, eval_metrics=(metric_fn, [in_top_k, ndcg, metric_weights])
     )
 
   return tf_estimator.EstimatorSpec(
-      mode=tf_estimator.ModeKeys.EVAL, loss=cross_entropy, eval_metric_ops=metric_fn(in_top_k, ndcg, metric_weights)
+    mode=tf_estimator.ModeKeys.EVAL, loss=cross_entropy, eval_metric_ops=metric_fn(in_top_k, ndcg, metric_weights)
   )
 
 
 def compute_eval_loss_and_metrics_helper(
-    logits: tf.Tensor,
-    softmax_logits: tf.Tensor,
-    duplicate_mask: tf.Tensor,
-    num_training_neg: int,
-    match_mlperf: bool = False
+  logits: tf.Tensor,
+  softmax_logits: tf.Tensor,
+  duplicate_mask: tf.Tensor,
+  num_training_neg: int,
+  match_mlperf: bool = False,
 ):
   """Model evaluation with HR and NDCG metrics.
 
@@ -376,12 +362,12 @@ def compute_eval_loss_and_metrics_helper(
   # Examples are provided by the eval Dataset in a structured format, so eval
   # labels can be reconstructed on the fly.
   eval_labels = tf.reshape(
-      shape=(-1,),
-      tensor=tf.one_hot(
-          tf.zeros(shape=(logits_by_user.shape[0],), dtype=tf.int32) + rconst.NUM_EVAL_NEGATIVES,
-          logits_by_user.shape[1],
-          dtype=tf.int32
-      )
+    shape=(-1,),
+    tensor=tf.one_hot(
+      tf.zeros(shape=(logits_by_user.shape[0],), dtype=tf.int32) + rconst.NUM_EVAL_NEGATIVES,
+      logits_by_user.shape[1],
+      dtype=tf.int32,
+    ),
   )
 
   eval_labels_float = tf.cast(eval_labels, tf.float32)
@@ -392,26 +378,27 @@ def compute_eval_loss_and_metrics_helper(
   # the training data. (And provides apples-to-apples comparison)
   negative_scale_factor = num_training_neg / rconst.NUM_EVAL_NEGATIVES
   example_weights = (
-      (eval_labels_float + (1 - eval_labels_float) * negative_scale_factor) * (1 + rconst.NUM_EVAL_NEGATIVES) /
-      (1 + num_training_neg)
+    (eval_labels_float + (1 - eval_labels_float) * negative_scale_factor)
+    * (1 + rconst.NUM_EVAL_NEGATIVES)
+    / (1 + num_training_neg)
   )
 
   # Tile metric weights back to logit dimensions
   expanded_metric_weights = tf.reshape(
-      tf.tile(metric_weights[:, tf.newaxis], (1, rconst.NUM_EVAL_NEGATIVES + 1)), (-1,)
+    tf.tile(metric_weights[:, tf.newaxis], (1, rconst.NUM_EVAL_NEGATIVES + 1)), (-1,)
   )
 
   # ignore padded examples
   example_weights *= tf.cast(expanded_metric_weights, tf.float32)
 
   cross_entropy = tf.compat.v1.losses.sparse_softmax_cross_entropy(
-      logits=softmax_logits, labels=eval_labels, weights=example_weights
+    logits=softmax_logits, labels=eval_labels, weights=example_weights
   )
 
   def metric_fn(top_k_tensor, ndcg_tensor, weight_tensor):
     return {
-        rconst.HR_KEY: tf.compat.v1.metrics.mean(top_k_tensor, weights=weight_tensor, name=rconst.HR_METRIC_NAME),
-        rconst.NDCG_KEY: tf.compat.v1.metrics.mean(ndcg_tensor, weights=weight_tensor, name=rconst.NDCG_METRIC_NAME)
+      rconst.HR_KEY: tf.compat.v1.metrics.mean(top_k_tensor, weights=weight_tensor, name=rconst.HR_METRIC_NAME),
+      rconst.NDCG_KEY: tf.compat.v1.metrics.mean(ndcg_tensor, weights=weight_tensor, name=rconst.NDCG_METRIC_NAME),
     }
 
   return cross_entropy, metric_fn, in_top_k, ndcg, metric_weights

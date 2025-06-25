@@ -28,10 +28,10 @@ def test_update_state_signature():
 
 def check_update_state_signature(metric_class, public_params, case_list):
   error_msg = (
-      "Class {} is missing the parameter {} in the `update_state` "
-      "method. If the method doesn't use this argument, declare "
-      "it anyway and raise a UserWarning if it is "
-      "not None."
+    "Class {} is missing the parameter {} in the `update_state` "
+    "method. If the method doesn't use this argument, declare "
+    "it anyway and raise a UserWarning if it is "
+    "not None."
   )
 
   update_state_signature = inspect.signature(metric_class.update_state)

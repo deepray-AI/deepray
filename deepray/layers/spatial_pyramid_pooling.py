@@ -26,47 +26,47 @@ from typing import Union, Iterable
 class SpatialPyramidPooling2D(tf.keras.layers.Layer):
   """Performs Spatial Pyramid Pooling.
 
-    See [Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition](https://arxiv.org/pdf/1406.4729.pdf).
+  See [Spatial Pyramid Pooling in Deep Convolutional Networks for Visual Recognition](https://arxiv.org/pdf/1406.4729.pdf).
 
-    Spatial Pyramid Pooling generates a fixed-length representation
-    regardless of input size/scale. It is typically used before a layer
-    that requires a constant input shape, for example before a Dense Layer.
+  Spatial Pyramid Pooling generates a fixed-length representation
+  regardless of input size/scale. It is typically used before a layer
+  that requires a constant input shape, for example before a Dense Layer.
 
-    Args:
-      bins: Either a collection of integers or a collection of collections of 2 integers.
-        Each element in the inner collection must contain 2 integers, (pooled_rows, pooled_cols)
-        For example, providing [1, 3, 5] or [[1, 1], [3, 3], [5, 5]] preforms pooling
-        using three different pooling layers, having outputs with dimensions 1x1, 3x3 and 5x5 respectively.
-        These are flattened along height and width to give an output of shape
-        [batch_size, (1 + 9 + 25), channels] = [batch_size, 35, channels].
-      data_format: A string,
-        one of `channels_last` (default) or `channels_first`.
-        The ordering of the dimensions in the inputs.
-        `channels_last` corresponds to inputs with shape
-        `(batch, height, width, channels)` while `channels_first`
-        corresponds to inputs with shape `(batch, channels, height, width)`.
+  Args:
+    bins: Either a collection of integers or a collection of collections of 2 integers.
+      Each element in the inner collection must contain 2 integers, (pooled_rows, pooled_cols)
+      For example, providing [1, 3, 5] or [[1, 1], [3, 3], [5, 5]] preforms pooling
+      using three different pooling layers, having outputs with dimensions 1x1, 3x3 and 5x5 respectively.
+      These are flattened along height and width to give an output of shape
+      [batch_size, (1 + 9 + 25), channels] = [batch_size, 35, channels].
+    data_format: A string,
+      one of `channels_last` (default) or `channels_first`.
+      The ordering of the dimensions in the inputs.
+      `channels_last` corresponds to inputs with shape
+      `(batch, height, width, channels)` while `channels_first`
+      corresponds to inputs with shape `(batch, channels, height, width)`.
 
-    Input shape:
-      - If `data_format='channels_last'`:
-        4D tensor with shape `(batch_size, height, width, channels)`.
-      - If `data_format='channels_first'`:
-        4D tensor with shape `(batch_size, channels, height, width)`.
+  Input shape:
+    - If `data_format='channels_last'`:
+      4D tensor with shape `(batch_size, height, width, channels)`.
+    - If `data_format='channels_first'`:
+      4D tensor with shape `(batch_size, channels, height, width)`.
 
-    Output shape:
-      The output is the pooled image, flattened across its height and width
-      - If `data_format='channels_last'`:
-        3D tensor with shape `(batch_size, num_bins, channels)`.
-      - If `data_format='channels_first'`:
-        3D tensor with shape `(batch_size, channels, num_bins)`.
-    """
+  Output shape:
+    The output is the pooled image, flattened across its height and width
+    - If `data_format='channels_last'`:
+      3D tensor with shape `(batch_size, num_bins, channels)`.
+    - If `data_format='channels_first'`:
+      3D tensor with shape `(batch_size, channels, num_bins)`.
+  """
 
   @typechecked
   def __init__(
-      self,
-      bins: Union[Iterable[int], Iterable[Iterable[int]]],
-      data_format=None,
-      *args,
-      **kwargs,
+    self,
+    bins: Union[Iterable[int], Iterable[Iterable[int]]],
+    data_format=None,
+    *args,
+    **kwargs,
   ):
     self.bins = [conv_utils.normalize_tuple(bin, 2, "bin") for bin in bins]
     self.data_format = conv_utils.normalize_data_format(data_format)

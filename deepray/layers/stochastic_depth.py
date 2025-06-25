@@ -6,51 +6,51 @@ from typeguard import typechecked
 class StochasticDepth(tf.keras.layers.Layer):
   """Stochastic Depth layer.
 
-    Implements Stochastic Depth as described in
-    [Deep Networks with Stochastic Depth](https://arxiv.org/abs/1603.09382), to randomly drop residual branches
-    in residual architectures.
+  Implements Stochastic Depth as described in
+  [Deep Networks with Stochastic Depth](https://arxiv.org/abs/1603.09382), to randomly drop residual branches
+  in residual architectures.
 
-    Usage:
-    Residual architectures with fixed depth, use residual branches that are merged back into the main network
-    by adding the residual branch back to the input:
+  Usage:
+  Residual architectures with fixed depth, use residual branches that are merged back into the main network
+  by adding the residual branch back to the input:
 
-    >>> input = np.ones((1, 3, 3, 1), dtype = np.float32)
-    >>> residual = tf.keras.layers.Conv2D(1, 1)(input)
-    >>> output = tf.keras.layers.Add()([input, residual])
-    >>> output.shape
-    TensorShape([1, 3, 3, 1])
+  >>> input = np.ones((1, 3, 3, 1), dtype = np.float32)
+  >>> residual = tf.keras.layers.Conv2D(1, 1)(input)
+  >>> output = tf.keras.layers.Add()([input, residual])
+  >>> output.shape
+  TensorShape([1, 3, 3, 1])
 
-    StochasticDepth acts as a drop-in replacement for the addition:
+  StochasticDepth acts as a drop-in replacement for the addition:
 
-    >>> input = np.ones((1, 3, 3, 1), dtype = np.float32)
-    >>> residual = tf.keras.layers.Conv2D(1, 1)(input)
-    >>> output = dp.layers.StochasticDepth()([input, residual])
-    >>> output.shape
-    TensorShape([1, 3, 3, 1])
+  >>> input = np.ones((1, 3, 3, 1), dtype = np.float32)
+  >>> residual = tf.keras.layers.Conv2D(1, 1)(input)
+  >>> output = dp.layers.StochasticDepth()([input, residual])
+  >>> output.shape
+  TensorShape([1, 3, 3, 1])
 
-    At train time, StochasticDepth returns:
+  At train time, StochasticDepth returns:
 
-    $$
-    x[0] + b_l * x[1],
-    $$
+  $$
+  x[0] + b_l * x[1],
+  $$
 
-    where $b_l$ is a random Bernoulli variable with probability $P(b_l = 1) = p_l$
+  where $b_l$ is a random Bernoulli variable with probability $P(b_l = 1) = p_l$
 
-    At test time, StochasticDepth rescales the activations of the residual branch based on the survival probability ($p_l$):
+  At test time, StochasticDepth rescales the activations of the residual branch based on the survival probability ($p_l$):
 
-    $$
-    x[0] + p_l * x[1]
-    $$
+  $$
+  x[0] + p_l * x[1]
+  $$
 
-    Args:
-        survival_probability: float, the probability of the residual branch being kept.
+  Args:
+      survival_probability: float, the probability of the residual branch being kept.
 
-    Call Args:
-        inputs:  List of `[shortcut, residual]` where `shortcut`, and `residual` are tensors of equal shape.
+  Call Args:
+      inputs:  List of `[shortcut, residual]` where `shortcut`, and `residual` are tensors of equal shape.
 
-    Output shape:
-        Equal to the shape of inputs `shortcut`, and `residual`
-    """
+  Output shape:
+      Equal to the shape of inputs `shortcut`, and `residual`
+  """
 
   @typechecked
   def __init__(self, survival_probability: float = 0.5, **kwargs):

@@ -50,15 +50,16 @@ flags.FLAGS(sys.argv, known_only=True)
 def init():
   logger.debug(f"sys.argv = {sys.argv}")  # sys.argv from Horovod
 
-  gpus = tf.config.experimental.list_physical_devices('GPU')
+  gpus = tf.config.experimental.list_physical_devices("GPU")
   for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
   if flags.FLAGS.distribution_strategy == "horovod":
     import horovod.tensorflow as hvd
+
     hvd.init()
     if gpus:
-      tf.config.experimental.set_visible_devices(gpus[hvd.local_rank()], 'GPU')
+      tf.config.experimental.set_visible_devices(gpus[hvd.local_rank()], "GPU")
       gpu_affinity.set_affinity(hvd.local_rank())
 
 
@@ -68,23 +69,23 @@ def start_tensorflow_server(cluster_resolver):
   os.environ["GRPC_FAIL_FAST"] = "use_caller"
 
   server = tf.distribute.Server(
-      cluster_resolver.cluster_spec(),
-      job_name=cluster_resolver.task_type,
-      task_index=cluster_resolver.task_id,
-      protocol=cluster_resolver.rpc_layer or "grpc",
-      start=True,
+    cluster_resolver.cluster_spec(),
+    job_name=cluster_resolver.task_type,
+    task_index=cluster_resolver.task_id,
+    protocol=cluster_resolver.rpc_layer or "grpc",
+    start=True,
   )
   server.join()
 
 
 def runner(function, verbose=None):
-  parser = argparse.ArgumentParser(description='Deepray Runner')
-  parser.add_argument('-v', '--version', action='version', version=__version__, help='Shows Deepray version.')
+  parser = argparse.ArgumentParser(description="Deepray Runner")
+  parser.add_argument("-v", "--version", action="version", version=__version__, help="Shows Deepray version.")
   parser.add_argument(
-      '--distribution_strategy', type=str, default='Horovod', help='Whether run distributed training with Horovod.'
+    "--distribution_strategy", type=str, default="Horovod", help="Whether run distributed training with Horovod."
   )
 
-  physical_devices = tf.config.list_physical_devices('GPU')
+  physical_devices = tf.config.list_physical_devices("GPU")
   world_size = len(physical_devices)
   logger.debug(f"world_size = {world_size}")
 
@@ -93,14 +94,15 @@ def runner(function, verbose=None):
 
   if world_size > 1 and args.distribution_strategy == "Horovod":
     user_argv.extend([
-        "--distribution_strategy=horovod",
-        f"--num_gpus={world_size}",
-        "--use_horovod",
+      "--distribution_strategy=horovod",
+      f"--num_gpus={world_size}",
+      "--use_horovod",
     ])
     try:
       import horovod
-      os.environ['HOROVOD_STALL_CHECK_TIME_SECONDS'] = '5'
-      os.environ['HOROVOD_STALL_SHUTDOWN_TIME_SECONDS'] = '30'
+
+      os.environ["HOROVOD_STALL_CHECK_TIME_SECONDS"] = "5"
+      os.environ["HOROVOD_STALL_SHUTDOWN_TIME_SECONDS"] = "30"
     except ImportError:
       raise ValueError("Please install Horovod properly first if you want to use Horovod distribution_strategy.")
 

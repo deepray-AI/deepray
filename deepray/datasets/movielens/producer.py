@@ -11,7 +11,6 @@ from deepray.datasets.movielens import constants as rconst
 
 
 class Produce(DataPipeline):
-
   def __init__(self, params, producer):
     self._producer = producer
     self._params = params
@@ -57,7 +56,7 @@ class Produce(DataPipeline):
     return features, labels
 
   def build_dataset(
-      self, input_file_pattern, batch_size, is_training=True, context=None, use_horovod=False, *args, **kwargs
+    self, input_file_pattern, batch_size, is_training=True, context=None, use_horovod=False, *args, **kwargs
   ):
     input_fn = self._producer.make_input_fn(is_training=is_training)
     if is_training:

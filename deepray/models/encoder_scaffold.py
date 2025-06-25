@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -90,17 +91,17 @@ class EncoderScaffold(tf.keras.Model):
   """
 
   def __init__(
-      self,
-      num_output_classes,
-      classification_layer_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02),
-      classification_layer_dtype=tf.float32,
-      embedding_cls=None,
-      embedding_cfg=None,
-      embedding_data=None,
-      num_hidden_instances=1,
-      hidden_cls=transformer.Transformer,
-      hidden_cfg=None,
-      **kwargs
+    self,
+    num_output_classes,
+    classification_layer_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02),
+    classification_layer_dtype=tf.float32,
+    embedding_cls=None,
+    embedding_cfg=None,
+    embedding_data=None,
+    num_hidden_instances=1,
+    hidden_cls=transformer.Transformer,
+    hidden_cfg=None,
+    **kwargs,
   ):
     print(embedding_cfg)
     self._self_setattr_tracking = False
@@ -123,48 +124,45 @@ class EncoderScaffold(tf.keras.Model):
       embeddings, mask = self._embedding_network(inputs)
     else:
       self._embedding_network = None
-      word_ids = tf.keras.layers.Input(shape=(embedding_cfg['seq_length'],), dtype=tf.int32, name='input_word_ids')
-      mask = tf.keras.layers.Input(shape=(embedding_cfg['seq_length'],), dtype=tf.int32, name='input_mask')
-      type_ids = tf.keras.layers.Input(shape=(embedding_cfg['seq_length'],), dtype=tf.int32, name='input_type_ids')
+      word_ids = tf.keras.layers.Input(shape=(embedding_cfg["seq_length"],), dtype=tf.int32, name="input_word_ids")
+      mask = tf.keras.layers.Input(shape=(embedding_cfg["seq_length"],), dtype=tf.int32, name="input_mask")
+      type_ids = tf.keras.layers.Input(shape=(embedding_cfg["seq_length"],), dtype=tf.int32, name="input_type_ids")
       inputs = [word_ids, mask, type_ids]
 
       self._embedding_layer = on_device_embedding.OnDeviceEmbedding(
-          vocab_size=embedding_cfg['vocab_size'],
-          embedding_width=embedding_cfg['hidden_size'],
-          initializer=embedding_cfg['initializer'],
-          name='word_embeddings'
+        vocab_size=embedding_cfg["vocab_size"],
+        embedding_width=embedding_cfg["hidden_size"],
+        initializer=embedding_cfg["initializer"],
+        name="word_embeddings",
       )
 
       word_embeddings = self._embedding_layer(word_ids)
 
       # Always uses dynamic slicing for simplicity.
       self._position_embedding_layer = position_embedding.PositionEmbedding(
-          initializer=embedding_cfg['initializer'],
-          use_dynamic_slicing=True,
-          max_sequence_length=embedding_cfg['max_seq_length']
+        initializer=embedding_cfg["initializer"],
+        use_dynamic_slicing=True,
+        max_sequence_length=embedding_cfg["max_seq_length"],
       )
       position_embeddings = self._position_embedding_layer(word_embeddings)
 
-      type_embeddings = (
-          on_device_embedding.OnDeviceEmbedding(
-              vocab_size=embedding_cfg['type_vocab_size'],
-              embedding_width=embedding_cfg['hidden_size'],
-              initializer=embedding_cfg['initializer'],
-              use_one_hot=True,
-              name='type_embeddings'
-          )(type_ids)
-      )
+      type_embeddings = on_device_embedding.OnDeviceEmbedding(
+        vocab_size=embedding_cfg["type_vocab_size"],
+        embedding_width=embedding_cfg["hidden_size"],
+        initializer=embedding_cfg["initializer"],
+        use_one_hot=True,
+        name="type_embeddings",
+      )(type_ids)
 
       embeddings = tf.keras.layers.Add()([word_embeddings, position_embeddings, type_embeddings])
-      embeddings = (
-          tf.keras.layers.LayerNormalization(name='embeddings/layer_norm', axis=-1, epsilon=1e-12,
-                                             dtype=tf.float32)(embeddings)
-      )
-      embeddings = (tf.keras.layers.Dropout(rate=embedding_cfg['dropout_rate'], dtype=tf.float32)(embeddings))
+      embeddings = tf.keras.layers.LayerNormalization(
+        name="embeddings/layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
+      )(embeddings)
+      embeddings = tf.keras.layers.Dropout(rate=embedding_cfg["dropout_rate"], dtype=tf.float32)(embeddings)
 
-      if embedding_cfg.get('dtype') == 'float16':
+      if embedding_cfg.get("dtype") == "float16":
         embeddings = tf.cast(embeddings, tf.float16)
-      elif embedding_cfg.get('dtype') == 'bfloat16':
+      elif embedding_cfg.get("dtype") == "bfloat16":
         embeddings = tf.cast(embeddings, tf.bfloat16)
 
     attention_mask = self_attention_mask.SelfAttentionMask()([embeddings, mask])
@@ -177,41 +175,41 @@ class EncoderScaffold(tf.keras.Model):
         layer = self._hidden_cls
       data = layer([data, attention_mask])
 
-    first_token_tensor = (tf.keras.layers.Lambda(lambda x: tf.squeeze(x[:, 0:1, :], axis=1))(data))
+    first_token_tensor = tf.keras.layers.Lambda(lambda x: tf.squeeze(x[:, 0:1, :], axis=1))(data)
     cls_output = tf.keras.layers.Dense(
-        units=num_output_classes,
-        activation='tanh',
-        kernel_initializer=classification_layer_initializer,
-        dtype=classification_layer_dtype,
-        name='cls_transform'
+      units=num_output_classes,
+      activation="tanh",
+      kernel_initializer=classification_layer_initializer,
+      dtype=classification_layer_dtype,
+      name="cls_transform",
     )(first_token_tensor)
 
     super(EncoderScaffold, self).__init__(inputs=inputs, outputs=[data, cls_output], **kwargs)
 
   def get_config(self):
     config_dict = {
-        'num_hidden_instances': self._num_hidden_instances,
-        'num_output_classes': self._num_output_classes,
-        'classification_layer_initializer': self._classification_layer_initializer,
-        'embedding_cls': self._embedding_network,
-        'embedding_cfg': self._embedding_cfg,
-        'hidden_cfg': self._hidden_cfg,
+      "num_hidden_instances": self._num_hidden_instances,
+      "num_output_classes": self._num_output_classes,
+      "classification_layer_initializer": self._classification_layer_initializer,
+      "embedding_cls": self._embedding_network,
+      "embedding_cfg": self._embedding_cfg,
+      "hidden_cfg": self._hidden_cfg,
     }
     if inspect.isclass(self._hidden_cls):
-      config_dict['hidden_cls_string'] = tf.keras.utils.get_registered_name(self._hidden_cls)
+      config_dict["hidden_cls_string"] = tf.keras.utils.get_registered_name(self._hidden_cls)
     else:
-      config_dict['hidden_cls'] = self._hidden_cls
+      config_dict["hidden_cls"] = self._hidden_cls
 
     config_dict.update(self._kwargs)
     return config_dict
 
   @classmethod
   def from_config(cls, config, custom_objects=None):
-    if 'hidden_cls_string' in config:
-      config['hidden_cls'] = tf.keras.utils.get_registered_object(
-          config['hidden_cls_string'], custom_objects=custom_objects
+    if "hidden_cls_string" in config:
+      config["hidden_cls"] = tf.keras.utils.get_registered_object(
+        config["hidden_cls_string"], custom_objects=custom_objects
       )
-      del config['hidden_cls_string']
+      del config["hidden_cls_string"]
     return cls(**config)
 
   def get_embedding_table(self):
@@ -222,17 +220,18 @@ class EncoderScaffold(tf.keras.Model):
 
     if self._embedding_data is None:
       raise RuntimeError(
-          (
-              'The EncoderScaffold %s does not have a reference '
-              'to the embedding data. This is required when you '
-              'pass a custom embedding network to the scaffold. '
-              'It is also possible that you are trying to get '
-              'embedding data from an embedding scaffold with a '
-              'custom embedding network where the scaffold has '
-              'been serialized and deserialized. Unfortunately, '
-              'accessing custom embedding references after '
-              'serialization is not yet supported.'
-          ) % self.name
+        (
+          "The EncoderScaffold %s does not have a reference "
+          "to the embedding data. This is required when you "
+          "pass a custom embedding network to the scaffold. "
+          "It is also possible that you are trying to get "
+          "embedding data from an embedding scaffold with a "
+          "custom embedding network where the scaffold has "
+          "been serialized and deserialized. Unfortunately, "
+          "accessing custom embedding references after "
+          "serialization is not yet supported."
+        )
+        % self.name
       )
     else:
       return self._embedding_data

@@ -24,54 +24,54 @@ from typeguard import typechecked
 class Lookahead(KerasLegacyOptimizer):
   """This class allows to extend optimizers with the lookahead mechanism.
 
-    The mechanism is proposed by Michael R. Zhang et.al in the paper
-    [Lookahead Optimizer: k steps forward, 1 step back]
-    (https://arxiv.org/abs/1907.08610v1). The optimizer iteratively updates two
-    sets of weights: the search directions for weights are chosen by the inner
-    optimizer, while the "slow weights" are updated each `k` steps based on the
-    directions of the "fast weights" and the two sets of weights are
-    synchronized. This method improves the learning stability and lowers the
-    variance of its inner optimizer.
+  The mechanism is proposed by Michael R. Zhang et.al in the paper
+  [Lookahead Optimizer: k steps forward, 1 step back]
+  (https://arxiv.org/abs/1907.08610v1). The optimizer iteratively updates two
+  sets of weights: the search directions for weights are chosen by the inner
+  optimizer, while the "slow weights" are updated each `k` steps based on the
+  directions of the "fast weights" and the two sets of weights are
+  synchronized. This method improves the learning stability and lowers the
+  variance of its inner optimizer.
 
-    Example of usage:
+  Example of usage:
 
-    ```python
-    opt = tf.keras.optimizers.SGD(learning_rate)
-    opt = dp.optimizers.Lookahead(opt)
-    ```
-    """
+  ```python
+  opt = tf.keras.optimizers.SGD(learning_rate)
+  opt = dp.optimizers.Lookahead(opt)
+  ```
+  """
 
   @typechecked
   def __init__(
-      self,
-      optimizer: types.Optimizer,
-      sync_period: int = 6,
-      slow_step_size: types.FloatTensorLike = 0.5,
-      name: str = "Lookahead",
-      **kwargs,
+    self,
+    optimizer: types.Optimizer,
+    sync_period: int = 6,
+    slow_step_size: types.FloatTensorLike = 0.5,
+    name: str = "Lookahead",
+    **kwargs,
   ):
     r"""Wrap optimizer with the lookahead mechanism.
 
-        Args:
-            optimizer: The original optimizer that will be used to compute
-                and apply the gradients.
-            sync_period: An integer. The synchronization period of lookahead.
-                Enable lookahead mechanism by setting it with a positive value.
-            slow_step_size: A floating point value.
-                The ratio for updating the slow weights.
-            name: Optional name for the operations created when applying
-                gradients. Defaults to "Lookahead".
-            **kwargs: keyword arguments. Allowed to be {`clipnorm`,
-                `clipvalue`, `lr`, `decay`}. `clipnorm` is clip gradients
-                by norm; `clipvalue` is clip gradients by value, `decay` is
-                included for backward compatibility to allow time inverse
-                decay of learning rate. `lr` is included for backward
-                compatibility, recommended to use `learning_rate` instead.
-        """
+    Args:
+        optimizer: The original optimizer that will be used to compute
+            and apply the gradients.
+        sync_period: An integer. The synchronization period of lookahead.
+            Enable lookahead mechanism by setting it with a positive value.
+        slow_step_size: A floating point value.
+            The ratio for updating the slow weights.
+        name: Optional name for the operations created when applying
+            gradients. Defaults to "Lookahead".
+        **kwargs: keyword arguments. Allowed to be {`clipnorm`,
+            `clipvalue`, `lr`, `decay`}. `clipnorm` is clip gradients
+            by norm; `clipvalue` is clip gradients by value, `decay` is
+            included for backward compatibility to allow time inverse
+            decay of learning rate. `lr` is included for backward
+            compatibility, recommended to use `learning_rate` instead.
+    """
     super().__init__(name, **kwargs)
 
     if isinstance(optimizer, str):
-      if (hasattr(tf.keras.optimizers, "legacy") and KerasLegacyOptimizer == tf.keras.optimizers.legacy.Optimizer):
+      if hasattr(tf.keras.optimizers, "legacy") and KerasLegacyOptimizer == tf.keras.optimizers.legacy.Optimizer:
         optimizer = tf.keras.optimizers.get(optimizer, use_legacy_optimizer=True)
       else:
         optimizer = tf.keras.optimizers.get(optimizer)
@@ -96,7 +96,7 @@ class Lookahead(KerasLegacyOptimizer):
     return self._optimizer._prepare(var_list=var_list)  # pylint: disable=protected-access
 
   def apply_gradients(self, grads_and_vars, name=None, **kwargs):
-    self._optimizer._iterations = (self.iterations)  # pylint: disable=protected-access
+    self._optimizer._iterations = self.iterations  # pylint: disable=protected-access
     return super().apply_gradients(grads_and_vars, name, **kwargs)
 
   def _look_ahead_op(self, var):
@@ -109,12 +109,12 @@ class Lookahead(KerasLegacyOptimizer):
     sync_cond = tf.equal(tf.math.floordiv(local_step, sync_period) * sync_period, local_step)
     with tf.control_dependencies([step_back]):
       slow_update = slow_var.assign(
-          tf.where(sync_cond, step_back, slow_var),
-          use_locking=self._use_locking,
+        tf.where(sync_cond, step_back, slow_var),
+        use_locking=self._use_locking,
       )
       var_update = var.assign(
-          tf.where(sync_cond, step_back, var),
-          use_locking=self._use_locking,
+        tf.where(sync_cond, step_back, var),
+        use_locking=self._use_locking,
       )
     return tf.group(slow_update, var_update)
 
@@ -129,10 +129,8 @@ class Lookahead(KerasLegacyOptimizer):
     return tf.group(train_op, look_ahead_op)
 
   def _resource_apply_sparse(self, grad, var, indices):
-    train_op = (
-        self._optimizer._resource_apply_sparse(  # pylint: disable=protected-access
-            grad, var, indices
-        )
+    train_op = self._optimizer._resource_apply_sparse(  # pylint: disable=protected-access
+      grad, var, indices
     )
     with tf.control_dependencies([train_op]):
       look_ahead_op = self._look_ahead_op(var)
@@ -140,9 +138,9 @@ class Lookahead(KerasLegacyOptimizer):
 
   def get_config(self):
     config = {
-        "optimizer": tf.keras.optimizers.serialize(self._optimizer),
-        "sync_period": self._serialize_hyperparameter("sync_period"),
-        "slow_step_size": self._serialize_hyperparameter("slow_step_size"),
+      "optimizer": tf.keras.optimizers.serialize(self._optimizer),
+      "sync_period": self._serialize_hyperparameter("sync_period"),
+      "slow_step_size": self._serialize_hyperparameter("slow_step_size"),
     }
     base_config = super().get_config()
     return {**base_config, **config}

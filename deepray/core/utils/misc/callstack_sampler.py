@@ -7,8 +7,7 @@ import traceback
 
 
 class CallstackSampler(object):
-  """A simple signal-based Python callstack sampler.
-  """
+  """A simple signal-based Python callstack sampler."""
 
   def __init__(self, interval=None):
     self.stacks = []
@@ -21,7 +20,7 @@ class CallstackSampler(object):
     formatted_stack = []
     formatted_stack.append(datetime.datetime.utcnow())
     for filename, lineno, function_name, text in stack:
-      formatted_frame = '{}:{}({})({})'.format(filename, lineno, function_name, text)
+      formatted_frame = "{}:{}({})({})".format(filename, lineno, function_name, text)
       formatted_stack.append(formatted_frame)
     self.stacks.append(formatted_stack)
     signal.setitimer(signal.ITIMER_VIRTUAL, self.interval, 0)
@@ -36,11 +35,11 @@ class CallstackSampler(object):
       signal.setitimer(signal.ITIMER_VIRTUAL, 0)
 
   def save(self, fname):
-    with open(fname, 'w') as f:
+    with open(fname, "w") as f:
       for s in self.stacks:
         for l in s:
-          f.write('%s\n' % l)
-        f.write('\n')
+          f.write("%s\n" % l)
+        f.write("\n")
 
 
 @contextlib.contextmanager

@@ -21,11 +21,10 @@ from official.nlp.modeling.ops import decoding_module
 
 def length_normalization(length, dtype):
   """Return length normalization factor."""
-  return tf.pow(((5. + tf.cast(length, dtype)) / 6.), 0.0)
+  return tf.pow(((5.0 + tf.cast(length, dtype)) / 6.0), 0.0)
 
 
 class TestSubclass(decoding_module.DecodingModule, metaclass=abc.ABCMeta):
-
   def __init__(self, length_normalization_fn=length_normalization, extra_cache_output=True, dtype=tf.float32):
     super(TestSubclass, self).__init__(length_normalization_fn=length_normalization, dtype=dtype)
 
@@ -52,7 +51,6 @@ class TestSubclass(decoding_module.DecodingModule, metaclass=abc.ABCMeta):
 
 
 class DecodingModuleTest(tf.test.TestCase):
-
   def test_get_shape_keep_last_dim(self):
     y = tf.constant(4.0)
     x = tf.ones([7, tf.cast(tf.sqrt(y), tf.int32), 2, 5])
@@ -67,7 +65,7 @@ class DecodingModuleTest(tf.test.TestCase):
   def test_inf(self):
     d = TestSubclass()
     inf_value = d.inf()
-    self.assertAllEqual(inf_value, tf.constant(10000000., tf.float32))
+    self.assertAllEqual(inf_value, tf.constant(10000000.0, tf.float32))
 
   def test_length_normalization(self):
     d = TestSubclass()
@@ -75,5 +73,5 @@ class DecodingModuleTest(tf.test.TestCase):
     self.assertAllEqual(normalized_length, tf.constant(1.0, tf.float32))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -26,10 +27,12 @@ import tensorflow as tf
 import typing
 
 
-def export_bert_model(model_export_path: typing.Text,
-                      model: tf.keras.Model,
-                      checkpoint_dir: typing.Optional[typing.Text] = None,
-                      restore_model_using_load_weights: bool = False) -> None:
+def export_bert_model(
+  model_export_path: typing.Text,
+  model: tf.keras.Model,
+  checkpoint_dir: typing.Optional[typing.Text] = None,
+  restore_model_using_load_weights: bool = False,
+) -> None:
   """Export BERT model for serving which does not include the optimizer.
 
   Arguments:
@@ -50,15 +53,15 @@ def export_bert_model(model_export_path: typing.Text,
     ValueError when either model_export_path or model is not specified.
   """
   if not model_export_path:
-    raise ValueError('model_export_path must be specified.')
+    raise ValueError("model_export_path must be specified.")
   if not isinstance(model, tf.keras.Model):
-    raise ValueError('model must be a tf.keras.Model object.')
+    raise ValueError("model must be a tf.keras.Model object.")
 
   if checkpoint_dir:
     # Keras compile/fit() was used to save checkpoint using
     # model.save_weights().
     if restore_model_using_load_weights:
-      model_weight_path = os.path.join(checkpoint_dir, 'checkpoint')
+      model_weight_path = os.path.join(checkpoint_dir, "checkpoint")
       assert tf.io.gfile.exists(model_weight_path)
       model.load_weights(model_weight_path)
 
@@ -69,12 +72,10 @@ def export_bert_model(model_export_path: typing.Text,
       # Restores the model from latest checkpoint.
       latest_checkpoint_file = tf.train.latest_checkpoint(checkpoint_dir)
       assert latest_checkpoint_file
-      logging.info('Checkpoint file %s found and restoring from '
-                   'checkpoint', latest_checkpoint_file)
-      checkpoint.restore(
-          latest_checkpoint_file).assert_existing_objects_matched()
+      logging.info("Checkpoint file %s found and restoring from checkpoint", latest_checkpoint_file)
+      checkpoint.restore(latest_checkpoint_file).assert_existing_objects_matched()
 
-  model.save(model_export_path, include_optimizer=False, save_format='tf')
+  model.save(model_export_path, include_optimizer=False, save_format="tf")
 
 
 class BertModelCheckpoint(tf.keras.callbacks.Callback):
@@ -88,14 +89,12 @@ class BertModelCheckpoint(tf.keras.callbacks.Callback):
       checkpoint: tf.train.Checkpoint object.
     """
     super(BertModelCheckpoint, self).__init__()
-    self.checkpoint_file_name = os.path.join(
-        checkpoint_dir, 'bert_training_checkpoint_step_{global_step}.ckpt')
+    self.checkpoint_file_name = os.path.join(checkpoint_dir, "bert_training_checkpoint_step_{global_step}.ckpt")
     assert isinstance(checkpoint, tf.train.Checkpoint)
     self.checkpoint = checkpoint
 
   def on_epoch_end(self, epoch, logs=None):
     global_step = tf.keras.backend.get_value(self.model.optimizer.iterations)
-    formatted_file_name = self.checkpoint_file_name.format(
-        global_step=global_step)
+    formatted_file_name = self.checkpoint_file_name.format(global_step=global_step)
     saved_path = self.checkpoint.save(formatted_file_name)
-    logging.info('Saving model TF checkpoint to : %s', saved_path)
+    logging.info("Saving model TF checkpoint to : %s", saved_path)

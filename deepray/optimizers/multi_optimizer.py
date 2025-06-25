@@ -30,7 +30,7 @@ from deepray.optimizers import KerasLegacyOptimizer
 
 if Version(tf.__version__).release >= Version("2.16").release:
   # Determine if loading keras 2 or 3.
-  if (hasattr(tf.keras, "version") and Version(tf.keras.version()).release >= Version("3.0").release):
+  if hasattr(tf.keras, "version") and Version(tf.keras.version()).release >= Version("3.0").release:
     # New versions of Keras require importing from `keras.src` when
     # importing internal symbols.
     from keras.src import backend
@@ -49,61 +49,61 @@ else:
 class MultiOptimizer(KerasLegacyOptimizer):
   """Multi Optimizer Wrapper for Discriminative Layer Training.
 
-    Creates a wrapper around a set of instantiated optimizer layer pairs.
-    Generally useful for transfer learning of deep networks.
+  Creates a wrapper around a set of instantiated optimizer layer pairs.
+  Generally useful for transfer learning of deep networks.
 
-    Each optimizer will optimize only the weights associated with its paired layer.
-    This can be used to implement discriminative layer training by assigning
-    different learning rates to each optimizer layer pair.
-    `(tf.keras.optimizers.legacy.Optimizer, List[tf.keras.layers.Layer])` pairs are also supported.
-    Please note that the layers must be instantiated before instantiating the optimizer.
+  Each optimizer will optimize only the weights associated with its paired layer.
+  This can be used to implement discriminative layer training by assigning
+  different learning rates to each optimizer layer pair.
+  `(tf.keras.optimizers.legacy.Optimizer, List[tf.keras.layers.Layer])` pairs are also supported.
+  Please note that the layers must be instantiated before instantiating the optimizer.
 
-    Args:
-        optimizers_and_varnames: a list of tuples of an optimizer and a layer or model.
-            Each tuple should contain exactly 1 instantiated optimizer and 1 object that
-            subclasses `tf.keras.Model`, `tf.keras.Sequential` or `tf.keras.layers.Layer`.
-            Nested layers and models will be automatically discovered.
-            Alternatively, in place of a single layer, you can pass a list of layers.
-        default_optimizer: Default optimizer for the left trainable variables.
+  Args:
+      optimizers_and_varnames: a list of tuples of an optimizer and a layer or model.
+          Each tuple should contain exactly 1 instantiated optimizer and 1 object that
+          subclasses `tf.keras.Model`, `tf.keras.Sequential` or `tf.keras.layers.Layer`.
+          Nested layers and models will be automatically discovered.
+          Alternatively, in place of a single layer, you can pass a list of layers.
+      default_optimizer: Default optimizer for the left trainable variables.
 
-    Usage:
+  Usage:
 
-    >>> model = tf.keras.Sequential([
-    ...     tf.keras.Input(shape=(4,)),
-    ...     tf.keras.layers.Dense(8, name="varname1"),
-    ...     tf.keras.layers.Dense(16, name="varname2"),
-    ...     tf.keras.layers.Dense(32, name="varname3"),
-    ...     tf.keras.layers.Dense(64),
-    ... ])
-    >>> optimizers = [
-    ...     tf.keras.optimizers.Adam(learning_rate=1e-4),
-    ...     tf.keras.optimizers.Adam(learning_rate=1e-2),
-    ...     tf.keras.optimizers.Adam(learning_rate=1e-3)
-    ... ]
-    >>> optimizers_and_varnames = [(optimizers[0], "varname1"), (optimizers[1], "varname2,varname3")]
-    >>> optimizer = dp.optimizers.MultiOptimizer(optimizers_and_varnames, optimizers[2])
-    >>> model.compile(optimizer=optimizer, loss="mse")
+  >>> model = tf.keras.Sequential([
+  ...     tf.keras.Input(shape=(4,)),
+  ...     tf.keras.layers.Dense(8, name="varname1"),
+  ...     tf.keras.layers.Dense(16, name="varname2"),
+  ...     tf.keras.layers.Dense(32, name="varname3"),
+  ...     tf.keras.layers.Dense(64),
+  ... ])
+  >>> optimizers = [
+  ...     tf.keras.optimizers.Adam(learning_rate=1e-4),
+  ...     tf.keras.optimizers.Adam(learning_rate=1e-2),
+  ...     tf.keras.optimizers.Adam(learning_rate=1e-3)
+  ... ]
+  >>> optimizers_and_varnames = [(optimizers[0], "varname1"), (optimizers[1], "varname2,varname3")]
+  >>> optimizer = dp.optimizers.MultiOptimizer(optimizers_and_varnames, optimizers[2])
+  >>> model.compile(optimizer=optimizer, loss="mse")
 
-    Reference:
-        - [Universal Language Model Fine-tuning for Text Classification](https://arxiv.org/abs/1801.06146)
-        - [Collaborative Layer-wise Discriminative Learning in Deep Neural Networks](https://arxiv.org/abs/1607.05440)
+  Reference:
+      - [Universal Language Model Fine-tuning for Text Classification](https://arxiv.org/abs/1801.06146)
+      - [Collaborative Layer-wise Discriminative Learning in Deep Neural Networks](https://arxiv.org/abs/1607.05440)
 
-    Note: Currently, `dp.optimizers.MultiOptimizer` does not support callbacks that modify optimizers.
-        However, you can instantiate optimizer layer pairs with
-        `tf.keras.optimizers.schedules.LearningRateSchedule`
-        instead of a static learning rate.
+  Note: Currently, `dp.optimizers.MultiOptimizer` does not support callbacks that modify optimizers.
+      However, you can instantiate optimizer layer pairs with
+      `tf.keras.optimizers.schedules.LearningRateSchedule`
+      instead of a static learning rate.
 
-    This code should function on CPU, GPU, and TPU. Apply with `tf.distribute.Strategy().scope()` context as you
-    would with any other optimizer.
-    """
+  This code should function on CPU, GPU, and TPU. Apply with `tf.distribute.Strategy().scope()` context as you
+  would with any other optimizer.
+  """
 
   @typechecked
   def __init__(
-      self,
-      optimizers_and_varnames: Union[list, None] = None,
-      default_optimizer: KerasLegacyOptimizer = None,
-      name: str = "MultiOptimizer",
-      **kwargs,
+    self,
+    optimizers_and_varnames: Union[list, None] = None,
+    default_optimizer: KerasLegacyOptimizer = None,
+    name: str = "MultiOptimizer",
+    **kwargs,
   ):
     super(MultiOptimizer, self).__init__(name, **kwargs)
     if default_optimizer is None:
@@ -123,7 +123,7 @@ class MultiOptimizer(KerasLegacyOptimizer):
     for grad, var in grads_and_vars:
       # Check if each variable name exists in the variable name list
       for optimizer, varnames in self.optimizers_and_varnames:
-        if any(name in var.name for name in varnames.split(',')):
+        if any(name in var.name for name in varnames.split(",")):
           # If it does, append the variable to the optimizer's variable list
           grad_var_dict[optimizer].append((grad, var))
           break
@@ -146,7 +146,7 @@ class MultiOptimizer(KerasLegacyOptimizer):
       # symbolic then the step update should be carried out under a graph
       # context. (eager updates execute immediately)
       with backend._current_graph(  # pylint: disable=protected-access
-          update_ops
+        update_ops
       ).as_default():
         with tf.control_dependencies([update_group]):
           return self.iterations.assign_add(1, read_value=False)

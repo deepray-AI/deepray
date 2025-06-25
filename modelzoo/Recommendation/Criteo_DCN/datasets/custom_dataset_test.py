@@ -12,9 +12,9 @@ from deepray.utils.benchmark import PerformanceCalculator
 
 def define_flags():
   argv = sys.argv + [
-      "--batch_size=4096",
-      "--epochs=1",
-      # "--feature_map=feature_map_small.csv",
+    "--batch_size=4096",
+    "--epochs=1",
+    # "--feature_map=feature_map_small.csv",
   ]
   flags.FLAGS(argv)
 
@@ -22,11 +22,11 @@ def define_flags():
 define_flags()
 data_pipe = CustomParquetPipeline()
 train_dataset = data_pipe(
-    batch_size=flags.FLAGS.batch_size,
-    input_file_pattern=[
-        "/workspaces/datasets/00000-1-038360cf-9d9d-454c-8381-6a57bdbf6d57-00001.parquet",
-        "/workspaces/datasets/01799-1800-26382079-2024-439e-84bf-e7b2231e0a2f-00001.parquet",
-    ]
+  batch_size=flags.FLAGS.batch_size,
+  input_file_pattern=[
+    "/workspaces/datasets/00000-1-038360cf-9d9d-454c-8381-6a57bdbf6d57-00001.parquet",
+    "/workspaces/datasets/01799-1800-26382079-2024-439e-84bf-e7b2231e0a2f-00001.parquet",
+  ],
 )
 _performance_calculator = PerformanceCalculator(0, 1000)
 
@@ -38,7 +38,7 @@ for x, y in train_dataset:
   step_throughput = _performance_calculator(1, flags.FLAGS.batch_size)
 
   if num_examples % 100 == 0:
-    print(f'step {step}, Perf {step_throughput} samples/s')
+    print(f"step {step}, Perf {step_throughput} samples/s")
 # print(batch)
 
 print(num_examples)

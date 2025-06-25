@@ -14,7 +14,6 @@ from deepray.utils.data.feature_map import FeatureMap
 
 
 class EmbeddingContainer(tf.Module):
-
   def __init__(self, training, use_group_embedding):
     super().__init__()
     self.embeddings = {}
@@ -24,31 +23,31 @@ class EmbeddingContainer(tf.Module):
   def add_embedding(self, name, dim, dtype, voc_size):
     if voc_size:
       self.embeddings[name] = keras.layers.Embedding(
-          input_dim=voc_size + 1,
-          output_dim=dim,
-          embeddings_initializer="uniform" if self.training else keras.initializers.Zeros(),
+        input_dim=voc_size + 1,
+        output_dim=dim,
+        embeddings_initializer="uniform" if self.training else keras.initializers.Zeros(),
       )
     elif flags.FLAGS.use_dynamic_embedding:
       self.embeddings[name] = DistributedDynamicEmbedding(
-          embedding_dim=dim,
-          key_dtype=dtype,
-          value_dtype=tf.float32,
-          initializer=keras.initializers.TruncatedNormal() if self.training else keras.initializers.Zeros(),
-          name='DynamicVariable_' + name,
-          device="DRAM",
-          init_capacity=1024 * 10,
-          max_capacity=1024 * 100,
+        embedding_dim=dim,
+        key_dtype=dtype,
+        value_dtype=tf.float32,
+        initializer=keras.initializers.TruncatedNormal() if self.training else keras.initializers.Zeros(),
+        name="DynamicVariable_" + name,
+        device="DRAM",
+        init_capacity=1024 * 10,
+        max_capacity=1024 * 100,
       )
     else:
       emb = EmbeddingVariable(
-          embedding_dim=dim,
-          key_dtype=dtype,
-          value_dtype=tf.float32,
-          initializer=keras.initializers.TruncatedNormal() if self.training else keras.initializers.Zeros(),
-          name='emb' + name,
-          storage_type="DRAM",
-          # with_unique=True,
-          # storage_type="HBM",
+        embedding_dim=dim,
+        key_dtype=dtype,
+        value_dtype=tf.float32,
+        initializer=keras.initializers.TruncatedNormal() if self.training else keras.initializers.Zeros(),
+        name="emb" + name,
+        storage_type="DRAM",
+        # with_unique=True,
+        # storage_type="HBM",
       )
       self.embeddings[name] = emb
 
@@ -63,7 +62,6 @@ class EmbeddingContainer(tf.Module):
 
 
 class Ranking(keras.Model):
-
   def __init__(self, interaction, training=True, use_group_embedding=False, *args, **kwargs):
     super().__init__(*args, **kwargs)
     self.feature_map = FeatureMap().feature_map
@@ -71,22 +69,22 @@ class Ranking(keras.Model):
     self._top_stack = MLP(hidden_units=[512, 256, 1], activations=[None, None, "sigmoid"])
     self._interaction = interaction
     self.training = training
-    if interaction == 'dot':
+    if interaction == "dot":
       self._feature_interaction = DotInteraction(skip_gather=True)
-    elif interaction == 'cross':
+    elif interaction == "cross":
       self._feature_interaction = Cross()
     else:
       raise ValueError(
-          f'params.task.model.interaction {self.task_config.model.interaction} '
-          f'is not supported it must be either \'dot\' or \'cross\'.'
+        f"params.task.model.interaction {self.task_config.model.interaction} "
+        f"is not supported it must be either 'dot' or 'cross'."
       )
     self.use_group_embedding = use_group_embedding
     self.embedding_container = EmbeddingContainer(training, use_group_embedding)
 
   def build(self, input_shape):
-    for name, dim, dtype, voc_size in self.feature_map[(self.feature_map['ftype'] == "Categorical")][[
-        "name", "dim", "dtype", "voc_size"
-    ]].values:
+    for name, dim, dtype, voc_size in self.feature_map[(self.feature_map["ftype"] == "Categorical")][
+      ["name", "dim", "dtype", "voc_size"]
+    ].values:
       self.embedding_container.add_embedding(name, dim, dtype, voc_size)
 
   def call(self, inputs: Dict[str, tf.Tensor], training=None, mask=None) -> tf.Tensor:
@@ -94,7 +92,7 @@ class Ranking(keras.Model):
     sparse_embedding_vecs = []
     indices = []  # Keep indices for group embedding lookup
 
-    for name, dim in self.feature_map[(self.feature_map['ftype'] == "Categorical")][["name", "dim"]].values:
+    for name, dim in self.feature_map[(self.feature_map["ftype"] == "Categorical")][["name", "dim"]].values:
       tensor = inputs[name]
       if self.use_group_embedding:
         indices.append(tensor)

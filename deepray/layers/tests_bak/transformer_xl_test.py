@@ -23,19 +23,19 @@ from deepray.layers import transformer_xl
 
 
 def create_mock_transformer_xl_data(
-    batch_size,
-    num_heads,
-    head_size,
-    hidden_size,
-    seq_length,
-    memory_length=0,
-    num_predictions=2,
-    two_stream=False,
-    num_layers=1,
-    include_biases=True,
-    include_state=False,
-    include_mask=False,
-    include_segment=False
+  batch_size,
+  num_heads,
+  head_size,
+  hidden_size,
+  seq_length,
+  memory_length=0,
+  num_predictions=2,
+  two_stream=False,
+  num_layers=1,
+  include_biases=True,
+  include_state=False,
+  include_mask=False,
+  include_segment=False,
 ):
   """Creates mock testing data.
 
@@ -61,26 +61,26 @@ def create_mock_transformer_xl_data(
   encoding_shape = (batch_size, seq_length * 2, hidden_size)
 
   data = dict(
-      relative_position_encoding=tf.random.normal(shape=encoding_shape),
-      content_stream=tf.random.normal(shape=(batch_size, seq_length, hidden_size))
+    relative_position_encoding=tf.random.normal(shape=encoding_shape),
+    content_stream=tf.random.normal(shape=(batch_size, seq_length, hidden_size)),
   )
 
   if include_biases:
     attention_bias_shape = (num_heads, head_size)
     data.update(
-        dict(
-            content_attention_bias=tf.random.normal(shape=attention_bias_shape),
-            segment_attention_bias=tf.random.normal(shape=attention_bias_shape),
-            positional_attention_bias=tf.random.normal(shape=attention_bias_shape)
-        )
+      dict(
+        content_attention_bias=tf.random.normal(shape=attention_bias_shape),
+        segment_attention_bias=tf.random.normal(shape=attention_bias_shape),
+        positional_attention_bias=tf.random.normal(shape=attention_bias_shape),
+      )
     )
 
   if two_stream:
     data.update(
-        dict(
-            query_stream=tf.random.normal(shape=(batch_size, num_predictions, hidden_size)),
-            target_mapping=tf.random.normal(shape=(batch_size, num_predictions, seq_length))
-        )
+      dict(
+        query_stream=tf.random.normal(shape=(batch_size, num_predictions, hidden_size)),
+        target_mapping=tf.random.normal(shape=(batch_size, num_predictions, seq_length)),
+      )
     )
 
   if include_state:
@@ -118,15 +118,10 @@ def create_mock_transformer_xl_data(
 
 
 class TransformerXLBlockTest(tf.test.TestCase, parameterized.TestCase):
-
   @combinations.generate(
-      combinations.combine(
-          memory_length=[0, 4],
-          two_stream=[True, False],
-          state=[True, False],
-          mask=[True, False],
-          segment=[True, False]
-      )
+    combinations.combine(
+      memory_length=[0, 4], two_stream=[True, False], state=[True, False], mask=[True, False], segment=[True, False]
+    )
   )
   def test_transformer_xl_block(self, two_stream, memory_length, state, mask, segment):
     """Tests combinations of Transformer XL block calculations."""
@@ -134,29 +129,29 @@ class TransformerXLBlockTest(tf.test.TestCase, parameterized.TestCase):
     hidden_size, num_predictions, inner_size = 24, 8, 12
 
     data = create_mock_transformer_xl_data(
-        include_biases=True,
-        num_heads=num_heads,
-        head_size=head_size,
-        hidden_size=hidden_size,
-        seq_length=seq_length,
-        batch_size=batch_size,
-        memory_length=memory_length,
-        num_predictions=num_predictions,
-        two_stream=two_stream,
-        include_state=state,
-        include_mask=mask,
-        include_segment=segment
+      include_biases=True,
+      num_heads=num_heads,
+      head_size=head_size,
+      hidden_size=hidden_size,
+      seq_length=seq_length,
+      batch_size=batch_size,
+      memory_length=memory_length,
+      num_predictions=num_predictions,
+      two_stream=two_stream,
+      include_state=state,
+      include_mask=mask,
+      include_segment=segment,
     )
 
     test_layer = transformer_xl.TransformerXLBlock(
-        vocab_size=32000,
-        hidden_size=hidden_size,
-        num_attention_heads=num_heads,
-        head_size=head_size,
-        inner_size=inner_size,
-        dropout_rate=0.,
-        attention_dropout_rate=0.,
-        two_stream=two_stream
+      vocab_size=32000,
+      hidden_size=hidden_size,
+      num_attention_heads=num_heads,
+      head_size=head_size,
+      inner_size=inner_size,
+      dropout_rate=0.0,
+      attention_dropout_rate=0.0,
+      two_stream=two_stream,
     )
     output = test_layer(**data)
     content_attention = output["content_attention"]
@@ -170,14 +165,14 @@ class TransformerXLBlockTest(tf.test.TestCase, parameterized.TestCase):
 
   def test_get_config(self):
     transformer_xl_block = transformer_xl.TransformerXLBlock(
-        vocab_size=32000,
-        head_size=64,
-        num_attention_heads=2,
-        hidden_size=10,
-        inner_size=50,
-        dropout_rate=0.,
-        attention_dropout_rate=0.,
-        two_stream=False
+      vocab_size=32000,
+      head_size=64,
+      num_attention_heads=2,
+      hidden_size=10,
+      inner_size=50,
+      dropout_rate=0.0,
+      attention_dropout_rate=0.0,
+      two_stream=False,
     )
     transformer_xl_block_config = transformer_xl_block.get_config()
     new_block = transformer_xl.TransformerXLBlock.from_config(transformer_xl_block_config)
@@ -185,17 +180,16 @@ class TransformerXLBlockTest(tf.test.TestCase, parameterized.TestCase):
 
 
 class TransformerXLTest(tf.test.TestCase, parameterized.TestCase):
-
   @combinations.generate(
-      combinations.combine(
-          two_stream=[True, False],
-          memory_length=[0, 4],
-          reuse_length=[0, 4],
-          tie_attention_biases=[True, False],
-          state=[True, False],
-          mask=[True, False],
-          segment=[True, False]
-      )
+    combinations.combine(
+      two_stream=[True, False],
+      memory_length=[0, 4],
+      reuse_length=[0, 4],
+      tie_attention_biases=[True, False],
+      state=[True, False],
+      mask=[True, False],
+      segment=[True, False],
+    )
   )
   def test_transformer_xl(self, two_stream, memory_length, reuse_length, tie_attention_biases, state, mask, segment):
     batch_size, num_heads, head_size, seq_length = 2, 12, 64, 8
@@ -203,35 +197,35 @@ class TransformerXLTest(tf.test.TestCase, parameterized.TestCase):
     num_layers = 3
 
     data = create_mock_transformer_xl_data(
-        include_biases=False,
-        num_heads=num_heads,
-        head_size=head_size,
-        hidden_size=hidden_size,
-        seq_length=seq_length,
-        batch_size=batch_size,
-        memory_length=memory_length,
-        num_predictions=num_predictions,
-        two_stream=two_stream,
-        num_layers=num_layers,
-        include_state=state,
-        include_mask=mask,
-        include_segment=segment
+      include_biases=False,
+      num_heads=num_heads,
+      head_size=head_size,
+      hidden_size=hidden_size,
+      seq_length=seq_length,
+      batch_size=batch_size,
+      memory_length=memory_length,
+      num_predictions=num_predictions,
+      two_stream=two_stream,
+      num_layers=num_layers,
+      include_state=state,
+      include_mask=mask,
+      include_segment=segment,
     )
     transformer_xl_layer = transformer_xl.TransformerXL(
-        vocab_size=32000,
-        num_layers=num_layers,
-        head_size=head_size,
-        hidden_size=hidden_size,
-        num_attention_heads=num_heads,
-        inner_size=inner_size,
-        dropout_rate=0.,
-        attention_dropout_rate=0.,
-        initializer=tf.keras.initializers.RandomNormal(stddev=0.1),
-        two_stream=two_stream,
-        tie_attention_biases=tie_attention_biases,
-        memory_length=memory_length,
-        reuse_length=reuse_length,
-        inner_activation="relu"
+      vocab_size=32000,
+      num_layers=num_layers,
+      head_size=head_size,
+      hidden_size=hidden_size,
+      num_attention_heads=num_heads,
+      inner_size=inner_size,
+      dropout_rate=0.0,
+      attention_dropout_rate=0.0,
+      initializer=tf.keras.initializers.RandomNormal(stddev=0.1),
+      two_stream=two_stream,
+      tie_attention_biases=tie_attention_biases,
+      memory_length=memory_length,
+      reuse_length=reuse_length,
+      inner_activation="relu",
     )
     attention_output, cached_memory_states = transformer_xl_layer(**data)
     if two_stream:
@@ -242,20 +236,20 @@ class TransformerXLTest(tf.test.TestCase, parameterized.TestCase):
 
   def test_get_config(self):
     transformer_xl_layer = transformer_xl.TransformerXL(
-        vocab_size=32000,
-        num_layers=12,
-        hidden_size=36,
-        head_size=12,
-        num_attention_heads=12,
-        inner_size=12,
-        dropout_rate=0.,
-        attention_dropout_rate=0.,
-        initializer=tf.keras.initializers.RandomNormal(stddev=0.1),
-        two_stream=False,
-        tie_attention_biases=True,
-        memory_length=0,
-        reuse_length=0,
-        inner_activation="relu"
+      vocab_size=32000,
+      num_layers=12,
+      hidden_size=36,
+      head_size=12,
+      num_attention_heads=12,
+      inner_size=12,
+      dropout_rate=0.0,
+      attention_dropout_rate=0.0,
+      initializer=tf.keras.initializers.RandomNormal(stddev=0.1),
+      two_stream=False,
+      tie_attention_biases=True,
+      memory_length=0,
+      reuse_length=0,
+      inner_activation="relu",
     )
     transformer_xl_config = transformer_xl_layer.get_config()
     new_transformer_xl = transformer_xl.TransformerXL.from_config(transformer_xl_config)

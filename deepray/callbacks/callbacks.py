@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Callbacks: utilities called at certain points during model training."""
+
 import numpy as np
 import tensorflow as tf
 from absl import flags
@@ -50,6 +51,7 @@ def sync_to_numpy_or_python_type(tensors):
   def _to_single_numpy_or_python_type(t):
     if flags.FLAGS.use_horovod:
       import horovod.tensorflow.keras as hvd
+
       t = hvd.allreduce(t, op=hvd.Average)
     # Don't turn ragged or sparse tensors to NumPy.
     if isinstance(t, tf.Tensor):
@@ -64,7 +66,6 @@ def sync_to_numpy_or_python_type(tensors):
 
 
 class HvdCallbackList(callbacks_module.CallbackList):
-
   def _process_logs(self, logs, is_batch_hook=False):
     """Turns tensors into numpy arrays or Python scalars if necessary."""
     if logs is None:

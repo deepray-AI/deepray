@@ -29,12 +29,11 @@ from official.nlp.modeling.networks import span_labeling
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class SpanLabelingTest(keras_parameterized.TestCase):
-
   def test_network_creation(self):
     """Validate that the Keras object can be created."""
     sequence_length = 15
     input_width = 512
-    test_network = span_labeling.SpanLabeling(input_width=input_width, output='predictions')
+    test_network = span_labeling.SpanLabeling(input_width=input_width, output="predictions")
     # Create a 3-dimensional input (the first dimension is implicit).
     sequence_data = tf.keras.Input(shape=(sequence_length, input_width), dtype=tf.float32)
     start_outputs, end_outputs = test_network(sequence_data)
@@ -69,7 +68,7 @@ class SpanLabelingTest(keras_parameterized.TestCase):
     """Validate that the logit outputs are correct."""
     sequence_length = 15
     input_width = 512
-    test_network = span_labeling.SpanLabeling(input_width=input_width, output='predictions')
+    test_network = span_labeling.SpanLabeling(input_width=input_width, output="predictions")
     # Create a 3-dimensional input (the first dimension is implicit).
     sequence_data = tf.keras.Input(shape=(sequence_length, input_width), dtype=tf.float32)
     output = test_network(sequence_data)
@@ -102,8 +101,8 @@ class SpanLabelingTest(keras_parameterized.TestCase):
     """Validate that the logit outputs are correct."""
     sequence_length = 15
     input_width = 512
-    test_network = span_labeling.SpanLabeling(input_width=input_width, output='predictions')
-    logit_network = span_labeling.SpanLabeling(input_width=input_width, output='logits')
+    test_network = span_labeling.SpanLabeling(input_width=input_width, output="predictions")
+    logit_network = span_labeling.SpanLabeling(input_width=input_width, output="logits")
     logit_network.set_weights(test_network.get_weights())
 
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -137,7 +136,7 @@ class SpanLabelingTest(keras_parameterized.TestCase):
 
   def test_serialize_deserialize(self):
     # Create a network object that sets all of its config options.
-    network = span_labeling.SpanLabeling(input_width=128, activation='relu', initializer='zeros', output='predictions')
+    network = span_labeling.SpanLabeling(input_width=128, activation="relu", initializer="zeros", output="predictions")
 
     # Create another network object from the first object's config.
     new_network = span_labeling.SpanLabeling.from_config(network.get_config())
@@ -150,8 +149,8 @@ class SpanLabelingTest(keras_parameterized.TestCase):
 
   def test_unknown_output_type_fails(self):
     with self.assertRaisesRegex(ValueError, 'Unknown `output` value "bad".*'):
-      _ = span_labeling.SpanLabeling(input_width=10, output='bad')
+      _ = span_labeling.SpanLabeling(input_width=10, output="bad")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

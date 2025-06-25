@@ -45,13 +45,10 @@ def test_poincare_normalize():
     outputs_expected = _poincare_normalize(inputs, dim, epsilon)
 
     outputs = test_utils.layer_test(
-        PoincareNormalize,
-        kwargs={
-            "axis": dim,
-            "epsilon": epsilon
-        },
-        input_data=inputs,
-        expected_output=outputs_expected,
+      PoincareNormalize,
+      kwargs={"axis": dim, "epsilon": epsilon},
+      input_data=inputs,
+      expected_output=outputs_expected,
     )
     for y in outputs_expected, outputs:
       norm = np.linalg.norm(y, axis=dim)
@@ -70,13 +67,10 @@ def test_poincare_normalize_dim_array():
   outputs_expected = _poincare_normalize(inputs, dim, epsilon)
 
   outputs = test_utils.layer_test(
-      PoincareNormalize,
-      kwargs={
-          "axis": dim,
-          "epsilon": epsilon
-      },
-      input_data=inputs,
-      expected_output=outputs_expected,
+    PoincareNormalize,
+    kwargs={"axis": dim, "epsilon": epsilon},
+    input_data=inputs,
+    expected_output=outputs_expected,
   )
   for y in outputs_expected, outputs:
     norm = np.linalg.norm(y, axis=tuple(dim))

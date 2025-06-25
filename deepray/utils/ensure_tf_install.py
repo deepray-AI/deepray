@@ -28,18 +28,18 @@ from deepray.version import INCLUSIVE_MIN_TF_VERSION, EXCLUSIVE_MAX_TF_VERSION
 def _check_tf_version():
   """Warn the user if the version of TensorFlow used is not supported.
 
-    This is not a check for custom ops compatibility. This check only ensure that
-    we support this TensorFlow version if the user uses only Deepray' Python code.
-    """
+  This is not a check for custom ops compatibility. This check only ensure that
+  we support this TensorFlow version if the user uses only Deepray' Python code.
+  """
 
   if "dev" in tf.__version__:
     warnings.warn(
-        "You are currently using a nightly version of TensorFlow ({}). \n"
-        "Deepray offers no support for the nightly versions of "
-        "TensorFlow. Some things might work, some other might not. \n"
-        "If you encounter a bug, do not file an issue on GitHub."
-        "".format(tf.__version__),
-        UserWarning,
+      "You are currently using a nightly version of TensorFlow ({}). \n"
+      "Deepray offers no support for the nightly versions of "
+      "TensorFlow. Some things might work, some other might not. \n"
+      "If you encounter a bug, do not file an issue on GitHub."
+      "".format(tf.__version__),
+      UserWarning,
     )
     return
 
@@ -50,18 +50,16 @@ def _check_tf_version():
     return
 
   warnings.warn(
-      "Tensorflow Deepray supports using Python ops for all Tensorflow versions "
-      "above or equal to {} and strictly below {} (nightly versions are not "
-      "supported). \n "
-      "The versions of TensorFlow you are currently using is {} and is not "
-      "supported. \n"
-      "Some things might work, some things might not.\n"
-      "If you were to encounter a bug, do not file an issue.\n"
-      "If you want to make sure you're using a tested and supported configuration, "
-      "either change the TensorFlow version or the Deepray's version. \n"
-      "You can find the compatibility matrix in TensorFlow Deepray's readme:\n"
-      "https://github.com/deepray-AI/deepray".format(
-          INCLUSIVE_MIN_TF_VERSION, EXCLUSIVE_MAX_TF_VERSION, tf.__version__
-      ),
-      UserWarning,
+    "Tensorflow Deepray supports using Python ops for all Tensorflow versions "
+    "above or equal to {} and strictly below {} (nightly versions are not "
+    "supported). \n "
+    "The versions of TensorFlow you are currently using is {} and is not "
+    "supported. \n"
+    "Some things might work, some things might not.\n"
+    "If you were to encounter a bug, do not file an issue.\n"
+    "If you want to make sure you're using a tested and supported configuration, "
+    "either change the TensorFlow version or the Deepray's version. \n"
+    "You can find the compatibility matrix in TensorFlow Deepray's readme:\n"
+    "https://github.com/deepray-AI/deepray".format(INCLUSIVE_MIN_TF_VERSION, EXCLUSIVE_MAX_TF_VERSION, tf.__version__),
+    UserWarning,
   )

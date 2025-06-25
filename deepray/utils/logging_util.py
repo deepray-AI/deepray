@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Logging utilities."""
+"""Logging utilities."""
 
 import functools
 import logging
@@ -20,14 +20,14 @@ import os
 import sys
 import threading
 from logging import (
-    CRITICAL,  # NOQA
-    DEBUG,  # NOQA
-    ERROR,  # NOQA
-    FATAL,  # NOQA
-    INFO,  # NOQA
-    NOTSET,  # NOQA
-    WARN,  # NOQA
-    WARNING,  # NOQA
+  CRITICAL,  # NOQA
+  DEBUG,  # NOQA
+  ERROR,  # NOQA
+  FATAL,  # NOQA
+  INFO,  # NOQA
+  NOTSET,  # NOQA
+  WARN,  # NOQA
+  WARNING,  # NOQA
 )
 from logging import captureWarnings as _captureWarnings
 from typing import Optional
@@ -38,12 +38,12 @@ _lock = threading.Lock()
 _default_handler: Optional[logging.Handler] = None
 
 log_levels = {
-    "detail": logging.DEBUG,  # will also print filename and line number
-    "debug": logging.DEBUG,
-    "info": logging.INFO,
-    "warning": logging.WARNING,
-    "error": logging.ERROR,
-    "critical": logging.CRITICAL,
+  "detail": logging.DEBUG,  # will also print filename and line number
+  "debug": logging.DEBUG,
+  "info": logging.INFO,
+  "warning": logging.WARNING,
+  "error": logging.ERROR,
+  "critical": logging.CRITICAL,
 }
 
 _default_log_level = logging.INFO
@@ -53,17 +53,16 @@ _tqdm_active = True
 
 def _get_default_logging_level():
   """
-    If DEEPRAY_VERBOSITY env var is set to one of the valid choices return that as the new default level. If it is
-    not - fall back to `_default_log_level`
-    """
+  If DEEPRAY_VERBOSITY env var is set to one of the valid choices return that as the new default level. If it is
+  not - fall back to `_default_log_level`
+  """
   env_level_str = os.getenv("DEEPRAY_VERBOSITY", None)
   if env_level_str:
     if env_level_str in log_levels:
       return log_levels[env_level_str]
     else:
       logging.getLogger().warning(
-          f"Unknown option DEEPRAY_VERBOSITY={env_level_str}, "
-          f"has to be one of: { ', '.join(log_levels.keys()) }"
+        f"Unknown option DEEPRAY_VERBOSITY={env_level_str}, has to be one of: {', '.join(log_levels.keys())}"
       )
   return _default_log_level
 
@@ -121,17 +120,17 @@ def get_log_levels_dict():
 
 def captureWarnings(capture):
   """
-    Calls the `captureWarnings` method from the logging library to enable management of the warnings emitted by the
-    `warnings` library.
+  Calls the `captureWarnings` method from the logging library to enable management of the warnings emitted by the
+  `warnings` library.
 
-    Read more about this method here:
-    https://docs.python.org/3/library/logging.html#integration-with-the-warnings-module
+  Read more about this method here:
+  https://docs.python.org/3/library/logging.html#integration-with-the-warnings-module
 
-    All warnings will be logged through the `py.warnings` logger.
+  All warnings will be logged through the `py.warnings` logger.
 
-    Careful: this method also adds a handler to this logger if it does not already have one, and updates the logging
-    level of that logger to the library's root logger.
-    """
+  Careful: this method also adds a handler to this logger if it does not already have one, and updates the logging
+  level of that logger to the library's root logger.
+  """
   logger = get_logger("py.warnings")
 
   if not logger.handlers:
@@ -144,10 +143,10 @@ def captureWarnings(capture):
 
 def get_logger(name: Optional[str] = None) -> logging.Logger:
   """
-    Return a logger with the specified name.
+  Return a logger with the specified name.
 
-    This function is not supposed to be directly accessed unless you are writing a custom transformers module.
-    """
+  This function is not supposed to be directly accessed unless you are writing a custom transformers module.
+  """
 
   if name is None:
     name = _get_library_name()
@@ -158,22 +157,22 @@ def get_logger(name: Optional[str] = None) -> logging.Logger:
 
 def get_verbosity() -> int:
   """
-    Return the current level for the 🤗 Transformers's root logger as an int.
+  Return the current level for the 🤗 Transformers's root logger as an int.
 
-    Returns:
-        `int`: The logging level.
+  Returns:
+      `int`: The logging level.
 
-    <Tip>
+  <Tip>
 
-    🤗 Transformers has following logging levels:
+  🤗 Transformers has following logging levels:
 
-    - 50: `transformers.logging.CRITICAL` or `transformers.logging.FATAL`
-    - 40: `transformers.logging.ERROR`
-    - 30: `transformers.logging.WARNING` or `transformers.logging.WARN`
-    - 20: `transformers.logging.INFO`
-    - 10: `transformers.logging.DEBUG`
+  - 50: `transformers.logging.CRITICAL` or `transformers.logging.FATAL`
+  - 40: `transformers.logging.ERROR`
+  - 30: `transformers.logging.WARNING` or `transformers.logging.WARN`
+  - 20: `transformers.logging.INFO`
+  - 10: `transformers.logging.DEBUG`
 
-    </Tip>"""
+  </Tip>"""
 
   _configure_library_root_logger()
   return _get_library_root_logger().getEffectiveLevel()
@@ -181,18 +180,18 @@ def get_verbosity() -> int:
 
 def set_verbosity(verbosity: int) -> None:
   """
-    Set the verbosity level for the 🤗 Transformers's root logger.
+  Set the verbosity level for the 🤗 Transformers's root logger.
 
-    Args:
-        verbosity (`int`):
-            Logging level, e.g., one of:
+  Args:
+      verbosity (`int`):
+          Logging level, e.g., one of:
 
-            - `transformers.logging.CRITICAL` or `transformers.logging.FATAL`
-            - `transformers.logging.ERROR`
-            - `transformers.logging.WARNING` or `transformers.logging.WARN`
-            - `transformers.logging.INFO`
-            - `transformers.logging.DEBUG`
-    """
+          - `transformers.logging.CRITICAL` or `transformers.logging.FATAL`
+          - `transformers.logging.ERROR`
+          - `transformers.logging.WARNING` or `transformers.logging.WARN`
+          - `transformers.logging.INFO`
+          - `transformers.logging.DEBUG`
+  """
 
   _configure_library_root_logger()
   _get_library_root_logger().setLevel(verbosity)
@@ -256,8 +255,8 @@ def remove_handler(handler: logging.Handler) -> None:
 
 def disable_propagation() -> None:
   """
-    Disable propagation of the library log outputs. Note that log propagation is disabled by default.
-    """
+  Disable propagation of the library log outputs. Note that log propagation is disabled by default.
+  """
 
   _configure_library_root_logger()
   _get_library_root_logger().propagate = False
@@ -265,9 +264,9 @@ def disable_propagation() -> None:
 
 def enable_propagation() -> None:
   """
-    Enable propagation of the library log outputs. Please disable the HuggingFace Transformers's default handler to
-    prevent double logging if the root logger has been configured.
-    """
+  Enable propagation of the library log outputs. Please disable the HuggingFace Transformers's default handler to
+  prevent double logging if the root logger has been configured.
+  """
 
   _configure_library_root_logger()
   _get_library_root_logger().propagate = True
@@ -275,12 +274,12 @@ def enable_propagation() -> None:
 
 def enable_explicit_format() -> None:
   """
-    Enable explicit formatting for every HuggingFace Transformers's logger. The explicit formatter is as follows:
-    ```
-        [LEVELNAME|FILENAME|LINE NUMBER] TIME >> MESSAGE
-    ```
-    All handlers currently bound to the root logger are affected by this method.
-    """
+  Enable explicit formatting for every HuggingFace Transformers's logger. The explicit formatter is as follows:
+  ```
+      [LEVELNAME|FILENAME|LINE NUMBER] TIME >> MESSAGE
+  ```
+  All handlers currently bound to the root logger are affected by this method.
+  """
   handlers = _get_library_root_logger().handlers
 
   for handler in handlers:
@@ -290,10 +289,10 @@ def enable_explicit_format() -> None:
 
 def reset_format() -> None:
   """
-    Resets the formatting for HuggingFace Transformers's loggers.
+  Resets the formatting for HuggingFace Transformers's loggers.
 
-    All handlers currently bound to the root logger are affected by this method.
-    """
+  All handlers currently bound to the root logger are affected by this method.
+  """
   handlers = _get_library_root_logger().handlers
 
   for handler in handlers:
@@ -302,9 +301,9 @@ def reset_format() -> None:
 
 def warning_advice(self, *args, **kwargs):
   """
-    This method is identical to `logger.warning()`, but if env var TRANSFORMERS_NO_ADVISORY_WARNINGS=1 is set, this
-    warning will not be printed
-    """
+  This method is identical to `logger.warning()`, but if env var TRANSFORMERS_NO_ADVISORY_WARNINGS=1 is set, this
+  warning will not be printed
+  """
   no_advisory_warnings = os.getenv("TRANSFORMERS_NO_ADVISORY_WARNINGS", False)
   if no_advisory_warnings:
     return
@@ -317,12 +316,12 @@ logging.Logger.warning_advice = warning_advice
 @functools.lru_cache(None)
 def warning_once(self, *args, **kwargs):
   """
-    This method is identical to `logger.warning()`, but will emit the warning with the same message only once
+  This method is identical to `logger.warning()`, but will emit the warning with the same message only once
 
-    Note: The cache is for the function arguments, so 2 different callers using the same arguments will hit the cache.
-    The assumption here is that all warning messages are unique across the code. If they aren't then need to switch to
-    another type of cache that includes the caller frame information in the hashing function.
-    """
+  Note: The cache is for the function arguments, so 2 different callers using the same arguments will hit the cache.
+  The assumption here is that all warning messages are unique across the code. If they aren't then need to switch to
+  another type of cache that includes the caller frame information in the hashing function.
+  """
   self.warning(*args, **kwargs)
 
 
@@ -354,7 +353,6 @@ class EmptyTqdm:
 
 
 class _tqdm_cls:
-
   def __call__(self, *args, **kwargs):
     if _tqdm_active:
       return tqdm_lib.tqdm(*args, **kwargs)

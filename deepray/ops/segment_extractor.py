@@ -30,7 +30,7 @@ def _random_int_up_to(maxval, random_fn):
   # when we cast back to int.
   float_maxval = tf.cast(maxval, tf.float32)
   return tf.cast(
-      random_fn(shape=tf.shape(maxval), minval=tf.zeros_like(float_maxval), maxval=float_maxval), dtype=maxval.dtype
+    random_fn(shape=tf.shape(maxval), minval=tf.zeros_like(float_maxval), maxval=float_maxval), dtype=maxval.dtype
   )
 
 
@@ -102,9 +102,9 @@ def get_sentence_order_labels(sentences, random_threshold=0.5, random_next_thres
   # For every position j, sample a position following j, or a position
   # which is [j, row_max]
   all_succeeding = positions.with_flat_values(
-      tf.ragged.map_flat_values(
-          _random_int_from_range, positions.flat_values + 1, row_lengths_broadcasted_flat, random_fn
-      )
+    tf.ragged.map_flat_values(
+      _random_int_from_range, positions.flat_values + 1, row_lengths_broadcasted_flat, random_fn
+    )
   )
 
   # Convert to format that is convenient for `gather_nd`
@@ -124,12 +124,12 @@ def get_sentence_order_labels(sentences, random_threshold=0.5, random_next_thres
   # Decide what to use for the segment: (1) random, out-of-batch, (2) preceeding
   # item, or (3) succeeding.
   # Should get out-of-batch instead of succeeding item
-  should_get_random = ((_get_random(positions, random_fn) > random_threshold) | tf.logical_not(valid_succeeding_mask))
+  should_get_random = (_get_random(positions, random_fn) > random_threshold) | tf.logical_not(valid_succeeding_mask)
   random_or_succeeding_nd = tf.compat.v1.where(should_get_random, all_random_nd, all_succeeding_nd)
   # Choose which items should get a random succeeding item. Force positions that
   # don't have a valid preceeding items to get a random succeeding item.
-  should_get_random_or_succeeding = (
-      (_get_random(positions, random_fn) > random_next_threshold) | tf.logical_not(valid_preceding_mask)
+  should_get_random_or_succeeding = (_get_random(positions, random_fn) > random_next_threshold) | tf.logical_not(
+    valid_preceding_mask
   )
   gather_indices = tf.compat.v1.where(should_get_random_or_succeeding, random_or_succeeding_nd, all_preceding_nd)
   return (tf.gather_nd(sentences, gather_indices), should_get_random_or_succeeding)
@@ -168,10 +168,9 @@ def get_next_sentence_labels(sentences, random_threshold=0.5, random_fn=tf.rando
   # sentences in the document). We will patch these up and force them to grab a
   # random sentence from a random document.
   valid_next_sentences = tf.cast(
-      tf.concat([tf.ones_like(positions)[:, :-1],
-                 tf.zeros([positions.nrows(), 1], dtype=tf.int64)], -1), tf.bool
+    tf.concat([tf.ones_like(positions)[:, :-1], tf.zeros([positions.nrows(), 1], dtype=tf.int64)], -1), tf.bool
   )
 
-  is_random = ((_get_random(positions, random_fn) > random_threshold) | tf.logical_not(valid_next_sentences))
+  is_random = (_get_random(positions, random_fn) > random_threshold) | tf.logical_not(valid_next_sentences)
   gather_indices = tf.compat.v1.where(is_random, all_random_nd, next_sentences_pos_nd)
   return tf.gather_nd(sentences, gather_indices), tf.logical_not(is_random)

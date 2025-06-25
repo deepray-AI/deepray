@@ -41,7 +41,7 @@ if _stdout_utf8():
 else:
 
   def help_wrap(text, *args, **kwargs):
-    return _help_wrap(text, *args, **kwargs).replace(u"\ufeff", u"")
+    return _help_wrap(text, *args, **kwargs).replace("\ufeff", "")
 
 
 # Replace None with h to also allow -h

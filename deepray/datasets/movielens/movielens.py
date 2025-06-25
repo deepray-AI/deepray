@@ -9,7 +9,6 @@ from deepray.datasets.movielens import constants as rconst
 
 
 class Movielens(DataPipeline):
-
   @staticmethod
   def parser(self, serialized_data, batch_size=None, is_training=True):
     """Convert serialized TFRecords into tensors.
@@ -27,16 +26,16 @@ class Movielens(DataPipeline):
 
       if is_training:
         return {
-            rconst.USER_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
-            rconst.ITEM_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
-            rconst.VALID_POINT_MASK: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
-            "labels": tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64)
+          rconst.USER_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
+          rconst.ITEM_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
+          rconst.VALID_POINT_MASK: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
+          "labels": tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
         }
       else:
         return {
-            rconst.USER_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
-            rconst.ITEM_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
-            rconst.DUPLICATE_MASK: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64)
+          rconst.USER_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
+          rconst.ITEM_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
+          rconst.DUPLICATE_MASK: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
         }
 
     features = tf.io.parse_single_example(serialized_data, _get_feature_map(batch_size, is_training=is_training))
@@ -47,33 +46,32 @@ class Movielens(DataPipeline):
       valid_point_mask = tf.cast(features[rconst.VALID_POINT_MASK], tf.bool)
       fake_dup_mask = tf.zeros_like(users)
       return {
-          rconst.USER_COLUMN: users,
-          rconst.ITEM_COLUMN: items,
-          rconst.VALID_POINT_MASK: valid_point_mask,
-          rconst.TRAIN_LABEL_KEY: tf.reshape(tf.cast(features["labels"], tf.bool), (batch_size, 1)),
-          rconst.DUPLICATE_MASK: fake_dup_mask
+        rconst.USER_COLUMN: users,
+        rconst.ITEM_COLUMN: items,
+        rconst.VALID_POINT_MASK: valid_point_mask,
+        rconst.TRAIN_LABEL_KEY: tf.reshape(tf.cast(features["labels"], tf.bool), (batch_size, 1)),
+        rconst.DUPLICATE_MASK: fake_dup_mask,
       }
     else:
       labels = tf.cast(tf.zeros_like(users), tf.bool)
       fake_valid_pt_mask = tf.cast(tf.zeros_like(users), tf.bool)
       return {
-          rconst.USER_COLUMN: users,
-          rconst.ITEM_COLUMN: items,
-          rconst.DUPLICATE_MASK: tf.cast(features[rconst.DUPLICATE_MASK], tf.bool),
-          rconst.VALID_POINT_MASK: fake_valid_pt_mask,
-          rconst.TRAIN_LABEL_KEY: labels
+        rconst.USER_COLUMN: users,
+        rconst.ITEM_COLUMN: items,
+        rconst.DUPLICATE_MASK: tf.cast(features[rconst.DUPLICATE_MASK], tf.bool),
+        rconst.VALID_POINT_MASK: fake_valid_pt_mask,
+        rconst.TRAIN_LABEL_KEY: labels,
       }
 
   def build_dataset(self, input_file_pattern, pre_batch_size, batch_size, is_training=True, rebatch=False):
     """Creates dataset from (tf)records files for training/evaluation."""
     if pre_batch_size != batch_size:
-      raise ValueError("Pre-batch ({}) size is not equal to batch "
-                       "size ({})".format(pre_batch_size, batch_size))
+      raise ValueError("Pre-batch ({}) size is not equal to batch size ({})".format(pre_batch_size, batch_size))
 
     files = tf.data.Dataset.list_files(input_file_pattern, shuffle=is_training)
 
     dataset = files.interleave(
-        tf.data.TFRecordDataset, cycle_length=16, num_parallel_calls=tf.data.experimental.AUTOTUNE
+      tf.data.TFRecordDataset, cycle_length=16, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
     decode_fn = functools.partial(self.parser, batch_size=pre_batch_size, is_training=is_training)
     dataset = dataset.map(decode_fn, num_parallel_calls=tf.data.experimental.AUTOTUNE)

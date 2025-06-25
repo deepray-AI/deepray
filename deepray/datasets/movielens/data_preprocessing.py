@@ -32,8 +32,12 @@ from absl import logging
 from deepray.datasets.movielens import constants as rconst, data_pipeline
 
 _EXPECTED_CACHE_KEYS = (
-    rconst.TRAIN_USER_KEY, rconst.TRAIN_ITEM_KEY, rconst.EVAL_USER_KEY, rconst.EVAL_ITEM_KEY, rconst.USER_MAP,
-    rconst.ITEM_MAP
+  rconst.TRAIN_USER_KEY,
+  rconst.TRAIN_ITEM_KEY,
+  rconst.EVAL_USER_KEY,
+  rconst.EVAL_ITEM_KEY,
+  rconst.USER_MAP,
+  rconst.ITEM_MAP,
 )
 
 
@@ -164,13 +168,13 @@ def _filter_index_sort(raw_rating_path: Text, cache_path: Text) -> Tuple[pd.Data
     eval_df, train_df = grouped.tail(1), grouped.apply(lambda x: x.iloc[:-1])
 
     data = {
-        rconst.TRAIN_USER_KEY: train_df[rconst.USER_COLUMN].values.astype(rconst.USER_DTYPE),
-        rconst.TRAIN_ITEM_KEY: train_df[rconst.ITEM_COLUMN].values.astype(rconst.ITEM_DTYPE),
-        rconst.EVAL_USER_KEY: eval_df[rconst.USER_COLUMN].values.astype(rconst.USER_DTYPE),
-        rconst.EVAL_ITEM_KEY: eval_df[rconst.ITEM_COLUMN].values.astype(rconst.ITEM_DTYPE),
-        rconst.USER_MAP: user_map,
-        rconst.ITEM_MAP: item_map,
-        "create_time": time.time(),
+      rconst.TRAIN_USER_KEY: train_df[rconst.USER_COLUMN].values.astype(rconst.USER_DTYPE),
+      rconst.TRAIN_ITEM_KEY: train_df[rconst.ITEM_COLUMN].values.astype(rconst.ITEM_DTYPE),
+      rconst.EVAL_USER_KEY: eval_df[rconst.USER_COLUMN].values.astype(rconst.USER_DTYPE),
+      rconst.EVAL_ITEM_KEY: eval_df[rconst.ITEM_COLUMN].values.astype(rconst.ITEM_DTYPE),
+      rconst.USER_MAP: user_map,
+      rconst.ITEM_MAP: item_map,
+      "create_time": time.time(),
     }
 
     logging.info("Writing raw data cache.")
@@ -182,7 +186,7 @@ def _filter_index_sort(raw_rating_path: Text, cache_path: Text) -> Tuple[pd.Data
 
 
 def instantiate_pipeline(
-    dataset, data_dir, params, constructor_type=None, deterministic=False, epoch_dir=None, generate_data_offline=False
+  dataset, data_dir, params, constructor_type=None, deterministic=False, epoch_dir=None, generate_data_offline=False
 ):
   # type: (str, str, dict, typing.Optional[str], bool, typing.Optional[str], bool) -> (int, int, data_pipeline.BaseDataConstructor)
   """Load and digest data CSV into a usable form.
@@ -214,24 +218,24 @@ def instantiate_pipeline(
     raise ValueError("Expected to find {} items, but found {}".format(num_items, len(item_map)))
 
   producer = data_pipeline.get_constructor(constructor_type or "materialized")(
-      maximum_number_epochs=params["epochs"],
-      num_users=num_users,
-      num_items=num_items,
-      user_map=user_map,
-      item_map=item_map,
-      train_pos_users=raw_data[rconst.TRAIN_USER_KEY],
-      train_pos_items=raw_data[rconst.TRAIN_ITEM_KEY],
-      train_batch_size=params["batch_size"],
-      batches_per_train_step=params["batches_per_step"],
-      num_train_negatives=params["num_neg"],
-      eval_pos_users=raw_data[rconst.EVAL_USER_KEY],
-      eval_pos_items=raw_data[rconst.EVAL_ITEM_KEY],
-      eval_batch_size=params["eval_batch_size"],
-      batches_per_eval_step=params["batches_per_step"],
-      stream_files=params["stream_files"],
-      deterministic=deterministic,
-      epoch_dir=epoch_dir,
-      create_data_offline=generate_data_offline
+    maximum_number_epochs=params["epochs"],
+    num_users=num_users,
+    num_items=num_items,
+    user_map=user_map,
+    item_map=item_map,
+    train_pos_users=raw_data[rconst.TRAIN_USER_KEY],
+    train_pos_items=raw_data[rconst.TRAIN_ITEM_KEY],
+    train_batch_size=params["batch_size"],
+    batches_per_train_step=params["batches_per_step"],
+    num_train_negatives=params["num_neg"],
+    eval_pos_users=raw_data[rconst.EVAL_USER_KEY],
+    eval_pos_items=raw_data[rconst.EVAL_ITEM_KEY],
+    eval_batch_size=params["eval_batch_size"],
+    batches_per_eval_step=params["batches_per_step"],
+    stream_files=params["stream_files"],
+    deterministic=deterministic,
+    epoch_dir=epoch_dir,
+    create_data_offline=generate_data_offline,
   )
 
   run_time = timeit.default_timer() - st

@@ -75,15 +75,15 @@ class AlphaDCGMetric(_RankingMetric):
   """
 
   def __init__(
-      self,
-      name="alpha_dcg_metric",
-      topn=None,
-      alpha=0.5,
-      rank_discount_fn=None,
-      seed=None,
-      dtype=None,
-      ragged=False,
-      **kwargs
+    self,
+    name="alpha_dcg_metric",
+    topn=None,
+    alpha=0.5,
+    rank_discount_fn=None,
+    seed=None,
+    dtype=None,
+    ragged=False,
+    **kwargs,
   ):
     """Construct the ranking metric class for alpha-DCG.
 
@@ -110,17 +110,15 @@ class AlphaDCGMetric(_RankingMetric):
     self._rank_discount_fn = rank_discount_fn or utils.log2_inverse
     self._seed = seed
     self._metric = metrics_impl.AlphaDCGMetric(
-        name=name, topn=topn, alpha=alpha, rank_discount_fn=self._rank_discount_fn, seed=seed, ragged=ragged
+      name=name, topn=topn, alpha=alpha, rank_discount_fn=self._rank_discount_fn, seed=seed, ragged=ragged
     )
 
   def get_config(self):
     config = super(AlphaDCGMetric, self).get_config()
-    config.update(
-        {
-            "topn": self._topn,
-            "alpha": self._alpha,
-            "rank_discount_fn": self._rank_discount_fn,
-            "seed": self._seed,
-        }
-    )
+    config.update({
+      "topn": self._topn,
+      "alpha": self._alpha,
+      "rank_discount_fn": self._rank_discount_fn,
+      "seed": self._seed,
+    })
     return config

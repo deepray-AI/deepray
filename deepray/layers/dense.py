@@ -109,28 +109,25 @@ class Dense(Layer):
 
   @utils.allow_initializer_layout
   def __init__(
-      self,
-      units,
-      activation=None,
-      use_bias=True,
-      kernel_initializer='glorot_uniform',
-      bias_initializer='zeros',
-      kernel_regularizer=None,
-      bias_regularizer=None,
-      activity_regularizer=None,
-      kernel_constraint=None,
-      bias_constraint=None,
-      **kwargs
+    self,
+    units,
+    activation=None,
+    use_bias=True,
+    kernel_initializer="glorot_uniform",
+    bias_initializer="zeros",
+    kernel_regularizer=None,
+    bias_regularizer=None,
+    activity_regularizer=None,
+    kernel_constraint=None,
+    bias_constraint=None,
+    **kwargs,
   ):
     super(Dense, self).__init__(activity_regularizer=activity_regularizer, **kwargs)
 
-    self.name = self.kwargs('name', None)
+    self.name = self.kwargs("name", None)
     self.units = int(units) if not isinstance(units, int) else units
     if self.units < 0:
-      raise ValueError(
-          f'Received an invalid value for `units`, expected '
-          f'a positive integer. Received: units={units}'
-      )
+      raise ValueError(f"Received an invalid value for `units`, expected a positive integer. Received: units={units}")
     self.activation = activations.get(activation)
     self.use_bias = use_bias
     self.kernel_initializer = initializers.get(kernel_initializer)
@@ -146,38 +143,37 @@ class Dense(Layer):
   def build(self, input_shape):
     dtype = tf.as_dtype(self.dtype or backend.floatx())
     if not (dtype.is_floating or dtype.is_complex):
-      raise TypeError('A Dense layer can only be built with a floating-point '
-                      f'dtype. Received: dtype={dtype}')
+      raise TypeError(f"A Dense layer can only be built with a floating-point dtype. Received: dtype={dtype}")
 
     input_shape = tf.TensorShape(input_shape)
     last_dim = tf.compat.dimension_value(input_shape[-1])
     if last_dim is None:
       raise ValueError(
-          'The last dimension of the inputs to a Dense layer '
-          'should be defined. Found None. '
-          f'Full input shape received: {input_shape}'
+        "The last dimension of the inputs to a Dense layer "
+        "should be defined. Found None. "
+        f"Full input shape received: {input_shape}"
       )
     self.input_spec = InputSpec(min_ndim=2, axes={-1: last_dim})
     self.kernel = self.add_weight(
-        '%skernel' % self.name + '_' if self.name else "",
-        shape=[last_dim, self.units],
-        initializer=self.kernel_initializer,
-        regularizer=self.kernel_regularizer,
-        constraint=self.kernel_constraint,
-        dtype=self.dtype,
-        trainable=True
+      "%skernel" % self.name + "_" if self.name else "",
+      shape=[last_dim, self.units],
+      initializer=self.kernel_initializer,
+      regularizer=self.kernel_regularizer,
+      constraint=self.kernel_constraint,
+      dtype=self.dtype,
+      trainable=True,
     )
     if self.use_bias:
       self.bias = self.add_weight(
-          '%sbias' % self.name + '_' if self.name else "",
-          shape=[
-              self.units,
-          ],
-          initializer=self.bias_initializer,
-          regularizer=self.bias_regularizer,
-          constraint=self.bias_constraint,
-          dtype=self.dtype,
-          trainable=True
+        "%sbias" % self.name + "_" if self.name else "",
+        shape=[
+          self.units,
+        ],
+        initializer=self.bias_initializer,
+        regularizer=self.bias_regularizer,
+        constraint=self.bias_constraint,
+        dtype=self.dtype,
+        trainable=True,
       )
     else:
       self.bias = None
@@ -194,9 +190,9 @@ class Dense(Layer):
       # dimensions at the end.
       if tf.compat.dimension_value(inputs.shape[-1]) is None:
         raise ValueError(
-            'Dense layer only supports RaggedTensors when the '
-            'innermost dimension is non-ragged. Received: '
-            f'inputs.shape={inputs.shape}.'
+          "Dense layer only supports RaggedTensors when the "
+          "innermost dimension is non-ragged. Received: "
+          f"inputs.shape={inputs.shape}."
         )
       original_inputs = inputs
       if inputs.flat_values.shape.rank > 1:
@@ -233,7 +229,7 @@ class Dense(Layer):
         # of the inputs to both ops.
         ids = tf.SparseTensor(indices=inputs.indices, values=inputs.indices[:, 1], dense_shape=inputs.dense_shape)
         weights = inputs
-        outputs = tf.nn.embedding_lookup_sparse(self.kernel, ids, weights, combiner='sum')
+        outputs = tf.nn.embedding_lookup_sparse(self.kernel, ids, weights, combiner="sum")
       else:
         outputs = tf.matmul(a=inputs, b=self.kernel)
     # Broadcast kernel to inputs.
@@ -261,27 +257,25 @@ class Dense(Layer):
     input_shape = input_shape.with_rank_at_least(2)
     if tf.compat.dimension_value(input_shape[-1]) is None:
       raise ValueError(
-          'The last dimension of the input shape of a Dense layer '
-          'should be defined. Found None. '
-          f'Received: input_shape={input_shape}'
+        "The last dimension of the input shape of a Dense layer "
+        "should be defined. Found None. "
+        f"Received: input_shape={input_shape}"
       )
     return input_shape[:-1].concatenate(self.units)
 
   def get_config(self):
     config = super(Dense, self).get_config()
-    config.update(
-        {
-            'name': self.name,
-            'units': self.units,
-            'activation': activations.serialize(self.activation),
-            'use_bias': self.use_bias,
-            'kernel_initializer': initializers.serialize(self.kernel_initializer),
-            'bias_initializer': initializers.serialize(self.bias_initializer),
-            'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
-            'bias_regularizer': regularizers.serialize(self.bias_regularizer),
-            'activity_regularizer': regularizers.serialize(self.activity_regularizer),
-            'kernel_constraint': constraints.serialize(self.kernel_constraint),
-            'bias_constraint': constraints.serialize(self.bias_constraint)
-        }
-    )
+    config.update({
+      "name": self.name,
+      "units": self.units,
+      "activation": activations.serialize(self.activation),
+      "use_bias": self.use_bias,
+      "kernel_initializer": initializers.serialize(self.kernel_initializer),
+      "bias_initializer": initializers.serialize(self.bias_initializer),
+      "kernel_regularizer": regularizers.serialize(self.kernel_regularizer),
+      "bias_regularizer": regularizers.serialize(self.bias_regularizer),
+      "activity_regularizer": regularizers.serialize(self.activity_regularizer),
+      "kernel_constraint": constraints.serialize(self.kernel_constraint),
+      "bias_constraint": constraints.serialize(self.bias_constraint),
+    })
     return config

@@ -39,7 +39,6 @@ from official.utils.logs import logger
 
 
 class BenchmarkLoggerTest(tf.test.TestCase):
-
   @classmethod
   def setUpClass(cls):  # pylint: disable=invalid-name
     super(BenchmarkLoggerTest, cls).setUpClass()
@@ -88,7 +87,6 @@ class BenchmarkLoggerTest(tf.test.TestCase):
 
 
 class BaseBenchmarkLoggerTest(tf.test.TestCase):
-
   def setUp(self):
     super(BaseBenchmarkLoggerTest, self).setUp()
     self._actual_log = logging.info
@@ -113,7 +111,6 @@ class BaseBenchmarkLoggerTest(tf.test.TestCase):
 
 
 class BenchmarkFileLoggerTest(tf.test.TestCase):
-
   def setUp(self):
     super(BenchmarkFileLoggerTest, self).setUp()
     # Avoid pulling extra env vars from test environment which affects the test
@@ -238,12 +235,12 @@ class BenchmarkFileLoggerTest(tf.test.TestCase):
   def test_collect_run_params(self):
     run_info = {}
     run_parameters = {
-        "batch_size": 32,
-        "synthetic_data": True,
-        "epochs": 100.00,
-        "dtype": "fp16",
-        "resnet_size": 50,
-        "random_tensor": tf.constant(2.0)
+      "batch_size": 32,
+      "synthetic_data": True,
+      "epochs": 100.00,
+      "dtype": "fp16",
+      "resnet_size": 50,
+      "random_tensor": tf.constant(2.0),
     }
     logger._collect_run_params(run_info, run_parameters)
     self.assertEqual(len(run_info["run_parameters"]), 6)
@@ -251,17 +248,13 @@ class BenchmarkFileLoggerTest(tf.test.TestCase):
     self.assertEqual(run_info["run_parameters"][1], {"name": "dtype", "string_value": "fp16"})
     if keras_utils.is_v2_0():
       self.assertEqual(
-          run_info["run_parameters"][2], {
-              "name": "random_tensor",
-              "string_value": "tf.Tensor(2.0, shape=(), dtype=float32)"
-          }
+        run_info["run_parameters"][2],
+        {"name": "random_tensor", "string_value": "tf.Tensor(2.0, shape=(), dtype=float32)"},
       )
     else:
       self.assertEqual(
-          run_info["run_parameters"][2], {
-              "name": "random_tensor",
-              "string_value": "Tensor(\"Const:0\", shape=(), dtype=float32)"
-          }
+        run_info["run_parameters"][2],
+        {"name": "random_tensor", "string_value": 'Tensor("Const:0", shape=(), dtype=float32)'},
       )
 
     self.assertEqual(run_info["run_parameters"][3], {"name": "resnet_size", "long_value": 50})
@@ -277,14 +270,8 @@ class BenchmarkFileLoggerTest(tf.test.TestCase):
     logger._collect_tensorflow_environment_variables(run_info)
     self.assertIsNotNone(run_info["tensorflow_environment_variables"])
     expected_tf_envs = [
-        {
-            "name": "TF_ENABLE_WINOGRAD_NONFUSED",
-            "value": "1"
-        },
-        {
-            "name": "TF_OTHER",
-            "value": "2"
-        },
+      {"name": "TF_ENABLE_WINOGRAD_NONFUSED", "value": "1"},
+      {"name": "TF_OTHER", "value": "2"},
     ]
     self.assertEqual(run_info["tensorflow_environment_variables"], expected_tf_envs)
 
@@ -297,7 +284,6 @@ class BenchmarkFileLoggerTest(tf.test.TestCase):
 
 @unittest.skipIf(bigquery is None, "Bigquery dependency is not installed.")
 class BenchmarkBigQueryLoggerTest(tf.test.TestCase):
-
   def setUp(self):
     super(BenchmarkBigQueryLoggerTest, self).setUp()
     # Avoid pulling extra env vars from test environment which affects the test
@@ -308,7 +294,7 @@ class BenchmarkBigQueryLoggerTest(tf.test.TestCase):
 
     self.mock_bq_uploader = mock.MagicMock()
     self.logger = logger.BenchmarkBigQueryLogger(
-        self.mock_bq_uploader, "dataset", "run_table", "run_status_table", "metric_table", "run_id"
+      self.mock_bq_uploader, "dataset", "run_table", "run_status_table", "metric_table", "run_id"
     )
 
   def tearDown(self):
@@ -320,23 +306,20 @@ class BenchmarkBigQueryLoggerTest(tf.test.TestCase):
   def test_log_metric(self):
     self.logger.log_metric("accuracy", 0.999, global_step=1e4, extras={"name": "value"})
     expected_metric_json = [
-        {
-            "name": "accuracy",
-            "value": 0.999,
-            "unit": None,
-            "global_step": 1e4,
-            "timestamp": mock.ANY,
-            "extras": [{
-                "name": "name",
-                "value": "value"
-            }]
-        }
+      {
+        "name": "accuracy",
+        "value": 0.999,
+        "unit": None,
+        "global_step": 1e4,
+        "timestamp": mock.ANY,
+        "extras": [{"name": "name", "value": "value"}],
+      }
     ]
     # log_metric will call upload_benchmark_metric_json in a separate thread.
     # Give it some grace period for the new thread before assert.
     time.sleep(1)
     self.mock_bq_uploader.upload_benchmark_metric_json.assert_called_once_with(
-        "dataset", "metric_table", "run_id", expected_metric_json
+      "dataset", "metric_table", "run_id", expected_metric_json
     )
 
   @mock.patch("official.utils.logs.logger._gather_run_info")
@@ -356,7 +339,7 @@ class BenchmarkBigQueryLoggerTest(tf.test.TestCase):
     # Give it some grace period for the new thread before assert.
     time.sleep(1)
     self.mock_bq_uploader.update_run_status.assert_called_once_with(
-        "dataset", "run_status_table", "run_id", logger.RUN_STATUS_SUCCESS
+      "dataset", "run_status_table", "run_id", logger.RUN_STATUS_SUCCESS
     )
 
 

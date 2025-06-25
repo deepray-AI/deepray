@@ -10,7 +10,6 @@ from deepray.datasets.movielens.movielens_100k_ratings import Movielens100kRatin
 
 
 class TestData(Movielens100kRating):
-
   def parser(self, x: Dict[str, tf.Tensor]) -> Tuple[Dict[str, tf.Tensor], tf.Tensor]:
     labels = x.pop("user_rating")
     x["movie_title"] = self.movie_titles_vocabulary(x["movie_title"])
@@ -19,18 +18,18 @@ class TestData(Movielens100kRating):
     return x, labels
 
   def build_dataset(
-      self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
+    self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
     key_func = lambda x: self.user_ids_vocabulary(x["user_id"])
     reduce_func = lambda key, dataset: dataset.batch(100)
 
     ratings = self.ratings.map(
-        lambda x: {
-            "movie_title": x["movie_title"],
-            "user_id": x["user_id"],
-            "movie_id": x["movie_id"],
-            "user_rating": x["user_rating"]
-        }
+      lambda x: {
+        "movie_title": x["movie_title"],
+        "user_id": x["user_id"],
+        "movie_id": x["movie_id"],
+        "user_rating": x["user_rating"],
+      }
     )
     ds_train = ratings.group_by_window(key_func=key_func, reduce_func=reduce_func, window_size=100)
     ds_train = ds_train.map(self.parser)
@@ -54,24 +53,27 @@ for x, label in ds_train.take(1):
 # Create the ranking model, trained with a ranking loss and evaluated with
 # ranking metrics.
 model = MovieLensRankingModel(
-    user_input_dim=data_pipe.user_ids_vocabulary.vocabulary_size(),
-    movie_input_dim=data_pipe.movie_titles_vocabulary.vocabulary_size()
+  user_input_dim=data_pipe.user_ids_vocabulary.vocabulary_size(),
+  movie_input_dim=data_pipe.movie_titles_vocabulary.vocabulary_size(),
 )
 
 if USE_SOK:
   embedding_opt = dp.optimizers.Adagrad(learning_rate=0.5)
   embedding_opt = sok.OptimizerWrapper(embedding_opt)
   dense_opt = dp.optimizers.Adagrad(learning_rate=0.5)
-  optimizer = MultiOptimizer([
+  optimizer = MultiOptimizer(
+    [
       (embedding_opt, "DynamicVariable_"),
-  ], default_optimizer=dense_opt)
+    ],
+    default_optimizer=dense_opt,
+  )
 else:
   optimizer = dp.optimizers.Adagrad(0.5)
 
 loss = dp.losses.SoftmaxLoss(ragged=True)
 eval_metrics = [
-    dp.metrics.NDCGMetric(ragged=True, name="metric/ndcg"),
-    dp.metrics.MRRMetric(ragged=True, name="metric/mrr"),
+  dp.metrics.NDCGMetric(ragged=True, name="metric/ndcg"),
+  dp.metrics.MRRMetric(ragged=True, name="metric/mrr"),
 ]
 model.compile(optimizer=optimizer, loss=loss, metrics=eval_metrics, run_eagerly=False)
 
@@ -84,8 +86,8 @@ for movie_titles in movies.batch(2000):
 
 # Generate the input for user 42.
 inputs = {
-    "user_id": tf.expand_dims(tf.repeat(data_pipe.user_ids_vocabulary("42"), repeats=movie_titles.shape[0]), axis=0),
-    "movie_title": tf.expand_dims(data_pipe.movie_titles_vocabulary(movie_titles), axis=0)
+  "user_id": tf.expand_dims(tf.repeat(data_pipe.user_ids_vocabulary("42"), repeats=movie_titles.shape[0]), axis=0),
+  "movie_title": tf.expand_dims(data_pipe.movie_titles_vocabulary(movie_titles), axis=0),
 }
 
 # Get movie recommendations for user 42.

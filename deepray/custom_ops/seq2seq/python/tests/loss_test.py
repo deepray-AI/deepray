@@ -37,13 +37,13 @@ def get_test_data():
   # and logits = [[0.5] * 5, [1.5] * 5, [2.5] * 5]
   expected_loss = 1.60944
   return (
-      batch_size,
-      sequence_length,
-      number_of_classes,
-      logits,
-      targets,
-      weights,
-      expected_loss,
+    batch_size,
+    sequence_length,
+    number_of_classes,
+    logits,
+    targets,
+    weights,
+    expected_loss,
   )
 
 
@@ -53,13 +53,13 @@ def get_test_data():
 @pytest.mark.parametrize("zero_weights", [True, False])
 def test_sequence_loss(average_across_timesteps, average_across_batch, zero_weights):
   (
-      batch_size,
-      sequence_length,
-      _,
-      logits,
-      targets,
-      weights,
-      expected_loss,
+    batch_size,
+    sequence_length,
+    _,
+    logits,
+    targets,
+    weights,
+    expected_loss,
   ) = get_test_data()
 
   if zero_weights:
@@ -67,11 +67,11 @@ def test_sequence_loss(average_across_timesteps, average_across_batch, zero_weig
     weights = tf.stack(weights, axis=1)
 
   computed = loss.sequence_loss(
-      logits,
-      targets,
-      weights,
-      average_across_timesteps=average_across_timesteps,
-      average_across_batch=average_across_batch,
+    logits,
+    targets,
+    weights,
+    average_across_timesteps=average_across_timesteps,
+    average_across_batch=average_across_batch,
   )
   computed = computed.numpy()
   if average_across_timesteps and average_across_batch and zero_weights:
@@ -98,21 +98,20 @@ def test_sequence_loss(average_across_timesteps, average_across_batch, zero_weig
 @pytest.mark.parametrize("average_across_timesteps", [True, False])
 @pytest.mark.parametrize("average_across_batch", [True, False])
 def test_sequence_loss_class(average_across_timesteps, average_across_batch):
-
   (
-      batch_size,
-      sequence_length,
-      _,
-      logits,
-      targets,
-      weights,
-      expected_loss,
+    batch_size,
+    sequence_length,
+    _,
+    logits,
+    targets,
+    weights,
+    expected_loss,
   ) = get_test_data()
   seq_loss = loss.SequenceLoss(
-      average_across_timesteps=average_across_timesteps,
-      average_across_batch=average_across_batch,
-      sum_over_timesteps=False,
-      sum_over_batch=False,
+    average_across_timesteps=average_across_timesteps,
+    average_across_batch=average_across_batch,
+    sum_over_timesteps=False,
+    sum_over_batch=False,
   )
   average_loss_per_example = seq_loss(targets, logits, weights)
   res = average_loss_per_example.numpy()
@@ -130,29 +129,29 @@ def test_sequence_loss_class(average_across_timesteps, average_across_batch):
 
 def test_sum_reduction():
   (
-      batch_size,
-      sequence_length,
-      _,
-      logits,
-      targets,
-      weights,
-      expected_loss,
+    batch_size,
+    sequence_length,
+    _,
+    logits,
+    targets,
+    weights,
+    expected_loss,
   ) = get_test_data()
   seq_loss = loss.SequenceLoss(
-      average_across_timesteps=False,
-      average_across_batch=False,
-      sum_over_timesteps=True,
-      sum_over_batch=True,
+    average_across_timesteps=False,
+    average_across_batch=False,
+    sum_over_timesteps=True,
+    sum_over_batch=True,
   )
   average_loss_per_example = seq_loss(targets, logits, weights)
   res = average_loss_per_example.numpy()
   np.testing.assert_allclose(expected_loss, res, atol=1e-6, rtol=1e-6)
 
   seq_loss = loss.SequenceLoss(
-      average_across_timesteps=False,
-      average_across_batch=False,
-      sum_over_timesteps=False,
-      sum_over_batch=True,
+    average_across_timesteps=False,
+    average_across_batch=False,
+    sum_over_timesteps=False,
+    sum_over_batch=True,
   )
   average_loss_per_sequence = seq_loss(targets, logits, weights)
   res = average_loss_per_sequence.numpy()
@@ -160,10 +159,10 @@ def test_sum_reduction():
   np.testing.assert_allclose(compare_per_sequence, res, atol=1e-6, rtol=1e-6)
 
   seq_loss = loss.SequenceLoss(
-      average_across_timesteps=False,
-      average_across_batch=False,
-      sum_over_timesteps=True,
-      sum_over_batch=False,
+    average_across_timesteps=False,
+    average_across_batch=False,
+    sum_over_timesteps=True,
+    sum_over_batch=False,
   )
   average_loss_per_batch = seq_loss(targets, logits, weights)
   res = average_loss_per_batch.numpy()
@@ -171,10 +170,10 @@ def test_sum_reduction():
   np.testing.assert_allclose(compare_per_batch, res, atol=1e-6, rtol=1e-6)
 
   seq_loss = loss.SequenceLoss(
-      average_across_timesteps=False,
-      average_across_batch=False,
-      sum_over_timesteps=False,
-      sum_over_batch=False,
+    average_across_timesteps=False,
+    average_across_batch=False,
+    sum_over_timesteps=False,
+    sum_over_batch=False,
   )
   total_loss = seq_loss(targets, logits, weights)
   res = total_loss.numpy()
@@ -185,33 +184,33 @@ def test_sum_reduction():
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def test_weighted_sum_reduction():
   (
-      batch_size,
-      sequence_length,
-      _,
-      logits,
-      targets,
-      _,
-      expected_loss,
+    batch_size,
+    sequence_length,
+    _,
+    logits,
+    targets,
+    _,
+    expected_loss,
   ) = get_test_data()
   weights = [tf.constant(1.0, shape=[batch_size]) for _ in range(sequence_length)]
   # Make the last element in the sequence to have zero weights.
   weights[-1] = tf.constant(0.0, shape=[batch_size])
   weights = tf.stack(weights, axis=1)
   seq_loss = loss.SequenceLoss(
-      average_across_timesteps=False,
-      average_across_batch=False,
-      sum_over_timesteps=True,
-      sum_over_batch=True,
+    average_across_timesteps=False,
+    average_across_batch=False,
+    sum_over_timesteps=True,
+    sum_over_batch=True,
   )
   average_loss_per_example = seq_loss(targets, logits, weights)
   res = average_loss_per_example.numpy()
   np.testing.assert_allclose(expected_loss, res, rtol=1e-6, atol=1e-6)
 
   seq_loss = loss.SequenceLoss(
-      average_across_timesteps=False,
-      average_across_batch=False,
-      sum_over_timesteps=False,
-      sum_over_batch=True,
+    average_across_timesteps=False,
+    average_across_batch=False,
+    sum_over_timesteps=False,
+    sum_over_batch=True,
   )
   average_loss_per_sequence = seq_loss(targets, logits, weights)
   res = average_loss_per_sequence.numpy()
@@ -222,10 +221,10 @@ def test_weighted_sum_reduction():
   np.testing.assert_allclose(compare_per_sequence, res, rtol=1e-6, atol=1e-6)
 
   seq_loss = loss.SequenceLoss(
-      average_across_timesteps=False,
-      average_across_batch=False,
-      sum_over_timesteps=True,
-      sum_over_batch=False,
+    average_across_timesteps=False,
+    average_across_batch=False,
+    sum_over_timesteps=True,
+    sum_over_batch=False,
   )
   average_loss_per_batch = seq_loss(targets, logits, weights)
   res = average_loss_per_batch.numpy()
@@ -233,10 +232,10 @@ def test_weighted_sum_reduction():
   np.testing.assert_allclose(compare_per_batch, res, rtol=1e-6, atol=1e-6)
 
   seq_loss = loss.SequenceLoss(
-      average_across_timesteps=False,
-      average_across_batch=False,
-      sum_over_timesteps=False,
-      sum_over_batch=False,
+    average_across_timesteps=False,
+    average_across_batch=False,
+    sum_over_timesteps=False,
+    sum_over_batch=False,
   )
   total_loss = seq_loss(targets, logits, weights)
   res = total_loss.numpy()
@@ -252,10 +251,10 @@ def test_ambiguous_order():
   with pytest.raises(ValueError, match="because of ambiguous order"):
     _, _, _, logits, targets, weights, _ = get_test_data()
     seq_loss = loss.SequenceLoss(
-        average_across_timesteps=False,
-        average_across_batch=True,
-        sum_over_timesteps=True,
-        sum_over_batch=False,
+      average_across_timesteps=False,
+      average_across_batch=True,
+      sum_over_timesteps=True,
+      sum_over_batch=False,
     )
     seq_loss(targets, logits, weights).numpy()
 
@@ -263,22 +262,22 @@ def test_ambiguous_order():
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def test_keras_compatibility():
   """To test the compatibility of SequenceLoss with Keras's built-in
-    training loops, we create a fake model which always outputs a pre-
-    defined set of logits.
+  training loops, we create a fake model which always outputs a pre-
+  defined set of logits.
 
-    Then we check the calculated loss to be equal to the expected
-    loss. Note that since the fake model doesn't have any trainable
-    parameters, no matter how many steps we train it, it always
-    outputs the same loss value.
-    """
+  Then we check the calculated loss to be equal to the expected
+  loss. Note that since the fake model doesn't have any trainable
+  parameters, no matter how many steps we train it, it always
+  outputs the same loss value.
+  """
   (
-      batch_size,
-      sequence_length,
-      number_of_classes,
-      logits,
-      targets,
-      weights,
-      expected_loss,
+    batch_size,
+    sequence_length,
+    number_of_classes,
+    logits,
+    targets,
+    weights,
+    expected_loss,
   ) = get_test_data()
   targets = tf.one_hot(targets, depth=number_of_classes)
 

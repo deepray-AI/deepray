@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -37,29 +38,28 @@ class Classification(tf.keras.Model):
       'predictions'.
   """
 
-  def __init__(self, input_width, num_classes, initializer='glorot_uniform', output='logits', **kwargs):
+  def __init__(self, input_width, num_classes, initializer="glorot_uniform", output="logits", **kwargs):
     self._self_setattr_tracking = False
     self._config_dict = {
-        'input_width': input_width,
-        'num_classes': num_classes,
-        'initializer': initializer,
-        'output': output,
+      "input_width": input_width,
+      "num_classes": num_classes,
+      "initializer": initializer,
+      "output": output,
     }
 
-    cls_output = tf.keras.layers.Input(shape=(input_width,), name='cls_output', dtype=tf.float32)
+    cls_output = tf.keras.layers.Input(shape=(input_width,), name="cls_output", dtype=tf.float32)
 
     self.logits = tf.keras.layers.Dense(
-        num_classes, activation=None, kernel_initializer=initializer, name='predictions/transform/logits'
+      num_classes, activation=None, kernel_initializer=initializer, name="predictions/transform/logits"
     )(cls_output)
     predictions = tf.keras.layers.Activation(tf.nn.log_softmax)(self.logits)
 
-    if output == 'logits':
+    if output == "logits":
       output_tensors = self.logits
-    elif output == 'predictions':
+    elif output == "predictions":
       output_tensors = predictions
     else:
-      raise ValueError(('Unknown `output` value "%s". `output` can be either "logits" or '
-                        '"predictions"') % output)
+      raise ValueError(('Unknown `output` value "%s". `output` can be either "logits" or "predictions"') % output)
 
     super(Classification, self).__init__(inputs=[cls_output], outputs=output_tensors, **kwargs)
 

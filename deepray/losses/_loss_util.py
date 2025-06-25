@@ -22,9 +22,9 @@ import math
 from typing import Callable, Dict, Tuple
 import tensorflow as tf
 
-_PADDING_LABEL = -1.
+_PADDING_LABEL = -1.0
 _PADDING_PREDICTION = -1e6
-_PADDING_WEIGHT = 0.
+_PADDING_WEIGHT = 0.0
 
 TensorLike = tf.types.experimental.TensorLike
 TransformationFunction = Callable[[TensorLike], tf.Tensor]
@@ -135,7 +135,7 @@ class _RankingLoss(object, metaclass=abc.ABCMeta):
     Returns:
       A tuple(losses, loss_weights) that have the same shape.
     """
-    raise NotImplementedError('Calling an abstract method.')
+    raise NotImplementedError("Calling an abstract method.")
 
   def normalize_weights(self, labels, weights):
     """Normalizes weights.
@@ -224,7 +224,7 @@ class _RankingLoss(object, metaclass=abc.ABCMeta):
       A pair of `Tensor` objects of shape [batch_size] containing per-list
       losses and weights.
     """
-    raise NotImplementedError('Calling an abstract method.')
+    raise NotImplementedError("Calling an abstract method.")
 
   def eval_metric(self, labels, logits, weights, mask=None):
     """Computes the eval metric for the loss in tf.estimator (not tf.keras).
@@ -266,7 +266,7 @@ def ragged_to_dense(labels, predictions, weights):
     A tuple (labels, predictions, weights, mask) of dense `tf.Tensor`s.
   """
   # TODO: Add checks to validate (ragged) shapes of input tensors.
-  mask = tf.cast(tf.ones_like(labels).to_tensor(0.), dtype=tf.bool)
+  mask = tf.cast(tf.ones_like(labels).to_tensor(0.0), dtype=tf.bool)
   labels = labels.to_tensor(_PADDING_LABEL)
   if predictions is not None:
     predictions = predictions.to_tensor(_PADDING_PREDICTION)
@@ -278,4 +278,4 @@ def ragged_to_dense(labels, predictions, weights):
 def is_label_valid(labels):
   """Returns a boolean `Tensor` for label validity."""
   labels = tf.convert_to_tensor(value=labels)
-  return tf.greater_equal(labels, 0.)
+  return tf.greater_equal(labels, 0.0)

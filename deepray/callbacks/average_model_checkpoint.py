@@ -21,44 +21,44 @@ from deepray.optimizers.average_wrapper import AveragedOptimizerWrapper
 class AverageModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
   r"""The callback that saves average model weights.
 
-    The callback that should be used with optimizers that extend
-    `dp.optimizers.AveragedOptimizerWrapper`, i.e.,
-    `dp.optimizers.MovingAverage` and
-    `dp.optimizers.StochasticAverage` optimizers.
-    It saves and, optionally, assigns the averaged weights.
+  The callback that should be used with optimizers that extend
+  `dp.optimizers.AveragedOptimizerWrapper`, i.e.,
+  `dp.optimizers.MovingAverage` and
+  `dp.optimizers.StochasticAverage` optimizers.
+  It saves and, optionally, assigns the averaged weights.
 
-    Args:
-        update_weights: If `True`, assign the moving average weights
-            to the model, and save them. If False, keep the old
-            non-averaged weights, but the saved model uses the
-            average weights.
+  Args:
+      update_weights: If `True`, assign the moving average weights
+          to the model, and save them. If False, keep the old
+          non-averaged weights, but the saved model uses the
+          average weights.
 
-        See `tf.keras.callbacks.ModelCheckpoint` for the other args.
-    """
+      See `tf.keras.callbacks.ModelCheckpoint` for the other args.
+  """
 
   @typechecked
   def __init__(
-      self,
-      update_weights: bool,
-      filepath: str,
-      monitor: str = "val_loss",
-      verbose: int = 0,
-      save_best_only: bool = False,
-      save_weights_only: bool = False,
-      mode: str = "auto",
-      save_freq: str = "epoch",
-      **kwargs,
+    self,
+    update_weights: bool,
+    filepath: str,
+    monitor: str = "val_loss",
+    verbose: int = 0,
+    save_best_only: bool = False,
+    save_weights_only: bool = False,
+    mode: str = "auto",
+    save_freq: str = "epoch",
+    **kwargs,
   ):
     self.update_weights = update_weights
     super().__init__(
-        filepath,
-        monitor,
-        verbose,
-        save_best_only,
-        save_weights_only,
-        mode,
-        save_freq,
-        **kwargs,
+      filepath,
+      monitor,
+      verbose,
+      save_best_only,
+      save_weights_only,
+      mode,
+      save_freq,
+      **kwargs,
     )
 
   def _get_optimizer(self):
@@ -72,8 +72,7 @@ class AverageModelCheckpoint(tf.keras.callbacks.ModelCheckpoint):
     super().set_model(model)
     optimizer = self._get_optimizer()
     if not isinstance(optimizer, AveragedOptimizerWrapper):
-      raise TypeError("AverageModelCheckpoint is only used when training"
-                      "with MovingAverage or StochasticAverage")
+      raise TypeError("AverageModelCheckpoint is only used when trainingwith MovingAverage or StochasticAverage")
 
   def _save_model(self, *args, **kwargs):
     optimizer = self._get_optimizer()

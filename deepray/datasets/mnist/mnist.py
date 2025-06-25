@@ -26,7 +26,6 @@ from deepray.utils.horovod_utils import get_rank, get_world_size
 
 
 class Mnist(DataPipeline):
-
   def __init__(self, path="mnist.npz"):
     """Loads the MNIST dataset.
 
@@ -76,21 +75,21 @@ class Mnist(DataPipeline):
     super().__init__()
 
     flags.FLAGS([
-        sys.argv[0],
-        "--num_train_examples=60000",
+      sys.argv[0],
+      "--num_train_examples=60000",
     ])
 
-    origin_folder = ("https://storage.googleapis.com/tensorflow/tf-keras-datasets/")
+    origin_folder = "https://storage.googleapis.com/tensorflow/tf-keras-datasets/"
     self.path = get_file(
-        path,
-        origin=origin_folder + "mnist.npz",
-        file_hash=(  # noqa: E501
-            "731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673d1"
-        ),
+      path,
+      origin=origin_folder + "mnist.npz",
+      file_hash=(  # noqa: E501
+        "731c5ac602752760c8e48fbffcf8c3b850d9dc2a2aedcf2cc48468fc17b673d1"
+      ),
     )
 
   def build_dataset(
-      self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
+    self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
     with np.load(self.path, allow_pickle=True) as f:
       if is_training:

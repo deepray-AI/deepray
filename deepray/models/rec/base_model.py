@@ -22,16 +22,34 @@ from deepray.utils.data.input_meta import InputMeta
 from tensorflow_recommenders_addons import dynamic_embedding as de
 
 Feature = namedtuple(
-    'Feature', [
-        'name', 'code', 'dtype', 'len', 'default_value', 'use_hash', 'ids', 'vocab', 'boundaries', 'emb_name',
-        'emb_size', 'emb_dim', 'emb_reg_l1', 'emb_split', 'emb_reg_l2', 'emb_init', 'emb_mask', 'emb_dynamic',
-        'trainable', 'combiner', 'group'
-    ]
+  "Feature",
+  [
+    "name",
+    "code",
+    "dtype",
+    "len",
+    "default_value",
+    "use_hash",
+    "ids",
+    "vocab",
+    "boundaries",
+    "emb_name",
+    "emb_size",
+    "emb_dim",
+    "emb_reg_l1",
+    "emb_split",
+    "emb_reg_l2",
+    "emb_init",
+    "emb_mask",
+    "emb_dynamic",
+    "trainable",
+    "combiner",
+    "group",
+  ],
 )
 
 
-class BaseModel():
-
+class BaseModel:
   def __init__(self):
     super().__init__()
     self.conf = InputMeta().conf
@@ -39,8 +57,19 @@ class BaseModel():
     self.field_dict = self.get_fea_field_dict()
     self.feature_map = FeatureMap(feature_map=FLAGS.feature_map, black_list=FLAGS.black_list).feature_map
 
-    self.fea_gpercentile_dict, fea_gcov_dict, fea_geva_dict, self.fea_bpercentile_dict, fea_bcov_dict, fea_beva_dict, self.fea_tag_dict, self.cate_fea_dict, id_fea_dict, search_vocab_list, word_fea_dict = self.get_feature_meta(
-    )
+    (
+      self.fea_gpercentile_dict,
+      fea_gcov_dict,
+      fea_geva_dict,
+      self.fea_bpercentile_dict,
+      fea_bcov_dict,
+      fea_beva_dict,
+      self.fea_tag_dict,
+      self.cate_fea_dict,
+      id_fea_dict,
+      search_vocab_list,
+      word_fea_dict,
+    ) = self.get_feature_meta()
 
     self.save_path = self.get_save_model_path(self.conf.out_path)
 
@@ -53,26 +82,26 @@ class BaseModel():
       path_to_pb = os.path.join(self.save_path, "saved_model.pb")
       path_to_pbtxt = os.path.join(self.save_path, "saved_model.pbtxt")
       if os.path.exists(path_to_pb) or os.path.exists(path_to_pbtxt):
-        logging.info('[MODEL] Model already exists! would OVERWRITE! %s' % self.save_path)
+        logging.info("[MODEL] Model already exists! would OVERWRITE! %s" % self.save_path)
         # sys.exit(0)
 
     # input相关
-    self.use_fea_list = self.feature_map['name'].values.tolist()
+    self.use_fea_list = self.feature_map["name"].values.tolist()
 
     self.hash_fea_dict, self.id_fea_dict = self.conf.hash_fea_bucket_size_dict, self.conf.id_fea_bucket_size_dict
     self.conti_fea_cut = None
-    if self.conf.bussiness == 'boss':
+    if self.conf.bussiness == "boss":
       self.conti_fea_cut = self.fea_bpercentile_dict
-    elif self.conf.bussiness == 'geek':
+    elif self.conf.bussiness == "geek":
       self.conti_fea_cut = self.fea_gpercentile_dict
     else:
-      logging.info(f'system exits with code -1! unknown bussiness: {self.conf.bussiness}')
+      logging.info(f"system exits with code -1! unknown bussiness: {self.conf.bussiness}")
       sys.exit(-1)
     if self.conf.extra_conti_fea_cut:
       self.conti_fea_cut = {**self.conti_fea_cut, **self.conf.extra_conti_fea_cut}
-    logging.info(f'conti_fea_cut: {len(self.conti_fea_cut)}')
-    logging.info(f'cate_fea_dict: {len(self.cate_fea_dict)}')
-    logging.info(f'use_fea_list: {len(self.use_fea_list)}')
+    logging.info(f"conti_fea_cut: {len(self.conti_fea_cut)}")
+    logging.info(f"cate_fea_dict: {len(self.cate_fea_dict)}")
+    logging.info(f"use_fea_list: {len(self.use_fea_list)}")
     # output相关
     self.target_label_table, self.eva_target_label_table, self.class_weight_table = self.get_target()
 
@@ -88,7 +117,7 @@ class BaseModel():
     eva_target_label_table = dict()
     class_weight_table = dict()
     for key, value in self.conf.target.items():
-      sample_weight = value['total_sample_weight'] if 'total_sample_weight' in value else value['sample_weight']
+      sample_weight = value["total_sample_weight"] if "total_sample_weight" in value else value["sample_weight"]
       label_key = []
       label_value = []
       for k, v in sample_weight.items():
@@ -96,27 +125,27 @@ class BaseModel():
         label_value.append(0 if v < 0 else 1)
 
       # 兼容之前的格式，之后会下掉
-      if 'label' in value:
+      if "label" in value:
         label_key = []
         label_value = []
-        for k, v in value['label'].items():
+        for k, v in value["label"].items():
           label_key.append(k)
           label_value.append(v)
 
       initializer = tf.lookup.KeyValueTensorInitializer(
-          keys=label_key, values=label_value, key_dtype=tf.string, value_dtype=tf.int64, name=key + "_target_lookup_1"
+        keys=label_key, values=label_value, key_dtype=tf.string, value_dtype=tf.int64, name=key + "_target_lookup_1"
       )
       target_label_table[key] = tf.lookup.StaticHashTable(initializer, default_value=0, name=key + "_target_lookup")
       class_weight_table[key] = value["class_weight"]
 
     for key, value in self.conf.evaluate_target.items():
-      target_label = value['label']
+      target_label = value["label"]
       initializer = tf.lookup.KeyValueTensorInitializer(
-          keys=list(target_label.keys()),
-          values=list(target_label.values()),
-          key_dtype=tf.string,
-          value_dtype=tf.int64,
-          name=key + "_target_lookup_1"
+        keys=list(target_label.keys()),
+        values=list(target_label.values()),
+        key_dtype=tf.string,
+        value_dtype=tf.int64,
+        name=key + "_target_lookup_1",
       )
       eva_target_label_table[key] = tf.lookup.StaticHashTable(initializer, default_value=0, name=key + "_target_lookup")
       class_weight_table[key] = 0
@@ -135,20 +164,20 @@ class BaseModel():
 
   def get_fea_field_dict(self):
     fea_field_dict = dict()
-    fea_field_path = os.path.join(self.conf.conf_path, 'fea_field')
+    fea_field_path = os.path.join(self.conf.conf_path, "fea_field")
     for file in os.listdir(fea_field_path):
       filename = os.path.join(fea_field_path, file)
       val = []
       #         logger.info("#" + file + "#")
       if not os.path.isfile(filename):
-        logging.info('warning: %s is a directory!' % file)
+        logging.info("warning: %s is a directory!" % file)
         continue
-      with open(filename, 'r') as fr:
+      with open(filename, "r") as fr:
         while True:
           line = fr.readline().strip()
-          if line == '':
+          if line == "":
             break
-          if line == 'NULL':
+          if line == "NULL":
             continue
           val.append(line)
           # logging.info(line)
@@ -157,11 +186,11 @@ class BaseModel():
 
   def get_feature_tag(self):
     path = os.path.join(self.conf.common_config, self.conf.tag_file)
-    logging.info(f'fea_tag_path: {path}')
+    logging.info(f"fea_tag_path: {path}")
     fea_tag_name_dict = dict()
     f = open(path)
     for line in f.readlines():
-      line = line.strip().split('\t')
+      line = line.strip().split("\t")
       if len(line) < 2:
         continue
       fea_tag_name_dict[line[0]] = line[1]
@@ -169,7 +198,7 @@ class BaseModel():
 
   def get_cate_fea_vocab_list(self):
     path = os.path.join(self.conf.common_config, self.conf.vocab_dir)
-    logging.info(f'fea_vocab_path: {path}')
+    logging.info(f"fea_vocab_path: {path}")
     cate_fea_vocab_list = dict()
     # cate_fea_path = os.path.join(self.conf.project_path, 'self.conf', 'conf_common', self.conf.cate_fea_dir)
 
@@ -179,12 +208,12 @@ class BaseModel():
       val = []
       # logging.info(file)
       if os.path.isdir(filename):
-        logging.info('warning: %s is a directory!' % file)
+        logging.info("warning: %s is a directory!" % file)
         continue
-      with open(filename, 'r') as f:
+      with open(filename, "r") as f:
         for line in f:
           line = line.strip()
-          if line == '' or line == 'NULL':
+          if line == "" or line == "NULL":
             continue
           val.append(int(line))
       cate_fea_vocab_list[file] = val
@@ -193,7 +222,7 @@ class BaseModel():
 
   def get_search_vocab_list(self):
     path = os.path.join(self.conf.common_config, self.conf.search_dir)
-    logging.info(f'search_vocab_path: {path}')
+    logging.info(f"search_vocab_path: {path}")
     search_vocab_list = dict()
 
     for file in os.listdir(path):
@@ -201,14 +230,14 @@ class BaseModel():
       val = []
       # logging.info(file)
       if os.path.isdir(filename):
-        logging.info('warning: %s is a directory!' % file)
+        logging.info("warning: %s is a directory!" % file)
         continue
-      with open(filename, 'r') as f:
+      with open(filename, "r") as f:
         for line in f:
           line = line.strip()
-          if line == '' or line == 'NULL':
+          if line == "" or line == "NULL":
             continue
-          val.append(line.strip().encode('utf-8'))
+          val.append(line.strip().encode("utf-8"))
       search_vocab_list[file] = val
     # sys.exit()
     return search_vocab_list
@@ -230,21 +259,21 @@ class BaseModel():
     # fea_tag                string
 
     path = os.path.join(self.conf.common_config, self.conf.meta_file)
-    logging.info(f'fea_meta_path: {path}')
+    logging.info(f"fea_meta_path: {path}")
 
     cate_fea_vocab_list = self.get_cate_fea_vocab_list()
     fea_tag_name_dict = self.get_feature_tag()
     search_vocab_list = self.get_search_vocab_list()
 
-    cols = 'fea_code,fea_name,fea_len,fea_dtype,gpercentile,gcov,geva,bpercentile,bcov,beva,def_valu,fea_tag,dim'
-    cols = cols.split(',')
+    cols = "fea_code,fea_name,fea_len,fea_dtype,gpercentile,gcov,geva,bpercentile,bcov,beva,def_valu,fea_tag,dim"
+    cols = cols.split(",")
     logging.info(cols)
 
     cate_fea_dict = dict()
     word_fea_dict = dict()
-    fea_id_set = {'job_id', 'boss_id', 'exp_id', 'geek_id', 'addf_id'}
+    fea_id_set = {"job_id", "boss_id", "exp_id", "geek_id", "addf_id"}
     id_fea_dict = dict()
-    word_tag_set = {'word'}
+    word_tag_set = {"word"}
 
     fea_gpercentile_dict = dict()
     fea_gcov_dict = dict()
@@ -256,20 +285,20 @@ class BaseModel():
 
     f = open(path)
     for line in f.readlines():
-      line = line.strip().split('\t')
+      line = line.strip().split("\t")
 
       # logging.info(line)
       if len(line) < len(cols):
-        logging.info(f'column len not match! please check input: {line}')
+        logging.info(f"column len not match! please check input: {line}")
         continue
-      if line[2] == '-1' and not line[2].isdigit():
-        logging.info(f'fea_len = -1! please check input: {line}')
+      if line[2] == "-1" and not line[2].isdigit():
+        logging.info(f"fea_len = -1! please check input: {line}")
         continue
-      if line[3] not in ('int64', 'float32', 'string'):
-        logging.info(f'invalaid dytype! please check input: {line}')
+      if line[3] not in ("int64", "float32", "string"):
+        logging.info(f"invalaid dytype! please check input: {line}")
         continue
       if int(line[2]) > 1 and not line[11]:
-        logging.info(f'empty fea_tag! required fea_tag when vector occurs but found null! please check input: {line}')
+        logging.info(f"empty fea_tag! required fea_tag when vector occurs but found null! please check input: {line}")
         continue
       fea_name = line[1]
       fea_len = int(line[2])
@@ -280,7 +309,7 @@ class BaseModel():
       fea_bpercentile = line[7]
       fea_bcov = line[8]
       fea_beva = line[9]
-      fea_tag = line[11].strip().split(',')
+      fea_tag = line[11].strip().split(",")
       for tag in fea_tag:
         if tag in fea_tag_name_dict:
           tag_name = fea_tag_name_dict[tag]
@@ -295,36 +324,67 @@ class BaseModel():
         if tag_name in cate_fea_vocab_list:
           cate_fea_dict[fea_name] = cate_fea_vocab_list[tag_name]
         else:
-          logging.warn(f'tag {tag_name} NOT EXIST for cat feature {fea_name}')
+          logging.warn(f"tag {tag_name} NOT EXIST for cat feature {fea_name}")
           cate_fea_dict[fea_name] = []
 
-      if fea_len == 1 and fea_dtype in ('int64', 'float32') and fea_name not in fea_tag_dict:
-        if fea_gpercentile.startswith('[') or (
-            fea_gpercentile not in ['', '\"\"'] and not fea_gpercentile.startswith('{')
+      if fea_len == 1 and fea_dtype in ("int64", "float32") and fea_name not in fea_tag_dict:
+        if fea_gpercentile.startswith("[") or (
+          fea_gpercentile not in ["", '""'] and not fea_gpercentile.startswith("{")
         ):
-          fea_gpercentile = list(set(map(lambda x: float(x), fea_gpercentile.strip('[').strip(']').split(','))))
+          fea_gpercentile = list(set(map(lambda x: float(x), fea_gpercentile.strip("[").strip("]").split(","))))
           fea_gpercentile.sort()
           fea_gpercentile_dict[fea_name] = fea_gpercentile
-        if fea_bpercentile.startswith('[') or (
-            fea_bpercentile not in ['', '\"\"'] and not fea_bpercentile.startswith('{')
+        if fea_bpercentile.startswith("[") or (
+          fea_bpercentile not in ["", '""'] and not fea_bpercentile.startswith("{")
         ):
-          fea_bpercentile = list(set(map(lambda x: float(x), fea_bpercentile.strip('[').strip(']').split(','))))
+          fea_bpercentile = list(set(map(lambda x: float(x), fea_bpercentile.strip("[").strip("]").split(","))))
           fea_bpercentile.sort()
           fea_bpercentile_dict[fea_name] = fea_bpercentile
-      if fea_gcov != '':
+      if fea_gcov != "":
         fea_gcov_dict[fea_name] = fea_gcov
         fea_geva_dict[fea_name] = fea_geva
-      if fea_bcov != '':
+      if fea_bcov != "":
         fea_bcov_dict[fea_name] = fea_bcov
         fea_beva_dict[fea_name] = fea_beva
 
-    return fea_gpercentile_dict, fea_gcov_dict, fea_geva_dict, fea_bpercentile_dict, fea_bcov_dict, fea_beva_dict, fea_tag_dict, cate_fea_dict, id_fea_dict, search_vocab_list, word_fea_dict
+    return (
+      fea_gpercentile_dict,
+      fea_gcov_dict,
+      fea_geva_dict,
+      fea_bpercentile_dict,
+      fea_bcov_dict,
+      fea_beva_dict,
+      fea_tag_dict,
+      cate_fea_dict,
+      id_fea_dict,
+      search_vocab_list,
+      word_fea_dict,
+    )
 
   def make_feature(self, f=None, **kwargs):
     if not f:
       f = Feature(
-          None, 0, tf.int64, 1, -3, False, False, None, None, None, 0, 1, 0.00001, None, 0.00001, 'truncated_normal',
-          False, False, True, 'mean', None
+        None,
+        0,
+        tf.int64,
+        1,
+        -3,
+        False,
+        False,
+        None,
+        None,
+        None,
+        0,
+        1,
+        0.00001,
+        None,
+        0.00001,
+        "truncated_normal",
+        False,
+        False,
+        True,
+        "mean",
+        None,
       )
     copy = f._asdict()
     copy.update(kwargs)
@@ -350,31 +410,31 @@ class BaseModel():
 
       if fea_emb_name and fea_emb_name not in emb_dict:
         if is_training:
-          initializer = tf.keras.initializers.TruncatedNormal(mean=0., stddev=1. / math.sqrt(feature.emb_dim))
+          initializer = tf.keras.initializers.TruncatedNormal(mean=0.0, stddev=1.0 / math.sqrt(feature.emb_dim))
         else:
           initializer = tf.keras.initializers.Zeros()
 
         if feature.emb_dynamic:  # 现在所有的特征都走de，我们仍使用这个字段标识是否是id特征
           emb = DynamicEmbedding(
+            embedding_size=feature.emb_dim,
+            mini_batch_regularizer=l2(feature.emb_reg_l2),
+            mask_value=feature.default_value,
+            key_dtype=tf.int64,
+            value_dtype=tf.float32,
+            initializer=initializer,
+            name="dynamic_" + fea_emb_name,
+          )
+        else:
+          if not FLAGS.use_horovod:
+            emb = DynamicEmbedding(
               embedding_size=feature.emb_dim,
               mini_batch_regularizer=l2(feature.emb_reg_l2),
               mask_value=feature.default_value,
               key_dtype=tf.int64,
               value_dtype=tf.float32,
               initializer=initializer,
-              name='dynamic_' + fea_emb_name
-          )
-        else:
-          if not FLAGS.use_horovod:
-            emb = DynamicEmbedding(
-                embedding_size=feature.emb_dim,
-                mini_batch_regularizer=l2(feature.emb_reg_l2),
-                mask_value=feature.default_value,
-                key_dtype=tf.int64,
-                value_dtype=tf.float32,
-                initializer=initializer,
-                name="UnifiedDynamicEmbedding",
-                # init_capacity=1000000 * 8  # 如果提示hash冲突，调整该参数
+              name="UnifiedDynamicEmbedding",
+              # init_capacity=1000000 * 8  # 如果提示hash冲突，调整该参数
             )
           else:
             import horovod.tensorflow as hvd
@@ -383,14 +443,14 @@ class BaseModel():
             mpi_size = hvd.size()
             mpi_rank = hvd.rank()
             emb = de.keras.layers.HvdAllToAllEmbedding(
-                mpi_size=mpi_size,
-                embedding_size=feature.emb_dim,
-                key_dtype=tf.int64,
-                value_dtype=tf.float32,
-                initializer=initializer,
-                devices=gpu_device,
-                name='DenseUnifiedEmbeddingLayer',
-                kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank))
+              mpi_size=mpi_size,
+              embedding_size=feature.emb_dim,
+              key_dtype=tf.int64,
+              value_dtype=tf.float32,
+              initializer=initializer,
+              devices=gpu_device,
+              name="DenseUnifiedEmbeddingLayer",
+              kv_creator=de.CuckooHashTableCreator(saver=de.FileSystemSaver(proc_size=mpi_size, proc_rank=mpi_rank)),
             )
 
         emb_dict[fea_emb_name] = emb
@@ -413,7 +473,9 @@ class BaseModel():
     for i, input_tensor in enumerate(redis_inputs):
       input_tensor = input_tensor if input_tensor.dtype == tf.int64 else tf.cast(input_tensor, tf.int64)
       id_tensor_prefix_code = tf.constant(int(features[i].code) << 47, dtype=tf.int64)  # 这里用的code
-      id_tensor = tf.bitwise.bitwise_xor(input_tensor, id_tensor_prefix_code)  # 前半部分是特征code，后半部分是值，全部合到一起去查询
+      id_tensor = tf.bitwise.bitwise_xor(
+        input_tensor, id_tensor_prefix_code
+      )  # 前半部分是特征code，后半部分是值，全部合到一起去查询
       id_tensors.append(id_tensor)
       fea_lens.append(features[i].len)
 
@@ -437,9 +499,9 @@ class BaseModel():
       is_sequence_feature.append(False)
 
     id_tensors_concat = Concatenate(axis=1)(id_tensors)
-    embedding_outs_concat = emb_dict['not_id_feature'](id_tensors_concat)
+    embedding_outs_concat = emb_dict["not_id_feature"](id_tensors_concat)
     embedding_outs = tf.split(
-        embedding_outs_concat, num_or_size_splits=split_dims_final, axis=1, name=f"split_not_id_fea"
+      embedding_outs_concat, num_or_size_splits=split_dims_final, axis=1, name=f"split_not_id_fea"
     )
 
     dense_dict = OrderedDict()
@@ -453,7 +515,7 @@ class BaseModel():
         dense_dict[seq_fea.name] = embedding_vec
       else:
         simple_fea_embeddings = tf.split(
-            embedding, num_or_size_splits=[1] * split_dims_final[i], axis=1, name=f"split_simple_fea_embeddings_{i}"
+          embedding, num_or_size_splits=[1] * split_dims_final[i], axis=1, name=f"split_simple_fea_embeddings_{i}"
         )
         for _, simple_fea_embedding in enumerate(simple_fea_embeddings):
           #                 logging.info(f"simple fea: {simple_fea_embedding.get_shape()}, {features[counter_flag].name}")
@@ -496,8 +558,9 @@ class BaseModel():
         for i, fea in enumerate(feas):
           fea_dense = dense_looks[i]
           if fea.len > 1 and fea.combiner:
-            fea_dense = Pooling(combiner=fea.combiner,
-                                name=f"{fea.combiner}_{fea.name}")(fea_dense, mask=masks[fea.code])
+            fea_dense = Pooling(combiner=fea.combiner, name=f"{fea.combiner}_{fea.name}")(
+              fea_dense, mask=masks[fea.code]
+            )
           dense_dict[fea.name] = fea_dense
 
     return dense_dict
@@ -506,19 +569,20 @@ class BaseModel():
     # Inputs
     conti_features = self.conti_fea_dict()
     features = dict()
-    for code, fname, dtype, length, def_valu in self.feature_map[["code", "name", "dtype", "length",
-                                                                  "def_valu"]].values:
-      if 'int' in dtype:
+    for code, fname, dtype, length, def_valu in self.feature_map[
+      ["code", "name", "dtype", "length", "def_valu"]
+    ].values:
+      if "int" in dtype:
         try:
           def_valu = int(def_valu)
         except ValueError as e:
-          logging.info(f'[ERROR] default value, {fname} {dtype} {def_valu}')
+          logging.info(f"[ERROR] default value, {fname} {dtype} {def_valu}")
           def_valu = -3 if length > 1 else 0
-      elif 'float' in dtype:
+      elif "float" in dtype:
         try:
           def_valu = float(def_valu)
         except ValueError as e:
-          logging.info(f'[ERROR] default value, {fname} {dtype} {def_valu}')
+          logging.info(f"[ERROR] default value, {fname} {dtype} {def_valu}")
           def_valu = -3.0 if length > 1 else 0.0
       if def_valu == "_PAD_":
         print("def:", fname, def_valu)
@@ -545,35 +609,37 @@ class BaseModel():
       else:
         print(fname + " is error feature or is id_fea")
 
-      if fname in self.id_fea_dict:  # 这里会把上面hash中重复的特征给覆盖掉 - id/id序列特征，其tag一定要有4个id的某一个，才能确保被调用到
+      if (
+        fname in self.id_fea_dict
+      ):  # 这里会把上面hash中重复的特征给覆盖掉 - id/id序列特征，其tag一定要有4个id的某一个，才能确保被调用到
         emb_name = self.id_fea_dict[fname]  # 这个名字会重复吧
         emb_dynamic = True
         use_hash = False
         emb_size = 0
 
       features[fname] = self.make_feature(
-          name=fname,
-          code=code,
-          dtype=dtype,
-          len=int(length),
-          default_value=def_valu,
-          use_hash=use_hash,
-          vocab=vocab,
-          boundaries=boundaries,
-          emb_name=emb_name,
-          emb_size=emb_size,
-          emb_dynamic=emb_dynamic,
-          emb_reg_l2=self.conf.emb_reg_l2
+        name=fname,
+        code=code,
+        dtype=dtype,
+        len=int(length),
+        default_value=def_valu,
+        use_hash=use_hash,
+        vocab=vocab,
+        boundaries=boundaries,
+        emb_name=emb_name,
+        emb_size=emb_size,
+        emb_dynamic=emb_dynamic,
+        emb_reg_l2=self.conf.emb_reg_l2,
       )
     return features
 
   def conti_fea_dict(self):
-    if self.conf.bussiness == 'boss':
+    if self.conf.bussiness == "boss":
       conti_fea = self.fea_bpercentile_dict
-    elif self.conf.bussiness == 'geek':
+    elif self.conf.bussiness == "geek":
       conti_fea = self.fea_gpercentile_dict
     else:
-      logging.info(f'system exits with code -1! unknown bussiness: {self.conf.bussiness}')
+      logging.info(f"system exits with code -1! unknown bussiness: {self.conf.bussiness}")
       sys.exit(-1)
     if self.conf.extra_conti_fea_cut:
       conti_fea = {**conti_fea, **self.conf.extra_conti_fea_cut}
@@ -582,12 +648,12 @@ class BaseModel():
   # 读取geek nn的特征交叉信息
   def get_geek_nn_compo(self):
     nn_cnt = dict()
-    nn_path = os.path.join(self.conf.conf_path, self.conf.network_compo_dir, 'geek')
-    with open(nn_path, 'r') as fr:
+    nn_path = os.path.join(self.conf.conf_path, self.conf.network_compo_dir, "geek")
+    with open(nn_path, "r") as fr:
       for line in fr.readlines():
-        line = line.strip().split('\t')
-        fields = line[0].split(',')
-        fea_len = list(map(lambda x: int(x), line[1].split(',')))
+        line = line.strip().split("\t")
+        fields = line[0].split(",")
+        fea_len = list(map(lambda x: int(x), line[1].split(",")))
         for field in fields:
           if field not in nn_cnt:
             nn_cnt[field] = fea_len
@@ -597,12 +663,12 @@ class BaseModel():
   # 读取job nn的特征交叉信息
   def get_job_nn_compo(self):
     nn_cnt = dict()
-    nn_path = os.path.join(self.conf.conf_path, self.conf.network_compo_dir, 'job')
-    with open(nn_path, 'r') as fr:
+    nn_path = os.path.join(self.conf.conf_path, self.conf.network_compo_dir, "job")
+    with open(nn_path, "r") as fr:
       for line in fr.readlines():
-        line = line.strip().split('\t')
-        fields = line[0].split(',')
-        fea_len = list(map(lambda x: int(x), line[1].split(',')))
+        line = line.strip().split("\t")
+        fields = line[0].split(",")
+        fea_len = list(map(lambda x: int(x), line[1].split(",")))
         for field in fields:
           if field not in nn_cnt:
             nn_cnt[field] = fea_len
