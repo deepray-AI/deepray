@@ -23,7 +23,7 @@ import pytest
 
 
 def adam_update_numpy(param, g_t, t, m, v, lr=0.001, beta1=0.9, beta2=0.999, epsilon=1e-7):
-  lr_t = lr * np.sqrt(1 - beta2**(t + 1)) / (1 - beta1**(t + 1))
+  lr_t = lr * np.sqrt(1 - beta2 ** (t + 1)) / (1 - beta1 ** (t + 1))
 
   m_t = beta1 * m + (1 - beta1) * g_t
   v_t = beta2 * v + (1 - beta2) * g_t * g_t
@@ -62,15 +62,15 @@ def _test_sparse(dtype):
   var1 = tf.Variable(var1_np)
   grads0_np_indices = np.array([0, 2], dtype=np.int32)
   grads0 = tf.IndexedSlices(
-      tf.constant(grads0_np[grads0_np_indices]),
-      tf.constant(grads0_np_indices),
-      tf.constant([3]),
+    tf.constant(grads0_np[grads0_np_indices]),
+    tf.constant(grads0_np_indices),
+    tf.constant([3]),
   )
   grads1_np_indices = np.array([0, 2], dtype=np.int32)
   grads1 = tf.IndexedSlices(
-      tf.constant(grads1_np[grads1_np_indices]),
-      tf.constant(grads1_np_indices),
-      tf.constant([3]),
+    tf.constant(grads1_np[grads1_np_indices]),
+    tf.constant(grads1_np_indices),
+    tf.constant([3]),
   )
   opt = lazy_adam.LazyAdam()
 
@@ -81,8 +81,8 @@ def _test_sparse(dtype):
   # Run 3 steps of Adam
   for t in range(3):
     beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
-    test_utils.assert_allclose_according_to_type(0.9**(t + 1), beta_1_power)
-    test_utils.assert_allclose_according_to_type(0.999**(t + 1), beta_2_power)
+    test_utils.assert_allclose_according_to_type(0.9 ** (t + 1), beta_1_power)
+    test_utils.assert_allclose_according_to_type(0.999 ** (t + 1), beta_2_power)
     opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
 
     var0_np, m0, v0 = adam_update_numpy(var0_np, grads0_np, t, m0, v0)
@@ -96,7 +96,6 @@ def _test_sparse(dtype):
 @pytest.mark.parametrize("dtype", [tf.int32, tf.int64])
 @pytest.mark.with_device(["cpu", "gpu"])
 def test_sparse_device_placement(dtype):
-
   # If a GPU is available, tests that all optimizer ops can be placed on
   # it (i.e. they have GPU kernels).
   var = tf.Variable([[1.0], [2.0]])
@@ -116,14 +115,14 @@ def test_sparse_repeated_indices(dtype):
     repeated_index_update_var = tf.Variable([[1], [2]], dtype=dtype)
     aggregated_update_var = tf.Variable([[1], [2]], dtype=dtype)
     grad_repeated_index = tf.IndexedSlices(
-        tf.constant([0.1, 0.1], shape=[2, 1], dtype=dtype),
-        tf.constant([1, 1]),
-        tf.constant([2, 1]),
+      tf.constant([0.1, 0.1], shape=[2, 1], dtype=dtype),
+      tf.constant([1, 1]),
+      tf.constant([2, 1]),
     )
     grad_aggregated = tf.IndexedSlices(
-        tf.constant([0.2], shape=[1, 1], dtype=dtype),
-        tf.constant([1]),
-        tf.constant([2, 1]),
+      tf.constant([0.2], shape=[1, 1], dtype=dtype),
+      tf.constant([1]),
+      tf.constant([2, 1]),
     )
     repeated_update_opt = lazy_adam.LazyAdam()
     aggregated_update_opt = lazy_adam.LazyAdam()
@@ -159,8 +158,8 @@ def test_basic(use_callable_params, dtype):
   # Run 3 steps of Adam
   for t in range(3):
     beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
-    test_utils.assert_allclose_according_to_type(0.9**(t + 1), beta_1_power)
-    test_utils.assert_allclose_according_to_type(0.999**(t + 1), beta_2_power)
+    test_utils.assert_allclose_according_to_type(0.9 ** (t + 1), beta_1_power)
+    test_utils.assert_allclose_according_to_type(0.999 ** (t + 1), beta_2_power)
     opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
 
     var0_np, m0, v0 = adam_update_numpy(var0_np, grads0_np, t, m0, v0)
@@ -189,8 +188,8 @@ def test_tensor_learning_rate(dtype):
   # Run 3 steps of Adam
   for t in range(3):
     beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
-    test_utils.assert_allclose_according_to_type(0.9**(t + 1), beta_1_power)
-    test_utils.assert_allclose_according_to_type(0.999**(t + 1), beta_2_power)
+    test_utils.assert_allclose_according_to_type(0.9 ** (t + 1), beta_1_power)
+    test_utils.assert_allclose_according_to_type(0.999 ** (t + 1), beta_2_power)
     opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
 
     var0_np, m0, v0 = adam_update_numpy(var0_np, grads0_np, t, m0, v0)
@@ -224,8 +223,8 @@ def test_sharing(dtype):
   # Run 3 steps of intertwined Adam1 and Adam2.
   for t in range(3):
     beta_1_power, beta_2_power = get_beta_accumulators(opt, dtype)
-    test_utils.assert_allclose_according_to_type(0.9**(t + 1), beta_1_power)
-    test_utils.assert_allclose_according_to_type(0.999**(t + 1), beta_2_power)
+    test_utils.assert_allclose_according_to_type(0.9 ** (t + 1), beta_1_power)
+    test_utils.assert_allclose_according_to_type(0.999 ** (t + 1), beta_2_power)
     opt.apply_gradients(zip([grads0, grads1], [var0, var1]))
 
     var0_np, m0, v0 = adam_update_numpy(var0_np, grads0_np, t, m0, v0)

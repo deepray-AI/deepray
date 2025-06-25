@@ -22,14 +22,14 @@ import tensorflow as tf
 
 
 def _id_key(filename):
-  _, id_num = filename.rsplit('-', maxsplit=1)
+  _, id_num = filename.rsplit("-", maxsplit=1)
   return int(id_num)
 
 
 def _find_managed_files(base_name):
   r"""Returns all files matching '{base_name}-\d+', in sorted order."""
-  managed_file_regex = re.compile(rf'{re.escape(base_name)}-\d+$')
-  filenames = tf.io.gfile.glob(f'{base_name}-*')
+  managed_file_regex = re.compile(rf"{re.escape(base_name)}-\d+$")
+  filenames = tf.io.gfile.glob(f"{base_name}-*")
   filenames = filter(managed_file_regex.match, filenames)
   return sorted(filenames, key=_id_key)
 
@@ -97,23 +97,23 @@ class ExportFileManager:
     if self._max_to_keep < 0:
       return
 
-    for filename in self.managed_files[:-self._max_to_keep]:
+    for filename in self.managed_files[: -self._max_to_keep]:
       tf.io.gfile.rmtree(filename)
 
   def next_name(self) -> str:
     """Returns a new file name based on `base_name` and `next_id_fn()`."""
-    return f'{self._base_name}-{self._next_id_fn()}'
+    return f"{self._base_name}-{self._next_id_fn()}"
 
 
 class ExportSavedModel:
   """Action that exports the given model as a SavedModel."""
 
   def __init__(
-      self,
-      model: tf.Module,
-      file_manager: ExportFileManager,
-      signatures,
-      options: Optional[tf.saved_model.SaveOptions] = None
+    self,
+    model: tf.Module,
+    file_manager: ExportFileManager,
+    signatures,
+    options: Optional[tf.saved_model.SaveOptions] = None,
   ):
     """Initializes the instance.
 

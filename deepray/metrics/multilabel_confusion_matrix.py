@@ -17,7 +17,7 @@
 import warnings
 
 import tensorflow as tf
-from tensorflow.keras import backend as K
+from tf_keras import backend as K
 from tensorflow.keras.metrics import Metric
 import numpy as np
 
@@ -28,105 +28,105 @@ from deepray.utils.types import AcceptableDTypes, FloatTensorLike
 class MultiLabelConfusionMatrix(Metric):
   """Computes Multi-label confusion matrix.
 
-    Class-wise confusion matrix is computed for the
-    evaluation of classification.
+  Class-wise confusion matrix is computed for the
+  evaluation of classification.
 
-    If multi-class input is provided, it will be treated
-    as multilabel data.
+  If multi-class input is provided, it will be treated
+  as multilabel data.
 
-    Consider classification problem with two classes
-    (i.e num_classes=2).
+  Consider classification problem with two classes
+  (i.e num_classes=2).
 
-    Resultant matrix `M` will be in the shape of `(num_classes, 2, 2)`.
+  Resultant matrix `M` will be in the shape of `(num_classes, 2, 2)`.
 
-    Every class `i` has a dedicated matrix of shape `(2, 2)` that contains:
+  Every class `i` has a dedicated matrix of shape `(2, 2)` that contains:
 
-    - true negatives for class `i` in `M(0,0)`
-    - false positives for class `i` in `M(0,1)`
-    - false negatives for class `i` in `M(1,0)`
-    - true positives for class `i` in `M(1,1)`
+  - true negatives for class `i` in `M(0,0)`
+  - false positives for class `i` in `M(0,1)`
+  - false negatives for class `i` in `M(1,0)`
+  - true positives for class `i` in `M(1,1)`
 
-    Args:
-        num_classes: `int`, the number of labels the prediction task can have.
-        name: (Optional) string name of the metric instance.
-        dtype: (Optional) data type of the metric result.
+  Args:
+      num_classes: `int`, the number of labels the prediction task can have.
+      name: (Optional) string name of the metric instance.
+      dtype: (Optional) data type of the metric result.
 
-    Usage:
+  Usage:
 
-    >>> # multilabel confusion matrix
-    >>> y_true = np.array([[1, 0, 1], [0, 1, 0]], dtype=np.int32)
-    >>> y_pred = np.array([[1, 0, 0], [0, 1, 1]], dtype=np.int32)
-    >>> metric = dp.metrics.MultiLabelConfusionMatrix(num_classes=3)
-    >>> metric.update_state(y_true, y_pred)
-    >>> result = metric.result()
-    >>> result.numpy()  #doctest: -DONT_ACCEPT_BLANKLINE
-    array([[[1., 0.],
-            [0., 1.]],
-    <BLANKLINE>
-           [[1., 0.],
-            [0., 1.]],
-    <BLANKLINE>
-           [[0., 1.],
-            [1., 0.]]], dtype=float32)
-    >>> # if multiclass input is provided
-    >>> y_true = np.array([[1, 0, 0], [0, 1, 0]], dtype=np.int32)
-    >>> y_pred = np.array([[1, 0, 0], [0, 0, 1]], dtype=np.int32)
-    >>> metric = dp.metrics.MultiLabelConfusionMatrix(num_classes=3)
-    >>> metric.update_state(y_true, y_pred)
-    >>> result = metric.result()
-    >>> result.numpy() #doctest: -DONT_ACCEPT_BLANKLINE
-    array([[[1., 0.],
-            [0., 1.]],
-    <BLANKLINE>
-           [[1., 0.],
-            [1., 0.]],
-    <BLANKLINE>
-           [[1., 1.],
-            [0., 0.]]], dtype=float32)
+  >>> # multilabel confusion matrix
+  >>> y_true = np.array([[1, 0, 1], [0, 1, 0]], dtype=np.int32)
+  >>> y_pred = np.array([[1, 0, 0], [0, 1, 1]], dtype=np.int32)
+  >>> metric = dp.metrics.MultiLabelConfusionMatrix(num_classes=3)
+  >>> metric.update_state(y_true, y_pred)
+  >>> result = metric.result()
+  >>> result.numpy()  #doctest: -DONT_ACCEPT_BLANKLINE
+  array([[[1., 0.],
+          [0., 1.]],
+  <BLANKLINE>
+         [[1., 0.],
+          [0., 1.]],
+  <BLANKLINE>
+         [[0., 1.],
+          [1., 0.]]], dtype=float32)
+  >>> # if multiclass input is provided
+  >>> y_true = np.array([[1, 0, 0], [0, 1, 0]], dtype=np.int32)
+  >>> y_pred = np.array([[1, 0, 0], [0, 0, 1]], dtype=np.int32)
+  >>> metric = dp.metrics.MultiLabelConfusionMatrix(num_classes=3)
+  >>> metric.update_state(y_true, y_pred)
+  >>> result = metric.result()
+  >>> result.numpy() #doctest: -DONT_ACCEPT_BLANKLINE
+  array([[[1., 0.],
+          [0., 1.]],
+  <BLANKLINE>
+         [[1., 0.],
+          [1., 0.]],
+  <BLANKLINE>
+         [[1., 1.],
+          [0., 0.]]], dtype=float32)
 
-    """
+  """
 
   @typechecked
   def __init__(
-      self,
-      num_classes: FloatTensorLike,
-      name: str = "Multilabel_confusion_matrix",
-      dtype: AcceptableDTypes = None,
-      **kwargs,
+    self,
+    num_classes: FloatTensorLike,
+    name: str = "Multilabel_confusion_matrix",
+    dtype: AcceptableDTypes = None,
+    **kwargs,
   ):
     super().__init__(name=name, dtype=dtype)
     self.num_classes = num_classes
     self.true_positives = self.add_weight(
-        "true_positives",
-        shape=[self.num_classes],
-        initializer="zeros",
-        dtype=self.dtype,
+      "true_positives",
+      shape=[self.num_classes],
+      initializer="zeros",
+      dtype=self.dtype,
     )
     self.false_positives = self.add_weight(
-        "false_positives",
-        shape=[self.num_classes],
-        initializer="zeros",
-        dtype=self.dtype,
+      "false_positives",
+      shape=[self.num_classes],
+      initializer="zeros",
+      dtype=self.dtype,
     )
     self.false_negatives = self.add_weight(
-        "false_negatives",
-        shape=[self.num_classes],
-        initializer="zeros",
-        dtype=self.dtype,
+      "false_negatives",
+      shape=[self.num_classes],
+      initializer="zeros",
+      dtype=self.dtype,
     )
     self.true_negatives = self.add_weight(
-        "true_negatives",
-        shape=[self.num_classes],
-        initializer="zeros",
-        dtype=self.dtype,
+      "true_negatives",
+      shape=[self.num_classes],
+      initializer="zeros",
+      dtype=self.dtype,
     )
 
   def update_state(self, y_true, y_pred, sample_weight=None):
     if sample_weight is not None:
       warnings.warn(
-          "`sample_weight` is not None. Be aware that MultiLabelConfusionMatrix "
-          "does not take `sample_weight` into account when computing the metric "
-          "value."
+        "`sample_weight` is not None. Be aware that MultiLabelConfusionMatrix "
+        "does not take `sample_weight` into account when computing the metric "
+        "value."
       )
 
     y_true = tf.cast(y_true, tf.int32)
@@ -153,14 +153,12 @@ class MultiLabelConfusionMatrix(Metric):
     self.true_negatives.assign_add(tf.cast(true_negative, self.dtype))
 
   def result(self):
-    flat_confusion_matrix = tf.convert_to_tensor(
-        [
-            self.true_negatives,
-            self.false_positives,
-            self.false_negatives,
-            self.true_positives,
-        ]
-    )
+    flat_confusion_matrix = tf.convert_to_tensor([
+      self.true_negatives,
+      self.false_positives,
+      self.false_negatives,
+      self.true_positives,
+    ])
     # reshape into 2*2 matrix
     confusion_matrix = tf.reshape(tf.transpose(flat_confusion_matrix), [-1, 2, 2])
 
@@ -170,7 +168,7 @@ class MultiLabelConfusionMatrix(Metric):
     """Returns the serializable config of the metric."""
 
     config = {
-        "num_classes": self.num_classes,
+      "num_classes": self.num_classes,
     }
     base_config = super().get_config()
     return {**base_config, **config}

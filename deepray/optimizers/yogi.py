@@ -33,18 +33,18 @@ from typing import Union, Callable
 def _solve(a, b, c):
   """Return solution of a quadratic minimization.
 
-    The optimization equation is:
-         f(a, b, c) = argmin_w{1/2 * a * w^2 + b * w + c * |w|}
-    we get optimal solution w*:
-         w* = -(b - sign(b)*c)/a if |b| > c else w* = 0
-    REQUIRES: Dimensionality of a and b must be same
-    Args:
-      a: A Tensor
-      b: A Tensor
-      c: A Tensor with one element.
-    Returns:
-      A Tensor w, which is solution for the equation
-    """
+  The optimization equation is:
+       f(a, b, c) = argmin_w{1/2 * a * w^2 + b * w + c * |w|}
+  we get optimal solution w*:
+       w* = -(b - sign(b)*c)/a if |b| > c else w* = 0
+  REQUIRES: Dimensionality of a and b must be same
+  Args:
+    a: A Tensor
+    b: A Tensor
+    c: A Tensor with one element.
+  Returns:
+    A Tensor w, which is solution for the equation
+  """
   w = (c * tf.sign(b) - b) / a
   w = tf.cast(tf.abs(b) > c, dtype=b.dtype) * w
   return w
@@ -54,50 +54,50 @@ def _solve(a, b, c):
 class Yogi(KerasLegacyOptimizer):
   """Optimizer that implements the Yogi algorithm in Keras.
 
-    See Algorithm 2 of
-    https://papers.nips.cc/paper/8186-adaptive-methods-for-nonconvex-optimization.pdf.
-    """
+  See Algorithm 2 of
+  https://papers.nips.cc/paper/8186-adaptive-methods-for-nonconvex-optimization.pdf.
+  """
 
   @typechecked
   def __init__(
-      self,
-      learning_rate: Union[FloatTensorLike, Callable] = 0.01,
-      beta1: FloatTensorLike = 0.9,
-      beta2: FloatTensorLike = 0.999,
-      epsilon: FloatTensorLike = 1e-3,
-      l1_regularization_strength: FloatTensorLike = 0.0,
-      l2_regularization_strength: FloatTensorLike = 0.0,
-      initial_accumulator_value: FloatTensorLike = 1e-6,
-      activation: str = "sign",
-      name: str = "Yogi",
-      **kwargs,
+    self,
+    learning_rate: Union[FloatTensorLike, Callable] = 0.01,
+    beta1: FloatTensorLike = 0.9,
+    beta2: FloatTensorLike = 0.999,
+    epsilon: FloatTensorLike = 1e-3,
+    l1_regularization_strength: FloatTensorLike = 0.0,
+    l2_regularization_strength: FloatTensorLike = 0.0,
+    initial_accumulator_value: FloatTensorLike = 1e-6,
+    activation: str = "sign",
+    name: str = "Yogi",
+    **kwargs,
   ):
     """Construct a new Yogi optimizer.
 
-        Args:
-          learning_rate: A Tensor or a floating point value.
-            The learning rate.
-          beta1: A float value or a constant float tensor.
-            The exponential decay rate for the 1st moment estimates.
-          beta2: A float value or a constant float tensor.
-            The exponential decay rate for the 2nd moment estimates.
-          epsilon: A constant trading off adaptivity and noise.
-          l1_regularization_strength: A float value, must be greater than or
-            equal to zero.
-          l2_regularization_strength: A float value, must be greater than or
-            equal to zero.
-          initial_accumulator_value: The starting value for accumulators.
-            Only positive values are allowed.
-          activation: Use hard sign or soft tanh to determin sign.
-          name: Optional name for the operations created when applying
-            gradients. Defaults to "Yogi".
-          **kwargs: keyword arguments. Allowed to be {`clipnorm`, `clipvalue`,
-            `lr`, `decay`}. `clipnorm` is clip gradients by norm; `clipvalue`
-            is clip gradients by value, `decay` is included for backward
-            compatibility to allow time inverse decay of learning rate. `lr`
-            is included for backward compatibility, recommended to use
-            `learning_rate` instead.
-        """
+    Args:
+      learning_rate: A Tensor or a floating point value.
+        The learning rate.
+      beta1: A float value or a constant float tensor.
+        The exponential decay rate for the 1st moment estimates.
+      beta2: A float value or a constant float tensor.
+        The exponential decay rate for the 2nd moment estimates.
+      epsilon: A constant trading off adaptivity and noise.
+      l1_regularization_strength: A float value, must be greater than or
+        equal to zero.
+      l2_regularization_strength: A float value, must be greater than or
+        equal to zero.
+      initial_accumulator_value: The starting value for accumulators.
+        Only positive values are allowed.
+      activation: Use hard sign or soft tanh to determin sign.
+      name: Optional name for the operations created when applying
+        gradients. Defaults to "Yogi".
+      **kwargs: keyword arguments. Allowed to be {`clipnorm`, `clipvalue`,
+        `lr`, `decay`}. `clipnorm` is clip gradients by norm; `clipvalue`
+        is clip gradients by value, `decay` is included for backward
+        compatibility to allow time inverse decay of learning rate. `lr`
+        is included for backward compatibility, recommended to use
+        `learning_rate` instead.
+    """
     super().__init__(name, **kwargs)
     self._set_hyper("learning_rate", kwargs.get("lr", learning_rate))
     self._set_hyper("decay", self._initial_decay)
@@ -208,13 +208,13 @@ class Yogi(KerasLegacyOptimizer):
   def _resource_apply_sparse(self, grad, var, indices):
     """Applies sparse gradients to a variable.
 
-        Args:
-          grad: A tensor for the `values` of `tf.IndexedSlices`.
-          var: A `tf.Variable` object.
-          indices: A tensor for the `indices` of `tf.IndexedSlices`.
-        Returns:
-          An op which updates `var` with `grad` and `indices`.
-        """
+    Args:
+      grad: A tensor for the `values` of `tf.IndexedSlices`.
+      var: A `tf.Variable` object.
+      indices: A tensor for the `indices` of `tf.IndexedSlices`.
+    Returns:
+      An op which updates `var` with `grad` and `indices`.
+    """
 
     var_dtype = var.dtype.base_dtype
     lr_t = self._decayed_lr(var_dtype)
@@ -308,17 +308,15 @@ class Yogi(KerasLegacyOptimizer):
 
   def get_config(self):
     config = super().get_config()
-    config.update(
-        {
-            "learning_rate": self._serialize_hyperparameter("learning_rate"),
-            "decay": self._serialize_hyperparameter("decay"),
-            "beta1": self._serialize_hyperparameter("beta_1"),
-            "beta2": self._serialize_hyperparameter("beta_2"),
-            "epsilon": self._serialize_hyperparameter("epsilon"),
-            "l1_regularization_strength": self._serialize_hyperparameter("l1_regularization_strength"),
-            "l2_regularization_strength": self._serialize_hyperparameter("l2_regularization_strength"),
-            "activation": self._activation,
-            "initial_accumulator_value": self._initial_accumulator_value,
-        }
-    )
+    config.update({
+      "learning_rate": self._serialize_hyperparameter("learning_rate"),
+      "decay": self._serialize_hyperparameter("decay"),
+      "beta1": self._serialize_hyperparameter("beta_1"),
+      "beta2": self._serialize_hyperparameter("beta_2"),
+      "epsilon": self._serialize_hyperparameter("epsilon"),
+      "l1_regularization_strength": self._serialize_hyperparameter("l1_regularization_strength"),
+      "l2_regularization_strength": self._serialize_hyperparameter("l2_regularization_strength"),
+      "activation": self._activation,
+      "initial_accumulator_value": self._initial_accumulator_value,
+    })
     return config

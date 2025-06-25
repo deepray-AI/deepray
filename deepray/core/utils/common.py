@@ -36,7 +36,7 @@ def create_global_step() -> tf.Variable:
     a distributed setting.
   """
   return tf.Variable(
-      0, dtype=tf.int64, name="global_step", trainable=False, aggregation=tf.VariableAggregation.ONLY_FIRST_REPLICA
+    0, dtype=tf.int64, name="global_step", trainable=False, aggregation=tf.VariableAggregation.ONLY_FIRST_REPLICA
   )
 
 
@@ -66,8 +66,7 @@ def make_distributed_dataset(strategy, dataset_or_fn, *args, **kwargs):
     return strategy.experimental_distribute_dataset(dataset_or_fn, input_options)
 
   if not callable(dataset_or_fn):
-    raise ValueError("`dataset_or_fn` should be either callable or an instance "
-                     "of `tf.data.Dataset`.")
+    raise ValueError("`dataset_or_fn` should be either callable or an instance of `tf.data.Dataset`.")
 
   def dataset_fn(input_context):
     """Wraps `dataset_or_fn` for strategy.distribute_datasets_from_function."""

@@ -127,7 +127,7 @@ I0321 13:21:31.940483 139718205667136 base_trainer.py:266] 	stage_one_mlp_dims  
 I0321 13:21:31.940556 139718205667136 base_trainer.py:266] 	stage_two_mlp_dims       = ['200', '80']
 I0321 13:21:31.940629 139718205667136 base_trainer.py:266] 	start_date               = None
 I0321 13:21:31.940701 139718205667136 base_trainer.py:266] 	stderrthreshold          = fatal
-I0321 13:21:31.940773 139718205667136 base_trainer.py:266] 	steps_per_summary        = 100
+I0321 13:21:31.940773 139718205667136 base_trainer.py:266] 	steps_per_execution        = 100
 I0321 13:21:31.940846 139718205667136 base_trainer.py:266] 	task_index               = -1
 I0321 13:21:31.940918 139718205667136 base_trainer.py:266] 	te                       = 3
 I0321 13:21:31.940990 139718205667136 base_trainer.py:266] 	test_random_seed         = 301

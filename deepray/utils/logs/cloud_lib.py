@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Utilities that interact with cloud service.
-"""
+"""Utilities that interact with cloud service."""
 
 import requests
 

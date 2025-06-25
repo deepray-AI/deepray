@@ -58,7 +58,6 @@ def test_apply_normalization():
 
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def test_reshape():
-
   def run_reshape_test(axis, group, input_shape, expected_shape):
     group_layer = GroupNormalization(groups=group, axis=axis)
     group_layer._set_number_of_groups_for_instance_norm(input_shape)
@@ -200,11 +199,11 @@ def test_instancenorm_flat():
 def test_initializer():
   # Check if the initializer for gamma and beta is working correctly
   layer = GroupNormalization(
-      groups=32,
-      beta_initializer="random_normal",
-      beta_constraint="NonNeg",
-      gamma_initializer="random_normal",
-      gamma_constraint="NonNeg",
+    groups=32,
+    beta_initializer="random_normal",
+    beta_constraint="NonNeg",
+    gamma_initializer="random_normal",
+    gamma_constraint="NonNeg",
   )
 
   model = _create_and_fit_sequential_model(layer, (64,))
@@ -415,10 +414,10 @@ def test_with_epsilon(dtype):
   inputs = np.random.rand(28, 28, 1).astype(dtype)
   inputs = np.expand_dims(inputs, axis=0)
   frn = FilterResponseNormalization(
-      beta_initializer=tf.keras.initializers.Constant(0.5),
-      gamma_initializer="ones",
-      learned_epsilon=True,
-      dtype=dtype,
+    beta_initializer=tf.keras.initializers.Constant(0.5),
+    gamma_initializer="ones",
+    learned_epsilon=True,
+    dtype=dtype,
   )
   frn.build((None, 28, 28, 1))
   observed = frn(inputs)

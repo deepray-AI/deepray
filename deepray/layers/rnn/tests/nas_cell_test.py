@@ -16,7 +16,7 @@
 
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras as keras
+import tf_keras as keras
 
 from deepray.layers.rnn import NASCell
 
@@ -24,72 +24,68 @@ from deepray.layers.rnn import NASCell
 def test_base():
   units = 6
   batch_size = 3
-  expected_output = np.array(
-      [
-          [0.576751, 0.576751, 0.576751, 0.576751, 0.576751, 0.576751],
-          [0.618936, 0.618936, 0.618936, 0.618936, 0.618936, 0.618936],
-          [0.627393, 0.627393, 0.627393, 0.627393, 0.627393, 0.627393],
-      ]
-  )
-  expected_state = np.array(
-      [
-          [
-              0.7157977,
-              0.7157977,
-              0.7157977,
-              0.7157977,
-              0.7157977,
-              0.7157977,
-              0.5767508,
-              0.5767508,
-              0.5767508,
-              0.5767508,
-              0.5767508,
-              0.5767508,
-          ],
-          [
-              0.7804162,
-              0.7804162,
-              0.7804162,
-              0.7804162,
-              0.7804162,
-              0.7804162,
-              0.6189357,
-              0.6189357,
-              0.6189357,
-              0.6189357,
-              0.6189357,
-              0.6189357,
-          ],
-          [
-              0.7945764,
-              0.7945764,
-              0.7945764,
-              0.7945764,
-              0.7945765,
-              0.7945765,
-              0.6273934,
-              0.6273934,
-              0.6273934,
-              0.6273934,
-              0.6273934,
-              0.6273934,
-          ],
-      ]
-  )
+  expected_output = np.array([
+    [0.576751, 0.576751, 0.576751, 0.576751, 0.576751, 0.576751],
+    [0.618936, 0.618936, 0.618936, 0.618936, 0.618936, 0.618936],
+    [0.627393, 0.627393, 0.627393, 0.627393, 0.627393, 0.627393],
+  ])
+  expected_state = np.array([
+    [
+      0.7157977,
+      0.7157977,
+      0.7157977,
+      0.7157977,
+      0.7157977,
+      0.7157977,
+      0.5767508,
+      0.5767508,
+      0.5767508,
+      0.5767508,
+      0.5767508,
+      0.5767508,
+    ],
+    [
+      0.7804162,
+      0.7804162,
+      0.7804162,
+      0.7804162,
+      0.7804162,
+      0.7804162,
+      0.6189357,
+      0.6189357,
+      0.6189357,
+      0.6189357,
+      0.6189357,
+      0.6189357,
+    ],
+    [
+      0.7945764,
+      0.7945764,
+      0.7945764,
+      0.7945764,
+      0.7945765,
+      0.7945765,
+      0.6273934,
+      0.6273934,
+      0.6273934,
+      0.6273934,
+      0.6273934,
+      0.6273934,
+    ],
+  ])
   const_initializer = tf.constant_initializer(0.5)
   cell = NASCell(
-      units=units,
-      kernel_initializer=const_initializer,
-      recurrent_initializer=const_initializer,
+    units=units,
+    kernel_initializer=const_initializer,
+    recurrent_initializer=const_initializer,
   )
 
   inputs = tf.constant(
-      np.array(
-          [[1.0, 1.0, 1.0, 1.0], [2.0, 2.0, 2.0, 2.0], [3.0, 3.0, 3.0, 3.0]],
-          dtype=np.float32,
-      ),
-      dtype=tf.float32,
+    np.array(
+      [[1.0, 1.0, 1.0, 1.0], [2.0, 2.0, 2.0, 2.0], [3.0, 3.0, 3.0, 3.0]],
+      dtype=np.float32,
+    ),
+    dtype=tf.float32,
   )
   state_value = tf.constant(0.1 * np.ones((batch_size, units), dtype=np.float32), dtype=tf.float32)
   init_state = [state_value, state_value]
@@ -114,71 +110,67 @@ def test_projection():
   units = 6
   batch_size = 3
   projection = 5
-  expected_output = np.array(
-      [
-          [1.697418, 1.697418, 1.697418, 1.697418, 1.697418],
-          [1.840037, 1.840037, 1.840037, 1.840037, 1.840037],
-          [1.873985, 1.873985, 1.873985, 1.873985, 1.873985],
-      ]
-  )
+  expected_output = np.array([
+    [1.697418, 1.697418, 1.697418, 1.697418, 1.697418],
+    [1.840037, 1.840037, 1.840037, 1.840037, 1.840037],
+    [1.873985, 1.873985, 1.873985, 1.873985, 1.873985],
+  ])
 
-  expected_state = np.array(
-      [
-          [
-              0.69855207,
-              0.69855207,
-              0.69855207,
-              0.69855207,
-              0.69855207,
-              0.69855207,
-              1.69741797,
-              1.69741797,
-              1.69741797,
-              1.69741797,
-              1.69741797,
-          ],
-          [
-              0.77073824,
-              0.77073824,
-              0.77073824,
-              0.77073824,
-              0.77073824,
-              0.77073824,
-              1.84003687,
-              1.84003687,
-              1.84003687,
-              1.84003687,
-              1.84003687,
-          ],
-          [
-              0.78973997,
-              0.78973997,
-              0.78973997,
-              0.78973997,
-              0.78973997,
-              0.78973997,
-              1.87398517,
-              1.87398517,
-              1.87398517,
-              1.87398517,
-              1.87398517,
-          ],
-      ]
-  )
+  expected_state = np.array([
+    [
+      0.69855207,
+      0.69855207,
+      0.69855207,
+      0.69855207,
+      0.69855207,
+      0.69855207,
+      1.69741797,
+      1.69741797,
+      1.69741797,
+      1.69741797,
+      1.69741797,
+    ],
+    [
+      0.77073824,
+      0.77073824,
+      0.77073824,
+      0.77073824,
+      0.77073824,
+      0.77073824,
+      1.84003687,
+      1.84003687,
+      1.84003687,
+      1.84003687,
+      1.84003687,
+    ],
+    [
+      0.78973997,
+      0.78973997,
+      0.78973997,
+      0.78973997,
+      0.78973997,
+      0.78973997,
+      1.87398517,
+      1.87398517,
+      1.87398517,
+      1.87398517,
+      1.87398517,
+    ],
+  ])
   const_initializer = tf.constant_initializer(0.5)
   cell = NASCell(
-      units=units,
-      projection=projection,
-      kernel_initializer=const_initializer,
-      recurrent_initializer=const_initializer,
-      projection_initializer=const_initializer,
+    units=units,
+    projection=projection,
+    kernel_initializer=const_initializer,
+    recurrent_initializer=const_initializer,
+    projection_initializer=const_initializer,
   )
   inputs = tf.constant(
-      np.array(
-          [[1.0, 1.0, 1.0, 1.0], [2.0, 2.0, 2.0, 2.0], [3.0, 3.0, 3.0, 3.0]],
-          dtype=np.float32,
-      ),
-      dtype=tf.float32,
+    np.array(
+      [[1.0, 1.0, 1.0, 1.0], [2.0, 2.0, 2.0, 2.0], [3.0, 3.0, 3.0, 3.0]],
+      dtype=np.float32,
+    ),
+    dtype=tf.float32,
   )
   state_value_c = tf.constant(0.1 * np.ones((batch_size, units), dtype=np.float32), dtype=tf.float32)
   state_value_h = tf.constant(0.1 * np.ones((batch_size, projection), dtype=np.float32), dtype=tf.float32)
@@ -213,16 +205,16 @@ def test_config_nas():
   cell = NASCell(10, projection=5, use_bias=True, name="nas_cell_3")
 
   expected_config = {
-      "dtype": "float32",
-      "name": "nas_cell_3",
-      "trainable": True,
-      "units": 10,
-      "projection": 5,
-      "use_bias": True,
-      "kernel_initializer": "glorot_uniform",
-      "recurrent_initializer": "glorot_uniform",
-      "bias_initializer": "zeros",
-      "projection_initializer": "glorot_uniform",
+    "dtype": "float32",
+    "name": "nas_cell_3",
+    "trainable": True,
+    "units": 10,
+    "projection": 5,
+    "use_bias": True,
+    "kernel_initializer": "glorot_uniform",
+    "recurrent_initializer": "glorot_uniform",
+    "bias_initializer": "zeros",
+    "projection_initializer": "glorot_uniform",
   }
   config = cell.get_config()
   assert config == expected_config

@@ -2,17 +2,31 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-src_file = 'taobao/taobao_test_data'
-dst_file = src_file + '.parquet'
+src_file = "taobao/taobao_test_data"
+dst_file = src_file + ".parquet"
 
 chunksize = 10000  # this is the number of lines
 
 # Definition of some constants
 LABEL_COLUMNS = ["clk", "buy"]
 HASH_INPUTS = [
-    "pid", "adgroup_id", "cate_id", "campaign_id", "customer", "brand", "user_id", "cms_segid", "cms_group_id",
-    "final_gender_code", "age_level", "pvalue_level", "shopping_level", "occupation", "new_user_class_level",
-    "tag_category_list", "tag_brand_list"
+  "pid",
+  "adgroup_id",
+  "cate_id",
+  "campaign_id",
+  "customer",
+  "brand",
+  "user_id",
+  "cms_segid",
+  "cms_group_id",
+  "final_gender_code",
+  "age_level",
+  "pvalue_level",
+  "shopping_level",
+  "occupation",
+  "new_user_class_level",
+  "tag_category_list",
+  "tag_brand_list",
 ]
 IDENTITY_INPUTS = ["price"]
 ALL_INPUT = LABEL_COLUMNS + HASH_INPUTS + IDENTITY_INPUTS
@@ -31,7 +45,7 @@ identity_field = [pa.field(item, pa.int32()) for item in IDENTITY_INPUTS]
 input_field = label_field + hash_field + identity_field
 
 label_default_values = {item: 0 for item in LABEL_COLUMNS}
-hash_default_values = {item: ' ' for item in HASH_INPUTS}
+hash_default_values = {item: " " for item in HASH_INPUTS}
 identity_default_values = {item: 0 for item in IDENTITY_INPUTS}
 default_values = {}
 default_values.update(label_default_values)

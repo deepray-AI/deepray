@@ -1,50 +1,78 @@
-"""NCF model input pipeline."""
-
 import os
-import sys
 
+import numpy as np
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
-
-FLAGS = flags.FLAGS
-FLAGS(
-    [
-        sys.argv[0],
-        "--num_train_examples=100000",
-        "--feature_map={}".format(os.path.join(os.path.dirname(__file__), "movielens.csv")),
-    ]
-)
+from deepray.datasets.datapipeline import DataPipeline
 
 
-class Movielens100kRating(DataPipeLine):
+class Movielens100kRating(DataPipeline):
+  def __init__(self, split=False, **kwargs):
+    super().__init__(**kwargs)
+    self.split = split
+    flags.FLAGS([
+      "--feature_map={}".format(os.path.join(os.path.dirname(__file__), "movielens.csv")),
+    ])
+    import tensorflow_datasets as tfds
+
+    # Ratings data.
+    self.ratings = tfds.load("movielens/100k-ratings", split="train", data_dir="/datasets/", download=True)
+    # Features of all the available movies.
+    self.movies = tfds.load("movielens/100k-movies", split="train", data_dir="/datasets/", download=True)
+    users = self.ratings.map(lambda x: x["user_id"], os.cpu_count())
+    movie_ids = self.movies.map(lambda x: x["movie_id"], os.cpu_count())
+    movies = self.movies.map(lambda x: x["movie_title"], os.cpu_count())
+    self.user_ids_vocabulary = tf.keras.layers.StringLookup(mask_token=None)
+    self.user_ids_vocabulary.adapt(users.batch(1_000_000))
+    self.movie_ids_vocabulary = tf.keras.layers.StringLookup(mask_token=None)
+    self.movie_ids_vocabulary.adapt(movie_ids.batch(1_000_000))
+    self.movie_titles_vocabulary = tf.keras.layers.StringLookup(mask_token=None)
+    self.movie_titles_vocabulary.adapt(movies.batch(1_682))
+
+  def get_vocabulary(self, feature):
+    if feature == "user_id":
+      return self.user_ids_vocabulary.get_vocabulary()
+    elif feature == "movie_id":
+      return self.movie_ids_vocabulary.get_vocabulary()
+    elif feature == "movie_title":
+      return self.movie_titles_vocabulary.get_vocabulary()
+    else:
+      column = (
+        self.original_dataset.map(lambda x: {feature: x[feature]}, os.cpu_count())
+        .batch(self.__len__)
+        .map(lambda x: x[feature], os.cpu_count())
+      )
+      return np.unique(np.concatenate(list(column)))
 
   def parser(self, record):
     return {
-        "movie_id": tf.strings.to_number(record["movie_id"], tf.int64),
-        "user_id": tf.strings.to_number(record["user_id"], tf.int64),
-        "movie_genres": tf.cast(record["movie_genres"][0], tf.int32),
-        "user_gender": tf.cast(record["user_gender"], tf.int32),
-        "user_occupation_label": tf.cast(record["user_occupation_label"], tf.int32),
-        "raw_user_age": tf.cast(record["raw_user_age"], tf.int32),
-        "timestamp": tf.cast(record["timestamp"] - 880000000, tf.int32),
+      "movie_id": tf.strings.to_number(record["movie_id"], tf.int64),
+      "movie_title": self.movie_titles_vocabulary(record["movie_title"]),
+      "user_id": self.user_ids_vocabulary(record["user_id"]),
+      "movie_genres": tf.cast(record["movie_genres"][0], tf.int32),
+      "user_gender": tf.cast(record["user_gender"], tf.int32),
+      "user_occupation_label": tf.cast(record["user_occupation_label"], tf.int32),
+      "raw_user_age": tf.cast(record["raw_user_age"], tf.int32),
+      "timestamp": tf.cast(record["timestamp"] - 880000000, tf.int32),
     }, record["user_rating"]
 
   def build_dataset(
-      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
+    self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
-    import tensorflow_datasets as tfds
-    ratings = tfds.load("movielens/100k-ratings", split="train", data_dir="/dataset/", download=True)
-    ratings = ratings.map(
-        self.parser
-        # lambda x: {
-        #   "movie_id": tf.strings.to_number(x["movie_id"], tf.int64),
-        #   "user_id": tf.strings.to_number(x["user_id"], tf.int64),
-        #   "user_rating": x["user_rating"]
-        # }
-    )
-    ratings = ratings.repeat(FLAGS.epochs)
-    shuffled = ratings.shuffle(1_000_000, seed=2021, reshuffle_each_iteration=False)
-    dataset = shuffled.batch(batch_size)
+    dataset = self.ratings.map(self.parser, os.cpu_count())
+    if epochs > 1:
+      dataset = dataset.repeat(epochs)
+    if shuffle:
+      dataset = dataset.shuffle(1_000_000, seed=2021, reshuffle_each_iteration=False)
+    if self.split:
+      if is_training:
+        dataset = dataset.take(80_000)
+      else:
+        dataset = dataset.skip(80_000).take(20_000)
+    dataset = dataset.batch(batch_size)
     return dataset
+
+  @property
+  def __len__(self):
+    return 1_000_000

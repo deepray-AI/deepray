@@ -21,13 +21,11 @@ https://github.com/tensorflow/models/blob/master/official/recommendation/ranking
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 from deepray.utils.horovod_utils import get_world_size, get_rank
 
-FLAGS = flags.FLAGS
 
-
-class CriteoTsvReader(DataPipeLine):
+class CriteoTsvReader(DataPipeline):
   """Input reader callable for pre-processed Criteo data.
 
   Raw Criteo data is assumed to be preprocessed in the following way:
@@ -40,20 +38,12 @@ class CriteoTsvReader(DataPipeLine):
   def __init__(self, file_pattern: str = None, use_synthetic_data: bool = False, **kwargs):
     super().__init__(**kwargs)
     self._file_pattern = file_pattern
-    self._num_dense_features = self.feature_map['ftype'].value_counts()['Numerical']
-    self._vocab_sizes = self.feature_map[(self.feature_map['ftype'] == "Categorical")]["voc_size"].tolist()
+    self._num_dense_features = self.feature_map["ftype"].value_counts()["Numerical"]
+    self._vocab_sizes = self.feature_map[(self.feature_map["ftype"] == "Categorical")]["voc_size"].tolist()
     self._use_synthetic_data = use_synthetic_data
 
   def build_dataset(
-      self,
-      input_file_pattern,
-      batch_size,
-      is_training=True,
-      prebatch_size=0,
-      epochs=1,
-      shuffle=True,
-      *args,
-      **kwargs
+    self, input_file_pattern, batch_size, is_training=True, epochs=1, shuffle=True, *args, **kwargs
   ) -> tf.data.Dataset:
     if self._use_synthetic_data:
       return self._generate_synthetic_data(is_training, batch_size)
@@ -76,7 +66,7 @@ class CriteoTsvReader(DataPipeLine):
 
     indices = tf.data.Dataset.range(get_world_size())
     dataset = indices.interleave(
-        map_func=make_dataset, cycle_length=FLAGS.cycle_length, num_parallel_calls=tf.data.experimental.AUTOTUNE
+      map_func=make_dataset, cycle_length=flags.FLAGS.cycle_length, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
 
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
@@ -90,10 +80,10 @@ class CriteoTsvReader(DataPipeLine):
     num_sparse_features = len(self._vocab_sizes)
     categorical_defaults = [[0] for _ in range(num_sparse_features)]
     record_defaults = label_defaults + dense_defaults + categorical_defaults
-    fields = tf.io.decode_csv(example, record_defaults, field_delim='\t', na_value='-1')
+    fields = tf.io.decode_csv(example, record_defaults, field_delim="\t", na_value="-1")
 
     num_labels = 1
-    label = tf.reshape(fields[0], [FLAGS.batch_size, 1])
+    label = tf.reshape(fields[0], [flags.FLAGS.batch_size, 1])
 
     features = {}
     num_dense = len(dense_defaults)
@@ -102,13 +92,13 @@ class CriteoTsvReader(DataPipeLine):
     offset = num_labels
     for idx in range(num_dense):
       dense_features.append(fields[idx + offset])
-    features['dense_features'] = tf.stack(dense_features, axis=1)
+    features["dense_features"] = tf.stack(dense_features, axis=1)
 
     offset += num_dense
-    features['sparse_features'] = {}
+    features["sparse_features"] = {}
 
     for idx in range(num_sparse_features):
-      features['sparse_features'][str(idx)] = fields[idx + offset]
+      features["sparse_features"][str(idx)] = fields[idx + offset]
 
     return features, label
 
@@ -129,9 +119,9 @@ class CriteoTsvReader(DataPipeLine):
 
     sparse_tensors = []
     sparse_tensor_elements = {}
-    for name, voc_size, dtype in self.feature_map[(self.feature_map['ftype'] == "Categorical")][[
-        "name", "voc_size", "dtype"
-    ]].values:
+    for name, voc_size, dtype in self.feature_map[(self.feature_map["ftype"] == "Categorical")][
+      ["name", "voc_size", "dtype"]
+    ].values:
       _tensor = tf.random.uniform(shape=(dataset_size,), maxval=int(voc_size), dtype=dtype)
       sparse_tensors.append(_tensor)
       sparse_tensor_elements[name] = _tensor
@@ -149,7 +139,7 @@ class CriteoTsvReader(DataPipeLine):
     # Using the threshold 0.5 to convert to 0/1 labels.
     label_tensor = tf.cast(label_tensor + 0.5, tf.int32)
 
-    sparse_tensor_elements.update({'dense_features': dense_tensor})
+    sparse_tensor_elements.update({"dense_features": dense_tensor})
 
     input_elem = sparse_tensor_elements, label_tensor
 

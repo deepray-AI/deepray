@@ -4,96 +4,39 @@
 # @license : Copyright(C),  <hailin.fu@>
 import os
 import sys
-import tensorflow as tf
-import numpy as np
+
 from absl import app, flags
 
-from deepray.datasets.criteo.criteo_tsv_reader import CriteoTsvReader
-from deepray.utils.benchmark import PerformanceCalculator
-from deepray.utils.export import SavedModel
-from dcn_v2 import Ranking
-
-FLAGS = flags.FLAGS
+from arsenal_parquet_dataset.custom_dataset import CustomArsenalParquetDataset
+from custom_model import MatchModel
 
 
 def runner(argv=None):
   dir_path = os.path.dirname(os.path.realpath(__file__))
   if len(argv) <= 1:
     argv = [
-        sys.argv[0],
-        "--batch_size=4096",
-        "--run_eagerly=false",
-        "--use_dynamic_embedding=True",
-        f"--feature_map={dir_path}/feature_map_small.csv",
-        "--model_dir=/results/tf_tfra_training_criteo_dcn_fp32_gbs16384_231017142132/export_main",
+      sys.argv[0],
+      "--batch_size=8",
+      "--dataset=gs_rank_e2e",
+      "--epochs=1",
+      "--run_eagerly=False",
+      "--use_dynamic_embedding=True",
+      f"--feature_map={dir_path}/feature_map.csv",
+      "--model_dir=/code/fuhailin/arsenal_tfra_accelerate/gs_rank_tfra_accelerate_test/latest",
     ]
   if argv:
     FLAGS(argv, known_only=True)
 
-  data_pipe = CriteoTsvReader(use_synthetic_data=True)
-  # create data pipline of train & test dataset
-  train_dataset = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
+  data_pipe = CustomArsenalParquetDataset(dataset_name=FLAGS.dataset, partitions=[{"ds": "2023-09-06"}])
+  test_files_list = data_pipe.get_dataset_files()
+  test_ds = data_pipe(input_file_pattern=test_files_list[-1], batch_size=FLAGS.batch_size)
+  model = MatchModel(pretrain=FLAGS.pretrain, training=False).build()
+  model.load_weights(os.path.join(FLAGS.model_dir, "variables/variables"))
 
-  mode = "123"
-  if mode == "sm_predict":
-    # TODO: bugfix
-    model = SavedModel(FLAGS.model_dir, "amp" if FLAGS.dtype else "fp32")
-  else:
-    model = Ranking(interaction="cross", training=False)
-    model.load_weights(os.path.join(FLAGS.model_dir, "variables/variables"))
-
-  a = {
-      "feature_14":
-          tf.constant(np.array([6394203, 7535249, 3500077, 836339, 7401745, 375123]), dtype=tf.int32),
-      "feature_15":
-          tf.constant(np.array([6394203, 7535249, 3500077, 836339, 7401745, 375123]), dtype=tf.int32),
-      "dense_features":
-          tf.constant(
-              np.array(
-                  [
-                      [0.7361634, 0.7361634], [0.00337589, 0.00337589], [0.673707, 0.673707], [0.33169293, 0.33169293],
-                      [0.8020003, 0.8020003], [0.18556607, 0.18556607]
-                  ]
-              ),
-              dtype=tf.float32
-          )
-  }
-
-  # b = {
-  #     "feature_14": tf.constant(np.array([1]), dtype=tf.int32),
-  #     "feature_15": tf.constant(np.array([1]), dtype=tf.int32),
-  #     "dense_features": tf.constant(np.array([[1.0, 1.0]]), dtype=tf.float32)
-  # }
-
-  print(model(a))
-
-  for name in ["feature_14", "feature_15"]:
-    tensor = a[name]
-    test = model.embedding_layer[name](tensor)
-    print(test)
-  # print(model(b))
-  exit(0)
-
-  _performance_calculator = PerformanceCalculator(0, 1000)
-  num_examples = 0
-  step = 0
-
-  for x, y in train_dataset.take(300):
+  for x, y in test_ds.take(1):
+    x = x.pop("lid")
     preds = model(x)
-    step += 1
-    num_examples += FLAGS.batch_size
-    step_throughput = _performance_calculator(1, FLAGS.batch_size)
-
-    if num_examples % 100 == 0:
-      print(f'step {step}, Perf {step_throughput} samples/s')
-
-  print(x)
-  print(num_examples)
-  results_perf = _performance_calculator.results
-  if not _performance_calculator.completed:
-    print(f"self._performance_calculator.completed: {_performance_calculator.completed}")
-    results_perf = _performance_calculator.get_current_benchmark_results()
-  print(results_perf)
+    print(preds)
 
 
 if __name__ == "__main__":

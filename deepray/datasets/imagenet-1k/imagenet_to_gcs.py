@@ -50,22 +50,21 @@ from absl import logging
 
 import tensorflow as tf
 
-flags.DEFINE_string('gcs_output_path', None, 'GCS path for uploading the dataset.')
-flags.DEFINE_string('local_scratch_dir', None, 'Scratch directory path for temporary files.')
+flags.DEFINE_string("gcs_output_path", None, "GCS path for uploading the dataset.")
+flags.DEFINE_string("local_scratch_dir", None, "Scratch directory path for temporary files.")
 flags.DEFINE_string(
-    'raw_data_dir', None, 'Directory path for raw Imagenet dataset. '
-    'Should have train and validation subdirectories inside it.'
+  "raw_data_dir",
+  None,
+  "Directory path for raw Imagenet dataset. Should have train and validation subdirectories inside it.",
 )
 
-FLAGS = flags.FLAGS
-
-LABELS_FILE = 'synset_labels.txt'
+LABELS_FILE = "synset_labels.txt"
 
 TRAINING_SHARDS = 1024
 VALIDATION_SHARDS = 128
 
-TRAINING_DIRECTORY = 'train'
-VALIDATION_DIRECTORY = 'validation'
+TRAINING_DIRECTORY = "train"
+VALIDATION_DIRECTORY = "validation"
 
 
 def _check_or_create_dir(directory: str):
@@ -84,12 +83,12 @@ def _int64_feature(value: Union[int, Iterable[int]]) -> tf.train.Feature:
 def _bytes_feature(value: Union[bytes, str]) -> tf.train.Feature:
   """Inserts bytes features into Example proto."""
   if isinstance(value, str):
-    value = bytes(value, 'utf-8')
+    value = bytes(value, "utf-8")
   return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
 def _convert_to_example(
-    filename: str, image_buffer: str, label: int, synset: str, height: int, width: int
+  filename: str, image_buffer: str, label: int, synset: str, height: int, width: int
 ) -> tf.train.Example:
   """Builds an Example proto for an ImageNet example.
 
@@ -104,24 +103,24 @@ def _convert_to_example(
     Example proto
 
   """
-  colorspace = 'RGB'
+  colorspace = "RGB"
   channels = 3
-  image_format = 'JPEG'
+  image_format = "JPEG"
 
   example = tf.train.Example(
-      features=tf.train.Features(
-          feature={
-              'image/height': _int64_feature(height),
-              'image/width': _int64_feature(width),
-              'image/colorspace': _bytes_feature(colorspace),
-              'image/channels': _int64_feature(channels),
-              'image/class/label': _int64_feature(label),
-              'image/class/synset': _bytes_feature(synset),
-              'image/format': _bytes_feature(image_format),
-              'image/filename': _bytes_feature(os.path.basename(filename)),
-              'image/encoded': _bytes_feature(image_buffer)
-          }
-      )
+    features=tf.train.Features(
+      feature={
+        "image/height": _int64_feature(height),
+        "image/width": _int64_feature(width),
+        "image/colorspace": _bytes_feature(colorspace),
+        "image/channels": _int64_feature(channels),
+        "image/class/label": _int64_feature(label),
+        "image/class/synset": _bytes_feature(synset),
+        "image/format": _bytes_feature(image_format),
+        "image/filename": _bytes_feature(os.path.basename(filename)),
+        "image/encoded": _bytes_feature(image_buffer),
+      }
+    )
   )
   return example
 
@@ -138,7 +137,7 @@ def _is_png(filename: str) -> bool:
   """
   # File list from:
   # https://github.com/cytsai/ilsvrc-cmyk-image-list
-  return 'n02105855_2933.JPEG' in filename
+  return "n02105855_2933.JPEG" in filename
 
 
 def _is_cmyk(filename: str) -> bool:
@@ -153,16 +152,30 @@ def _is_cmyk(filename: str) -> bool:
   """
   # File list from:
   # https://github.com/cytsai/ilsvrc-cmyk-image-list
-  denylist = set(
-      [
-          'n01739381_1309.JPEG', 'n02077923_14822.JPEG', 'n02447366_23489.JPEG', 'n02492035_15739.JPEG',
-          'n02747177_10752.JPEG', 'n03018349_4028.JPEG', 'n03062245_4620.JPEG', 'n03347037_9675.JPEG',
-          'n03467068_12171.JPEG', 'n03529860_11437.JPEG', 'n03544143_17228.JPEG', 'n03633091_5218.JPEG',
-          'n03710637_5125.JPEG', 'n03961711_5286.JPEG', 'n04033995_2932.JPEG', 'n04258138_17003.JPEG',
-          'n04264628_27969.JPEG', 'n04336792_7448.JPEG', 'n04371774_5854.JPEG', 'n04596742_4225.JPEG',
-          'n07583066_647.JPEG', 'n13037406_4650.JPEG'
-      ]
-  )
+  denylist = set([
+    "n01739381_1309.JPEG",
+    "n02077923_14822.JPEG",
+    "n02447366_23489.JPEG",
+    "n02492035_15739.JPEG",
+    "n02747177_10752.JPEG",
+    "n03018349_4028.JPEG",
+    "n03062245_4620.JPEG",
+    "n03347037_9675.JPEG",
+    "n03467068_12171.JPEG",
+    "n03529860_11437.JPEG",
+    "n03544143_17228.JPEG",
+    "n03633091_5218.JPEG",
+    "n03710637_5125.JPEG",
+    "n03961711_5286.JPEG",
+    "n04033995_2932.JPEG",
+    "n04258138_17003.JPEG",
+    "n04264628_27969.JPEG",
+    "n04336792_7448.JPEG",
+    "n04371774_5854.JPEG",
+    "n04596742_4225.JPEG",
+    "n07583066_647.JPEG",
+    "n13037406_4650.JPEG",
+  ])
   return os.path.basename(filename) in denylist
 
 
@@ -176,12 +189,12 @@ class ImageCoder(object):
     # Initializes function that converts PNG to JPEG data.
     self._png_data = tf.placeholder(dtype=tf.string)
     image = tf.image.decode_png(self._png_data, channels=3)
-    self._png_to_jpeg = tf.image.encode_jpeg(image, format='rgb', quality=100)
+    self._png_to_jpeg = tf.image.encode_jpeg(image, format="rgb", quality=100)
 
     # Initializes function that converts CMYK JPEG data to RGB JPEG data.
     self._cmyk_data = tf.placeholder(dtype=tf.string)
     image = tf.image.decode_jpeg(self._cmyk_data, channels=0)
-    self._cmyk_to_rgb = tf.image.encode_jpeg(image, format='rgb', quality=100)
+    self._cmyk_to_rgb = tf.image.encode_jpeg(image, format="rgb", quality=100)
 
     # Initializes function that decodes RGB JPEG data.
     self._decode_jpeg_data = tf.placeholder(dtype=tf.string)
@@ -217,17 +230,17 @@ def _process_image(filename: str, coder: ImageCoder) -> Tuple[str, int, int]:
 
   """
   # Read the image file.
-  with tf.gfile.FastGFile(filename, 'rb') as f:
+  with tf.gfile.FastGFile(filename, "rb") as f:
     image_data = f.read()
 
   # Clean the dirty data.
   if _is_png(filename):
     # 1 image is a PNG.
-    logging.info('Converting PNG to JPEG for %s', filename)
+    logging.info("Converting PNG to JPEG for %s", filename)
     image_data = coder.png_to_jpeg(image_data)
   elif _is_cmyk(filename):
     # 22 JPEG images are in CMYK colorspace.
-    logging.info('Converting CMYK to RGB for %s', filename)
+    logging.info("Converting CMYK to RGB for %s", filename)
     image_data = coder.cmyk_to_rgb(image_data)
 
   # Decode the RGB JPEG.
@@ -243,8 +256,11 @@ def _process_image(filename: str, coder: ImageCoder) -> Tuple[str, int, int]:
 
 
 def _process_image_files_batch(
-    coder: ImageCoder, output_file: str, filenames: Iterable[str], synsets: Iterable[Union[str, bytes]],
-    labels: Mapping[str, int]
+  coder: ImageCoder,
+  output_file: str,
+  filenames: Iterable[str],
+  synsets: Iterable[Union[str, bytes]],
+  labels: Mapping[str, int],
 ):
   """Processes and saves a list of images as TFRecords.
 
@@ -268,8 +284,12 @@ def _process_image_files_batch(
 
 
 def _process_dataset(
-    filenames: Iterable[str], synsets: Iterable[str], labels: Mapping[str, int], output_directory: str, prefix: str,
-    num_shards: int
+  filenames: Iterable[str],
+  synsets: Iterable[str],
+  labels: Mapping[str, int],
+  output_directory: str,
+  prefix: str,
+  num_shards: int,
 ) -> List[str]:
   """Processes and saves list of images as TFRecords.
 
@@ -292,11 +312,11 @@ def _process_dataset(
   files = []
 
   for shard in range(num_shards):
-    chunk_files = filenames[shard * chunksize:(shard + 1) * chunksize]
-    chunk_synsets = synsets[shard * chunksize:(shard + 1) * chunksize]
-    output_file = os.path.join(output_directory, '%s-%.5d-of-%.5d' % (prefix, shard, num_shards))
+    chunk_files = filenames[shard * chunksize : (shard + 1) * chunksize]
+    chunk_synsets = synsets[shard * chunksize : (shard + 1) * chunksize]
+    output_file = os.path.join(output_directory, "%s-%.5d-of-%.5d" % (prefix, shard, num_shards))
     _process_image_files_batch(coder, output_file, chunk_files, chunk_synsets, labels)
-    logging.info('Finished writing file: %s', output_file)
+    logging.info("Finished writing file: %s", output_file)
     files.append(output_file)
   return files
 
@@ -314,37 +334,45 @@ def convert_to_tf_records(raw_data_dir: str, local_scratch_dir: str) -> Tuple[Li
     return order
 
   # Glob all the training files
-  training_files = tf.io.gfile.glob(os.path.join(raw_data_dir, TRAINING_DIRECTORY, '*', '*.JPEG'))
+  training_files = tf.io.gfile.glob(os.path.join(raw_data_dir, TRAINING_DIRECTORY, "*", "*.JPEG"))
 
   # Get training file synset labels from the directory name
   training_synsets = [os.path.basename(os.path.dirname(f)) for f in training_files]
-  training_synsets = list(map(lambda x: bytes(x, 'utf-8'), training_synsets))
+  training_synsets = list(map(lambda x: bytes(x, "utf-8"), training_synsets))
 
   training_shuffle_idx = make_shuffle_idx(len(training_files))
   training_files = [training_files[i] for i in training_shuffle_idx]
   training_synsets = [training_synsets[i] for i in training_shuffle_idx]
 
   # Glob all the validation files
-  validation_files = sorted(tf.io.gfile.glob(os.path.join(raw_data_dir, VALIDATION_DIRECTORY, '*.JPEG')))
+  validation_files = sorted(tf.io.gfile.glob(os.path.join(raw_data_dir, VALIDATION_DIRECTORY, "*.JPEG")))
 
   # Get validation file synset labels from labels.txt
-  validation_synsets = tf.gfile.FastGFile(os.path.join(raw_data_dir, LABELS_FILE), 'rb').read().splitlines()
+  validation_synsets = tf.gfile.FastGFile(os.path.join(raw_data_dir, LABELS_FILE), "rb").read().splitlines()
 
   # Create unique ids for all synsets
   labels = {v: k + 1 for k, v in enumerate(sorted(set(validation_synsets + training_synsets)))}
 
   # Create training data
-  logging.info('Processing the training data.')
+  logging.info("Processing the training data.")
   training_records = _process_dataset(
-      training_files, training_synsets, labels, os.path.join(local_scratch_dir, TRAINING_DIRECTORY), TRAINING_DIRECTORY,
-      TRAINING_SHARDS
+    training_files,
+    training_synsets,
+    labels,
+    os.path.join(local_scratch_dir, TRAINING_DIRECTORY),
+    TRAINING_DIRECTORY,
+    TRAINING_SHARDS,
   )
 
   # Create validation data
-  logging.info('Processing the validation data.')
+  logging.info("Processing the validation data.")
   validation_records = _process_dataset(
-      validation_files, validation_synsets, labels, os.path.join(local_scratch_dir, VALIDATION_DIRECTORY),
-      VALIDATION_DIRECTORY, VALIDATION_SHARDS
+    validation_files,
+    validation_synsets,
+    labels,
+    os.path.join(local_scratch_dir, VALIDATION_DIRECTORY),
+    VALIDATION_DIRECTORY,
+    VALIDATION_SHARDS,
   )
 
   return training_records, validation_records
@@ -363,19 +391,19 @@ def run(raw_data_dir: str, gcs_output_path: str, local_scratch_dir: str, gcs_upl
   """
 
   if gcs_upload and gcs_output_path is None:
-    raise ValueError('GCS output path must be provided.')
-  elif gcs_upload and not gcs_output_path.startswith('gs://'):
-    raise ValueError('GCS output path must start with gs://')
+    raise ValueError("GCS output path must be provided.")
+  elif gcs_upload and not gcs_output_path.startswith("gs://"):
+    raise ValueError("GCS output path must start with gs://")
 
   if raw_data_dir is None:
     raise AssertionError(
-        'The ImageNet download path is no longer supported. Please download '
-        'and extract the .tar files manually and provide the `raw_data_dir`.'
+      "The ImageNet download path is no longer supported. Please download "
+      "and extract the .tar files manually and provide the `raw_data_dir`."
     )
 
   # Convert the raw data into tf-records
   training_records, validation_records = convert_to_tf_records(
-      raw_data_dir=raw_data_dir, local_scratch_dir=local_scratch_dir
+    raw_data_dir=raw_data_dir, local_scratch_dir=local_scratch_dir
   )
 
 
@@ -383,7 +411,6 @@ def main(_):
   run(raw_data_dir=FLAGS.raw_data_dir, gcs_output_path=FLAGS.gcs_output_path, local_scratch_dir=FLAGS.local_scratch_dir)
 
 
-if __name__ == '__main__':
-  logging.set_verbosity(logging.INFO)
+if __name__ == "__main__":
   tf.disable_v2_behavior()
   app.run(main)

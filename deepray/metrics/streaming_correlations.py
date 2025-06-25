@@ -14,53 +14,54 @@
 # ==============================================================================
 """Approximate Pearson's, Spearman's, Kendall's Tau-b/c correlations based
 on the algorithm of Wei Xiao https://arxiv.org/abs/1712.01521."""
+
 from abc import abstractmethod
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import backend
-from tensorflow.keras.metrics import Metric
+import tf_keras as keras
+from tf_keras import backend
 from deepray.utils.types import AcceptableDTypes
 from typeguard import typechecked
 
 
-class CorrelationBase(Metric):
+class CorrelationBase(keras.metrics.Metric):
   """Base class for streaming correlation metrics.
 
-    Based on https://arxiv.org/abs/1712.01521.
+  Based on https://arxiv.org/abs/1712.01521.
 
-    It stores and updates the joint and marginal histograms of (`y_true`, `y_pred`).
+  It stores and updates the joint and marginal histograms of (`y_true`, `y_pred`).
 
-    The concrete classes estimate the different correlation metrics
-    based on those histograms.
-    """
+  The concrete classes estimate the different correlation metrics
+  based on those histograms.
+  """
 
   @typechecked
   def __init__(
-      self,
-      actual_min: float = 0.0,
-      actual_max: float = 1.0,
-      preds_min: float = 0.0,
-      preds_max: float = 1.0,
-      actual_cutpoints: int = 100,
-      preds_cutpoints: int = 100,
-      name: str = None,
-      dtype: AcceptableDTypes = None,
+    self,
+    actual_min: float = 0.0,
+    actual_max: float = 1.0,
+    preds_min: float = 0.0,
+    preds_max: float = 1.0,
+    actual_cutpoints: int = 100,
+    preds_cutpoints: int = 100,
+    name: str = None,
+    dtype: AcceptableDTypes = None,
   ):
     """Creates a `CorrelationBase` instance.
 
-        Args:
-          actual_min: the inclusive lower bound on values from actual.
-          actual_max: the exclusive upper bound on values from actual.
-          preds_min: the inclusive lower bound on values from preds.
-          preds_max: the exclusive upper bound on values from preds.
-          actual_cutpoints: the number of divisions to create in actual range,
-            defaults to 100.
-          preds_cutpoints: the number of divisions to create in preds range,
-            defaults to 100.
-          name: (optional) String name of the metric instance
-          dtype: (optional) Data type of the metric result. Defaults to `None`
-        """
+    Args:
+      actual_min: the inclusive lower bound on values from actual.
+      actual_max: the exclusive upper bound on values from actual.
+      preds_min: the inclusive lower bound on values from preds.
+      preds_max: the exclusive upper bound on values from preds.
+      actual_cutpoints: the number of divisions to create in actual range,
+        defaults to 100.
+      preds_cutpoints: the number of divisions to create in preds range,
+        defaults to 100.
+      name: (optional) String name of the metric instance
+      dtype: (optional) Data type of the metric result. Defaults to `None`
+    """
     super().__init__(name=name, dtype=dtype)
     self.actual_min = actual_min
     self.actual_max = actual_max
@@ -69,15 +70,15 @@ class CorrelationBase(Metric):
     self.actual_cutpoints = actual_cutpoints
     self.preds_cutpoints = preds_cutpoints
     actual_cuts = np.linspace(
-        tf.cast(self.actual_min, tf.float32),
-        tf.cast(self.actual_max, tf.float32),
-        self.actual_cutpoints,
+      tf.cast(self.actual_min, tf.float32),
+      tf.cast(self.actual_max, tf.float32),
+      self.actual_cutpoints,
     )
     actual_cuts[-1] += backend.epsilon()
     preds_cuts = np.linspace(
-        tf.cast(self.preds_min, tf.float32),
-        tf.cast(self.preds_max, tf.float32),
-        self.preds_cutpoints,
+      tf.cast(self.preds_min, tf.float32),
+      tf.cast(self.preds_max, tf.float32),
+      self.preds_cutpoints,
     )
     preds_cuts[-1] += backend.epsilon()
     self.actual_cuts = tf.convert_to_tensor(actual_cuts, tf.float32)
@@ -89,27 +90,29 @@ class CorrelationBase(Metric):
 
   def update_state(self, y_true, y_pred, sample_weight=None):
     """Updates `m`, `nrow`, `ncol` respectively the joint and
-        marginal histograms of (`y_true`, `y_pred`)
-        """
+    marginal histograms of (`y_true`, `y_pred`)
+    """
 
     y_true = tf.clip_by_value(y_true, self.actual_min, self.actual_max)
     y_pred = tf.clip_by_value(y_pred, self.preds_min, self.preds_max)
 
     i = (
-        tf.searchsorted(
-            self.actual_cuts,
-            tf.cast(tf.reshape(y_true, [-1]), self.actual_cuts.dtype),
-            side="right",
-            out_type=tf.int64,
-        ) - 1
+      tf.searchsorted(
+        self.actual_cuts,
+        tf.cast(tf.reshape(y_true, [-1]), self.actual_cuts.dtype),
+        side="right",
+        out_type=tf.int64,
+      )
+      - 1
     )
     j = (
-        tf.searchsorted(
-            self.preds_cuts,
-            tf.cast(tf.reshape(y_pred, [-1]), self.preds_cuts.dtype),
-            side="right",
-            out_type=tf.int64,
-        ) - 1
+      tf.searchsorted(
+        self.preds_cuts,
+        tf.cast(tf.reshape(y_pred, [-1]), self.preds_cuts.dtype),
+        side="right",
+        out_type=tf.int64,
+      )
+      - 1
     )
 
     nrow = tf.tensor_scatter_nd_add(self.nrow, tf.expand_dims(i, axis=-1), tf.ones_like(i))
@@ -130,12 +133,12 @@ class CorrelationBase(Metric):
     """Returns the serializable config of the metric."""
 
     config = {
-        "actual_min": self.actual_min,
-        "actual_max": self.actual_max,
-        "preds_min": self.preds_min,
-        "preds_max": self.preds_max,
-        "actual_cutpoints": self.actual_cutpoints,
-        "preds_cutpoints": self.preds_cutpoints,
+      "actual_min": self.actual_min,
+      "actual_max": self.actual_max,
+      "preds_min": self.preds_min,
+      "preds_max": self.preds_max,
+      "actual_cutpoints": self.actual_cutpoints,
+      "preds_cutpoints": self.preds_cutpoints,
     }
     base_config = super().get_config()
     return {**base_config, **config}
@@ -160,11 +163,11 @@ class KendallsTauBase(CorrelationBase):
 
   def _compute_variables(self):
     """Compute a tuple containing the concordant pairs, discordant pairs,
-        ties in `y_true` and `y_pred`.
+    ties in `y_true` and `y_pred`.
 
-        Returns:
-          A tuple
-        """
+    Returns:
+      A tuple
+    """
     m = tf.cast(self.m, tf.float32)
     n_cap = tf.cumsum(tf.cumsum(m, axis=0), axis=1)
     # Number of concordant pairs.
@@ -186,14 +189,14 @@ class KendallsTauBase(CorrelationBase):
 class KendallsTauB(KendallsTauBase):
   """Computes Kendall's Tau-b Rank Correlation Coefficient.
 
-    Usage:
-    >>> actuals = tf.constant([12, 2, 1, 12, 2], dtype=tf.int32)
-    >>> preds = tf.constant([1, 4, 7, 1, 0], dtype=tf.int32)
-    >>> m = dp.metrics.KendallsTauB(0, 13, 0, 8)
-    >>> m.update_state(actuals, preds)
-    >>> m.result().numpy()
-    -0.47140455
-    """
+  Usage:
+  >>> actuals = tf.constant([12, 2, 1, 12, 2], dtype=tf.int32)
+  >>> preds = tf.constant([1, 4, 7, 1, 0], dtype=tf.int32)
+  >>> m = dp.metrics.KendallsTauB(0, 13, 0, 8)
+  >>> m.update_state(actuals, preds)
+  >>> m.result().numpy()
+  -0.47140455
+  """
 
   def result(self):
     p, q, t, u = self._compute_variables()
@@ -204,14 +207,14 @@ class KendallsTauB(KendallsTauBase):
 class KendallsTauC(KendallsTauBase):
   """Computes Kendall's Tau-c Rank Correlation Coefficient.
 
-    Usage:
-    >>> actuals = tf.constant([12, 2, 1, 12, 2], dtype=tf.int32)
-    >>> preds = tf.constant([1, 4, 7, 1, 0], dtype=tf.int32)
-    >>> m = dp.metrics.KendallsTauC(0, 13, 0, 8)
-    >>> m.update_state(actuals, preds)
-    >>> m.result().numpy()
-    -0.48000002
-    """
+  Usage:
+  >>> actuals = tf.constant([12, 2, 1, 12, 2], dtype=tf.int32)
+  >>> preds = tf.constant([1, 4, 7, 1, 0], dtype=tf.int32)
+  >>> m = dp.metrics.KendallsTauC(0, 13, 0, 8)
+  >>> m.update_state(actuals, preds)
+  >>> m.result().numpy()
+  -0.48000002
+  """
 
   def result(self):
     p, q, _, _ = self._compute_variables()
@@ -226,14 +229,14 @@ class KendallsTauC(KendallsTauBase):
 class SpearmansRank(CorrelationBase):
   """Computes Spearman's Rank Correlation Coefficient.
 
-    Usage:
-    >>> actuals = tf.constant([12, 2, 1, 12, 2], dtype=tf.int32)
-    >>> preds = tf.constant([1, 4, 7, 1, 0], dtype=tf.int32)
-    >>> m = dp.metrics.SpearmansRank(0, 13, 0, 8)
-    >>> m.update_state(actuals, preds)
-    >>> m.result().numpy()
-    -0.54073805
-    """
+  Usage:
+  >>> actuals = tf.constant([12, 2, 1, 12, 2], dtype=tf.int32)
+  >>> preds = tf.constant([1, 4, 7, 1, 0], dtype=tf.int32)
+  >>> m = dp.metrics.SpearmansRank(0, 13, 0, 8)
+  >>> m.update_state(actuals, preds)
+  >>> m.result().numpy()
+  -0.54073805
+  """
 
   def result(self):
     nrow = tf.cast(self.nrow, tf.float32)
@@ -258,14 +261,14 @@ class SpearmansRank(CorrelationBase):
 class PearsonsCorrelation(CorrelationBase):
   """Computes Pearsons's Correlation Coefficient.
 
-    Usage:
-    >>> actuals = tf.constant([12, 2, 1, 12, 2], dtype=tf.int32)
-    >>> preds = tf.constant([1, 4, 7, 1, 0], dtype=tf.int32)
-    >>> m = dp.metrics.PearsonsCorrelation(0, 13, 0, 8)
-    >>> m.update_state(actuals, preds)
-    >>> m.result().numpy()
-    -0.5618297
-    """
+  Usage:
+  >>> actuals = tf.constant([12, 2, 1, 12, 2], dtype=tf.int32)
+  >>> preds = tf.constant([1, 4, 7, 1, 0], dtype=tf.int32)
+  >>> m = dp.metrics.PearsonsCorrelation(0, 13, 0, 8)
+  >>> m.update_state(actuals, preds)
+  >>> m.result().numpy()
+  -0.5618297
+  """
 
   def result(self):
     ncol = tf.cast(self.ncol, tf.float32)

@@ -18,7 +18,7 @@ from absl import flags
 from deepray.utils.flags._conventions import help_wrap
 
 
-def define_distribution(use_horovod=True, distribution_strategy=False, worker_hosts=True, task_index=True):
+def define_distribution(use_horovod=True, distribution_strategy=False, worker_hosts=False, task_index=False):
   """Register distributed execution flags.
 
   Args:
@@ -33,40 +33,39 @@ def define_distribution(use_horovod=True, distribution_strategy=False, worker_ho
   key_flags = []
 
   if use_horovod:
-    flags.DEFINE_bool('use_horovod', False, 'Whether to use horovod.')
+    flags.DEFINE_bool("use_horovod", False, "Whether to use horovod.")
     key_flags.append("use_horovod")
 
   if distribution_strategy:
     flags.DEFINE_string(
-        name="distribution_strategy",
-        default="mirrored",
-        help=help_wrap(
-            "The Distribution Strategy to use for training. "
-            "Accepted values are 'off', 'one_device', "
-            "'mirrored', 'parameter_server', 'collective', "
-            "case insensitive. 'off' means not to use "
-            "Distribution Strategy; 'default' means to choose "
-            "from `MirroredStrategy` or `OneDeviceStrategy` "
-            "according to the number of GPUs."
-        )
+      name="distribution_strategy",
+      default="off",
+      help=help_wrap(
+        "The Distribution Strategy to use for training. "
+        "Accepted values are 'off', 'horovod', 'one_device', "
+        "'mirrored', 'parameter_server', 'collective', "
+        "case insensitive. 'off' means not to use "
+        "Distribution Strategy; 'default' means to choose "
+        "from `MirroredStrategy` or `OneDeviceStrategy` "
+        "according to the number of GPUs."
+      ),
     )
 
   if worker_hosts:
     flags.DEFINE_string(
-        name='worker_hosts',
-        default=None,
-        help=help_wrap(
-            'Comma-separated list of worker ip:port pairs for running '
-            'multi-worker models with DistributionStrategy.  The user would '
-            'start the program on each host with identical value for this '
-            'flag.'
-        )
+      name="worker_hosts",
+      default=None,
+      help=help_wrap(
+        "Comma-separated list of worker ip:port pairs for running "
+        "multi-worker models with DistributionStrategy.  The user would "
+        "start the program on each host with identical value for this "
+        "flag."
+      ),
     )
 
   if task_index:
     flags.DEFINE_integer(
-        name='task_index', default=-1, help=help_wrap('If multi-worker training, the task_index of this '
-                                                      'worker.')
+      name="task_index", default=-1, help=help_wrap("If multi-worker training, the task_index of this worker.")
     )
 
   return key_flags

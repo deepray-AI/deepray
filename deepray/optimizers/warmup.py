@@ -34,15 +34,16 @@ class WarmUpCosine(keras.optimizers.schedules.LearningRateSchedule):
     # steps. If not, then throw a value error.
     if self.total_steps < self.warmup_steps:
       raise ValueError(
-          f"Total number of steps {self.total_steps} must be" + f"larger or equal to warmup steps {self.warmup_steps}."
+        f"Total number of steps {self.total_steps} must be" + f"larger or equal to warmup steps {self.warmup_steps}."
       )
 
     # `cos_annealed_lr` is a graph that increases to 1 from the initial
     # step to the warmup step. After that this graph decays to -1 at the
     # final step mark.
     cos_annealed_lr = tf.cos(
-        self.pi * (tf.cast(step, tf.float32) - self.warmup_steps) /
-        tf.cast(self.total_steps - self.warmup_steps, tf.float32)
+      self.pi
+      * (tf.cast(step, tf.float32) - self.warmup_steps)
+      / tf.cast(self.total_steps - self.warmup_steps, tf.float32)
     )
 
     # Shift the mean of the `cos_annealed_lr` graph to 1. Now the grpah goes
@@ -96,12 +97,12 @@ class WarmUpPolynomial(tf.keras.optimizers.schedules.LearningRateSchedule):
   """
 
   def __init__(
-      self,
-      initial_learning_rate: float,
-      decay_schedule_fn: Callable,
-      warmup_steps: int,
-      power: float = 1.0,
-      name: str = None,
+    self,
+    initial_learning_rate: float,
+    decay_schedule_fn: Callable,
+    warmup_steps: int,
+    power: float = 1.0,
+    name: str = None,
   ):
     super().__init__()
     self.initial_learning_rate = initial_learning_rate
@@ -119,17 +120,17 @@ class WarmUpPolynomial(tf.keras.optimizers.schedules.LearningRateSchedule):
       warmup_percent_done = global_step_float / warmup_steps_float
       warmup_learning_rate = self.initial_learning_rate * tf.math.pow(warmup_percent_done, self.power)
       return tf.cond(
-          global_step_float < warmup_steps_float,
-          lambda: warmup_learning_rate,
-          lambda: self.decay_schedule_fn(step - self.warmup_steps),
-          name=name,
+        global_step_float < warmup_steps_float,
+        lambda: warmup_learning_rate,
+        lambda: self.decay_schedule_fn(step - self.warmup_steps),
+        name=name,
       )
 
   def get_config(self):
     return {
-        "initial_learning_rate": self.initial_learning_rate,
-        "decay_schedule_fn": self.decay_schedule_fn,
-        "warmup_steps": self.warmup_steps,
-        "power": self.power,
-        "name": self.name,
+      "initial_learning_rate": self.initial_learning_rate,
+      "decay_schedule_fn": self.decay_schedule_fn,
+      "warmup_steps": self.warmup_steps,
+      "power": self.power,
+      "name": self.name,
     }

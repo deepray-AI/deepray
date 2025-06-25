@@ -29,9 +29,8 @@ from deepray.layers import transformer
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class TransformerLayerTest(keras_parameterized.TestCase):
-
   def test_layer_creation(self):
-    test_layer = transformer.Transformer(num_attention_heads=10, intermediate_size=2048, intermediate_activation='relu')
+    test_layer = transformer.Transformer(num_attention_heads=10, intermediate_size=2048, intermediate_activation="relu")
     sequence_length = 21
     width = 80
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -41,7 +40,7 @@ class TransformerLayerTest(keras_parameterized.TestCase):
     self.assertEqual(data_tensor.shape.as_list(), output_tensor.shape.as_list())
 
   def test_layer_creation_with_mask(self):
-    test_layer = transformer.Transformer(num_attention_heads=10, intermediate_size=2048, intermediate_activation='relu')
+    test_layer = transformer.Transformer(num_attention_heads=10, intermediate_size=2048, intermediate_activation="relu")
     sequence_length = 21
     width = 80
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -53,18 +52,18 @@ class TransformerLayerTest(keras_parameterized.TestCase):
     self.assertEqual(data_tensor.shape.as_list(), output_tensor.shape.as_list())
 
   def test_layer_creation_with_incorrect_mask_fails(self):
-    test_layer = transformer.Transformer(num_attention_heads=10, intermediate_size=2048, intermediate_activation='relu')
+    test_layer = transformer.Transformer(num_attention_heads=10, intermediate_size=2048, intermediate_activation="relu")
     sequence_length = 21
     width = 80
     # Create a 3-dimensional input (the first dimension is implicit).
     data_tensor = tf.keras.Input(shape=(sequence_length, width))
     # Create a 2-dimensional input (the first dimension is implicit).
     mask_tensor = tf.keras.Input(shape=(sequence_length, sequence_length - 3))
-    with self.assertRaisesRegex(ValueError, 'When passing a mask tensor.*'):
+    with self.assertRaisesRegex(ValueError, "When passing a mask tensor.*"):
       _ = test_layer([data_tensor, mask_tensor])
 
   def test_layer_invocation(self):
-    test_layer = transformer.Transformer(num_attention_heads=10, intermediate_size=2048, intermediate_activation='relu')
+    test_layer = transformer.Transformer(num_attention_heads=10, intermediate_size=2048, intermediate_activation="relu")
     sequence_length = 21
     width = 80
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -81,7 +80,7 @@ class TransformerLayerTest(keras_parameterized.TestCase):
     _ = model.predict(input_data)
 
   def test_layer_invocation_with_mask(self):
-    test_layer = transformer.Transformer(num_attention_heads=10, intermediate_size=2048, intermediate_activation='relu')
+    test_layer = transformer.Transformer(num_attention_heads=10, intermediate_size=2048, intermediate_activation="relu")
     sequence_length = 21
     width = 80
     # Create a 3-dimensional input (the first dimension is implicit).
@@ -104,7 +103,7 @@ class TransformerLayerTest(keras_parameterized.TestCase):
 
   def test_layer_invocation_with_float16_dtype(self):
     test_layer = transformer.Transformer(
-        num_attention_heads=10, intermediate_size=2048, intermediate_activation='relu', dtype='float16'
+      num_attention_heads=10, intermediate_size=2048, intermediate_activation="relu", dtype="float16"
     )
     sequence_length = 21
     width = 80
@@ -128,10 +127,10 @@ class TransformerLayerTest(keras_parameterized.TestCase):
 
   def test_transform_with_initializer(self):
     test_layer = transformer.Transformer(
-        num_attention_heads=10,
-        intermediate_size=2048,
-        intermediate_activation='relu',
-        kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02)
+      num_attention_heads=10,
+      intermediate_size=2048,
+      intermediate_activation="relu",
+      kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02),
     )
     sequence_length = 21
     width = 80
@@ -142,5 +141,5 @@ class TransformerLayerTest(keras_parameterized.TestCase):
     self.assertEqual(data_tensor.shape.as_list(), output.shape.as_list())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

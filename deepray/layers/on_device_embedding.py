@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -24,7 +25,6 @@ import tensorflow as tf
 from deepray.layers import tf_utils
 
 
-# @tf.keras.utils.register_keras_serializable(package="Text")
 class OnDeviceEmbedding(tf.keras.layers.Layer):
   """Performs an embedding lookup suitable for accelerator devices.
 
@@ -56,17 +56,17 @@ class OnDeviceEmbedding(tf.keras.layers.Layer):
 
   def get_config(self):
     config = {
-        "vocab_size": self._vocab_size,
-        "embedding_width": self._embedding_width,
-        "initializer": self._initializer,
-        "use_one_hot": self._use_one_hot,
+      "vocab_size": self._vocab_size,
+      "embedding_width": self._embedding_width,
+      "initializer": self._initializer,
+      "use_one_hot": self._use_one_hot,
     }
     base_config = super(OnDeviceEmbedding, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))
 
   def build(self, input_shape):
     self.embeddings = self.add_weight(
-        "embeddings", shape=[self._vocab_size, self._embedding_width], initializer=self._initializer
+      "embeddings", shape=[self._vocab_size, self._embedding_width], initializer=self._initializer
     )
 
     super(OnDeviceEmbedding, self).build(input_shape)

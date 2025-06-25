@@ -23,30 +23,30 @@ from typing import Optional
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 def sparsemax_loss(
-    logits: TensorLike,
-    sparsemax: TensorLike,
-    labels: TensorLike,
-    name: Optional[str] = None,
+  logits: TensorLike,
+  sparsemax: TensorLike,
+  labels: TensorLike,
+  name: Optional[str] = None,
 ) -> tf.Tensor:
   """Sparsemax loss function [1].
 
-    Computes the generalized multi-label classification loss for the sparsemax
-    function. The implementation is a reformulation of the original loss
-    function such that it uses the sparsemax probability output instead of the
-    internal $ \tau $ variable. However, the output is identical to the original
-    loss function.
+  Computes the generalized multi-label classification loss for the sparsemax
+  function. The implementation is a reformulation of the original loss
+  function such that it uses the sparsemax probability output instead of the
+  internal $ \tau $ variable. However, the output is identical to the original
+  loss function.
 
-    [1]: https://arxiv.org/abs/1602.02068
+  [1]: https://arxiv.org/abs/1602.02068
 
-    Args:
-      logits: A `Tensor`. Must be one of the following types: `float32`,
-        `float64`.
-      sparsemax: A `Tensor`. Must have the same type as `logits`.
-      labels: A `Tensor`. Must have the same type as `logits`.
-      name: A name for the operation (optional).
-    Returns:
-      A `Tensor`. Has the same type as `logits`.
-    """
+  Args:
+    logits: A `Tensor`. Must be one of the following types: `float32`,
+      `float64`.
+    sparsemax: A `Tensor`. Must have the same type as `logits`.
+    labels: A `Tensor`. Must have the same type as `logits`.
+    name: A name for the operation (optional).
+  Returns:
+    A `Tensor`. Has the same type as `logits`.
+  """
   logits = tf.convert_to_tensor(logits, name="logits")
   sparsemax = tf.convert_to_tensor(sparsemax, name="sparsemax")
   labels = tf.convert_to_tensor(labels, name="labels")
@@ -62,9 +62,9 @@ def sparsemax_loss(
   # If z = -inf, and there is no support (sparsemax = 0), a multiplication
   # would cause 0 * -inf = nan, which is not correct in this case.
   sum_s = tf.where(
-      tf.math.logical_or(sparsemax > 0, tf.math.is_nan(sparsemax)),
-      sparsemax * (z - 0.5 * sparsemax),
-      tf.zeros_like(sparsemax),
+    tf.math.logical_or(sparsemax > 0, tf.math.is_nan(sparsemax)),
+    sparsemax * (z - 0.5 * sparsemax),
+    tf.zeros_like(sparsemax),
   )
 
   # - z_k + ||q||^2
@@ -76,9 +76,9 @@ def sparsemax_loss(
   # caose the sparsemax will be nan, which means the sum_s will also be nan,
   # therefor this case doesn't need addtional special treatment.
   q_part_safe = tf.where(
-      tf.math.logical_and(tf.math.equal(labels, 0), tf.math.is_inf(z)),
-      tf.zeros_like(z),
-      q_part,
+    tf.math.logical_and(tf.math.equal(labels, 0), tf.math.is_inf(z)),
+    tf.zeros_like(z),
+    q_part,
   )
 
   return tf.math.reduce_sum(sum_s + q_part_safe, axis=1)
@@ -96,29 +96,29 @@ def sparsemax_loss_from_logits(y_true: TensorLike, logits_pred: TensorLike) -> t
 class SparsemaxLoss(tf.keras.losses.Loss):
   """Sparsemax loss function.
 
-    Computes the generalized multi-label classification loss for the sparsemax
-    function.
+  Computes the generalized multi-label classification loss for the sparsemax
+  function.
 
-    Because the sparsemax loss function needs both the probability output and
-    the logits to compute the loss value, `from_logits` must be `True`.
+  Because the sparsemax loss function needs both the probability output and
+  the logits to compute the loss value, `from_logits` must be `True`.
 
-    Because it computes the generalized multi-label loss, the shape of both
-    `y_pred` and `y_true` must be `[batch_size, num_classes]`.
+  Because it computes the generalized multi-label loss, the shape of both
+  `y_pred` and `y_true` must be `[batch_size, num_classes]`.
 
-    Args:
-      from_logits: Whether `y_pred` is expected to be a logits tensor. Default
-        is `True`, meaning `y_pred` is the logits.
-      reduction: (Optional) Type of `tf.keras.losses.Reduction` to apply to
-        loss. Default value is `SUM_OVER_BATCH_SIZE`.
-      name: Optional name for the op.
-    """
+  Args:
+    from_logits: Whether `y_pred` is expected to be a logits tensor. Default
+      is `True`, meaning `y_pred` is the logits.
+    reduction: (Optional) Type of `tf.keras.losses.Reduction` to apply to
+      loss. Default value is `SUM_OVER_BATCH_SIZE`.
+    name: Optional name for the op.
+  """
 
   @typechecked
   def __init__(
-      self,
-      from_logits: bool = True,
-      reduction: str = tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
-      name: str = "sparsemax_loss",
+    self,
+    from_logits: bool = True,
+    reduction: str = tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE,
+    name: str = "sparsemax_loss",
   ):
     if from_logits is not True:
       raise ValueError("from_logits must be True")
@@ -131,7 +131,7 @@ class SparsemaxLoss(tf.keras.losses.Loss):
 
   def get_config(self):
     config = {
-        "from_logits": self.from_logits,
+      "from_logits": self.from_logits,
     }
     base_config = super().get_config()
     return {**base_config, **config}

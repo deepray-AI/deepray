@@ -16,20 +16,21 @@ import tensorflow as tf
 
 from deepray.utils.resource_loader import LazySO
 
-gen_ffm_ops = LazySO("custom_ops/feature_cross/_ffm_ops.so")
+gen_ffm_ops = LazySO("custom_ops/ffm_ops/_ffm_ops.so")
 
 
-def ffm(left: tf.Tensor, right: tf.Tensor, dim_size: int, int_type: str = 'multiply') -> tf.Tensor:
+def ffm(left: tf.Tensor, right: tf.Tensor, dim_size: int, int_type: str = "multiply") -> tf.Tensor:
   output = gen_ffm_ops.ops.FFM(left=left, right=right, dim_size=dim_size, int_type=int_type)
   return output
 
 
-@tf.RegisterGradient('FFM')
+@tf.RegisterGradient("FFM")
 def _ffm_grad(op, grad: tf.Tensor) -> tf.Tensor:
   left, right = op.inputs[0], op.inputs[1]
-  dim_size = op.get_attr('dim_size')
-  int_type = op.get_attr('int_type')
+  dim_size = op.get_attr("dim_size")
+  int_type = op.get_attr("int_type")
 
-  (left_grad,
-   right_grad) = gen_ffm_ops.ops.FFMGrad(grad=grad, left=left, right=right, dim_size=dim_size, int_type=int_type)
+  (left_grad, right_grad) = gen_ffm_ops.ops.FFMGrad(
+    grad=grad, left=left, right=right, dim_size=dim_size, int_type=int_type
+  )
   return left_grad, right_grad

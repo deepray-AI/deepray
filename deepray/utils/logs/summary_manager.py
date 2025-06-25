@@ -14,15 +14,12 @@
 """Provides a utility class for managing summary writing."""
 
 import os
-from absl import flags, logging
-from datetime import datetime
+
+import horovod.tensorflow as hvd
+import tensorflow as tf
+from absl import flags
 
 from deepray.design_patterns import SingletonType
-
-import tensorflow as tf
-import horovod.tensorflow as hvd
-
-FLAGS = flags.FLAGS
 
 _MIN_SUMMARY_STEPS = 10
 
@@ -48,15 +45,15 @@ class SummaryManager(metaclass=SingletonType):
 
     # Not writing tensorboard summaries if running in MLPerf.
     # Create summary writers
-    if FLAGS.use_horovod and hvd.rank() != 0 or FLAGS.ml_perf:
-      self.summary_writers['train'], self.summary_writers['evel'] = None, None
+    if flags.FLAGS.use_horovod and hvd.rank() != 0 or flags.FLAGS.ml_perf:
+      self.summary_writers["train"], self.summary_writers["evel"] = None, None
     else:
-      self.summary_writers['evel'] = tf.summary.create_file_writer(os.path.join(self._summary_dir, "eval"))
-      if FLAGS.steps_per_summary >= _MIN_SUMMARY_STEPS:
+      self.summary_writers["evel"] = tf.summary.create_file_writer(os.path.join(self._summary_dir, "eval"))
+      if flags.FLAGS.steps_per_execution >= _MIN_SUMMARY_STEPS:
         # Only writes summary when the stats are collected sufficiently over enough steps.
-        self.summary_writers['train'] = tf.summary.create_file_writer(os.path.join(self._summary_dir, "train"))
+        self.summary_writers["train"] = tf.summary.create_file_writer(os.path.join(self._summary_dir, "train"))
       else:
-        self.summary_writers['train'] = None
+        self.summary_writers["train"] = None
 
     if global_step is None:
       self._global_step = tf.summary.experimental.get_step()
@@ -75,7 +72,7 @@ class SummaryManager(metaclass=SingletonType):
       return self.summary_writers[relative_path]
     if self._enabled:
       self.summary_writers[relative_path] = tf.summary.create_file_writer(
-          os.path.join(self._summary_dir, relative_path)
+        os.path.join(self._summary_dir, relative_path)
       )
     else:
       self.summary_writers[relative_path] = tf.summary.create_noop_writer()

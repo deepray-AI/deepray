@@ -22,13 +22,13 @@ from typeguard import typechecked
 class Sparsemax(tf.keras.layers.Layer):
   """Sparsemax activation function.
 
-    The output shape is the same as the input shape.
+  The output shape is the same as the input shape.
 
-    See [From Softmax to Sparsemax: A Sparse Model of Attention and Multi-Label Classification](https://arxiv.org/abs/1602.02068).
+  See [From Softmax to Sparsemax: A Sparse Model of Attention and Multi-Label Classification](https://arxiv.org/abs/1602.02068).
 
-    Args:
-        axis: Integer, axis along which the sparsemax normalization is applied.
-    """
+  Args:
+      axis: Integer, axis along which the sparsemax normalization is applied.
+  """
 
   @typechecked
   def __init__(self, axis: int = -1, **kwargs):

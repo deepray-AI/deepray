@@ -73,7 +73,7 @@ printf "Logs written to %s\n" "$LOGFILE"
 
 set -x
 $nsys_command $mpi_command python -m examples.LanguageModeling.Multi-label-classification-with-BERT.trainer \
-    --steps_per_summary=20 \
+    --steps_per_execution=20 \
     --run_eagerly=false \
     --keras_use_ctl \
     --learning_rate=$learning_rate \

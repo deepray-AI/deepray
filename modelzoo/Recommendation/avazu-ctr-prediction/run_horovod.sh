@@ -72,7 +72,7 @@ $mpi_command python train.py \
     --feature_map=feature_map.csv \
     --benchmark \
     --use_dynamic_embedding=True \
-    --steps_per_summary=20 \
+    --steps_per_execution=20 \
     --model_name=$model \
     --epochs=1 \
     --run_eagerly=true \

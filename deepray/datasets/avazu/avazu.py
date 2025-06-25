@@ -23,34 +23,31 @@ import sys
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.parquet_pipeline.ali_parquet_dataset import ParquetPipeLine
-
-FLAGS = flags.FLAGS
+from deepray.datasets.parquet_pipeline.ali_parquet_dataset import ParquetPipeline
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 FLAGS([
-    sys.argv[0],
-    "--num_train_examples=36210028",
+  sys.argv[0],
+  "--num_train_examples=36210028",
 ])
-if os.path.exists(os.path.join(dir_path, 'feature_map.csv')):
+if os.path.exists(os.path.join(dir_path, "feature_map.csv")):
   FLAGS([
-      sys.argv[0],
-      f"--feature_map={dir_path}/feature_map.csv",
+    sys.argv[0],
+    f"--feature_map={dir_path}/feature_map.csv",
   ])
 
 DEFAULT_VALUE = {"int64": 0, "float32": 0.0, "bytes": ""}
 
 
-class Avazu(ParquetPipeLine):
-
+class Avazu(ParquetPipeline):
   def parse(self, record):
-    for name in self.feature_map[(self.feature_map['length'] == 1)]["name"].values:
+    for name in self.feature_map[(self.feature_map["length"] == 1)]["name"].values:
       record[name] = tf.expand_dims(record[name], axis=1)
 
-    if len(self.feature_map[(self.feature_map['ftype'] == "Label")].index) == 1:
-      target = record.pop(self.feature_map[(self.feature_map['ftype'] == "Label")].iloc[0]['name'])
+    if len(self.feature_map[(self.feature_map["ftype"] == "Label")].index) == 1:
+      target = record.pop(self.feature_map[(self.feature_map["ftype"] == "Label")].iloc[0]["name"])
     else:
       target = {}
-      for name in self.feature_map[(self.feature_map['ftype'] == "Label")][["name"]].values:
+      for name in self.feature_map[(self.feature_map["ftype"] == "Label")][["name"]].values:
         target[name] = record.pop(name)
     return record, target

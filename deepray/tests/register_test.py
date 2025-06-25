@@ -8,16 +8,14 @@ from deepray.utils import resource_loader
 
 def test_multiple_register():
   if resource_loader.SKIP_CUSTOM_OPS:
-    pytest.skip("Skipping the test because a custom ops "
-                "was being loaded while --skip-custom-ops was set.")
+    pytest.skip("Skipping the test because a custom ops was being loaded while --skip-custom-ops was set.")
   register_all()
   register_all()
 
 
 def test_get_all_shared_objects():
   if resource_loader.SKIP_CUSTOM_OPS:
-    pytest.skip("Skipping the test because a custom ops "
-                "was being loaded while --skip-custom-ops was set.")
+    pytest.skip("Skipping the test because a custom ops was being loaded while --skip-custom-ops was set.")
   all_shared_objects = _get_all_shared_objects()
   assert len(all_shared_objects) >= 4
 

@@ -13,6 +13,7 @@
 # limitations under the License.
 # ============================================================================
 """Tests for zero_out ops."""
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -24,11 +25,10 @@ from deepray.custom_ops.zero_out import zero_out
 
 
 class ZeroOutTest(test.TestCase):
-
   def testZeroOut(self):
     with self.test_session():
       self.assertAllClose(zero_out([[1, 2], [3, 4]]), np.array([[1, 0], [0, 0]]))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   test.main()

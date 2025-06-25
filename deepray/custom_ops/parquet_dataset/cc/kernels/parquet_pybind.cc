@@ -12,16 +12,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
-#include <pybind11/complex.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-
 #include <iostream>
 #include <string>
 #include <tuple>
 #include <vector>
 
 #include "arrow_util.h"
+#include "pybind11/complex.h"
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 
 namespace tensorflow {
 namespace data {

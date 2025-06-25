@@ -19,24 +19,63 @@ import tensorflow as tf
 from typeguard import typechecked
 from typing import Union, Iterable
 
-from deepray.utils.keras_utils import normalize_tuple
+
+def normalize_tuple(value, n, name):
+  """Transforms an integer or iterable of integers into an integer tuple.
+
+  A copy of tensorflow.python.keras.util.
+
+  Args:
+    value: The value to validate and convert. Could an int, or any iterable
+      of ints.
+    n: The size of the tuple to be returned.
+    name: The name of the argument being validated, e.g. "strides" or
+      "kernel_size". This is only used to format error messages.
+
+  Returns:
+    A tuple of n integers.
+
+  Raises:
+    ValueError: If something else than an int/long or iterable thereof was
+      passed.
+  """
+  if isinstance(value, int):
+    return (value,) * n
+  else:
+    try:
+      value_tuple = tuple(value)
+    except TypeError:
+      raise TypeError("The `" + name + "` argument must be a tuple of " + str(n) + " integers. Received: " + str(value))
+    if len(value_tuple) != n:
+      raise ValueError(
+        "The `" + name + "` argument must be a tuple of " + str(n) + " integers. Received: " + str(value)
+      )
+    for single_value in value_tuple:
+      try:
+        int(single_value)
+      except (ValueError, TypeError):
+        raise ValueError(
+          "The `" + name + "` argument must be a tuple of " + str(n) + " integers. Received: " + str(value) + " "
+          "including element " + str(single_value) + " of type" + " " + str(type(single_value))
+        )
+    return value_tuple
 
 
 def _calculate_output_shape(input_shape, pool_size, strides, padding):
   """Calculates the shape of the unpooled output."""
   if padding == "VALID":
     output_shape = (
-        input_shape[0],
-        (input_shape[1] - 1) * strides[0] + pool_size[0],
-        (input_shape[2] - 1) * strides[1] + pool_size[1],
-        input_shape[3],
+      input_shape[0],
+      (input_shape[1] - 1) * strides[0] + pool_size[0],
+      (input_shape[2] - 1) * strides[1] + pool_size[1],
+      input_shape[3],
     )
   elif padding == "SAME":
     output_shape = (
-        input_shape[0],
-        input_shape[1] * strides[0],
-        input_shape[2] * strides[1],
-        input_shape[3],
+      input_shape[0],
+      input_shape[1] * strides[0],
+      input_shape[2] * strides[1],
+      input_shape[3],
     )
   else:
     raise ValueError('Padding must be a string from: "SAME", "VALID"')
@@ -48,10 +87,10 @@ def _max_unpooling_2d(updates, mask, pool_size=(2, 2), strides=(2, 2), padding="
   pool_size_attr = " ".join(["i: %d" % v for v in pool_size])
   strides_attr = " ".join(["i: %d" % v for v in strides])
   experimental_implements = [
-      'name: "deepray:MaxUnpooling2D"',
-      'attr { key: "pool_size" value { list {%s} } }' % pool_size_attr,
-      'attr { key: "strides" value { list {%s} } }' % strides_attr,
-      'attr { key: "padding" value { s: "%s" } }' % padding,
+    'name: "deepray:MaxUnpooling2D"',
+    'attr { key: "pool_size" value { list {%s} } }' % pool_size_attr,
+    'attr { key: "strides" value { list {%s} } }' % strides_attr,
+    'attr { key: "padding" value { s: "%s" } }' % padding,
   ]
   experimental_implements = " ".join(experimental_implements)
 
@@ -86,32 +125,32 @@ def _max_unpooling_2d(updates, mask, pool_size=(2, 2), strides=(2, 2), padding="
 class MaxUnpooling2D(tf.keras.layers.Layer):
   """Unpool the outputs of a maximum pooling operation.
 
-    This function currently does not support outputs of MaxPoolingWithArgMax in
-    following cases:
-    - include_batch_in_index equals true.
-    - input_shape is not divisible by strides if padding is "SAME".
-    - (input_shape - pool_size) is not divisible by strides if padding is "VALID".
-    - The max pooling operation results in duplicate values in updates and mask.
+  This function currently does not support outputs of MaxPoolingWithArgMax in
+  following cases:
+  - include_batch_in_index equals true.
+  - input_shape is not divisible by strides if padding is "SAME".
+  - (input_shape - pool_size) is not divisible by strides if padding is "VALID".
+  - The max pooling operation results in duplicate values in updates and mask.
 
-    Args:
-      updates: The pooling result from max pooling.
-      mask: the argmax result corresponds to above max values.
-      pool_size: The filter that max pooling was performed with. Default: (2, 2).
-      strides: The strides that max pooling was performed with. Default: (2, 2).
-      padding: The padding that max pooling was performed with. Default: "SAME".
-    Input shape:
-      4D tensor with shape: `(batch_size, height, width, channel)`.
-    Output shape:
-      4D tensor with the same shape as the input of max pooling operation.
-    """
+  Args:
+    updates: The pooling result from max pooling.
+    mask: the argmax result corresponds to above max values.
+    pool_size: The filter that max pooling was performed with. Default: (2, 2).
+    strides: The strides that max pooling was performed with. Default: (2, 2).
+    padding: The padding that max pooling was performed with. Default: "SAME".
+  Input shape:
+    4D tensor with shape: `(batch_size, height, width, channel)`.
+  Output shape:
+    4D tensor with the same shape as the input of max pooling operation.
+  """
 
   @typechecked
   def __init__(
-      self,
-      pool_size: Union[int, Iterable[int]] = (2, 2),
-      strides: Union[int, Iterable[int]] = (2, 2),
-      padding: str = "SAME",
-      **kwargs,
+    self,
+    pool_size: Union[int, Iterable[int]] = (2, 2),
+    strides: Union[int, Iterable[int]] = (2, 2),
+    padding: str = "SAME",
+    **kwargs,
   ):
     super(MaxUnpooling2D, self).__init__(**kwargs)
 
@@ -124,11 +163,11 @@ class MaxUnpooling2D(tf.keras.layers.Layer):
 
   def call(self, updates, mask):
     return _max_unpooling_2d(
-        updates,
-        mask,
-        pool_size=self.pool_size,
-        strides=self.strides,
-        padding=self.padding,
+      updates,
+      mask,
+      pool_size=self.pool_size,
+      strides=self.strides,
+      padding=self.padding,
     )
 
   def compute_output_shape(self, input_shapes):

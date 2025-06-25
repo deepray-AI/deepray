@@ -22,21 +22,14 @@ limitations under the License.
 #include <unordered_map>
 #include <utility>
 
-#include "absl/container/flat_hash_map.h"
-#include "random.h"
+#include "deepray/custom_ops/utils/ok_status_util.h"
+#include "deepray/custom_ops/utils/random.h"
 #include "sparsehash/dense_hash_map"
 #include "task_runner.h"
 #include "tensorflow/core/framework/bounds_check.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
-#include "tensorflow/core/framework/tensor.h"
-#include "tensorflow/core/framework/tensor_shape.h"
-#include "tensorflow/core/lib/core/blocking_counter.h"
-#include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/lib/core/threadpool.h"
-#include "tensorflow/core/lib/hash/hash.h"
-#include "tensorflow/core/util/env_var.h"
-#include "tensorflow/core/util/work_sharder.h"
 
 namespace tensorflow {
 
@@ -192,7 +185,9 @@ void NewSizes(OpKernelContext* context, const Tensor& input,
 
 template <typename T, typename TIndex, class HashMap>
 void SerialComputeV1(OpKernelContext* context, const Tensor& input, Tensor* idx,
-                     int64 axis, int64* uniq_size, Tensor* output) {
+                     int64 axis, int64* uniq_size, int num_sparse,
+                     google::dense_hash_map<int, TIndex>* counter_map,
+                     Tensor* output) {
   auto Tin = input.flat<T>();
   const int64 N = input.NumElements();
   auto idx_vec = idx->template vec<TIndex>();
@@ -204,6 +199,22 @@ void SerialComputeV1(OpKernelContext* context, const Tensor& input, Tensor* idx,
     idx_vec(i) = it.first->second;
     if (it.second) {
       ++j;
+    }
+  }
+
+  counter_map->set_empty_key(std::numeric_limits<int>::max());
+  counter_map->resize(2 * N);
+  for (int i = 0; i < num_sparse; ++i) {
+    const Tensor& indices_tensor = context->input(1 + i);
+    auto extra_ids_vec = indices_tensor.template vec<T>();
+    const Tensor& counter_tensor = context->input(1 + num_sparse + i);
+    auto counter_vec = counter_tensor.template vec<TIndex>();
+    for (int64 k = 0; k < extra_ids_vec.size(); ++k) {
+      auto ids = extra_ids_vec(k);
+      auto idx_it = uniq.find(ids);
+      if (idx_it != uniq.end()) {
+        counter_map->emplace(idx_it->second, counter_vec(k));
+      }
     }
   }
 
@@ -224,6 +235,8 @@ void SerialComputeV1(OpKernelContext* context, const Tensor& input, Tensor* idx,
 template <typename T, typename TIndex, class HashMap>
 void ParallelComputeV1(OpKernelContext* context, const Tensor& input,
                        Tensor* idx, int64 axis, int64* uniq_size,
+                       int num_sparse,
+                       google::dense_hash_map<int, TIndex>* counter_map,
                        Tensor* output) {
   // Struct INode was used to store an inverse mapping for each node in the
   // hash map container.
@@ -424,6 +437,25 @@ void ParallelComputeV1(OpKernelContext* context, const Tensor& input,
   TaskRunner t3_runner(GlobalIndexTask, thread_pool, num_tasks_t1);
   t3_runner.Run();
 
+  counter_map->set_empty_key(std::numeric_limits<int>::max());
+  counter_map->resize(2 * N);
+  for (int i = 0; i < num_sparse; ++i) {
+    const Tensor& indices_tensor = context->input(1 + i);
+    auto extra_ids_vec = indices_tensor.template vec<T>();
+    const Tensor& counter_tensor = context->input(1 + num_sparse + i);
+    auto counter_vec = counter_tensor.template vec<TIndex>();
+    for (int64 k = 0; k < extra_ids_vec.size(); ++k) {
+      auto ids = extra_ids_vec(k);
+      for (int j = 0; j < num_tasks_t1; ++j) {
+        const INode* inode = uniq_maps[j].GetINodeByKey(ids);
+        if (inode != nullptr) {
+          counter_map->emplace(inode->index_, counter_vec(k));
+          continue;
+        }
+      }
+    }
+  }
+
   // Parallel Step 4: Write output indicies Tensor.
   int32 max_tasks_t4 = (N + kPartitionSize - 1) / kPartitionSize;
   int32 num_tasks_t4 = std::max(std::min(max_threads, max_tasks_t4), 1);
@@ -458,7 +490,9 @@ void ParallelComputeV1(OpKernelContext* context, const Tensor& input,
 template <typename TIndex, class HashMap>
 void MultiMapCompute(OpKernelContext* context, const Tensor& input, Tensor* idx,
                      int64 axis, int64* uniq_size_out, int32 num_buckets,
-                     int64 unique_ratio_hint, Tensor* output) {
+                     int64 unique_ratio_hint, int num_sparse,
+                     google::dense_hash_map<int, TIndex>* counter_map,
+                     Tensor* output) {
   auto Tin = input.vec<int64>();
   const int64 N = input.NumElements();
 
@@ -475,7 +509,7 @@ void MultiMapCompute(OpKernelContext* context, const Tensor& input, Tensor* idx,
   Partitioner map_parter(N, num_partitions);
   auto PartitionTask = [N, num_buckets, &Tin, &partitions, &map_parter,
                         &idx_vec](int32 task_id, int32 num_tasks) {
-    auto st = Status::OK();
+    auto st = TFOkStatus;
     int64* partition = partitions.get() + task_id * num_buckets;
     for (int64 i = 0; i < num_buckets; ++i) {
       partition[i] = -1;
@@ -499,7 +533,7 @@ void MultiMapCompute(OpKernelContext* context, const Tensor& input, Tensor* idx,
   };
 
   SummaryTaskRunner<Status, StatusSummaryUpdater> t0_runner(
-      PartitionTask, Status::OK(), thread_pool, num_partitions);
+      PartitionTask, TFOkStatus, thread_pool, num_partitions);
   t0_runner.Run();
   OP_REQUIRES_OK(context, t0_runner.summary());
 
@@ -543,6 +577,24 @@ void MultiMapCompute(OpKernelContext* context, const Tensor& input, Tensor* idx,
   int64 uniq_size =
       global_offsets[num_buckets - 1] + uniq_maps[num_buckets - 1].size();
 
+  counter_map->set_empty_key(std::numeric_limits<int>::max());
+  counter_map->resize(2 * uniq_size);
+
+  google::dense_hash_map<int64, TIndex> extra_unique_id_map;
+  extra_unique_id_map.set_empty_key(std::numeric_limits<int64>::max());
+  extra_unique_id_map.resize(2 * uniq_size);
+  for (int i = 0; i < num_sparse; ++i) {
+    const Tensor& indices_tensor = context->input(1 + i);
+    auto extra_ids_vec = indices_tensor.template vec<int64>();
+    const Tensor& counter_tensor = context->input(1 + num_sparse + i);
+    auto counter_vec = counter_tensor.template vec<TIndex>();
+    for (int64 k = 0; k < extra_ids_vec.size(); ++k) {
+      auto ids = extra_ids_vec(k);
+      auto counts = counter_vec(k);
+      extra_unique_id_map.emplace(ids, counts);
+    }
+  }
+
   *uniq_size_out = uniq_size;
   AllocatorAttributes attr;
   attr.set_on_host(true);
@@ -552,7 +604,8 @@ void MultiMapCompute(OpKernelContext* context, const Tensor& input, Tensor* idx,
   auto key_output_vec = output->template vec<int64>();
 
   auto OutputTask = [&key_output_vec, &uniq_maps, &global_offsets, &Tin,
-                     &idx_vec, &map_parter](int32 task_id, int32 num_tasks) {
+                     &idx_vec, &map_parter, &counter_map,
+                     extra_unique_id_map](int32 task_id, int32 num_tasks) {
     TIndex offset = global_offsets[task_id];
     for (auto iter = uniq_maps[task_id].begin();
          iter != uniq_maps[task_id].end(); ++iter) {
@@ -566,7 +619,10 @@ void MultiMapCompute(OpKernelContext* context, const Tensor& input, Tensor* idx,
         next_idx = idx_vec(cur_idx);
         idx_vec(cur_idx) = offset;
       }
-
+      auto it = extra_unique_id_map.find(iter->first);
+      if (it != extra_unique_id_map.end()) {
+        counter_map->emplace(offset, it->second);
+      }
       ++offset;
     }
   };
@@ -631,8 +687,10 @@ void MultipleElements(OpKernelContext* context, const Tensor& input,
 }
 
 template <typename TIndex>
-void CheckCountOutput(OpKernelContext* context, Tensor* output_counter,
-                      Tensor* idx, int num_outputs, int64 uniq_size) {
+void CheckCountOutput(OpKernelContext* context, Tensor* output,
+                      Tensor* output_counter, Tensor* idx, int num_outputs,
+                      int64 uniq_size, int num_sparse,
+                      google::dense_hash_map<int, TIndex> counter_map) {
   if (num_outputs > 2) {
     auto idx_vec = idx->template vec<TIndex>();
     AllocatorAttributes attr;
@@ -646,13 +704,19 @@ void CheckCountOutput(OpKernelContext* context, Tensor* output_counter,
     for (int64 i = 0; i < N; ++i) {
       count_output_vec(idx_vec(i))++;
     }
+    if (num_sparse > 0) {
+      for (auto& it : counter_map) {
+        count_output_vec(it.first) += (it.second - 1);
+      }
+    }
   }
 }
 
 template <typename T, typename TIndex, class HashMap>
-void ComputeInternalWithHashMap(OpKernelContext* context, const Tensor& input,
-                                Tensor* idx, int64 axis, int64* uniq_size,
-                                int64 N, bool serial, Tensor* output) {
+void ComputeInternalWithHashMap(
+    OpKernelContext* context, const Tensor& input, Tensor* idx, int64 axis,
+    int64* uniq_size, int64 N, int num_sparse, bool serial,
+    google::dense_hash_map<int, TIndex>* counter_map, Tensor* output) {
   OP_REQUIRES(context, TensorShapeUtils::IsVector(input.shape()),
               errors::InvalidArgument("unique expects a 1D vector."));
   // TODO(dga):  Make unique polymorphic for returning int32 and int64
@@ -664,10 +728,10 @@ void ComputeInternalWithHashMap(OpKernelContext* context, const Tensor& input,
 
   if (N >= kPartitionLimit && !serial) {
     ParallelComputeV1<T, TIndex, HashMap>(context, input, idx, axis, uniq_size,
-                                          output);
+                                          num_sparse, counter_map, output);
   } else {
     SerialComputeV1<T, TIndex, HashMap>(context, input, idx, axis, uniq_size,
-                                        output);
+                                        num_sparse, counter_map, output);
   }
 }
 
@@ -676,7 +740,7 @@ void UniqueInternal(OpKernelContext* context, const Tensor& input, Tensor* idx,
                     Tensor* output, Tensor* output_counter, int num_outputs,
                     int64 partition_size, bool serial, int64 axis,
                     int64 unique_ratio_hint, std::vector<int64>& new_sizes,
-                    UniqueMaps map_flag) {
+                    UniqueMaps map_flag, int num_sparse = 0) {
   typedef google::dense_hash_map<T, TIndex> DefaultHashMap;
 
   AllocatorAttributes attr;
@@ -686,6 +750,7 @@ void UniqueInternal(OpKernelContext* context, const Tensor& input, Tensor* idx,
                                       TensorShape({new_sizes[1]}), idx, attr));
 
   int64 uniq_size_out;
+  google::dense_hash_map<int, TIndex> counter_map;
 
   if (new_sizes[0] == 1 && new_sizes[2] == 1) {
     // Specialized and faster implementation when unique is run over single
@@ -704,35 +769,40 @@ void UniqueInternal(OpKernelContext* context, const Tensor& input, Tensor* idx,
           MultiMapCompute<TIndex,
                           google::dense_hash_map<int64, TIndex, IdHash>>(
               context, input, idx, axis, &uniq_size_out, num_buckets,
-              unique_ratio_hint, output);
+              unique_ratio_hint, num_sparse, &counter_map, output);
         } else {
           SerialComputeV1<T, TIndex, DefaultHashMap>(context, input, idx, axis,
-                                                     &uniq_size_out, output);
+                                                     &uniq_size_out, num_sparse,
+                                                     &counter_map, output);
         }
         break;
       case STL:
         ComputeInternalWithHashMap<T, TIndex, std::unordered_map<T, TIndex>>(
-            context, input, idx, axis, &uniq_size_out, N, serial, output);
+            context, input, idx, axis, &uniq_size_out, N, num_sparse, serial,
+            &counter_map, output);
         break;
       case ABSL:
         ComputeInternalWithHashMap<T, TIndex, absl::flat_hash_map<T, TIndex>>(
-            context, input, idx, axis, &uniq_size_out, N, serial, output);
+            context, input, idx, axis, &uniq_size_out, N, num_sparse, serial,
+            &counter_map, output);
         break;
       case GOOGLE:
         ComputeInternalWithHashMap<T, TIndex, DefaultHashMap>(
-            context, input, idx, axis, &uniq_size_out, N, serial, output);
+            context, input, idx, axis, &uniq_size_out, N, num_sparse, serial,
+            &counter_map, output);
         break;
       default:
         ComputeInternalWithHashMap<T, TIndex, DefaultHashMap>(
-            context, input, idx, axis, &uniq_size_out, N, serial, output);
+            context, input, idx, axis, &uniq_size_out, N, num_sparse, serial,
+            &counter_map, output);
     }
   } else {
     MultipleElements<T, TIndex>(context, input, idx, output, &uniq_size_out,
                                 axis, new_sizes);
   }
 
-  CheckCountOutput<TIndex>(context, output_counter, idx, num_outputs,
-                           uniq_size_out);
+  CheckCountOutput<TIndex>(context, output, output_counter, idx, num_outputs,
+                           uniq_size_out, num_sparse, counter_map);
 }
 
 template <typename T, typename TIndex>
@@ -761,6 +831,21 @@ void UniqueWithAxis(OpKernelContext* context, const Tensor& input,
   UniqueInternal<T, TIndex>(context, input, idx, output, output_counter,
                             num_outputs, partition_size, serial, axis,
                             unique_ratio_hint, new_sizes, map_flag);
+}
+
+template <typename T, typename TIndex>
+void UniqueWithExtraCounts(OpKernelContext* context, const Tensor& input,
+                           Tensor* idx, Tensor* output, Tensor* output_counter,
+                           int num_outputs, int64 partition_size, bool serial,
+                           int64 unique_ratio_hint, int num_sparse,
+                           UniqueMaps map_flag) {
+  int64 axis = 0;
+  std::vector<int64> new_sizes{1, input.NumElements(), 1};
+  OP_REQUIRES(context, TensorShapeUtils::IsVector(input.shape()),
+              errors::InvalidArgument("unique expects a 1D vector."));
+  UniqueInternal<T, TIndex>(context, input, idx, output, output_counter,
+                            num_outputs, partition_size, serial, axis,
+                            unique_ratio_hint, new_sizes, map_flag, num_sparse);
 }
 
 }  // namespace tensorflow

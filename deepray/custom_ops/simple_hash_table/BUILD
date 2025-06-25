@@ -12,7 +12,7 @@ custom_op_library(
         "simple_hash_table_op.cc",
     ],
     deps = [
-        "@com_google_absl//absl/container:flat_hash_map",
+        "//deepray/custom_ops/utils:ok_status_util",
     ],
 )
 
@@ -21,8 +21,6 @@ py_library(
     srcs = ["simple_hash_table_op.py"],
     data = ["simple_hash_table_kernel.so"],
     srcs_version = "PY3",
-    deps = [
-    ],
 )
 
 py_library(
@@ -56,5 +54,7 @@ py_test(
     ],
     deps = [
         ":simple_hash_table",
+        "@pypi_absl_py//:pkg",
+        "@pypi_tensorflow//:pkg",
     ],
 )

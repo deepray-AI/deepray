@@ -42,26 +42,26 @@ from .dynamic_module_utils import custom_object_save
 from .generation import GenerationConfig, TFGenerationMixin
 from .tf_utils import shape_list
 from .utils import (
-    DUMMY_INPUTS,
-    SAFE_WEIGHTS_INDEX_NAME,
-    SAFE_WEIGHTS_NAME,
-    TF2_WEIGHTS_INDEX_NAME,
-    TF2_WEIGHTS_NAME,
-    TF_WEIGHTS_NAME,
-    WEIGHTS_INDEX_NAME,
-    WEIGHTS_NAME,
-    ModelOutput,
-    PushToHubMixin,
-    cached_file,
-    download_url,
-    find_labels,
-    has_file,
-    is_offline_mode,
-    is_remote_url,
-    is_safetensors_available,
-    logging,
-    requires_backends,
-    working_or_temp_dir,
+  DUMMY_INPUTS,
+  SAFE_WEIGHTS_INDEX_NAME,
+  SAFE_WEIGHTS_NAME,
+  TF2_WEIGHTS_INDEX_NAME,
+  TF2_WEIGHTS_NAME,
+  TF_WEIGHTS_NAME,
+  WEIGHTS_INDEX_NAME,
+  WEIGHTS_NAME,
+  ModelOutput,
+  PushToHubMixin,
+  cached_file,
+  download_url,
+  find_labels,
+  has_file,
+  is_offline_mode,
+  is_remote_url,
+  is_safetensors_available,
+  logging,
+  requires_backends,
+  working_or_temp_dir,
 )
 
 if parse(tf.__version__) >= parse("2.11.0"):
@@ -86,8 +86,17 @@ if TYPE_CHECKING:
 logger = logging.get_logger(__name__)
 tf_logger = tf.get_logger()
 
-TFModelInputType = Union[List[tf.Tensor], List[np.ndarray], List[KerasTensor], Dict[str, tf.Tensor],
-                         Dict[str, np.ndarray], Dict[str, KerasTensor], tf.Tensor, np.ndarray, KerasTensor,]
+TFModelInputType = Union[
+  List[tf.Tensor],
+  List[np.ndarray],
+  List[KerasTensor],
+  Dict[str, tf.Tensor],
+  Dict[str, np.ndarray],
+  Dict[str, KerasTensor],
+  tf.Tensor,
+  np.ndarray,
+  KerasTensor,
+]
 
 
 def dummy_loss(y_true, y_pred):
@@ -100,20 +109,20 @@ def dummy_loss(y_true, y_pred):
 
 class TFModelUtilsMixin:
   """
-    A few utilities for `tf.keras.Model`, to be used as a mixin.
-    """
+  A few utilities for `tf.keras.Model`, to be used as a mixin.
+  """
 
   def num_parameters(self, only_trainable: bool = False) -> int:
     """
-        Get the number of (optionally, trainable) parameters in the model.
+    Get the number of (optionally, trainable) parameters in the model.
 
-        Args:
-            only_trainable (`bool`, *optional*, defaults to `False`):
-                Whether or not to return only the number of trainable parameters
+    Args:
+        only_trainable (`bool`, *optional*, defaults to `False`):
+            Whether or not to return only the number of trainable parameters
 
-        Returns:
-            `int`: The number of parameters.
-        """
+    Returns:
+        `int`: The number of parameters.
+    """
     if only_trainable:
       return int(sum(np.prod(w.shape.as_list()) for w in self.trainable_variables))
     else:
@@ -122,25 +131,25 @@ class TFModelUtilsMixin:
 
 def keras_serializable(cls):
   """
-    Decorate a Keras Layer class to support Keras serialization.
+  Decorate a Keras Layer class to support Keras serialization.
 
-    This is done by:
+  This is done by:
 
-    1. Adding a `transformers_config` dict to the Keras config dictionary in `get_config` (called by Keras at
-       serialization time.
-    2. Wrapping `__init__` to accept that `transformers_config` dict (passed by Keras at deserialization time) and
-       convert it to a config object for the actual layer initializer.
-    3. Registering the class as a custom object in Keras (if the Tensorflow version supports this), so that it does not
-       need to be supplied in `custom_objects` in the call to `tf.keras.models.load_model`.
+  1. Adding a `transformers_config` dict to the Keras config dictionary in `get_config` (called by Keras at
+     serialization time.
+  2. Wrapping `__init__` to accept that `transformers_config` dict (passed by Keras at deserialization time) and
+     convert it to a config object for the actual layer initializer.
+  3. Registering the class as a custom object in Keras (if the Tensorflow version supports this), so that it does not
+     need to be supplied in `custom_objects` in the call to `tf.keras.models.load_model`.
 
-    Args:
-        cls (a `tf.keras.layers.Layers subclass`):
-            Typically a `TF.MainLayer` class in this project, in general must accept a `config` argument to its
-            initializer.
+  Args:
+      cls (a `tf.keras.layers.Layers subclass`):
+          Typically a `TF.MainLayer` class in this project, in general must accept a `config` argument to its
+          initializer.
 
-    Returns:
-        The same class object, with modifications for Keras deserialization.
-    """
+  Returns:
+      The same class object, with modifications for Keras deserialization.
+  """
   initializer = cls.__init__
 
   config_class = getattr(cls, "config_class", None)
@@ -187,14 +196,14 @@ def keras_serializable(cls):
 
 class TFCausalLanguageModelingLoss:
   """
-    Loss function suitable for causal language modeling (CLM), that is, the task of guessing the next token.
+  Loss function suitable for causal language modeling (CLM), that is, the task of guessing the next token.
 
-    <Tip>
+  <Tip>
 
-    Any label of -100 will be ignored (along with the corresponding logits) in the loss computation.
+  Any label of -100 will be ignored (along with the corresponding logits) in the loss computation.
 
-    </Tip>
-    """
+  </Tip>
+  """
 
   def hf_compute_loss(self, labels, logits):
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction=tf.keras.losses.Reduction.NONE)
@@ -216,8 +225,8 @@ class TFCausalLanguageModelingLoss:
 
 class TFQuestionAnsweringLoss:
   """
-    Loss function suitable for question answering.
-    """
+  Loss function suitable for question answering.
+  """
 
   def hf_compute_loss(self, labels, logits):
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction=tf.keras.losses.Reduction.NONE)
@@ -229,14 +238,14 @@ class TFQuestionAnsweringLoss:
 
 class TFTokenClassificationLoss:
   """
-    Loss function suitable for token classification.
+  Loss function suitable for token classification.
 
-    <Tip>
+  <Tip>
 
-    Any label of -100 will be ignored (along with the corresponding logits) in the loss computation.
+  Any label of -100 will be ignored (along with the corresponding logits) in the loss computation.
 
-    </Tip>
-    """
+  </Tip>
+  """
 
   def hf_compute_loss(self, labels, logits):
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction=tf.keras.losses.Reduction.NONE)
@@ -271,8 +280,8 @@ class TFTokenClassificationLoss:
 
 class TFSequenceClassificationLoss:
   """
-    Loss function suitable for sequence classification.
-    """
+  Loss function suitable for sequence classification.
+  """
 
   def hf_compute_loss(self, labels, logits):
     if logits.shape.rank == 1 or logits.shape[1] == 1:
@@ -282,7 +291,7 @@ class TFSequenceClassificationLoss:
         labels = tf.expand_dims(labels, axis=-1)
     else:
       loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(
-          from_logits=True, reduction=tf.keras.losses.Reduction.NONE
+        from_logits=True, reduction=tf.keras.losses.Reduction.NONE
       )
 
     return loss_fn(labels, logits)
@@ -298,26 +307,26 @@ class TFMultipleChoiceLoss:
 
 class TFMaskedLanguageModelingLoss(TFCausalLanguageModelingLoss):
   """
-    Loss function suitable for masked language modeling (MLM), that is, the task of guessing the masked tokens.
+  Loss function suitable for masked language modeling (MLM), that is, the task of guessing the masked tokens.
 
-    <Tip>
+  <Tip>
 
-    Any label of -100 will be ignored (along with the corresponding logits) in the loss computation.
+  Any label of -100 will be ignored (along with the corresponding logits) in the loss computation.
 
-    </Tip>
-    """
+  </Tip>
+  """
 
 
 class TFNextSentencePredictionLoss:
   """
-    Loss function suitable for next sentence prediction (NSP), that is, the task of guessing the next sentence.
+  Loss function suitable for next sentence prediction (NSP), that is, the task of guessing the next sentence.
 
-    <Tip>
+  <Tip>
 
-    Any label of -100 will be ignored (along with the corresponding logits) in the loss computation.
+  Any label of -100 will be ignored (along with the corresponding logits) in the loss computation.
 
-    </Tip>
-    """
+  </Tip>
+  """
 
   def hf_compute_loss(self, labels, logits):
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True, reduction=tf.keras.losses.Reduction.NONE)
@@ -344,50 +353,50 @@ class TFNextSentencePredictionLoss:
 
 def booleans_processing(config, **kwargs):
   """
-    Process the input booleans of each model.
+  Process the input booleans of each model.
 
-    Args:
-        config ([`PretrainedConfig`]):
-            The config of the running model.
-        **kwargs:
-            The boolean parameters
+  Args:
+      config ([`PretrainedConfig`]):
+          The config of the running model.
+      **kwargs:
+          The boolean parameters
 
-    Returns:
-        A dictionary with the proper values for each boolean
-    """
+  Returns:
+      A dictionary with the proper values for each boolean
+  """
   final_booleans = {}
 
   # Pure conv models (such as ConvNext) do not have `output_attentions`. If the signature has
   # `output_attentions`, it will be present here in `kwargs`, even if unset (in that case, as `None`)
   if "output_attentions" in kwargs:
     final_booleans["output_attentions"] = (
-        kwargs["output_attentions"] if kwargs["output_attentions"] is not None else config.output_attentions
+      kwargs["output_attentions"] if kwargs["output_attentions"] is not None else config.output_attentions
     )
   final_booleans["output_hidden_states"] = (
-      kwargs["output_hidden_states"] if kwargs["output_hidden_states"] is not None else config.output_hidden_states
+    kwargs["output_hidden_states"] if kwargs["output_hidden_states"] is not None else config.output_hidden_states
   )
   final_booleans["return_dict"] = kwargs["return_dict"] if kwargs["return_dict"] is not None else config.return_dict
 
   if "use_cache" in kwargs:
     final_booleans["use_cache"] = (
-        kwargs["use_cache"] if kwargs["use_cache"] is not None else getattr(config, "use_cache", None)
+      kwargs["use_cache"] if kwargs["use_cache"] is not None else getattr(config, "use_cache", None)
     )
   return final_booleans
 
 
 def unpack_inputs(func):
   """
-    Decorator that processes the inputs to a Keras layer, passing them to the layer as keyword arguments. This enables
-    downstream use of the inputs by their variable name, even if they arrive packed as a dictionary in the first input
-    (common case in Keras).
+  Decorator that processes the inputs to a Keras layer, passing them to the layer as keyword arguments. This enables
+  downstream use of the inputs by their variable name, even if they arrive packed as a dictionary in the first input
+  (common case in Keras).
 
-    Args:
-        func (`callable`):
-            The callable function of the TensorFlow model.
+  Args:
+      func (`callable`):
+          The callable function of the TensorFlow model.
 
-    Returns:
-        A callable that wraps the original `func` with the behavior described above.
-    """
+  Returns:
+      A callable that wraps the original `func` with the behavior described above.
+  """
 
   original_signature = inspect.signature(func)
 
@@ -420,21 +429,21 @@ def unpack_inputs(func):
 
 def input_processing(func, config, **kwargs):
   """
-    Process the input of each TensorFlow model including the booleans. In case of a list of symbolic inputs, each input
-    has to be named accordingly to the parameters name, i.e. `input_ids = tf.keras.Input(shape=(128,), dtype='int32',
-    name="input_ids")` otherwise the order of the tensors will not be guaranteed during the training.
+  Process the input of each TensorFlow model including the booleans. In case of a list of symbolic inputs, each input
+  has to be named accordingly to the parameters name, i.e. `input_ids = tf.keras.Input(shape=(128,), dtype='int32',
+  name="input_ids")` otherwise the order of the tensors will not be guaranteed during the training.
 
-    Args:
-        func (`callable`):
-            The callable function of the TensorFlow model.
-        config ([`PretrainedConfig`]):
-            The config of the running model.
-        **kwargs:
-            The inputs of the model.
+  Args:
+      func (`callable`):
+          The callable function of the TensorFlow model.
+      config ([`PretrainedConfig`]):
+          The config of the running model.
+      **kwargs:
+          The inputs of the model.
 
-    Returns:
-        Two lists, one for the missing layers, and another one for the unexpected layers.
-    """
+  Returns:
+      Two lists, one for the missing layers, and another one for the unexpected layers.
+  """
   signature = dict(inspect.signature(func).parameters)
   has_kwargs = bool(signature.pop("kwargs", None))
   signature.pop("self", None)
@@ -446,25 +455,24 @@ def input_processing(func, config, **kwargs):
 
   if "inputs" in kwargs["kwargs_call"]:
     warnings.warn(
-        "The `inputs` argument is deprecated and will be removed in a future version, use `input_ids` instead.",
-        FutureWarning,
+      "The `inputs` argument is deprecated and will be removed in a future version, use `input_ids` instead.",
+      FutureWarning,
     )
 
     output["input_ids"] = kwargs["kwargs_call"].pop("inputs")
 
   if "decoder_cached_states" in kwargs["kwargs_call"]:
     warnings.warn(
-        "The `decoder_cached_states` argument is deprecated and will be removed in a future version, use"
-        " `past_key_values` instead.",
-        FutureWarning,
+      "The `decoder_cached_states` argument is deprecated and will be removed in a future version, use"
+      " `past_key_values` instead.",
+      FutureWarning,
     )
     output["past_key_values"] = kwargs["kwargs_call"].pop("decoder_cached_states")
 
   if "past" in kwargs["kwargs_call"] and "past_key_values" in parameter_names:
     warnings.warn(
-        "The `past` argument is deprecated and will be removed in a future version, use `past_key_values`"
-        " instead.",
-        FutureWarning,
+      "The `past` argument is deprecated and will be removed in a future version, use `past_key_values` instead.",
+      FutureWarning,
     )
     kwargs["past_key_values"] = kwargs["kwargs_call"].pop("past")
   elif "past_key_values" in kwargs["kwargs_call"] and "past" in parameter_names:
@@ -475,8 +483,7 @@ def input_processing(func, config, **kwargs):
   else:
     if len(kwargs["kwargs_call"]) > 0:
       raise ValueError(
-          "The following keyword arguments are not supported by this model:"
-          f" {list(kwargs['kwargs_call'].keys())}."
+        f"The following keyword arguments are not supported by this model: {list(kwargs['kwargs_call'].keys())}."
       )
     kwargs.pop("kwargs_call")
 
@@ -502,24 +509,22 @@ def input_processing(func, config, **kwargs):
         output[parameter_names[i]] = input
       else:
         raise ValueError(
-            f"Data of type {type(input)} is not allowed only {allowed_types} is accepted for"
-            f" {parameter_names[i]}."
+          f"Data of type {type(input)} is not allowed only {allowed_types} is accepted for {parameter_names[i]}."
         )
   elif isinstance(main_input, Mapping):
     if "inputs" in main_input:
       warnings.warn(
-          "The `inputs` argument is deprecated and will be removed in a future version, use `input_ids`"
-          " instead.",
-          FutureWarning,
+        "The `inputs` argument is deprecated and will be removed in a future version, use `input_ids` instead.",
+        FutureWarning,
       )
 
       output["input_ids"] = main_input.pop("inputs")
 
     if "decoder_cached_states" in main_input:
       warnings.warn(
-          "The `decoder_cached_states` argument is deprecated and will be removed in a future version, use"
-          " `past_key_values` instead.",
-          FutureWarning,
+        "The `decoder_cached_states` argument is deprecated and will be removed in a future version, use"
+        " `past_key_values` instead.",
+        FutureWarning,
       )
       output["past_key_values"] = main_input.pop("decoder_cached_states")
 
@@ -528,7 +533,7 @@ def input_processing(func, config, **kwargs):
         output[k] = v
       elif k not in parameter_names and "args" not in parameter_names:
         logger.warning(
-            f"The parameter {k} does not belongs to the parameter list {parameter_names} and will be ignored."
+          f"The parameter {k} does not belongs to the parameter list {parameter_names} and will be ignored."
         )
         continue
       else:
@@ -538,8 +543,7 @@ def input_processing(func, config, **kwargs):
       output[main_input_name] = main_input
     else:
       raise ValueError(
-          f"Data of type {type(main_input)} is not allowed only {allowed_types} is accepted for"
-          f" {main_input_name}."
+        f"Data of type {type(main_input)} is not allowed only {allowed_types} is accepted for {main_input_name}."
       )
 
   # Populates any unspecified argument with their default value, according to the signature.
@@ -576,30 +580,30 @@ def input_processing(func, config, **kwargs):
 
   if config is not None:
     boolean_dict = {
-        k: v
-        for k, v in output.items()
-        if k in ["return_dict", "output_attentions", "output_hidden_states", "use_cache"]
+      k: v for k, v in output.items() if k in ["return_dict", "output_attentions", "output_hidden_states", "use_cache"]
     }
 
-    output.update(booleans_processing(
+    output.update(
+      booleans_processing(
         config=config,
         **boolean_dict,
-    ))
+      )
+    )
 
   return output
 
 
 def dtype_byte_size(dtype):
   """
-    Returns the size (in bytes) occupied by one parameter of type `dtype`.
+  Returns the size (in bytes) occupied by one parameter of type `dtype`.
 
-    Example:
+  Example:
 
-    ```py
-    >>> dtype_byte_size(tf.float32)
-    4
-    ```
-    """
+  ```py
+  >>> dtype_byte_size(tf.float32)
+  4
+  ```
+  """
   if dtype == tf.bool:
     return 1 / 8
   bit_search = re.search(r"[^\d](\d+)$", dtype.name)
@@ -619,27 +623,27 @@ def format_weight_name(name, _prefix=None):
 
 def tf_shard_checkpoint(weights, max_shard_size="10GB"):
   """
-    Splits a model state dictionary in sub-checkpoints so that the final size of each sub-checkpoint does not exceed a
-    given size.
+  Splits a model state dictionary in sub-checkpoints so that the final size of each sub-checkpoint does not exceed a
+  given size.
 
-    The sub-checkpoints are determined by iterating through the `state_dict` in the order of its keys, so there is no
-    optimization made to make each sub-checkpoint as close as possible to the maximum size passed. For example, if the
-    limit is 10GB and we have weights of sizes [6GB, 6GB, 2GB, 6GB, 2GB, 2GB] they will get sharded as [6GB], [6+2GB],
-    [6+2+2GB] and not [6+2+2GB], [6+2GB], [6GB].
+  The sub-checkpoints are determined by iterating through the `state_dict` in the order of its keys, so there is no
+  optimization made to make each sub-checkpoint as close as possible to the maximum size passed. For example, if the
+  limit is 10GB and we have weights of sizes [6GB, 6GB, 2GB, 6GB, 2GB, 2GB] they will get sharded as [6GB], [6+2GB],
+  [6+2+2GB] and not [6+2+2GB], [6+2GB], [6GB].
 
-    <Tip warning={true}>
+  <Tip warning={true}>
 
-    If one of the model's weight is bigger that `max_shard_size`, it will end up in its own sub-checkpoint which will
-    have a size greater than `max_shard_size`.
+  If one of the model's weight is bigger that `max_shard_size`, it will end up in its own sub-checkpoint which will
+  have a size greater than `max_shard_size`.
 
-    </Tip>
+  </Tip>
 
-    Args:
-        weights (`Dict[str, tf.RessourceVariable]`): The list of tf.RessourceVariable of a model to save.
-        max_shard_size (`int` or `str`, *optional*, defaults to `"10GB"`):
-            The maximum size of each sub-checkpoint. If expressed as a string, needs to be digits followed by a unit
-            (like `"5MB"`).
-    """
+  Args:
+      weights (`Dict[str, tf.RessourceVariable]`): The list of tf.RessourceVariable of a model to save.
+      max_shard_size (`int` or `str`, *optional*, defaults to `"10GB"`):
+          The maximum size of each sub-checkpoint. If expressed as a string, needs to be digits followed by a unit
+          (like `"5MB"`).
+  """
   max_shard_size = convert_file_size_to_int(max_shard_size)
 
   sharded_state_dicts = []
@@ -671,7 +675,7 @@ def tf_shard_checkpoint(weights, max_shard_size="10GB"):
   weight_map = {}
   shards = {}
   for idx, shard in enumerate(sharded_state_dicts):
-    shard_file = TF2_WEIGHTS_NAME.replace(".h5", f"-{idx+1:05d}-of-{len(sharded_state_dicts):05d}.h5")
+    shard_file = TF2_WEIGHTS_NAME.replace(".h5", f"-{idx + 1:05d}-of-{len(sharded_state_dicts):05d}.h5")
     shards[shard_file] = shard
     for weight in shard:
       weight_name = weight.name
@@ -685,24 +689,24 @@ def tf_shard_checkpoint(weights, max_shard_size="10GB"):
 
 def load_tf_sharded_weights(model, shard_files, ignore_mismatched_sizes=False, strict=True):
   """
-    This is the same as `load_tf_weights` but for a sharded checkpoint. Detect missing and unexpected layers and load
-    the TF weights from the shard file accordingly to their names and shapes.
+  This is the same as `load_tf_weights` but for a sharded checkpoint. Detect missing and unexpected layers and load
+  the TF weights from the shard file accordingly to their names and shapes.
 
-    This load is performed efficiently: each checkpoint shard is loaded one by one in RAM and deleted after being
-    loaded in the model.
+  This load is performed efficiently: each checkpoint shard is loaded one by one in RAM and deleted after being
+  loaded in the model.
 
-    Args:
-        model (`tf.keras.models.Model`): The model in which to load the checkpoint.
-        shard_files (`str` or `os.PathLike`): A list containing the sharded checkpoint names.
-        ignore_mismatched_sizes`bool`, *optional`, defaults to `True`):
-            Whether or not to ignore the mismatch between the sizes
-        strict (`bool`, *optional*, defaults to `True`):
-            Whether to strictly enforce that the keys in the model state dict match the keys in the sharded checkpoint.
+  Args:
+      model (`tf.keras.models.Model`): The model in which to load the checkpoint.
+      shard_files (`str` or `os.PathLike`): A list containing the sharded checkpoint names.
+      ignore_mismatched_sizes`bool`, *optional`, defaults to `True`):
+          Whether or not to ignore the mismatch between the sizes
+      strict (`bool`, *optional*, defaults to `True`):
+          Whether to strictly enforce that the keys in the model state dict match the keys in the sharded checkpoint.
 
-    Returns:
-        Three lists, one for the missing layers, another one for the unexpected layers, and a last one for the
-        mismatched layers.
-    """
+  Returns:
+      Three lists, one for the missing layers, another one for the unexpected layers, and a last one for the
+      mismatched layers.
+  """
 
   # Load the index
   missing_keys = []
@@ -725,7 +729,7 @@ def load_tf_sharded_weights(model, shard_files, ignore_mismatched_sizes=False, s
   for shard_file in shard_files:
     state_dict = tf.io.read_file(shard_file)
     saved_weight_names_set, unexpected_keys_set, missmatched_keys_set = load_tf_shard(
-        model, model_layer_map, shard_file, ignore_mismatched_sizes=ignore_mismatched_sizes
+      model, model_layer_map, shard_file, ignore_mismatched_sizes=ignore_mismatched_sizes
     )
     saved_keys.update(saved_weight_names_set)
     unexpected_keys.update(unexpected_keys_set)
@@ -749,18 +753,18 @@ def load_tf_sharded_weights(model, shard_files, ignore_mismatched_sizes=False, s
 
 def load_tf_shard(model, model_layer_map, resolved_archive_file, ignore_mismatched_sizes=False):
   """
-    Loads a shard from a sharded checkpoint file. Handles the missing keys and unexpected keys.
+  Loads a shard from a sharded checkpoint file. Handles the missing keys and unexpected keys.
 
-    Args:
-        model (`tf.keras.models.Model`): Model in which the weights are loaded
-        model_layer_map (`Dict`): A dictionary mapping the layer name to the index of the layer in the model.
-        resolved_archive_file (`str`): Path to the checkpoint file from which the weights will be loaded
-        ignore_mismatched_sizes (`bool`, *optional*, defaults to `False`): Whether to ignore the mismatched keys
+  Args:
+      model (`tf.keras.models.Model`): Model in which the weights are loaded
+      model_layer_map (`Dict`): A dictionary mapping the layer name to the index of the layer in the model.
+      resolved_archive_file (`str`): Path to the checkpoint file from which the weights will be loaded
+      ignore_mismatched_sizes (`bool`, *optional*, defaults to `False`): Whether to ignore the mismatched keys
 
-    Returns:
-        `tf.keras.models.Model`: Three lists, one for the layers that were found and succesfully restored (from the
-        shard file), one for the missmatched layers, and another one for the unexpected layers.
-    """
+  Returns:
+      `tf.keras.models.Model`: Three lists, one for the layers that were found and succesfully restored (from the
+      shard file), one for the missmatched layers, and another one for the unexpected layers.
+  """
   saved_weight_names_set = set()
   saved_weights = {}
   missmatched_keys = set()
@@ -770,7 +774,7 @@ def load_tf_shard(model, model_layer_map, resolved_archive_file, ignore_mismatch
     with h5py.File(resolved_archive_file, "r") as sharded_checkpoint_file:
       # Retrieve the name of each layer from the H5 file
       saved_h5_model_layers_name = set(
-          hdf5_format.load_attributes_from_hdf5_group(sharded_checkpoint_file, "layer_names")
+        hdf5_format.load_attributes_from_hdf5_group(sharded_checkpoint_file, "layer_names")
       )
       weight_value_tuples = []
 
@@ -817,41 +821,41 @@ def load_tf_shard(model, model_layer_map, resolved_archive_file, ignore_mismatch
       with open(resolved_archive_file) as f:
         if f.read().startswith("version"):
           raise OSError(
-              "You seem to have cloned a repository without having git-lfs installed. Please install "
-              "git-lfs and run `git lfs install` followed by `git lfs pull` in the folder "
-              "you cloned."
+            "You seem to have cloned a repository without having git-lfs installed. Please install "
+            "git-lfs and run `git lfs install` followed by `git lfs pull` in the folder "
+            "you cloned."
           )
         else:
           raise ValueError(
-              f"Unable to locate the file {resolved_archive_file} which is necessary to load this pretrained"
-              " model. Make sure you have saved the model properly."
+            f"Unable to locate the file {resolved_archive_file} which is necessary to load this pretrained"
+            " model. Make sure you have saved the model properly."
           ) from e
     except (UnicodeDecodeError, ValueError):
       raise OSError(
-          f"Unable to load weights from TF checkpoint file for '{resolved_archive_file}' "
-          f"at '{resolved_archive_file}'. "
-          "If you tried to load a TF model from a sharded checkpoint, you should try converting the model"
-          "by loading it in pytorch and saving it localy. A convertion script should be realeased soon."
+        f"Unable to load weights from TF checkpoint file for '{resolved_archive_file}' "
+        f"at '{resolved_archive_file}'. "
+        "If you tried to load a TF model from a sharded checkpoint, you should try converting the model"
+        "by loading it in pytorch and saving it localy. A convertion script should be realeased soon."
       )
 
 
 def load_tf_weights(model, resolved_archive_file, ignore_mismatched_sizes=False, _prefix=None):
   """
-    Detect missing and unexpected layers and load the TF weights from the shard file accordingly to their names and
-    shapes.
+  Detect missing and unexpected layers and load the TF weights from the shard file accordingly to their names and
+  shapes.
 
-    Args:
-        model (`tf.keras.models.Model`):
-            The model to load the weights into.
-        resolved_archive_file (`str`):
-            The location of the H5 file.
-        ignore_mismatched_sizes (`bool`, *optional*, defaults to `False`):
-            Whether or not to ignore weights with shapes that don't match between the checkpoint of the model.
+  Args:
+      model (`tf.keras.models.Model`):
+          The model to load the weights into.
+      resolved_archive_file (`str`):
+          The location of the H5 file.
+      ignore_mismatched_sizes (`bool`, *optional*, defaults to `False`):
+          Whether or not to ignore weights with shapes that don't match between the checkpoint of the model.
 
-    Returns:
-        Three lists, one for the missing layers, another one for the unexpected layers, and a last one for the
-        mismatched layers.
-    """
+  Returns:
+      Three lists, one for the missing layers, another one for the unexpected layers, and a last one for the
+      mismatched layers.
+  """
   if resolved_archive_file.endswith(".safetensors"):
     load_function = load_tf_weights_from_safetensors
   else:
@@ -869,7 +873,7 @@ def load_tf_weights_from_h5(model, resolved_archive_file, ignore_mismatched_size
   with h5py.File(resolved_archive_file, "r") as sharded_checkpoint_file:
     # Retrieve the name of each layer from the H5 file
     saved_h5_model_layers_name = set(
-        hdf5_format.load_attributes_from_hdf5_group(sharded_checkpoint_file, "layer_names")
+      hdf5_format.load_attributes_from_hdf5_group(sharded_checkpoint_file, "layer_names")
     )
 
     # Find the missing layers from the high level list of layers
@@ -912,7 +916,7 @@ def load_tf_weights_from_h5(model, resolved_archive_file, ignore_mismatched_size
           if _prefix is not None:
             delimeter = len(_prefix.split("/"))
             symbolic_weight_name = "/".join(
-                symbolic_weight.name.split("/")[:delimeter] + symbolic_weight.name.split("/")[delimeter + 1:]
+              symbolic_weight.name.split("/")[:delimeter] + symbolic_weight.name.split("/")[delimeter + 1 :]
             )
           else:
             symbolic_weight_name = "/".join(symbolic_weight.name.split("/")[1:])
@@ -941,9 +945,11 @@ def load_tf_weights_from_h5(model, resolved_archive_file, ignore_mismatched_size
                 array = np.reshape(saved_weight_value, K.int_shape(symbolic_weight))
               except ValueError as e:
                 if ignore_mismatched_sizes:
-                  mismatched_layers.append(
-                      (symbolic_weight_name, saved_weight_value.shape, K.int_shape(symbolic_weight))
-                  )
+                  mismatched_layers.append((
+                    symbolic_weight_name,
+                    saved_weight_value.shape,
+                    K.int_shape(symbolic_weight),
+                  ))
                   continue
                 else:
                   raise e
@@ -1006,17 +1012,17 @@ def load_tf_weights_from_safetensors(model, resolved_archive_file, ignore_mismat
 
 def init_copy_embeddings(old_embeddings, new_num_tokens):
   r"""
-    This function aims to reduce the embeddings in case new_num_tokens < old_num_tokens or to pad with -1 in case
-    new_num_tokens > old_num_tokens. A mask is also computed in order to know which weight in the embeddings should be
-    kept or not. Example:
+  This function aims to reduce the embeddings in case new_num_tokens < old_num_tokens or to pad with -1 in case
+  new_num_tokens > old_num_tokens. A mask is also computed in order to know which weight in the embeddings should be
+  kept or not. Example:
 
-        - if new_num_tokens=5 and old_num_tokens=4 and old_embeddings=[w1,w2,w3,w4]
+      - if new_num_tokens=5 and old_num_tokens=4 and old_embeddings=[w1,w2,w3,w4]
 
-            -  mask=[True,True,True,True,False] and current_weights=[w1,w2,w3,w4,-1]
-        - if new_num_tokens=4 and old_num_tokens=5 and old_embeddings=[w1,w2,w3,w4,w5]
+          -  mask=[True,True,True,True,False] and current_weights=[w1,w2,w3,w4,-1]
+      - if new_num_tokens=4 and old_num_tokens=5 and old_embeddings=[w1,w2,w3,w4,w5]
 
-            - mask=[True,True,True,True] and current_weights=[w1,w2,w3,w4]
-    """
+          - mask=[True,True,True,True] and current_weights=[w1,w2,w3,w4]
+  """
   old_num_tokens, old_embedding_dim = shape_list(old_embeddings)
   size_diff = new_num_tokens - old_num_tokens
 
@@ -1033,9 +1039,9 @@ def init_copy_embeddings(old_embeddings, new_num_tokens):
   else:
     # if the new size if lower than the old one, we take the current embeddings until the new size
     current_weights = tf.slice(
-        old_embeddings.value(),
-        tf.convert_to_tensor([0, 0]),
-        tf.convert_to_tensor([new_num_tokens, old_embedding_dim]),
+      old_embeddings.value(),
+      tf.convert_to_tensor([0, 0]),
+      tf.convert_to_tensor([new_num_tokens, old_embedding_dim]),
     )
     mask = tf.fill(tf.convert_to_tensor([new_num_tokens, 1]), True)
 
@@ -1044,23 +1050,24 @@ def init_copy_embeddings(old_embeddings, new_num_tokens):
 
 class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, PushToHubMixin):
   r"""
-    Base class for all TF models.
+  Base class for all TF models.
 
-    [`TFPreTrainedModel`] takes care of storing the configuration of the models and handles methods for loading,
-    downloading and saving models as well as a few methods common to all models to:
+  [`TFPreTrainedModel`] takes care of storing the configuration of the models and handles methods for loading,
+  downloading and saving models as well as a few methods common to all models to:
 
-        - resize the input embeddings,
-        - prune heads in the self-attention heads.
+      - resize the input embeddings,
+      - prune heads in the self-attention heads.
 
-    Class attributes (overridden by derived classes):
+  Class attributes (overridden by derived classes):
 
-        - **config_class** ([`PretrainedConfig`]) -- A subclass of [`PretrainedConfig`] to use as configuration class
-          for this model architecture.
-        - **base_model_prefix** (`str`) -- A string indicating the attribute associated to the base model in derived
-          classes of the same architecture adding modules on top of the base model.
-        - **main_input_name** (`str`) -- The name of the principal input to the model (often `input_ids` for NLP
-          models, `pixel_values` for vision models and `input_values` for speech models).
-    """
+      - **config_class** ([`PretrainedConfig`]) -- A subclass of [`PretrainedConfig`] to use as configuration class
+        for this model architecture.
+      - **base_model_prefix** (`str`) -- A string indicating the attribute associated to the base model in derived
+        classes of the same architecture adding modules on top of the base model.
+      - **main_input_name** (`str`) -- The name of the principal input to the model (often `input_ids` for NLP
+        models, `pixel_values` for vision models and `input_values` for speech models).
+  """
+
   config_class = None
   base_model_prefix = ""
   main_input_name = "input_ids"
@@ -1079,29 +1086,29 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
   @property
   def dummy_inputs(self) -> Dict[str, tf.Tensor]:
     """
-        Dummy inputs to build the network.
+    Dummy inputs to build the network.
 
-        Returns:
-            `Dict[str, tf.Tensor]`: The dummy inputs.
-        """
+    Returns:
+        `Dict[str, tf.Tensor]`: The dummy inputs.
+    """
     return {
-        "input_ids": tf.constant(DUMMY_INPUTS, dtype=tf.int32),
+      "input_ids": tf.constant(DUMMY_INPUTS, dtype=tf.int32),
     }
 
   @property
   def framework(self) -> str:
     """
-        :str: Identifies that this is a TensorFlow model.
-        """
+    :str: Identifies that this is a TensorFlow model.
+    """
     return "tf"
 
   def __init__(self, config, *inputs, **kwargs):
     super().__init__(*inputs, **kwargs)
     if not isinstance(config, PretrainedConfig):
       raise ValueError(
-          f"Parameter config in `{self.__class__.__name__}(config)` should be an instance of class "
-          "`PretrainedConfig`. To create a model from a pretrained model use "
-          f"`model = {self.__class__.__name__}.from_pretrained(PRETRAINED_MODEL_NAME)`"
+        f"Parameter config in `{self.__class__.__name__}(config)` should be an instance of class "
+        "`PretrainedConfig`. To create a model from a pretrained model use "
+        f"`model = {self.__class__.__name__}.from_pretrained(PRETRAINED_MODEL_NAME)`"
       )
     # Save config and origin of the pretrained weights if given in model
     self.config = config
@@ -1122,61 +1129,61 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
   @classmethod
   def _from_config(cls, config, **kwargs):
     """
-        All context managers that the model should be initialized under go here.
-        """
+    All context managers that the model should be initialized under go here.
+    """
     return cls(config, **kwargs)
 
   def eager_serving(self, inputs):
     """
-        Method used for serving the model. Intended not to be compiled with a tf.function decorator so that we can use
-        it to generate multiple signatures later.
+    Method used for serving the model. Intended not to be compiled with a tf.function decorator so that we can use
+    it to generate multiple signatures later.
 
-        Args:
-            inputs (`Dict[str, tf.Tensor]`):
-                The input of the saved model as a dictionary of tensors.
-        """
+    Args:
+        inputs (`Dict[str, tf.Tensor]`):
+            The input of the saved model as a dictionary of tensors.
+    """
     output = self.call(inputs)
 
     return self.serving_output(output)
 
   @tf.function(
-      input_signature=[
-          {
-              "input_ids": tf.TensorSpec((None, None), tf.int32, name="input_ids"),
-              "attention_mask": tf.TensorSpec((None, None), tf.int32, name="attention_mask"),
-              "token_type_ids": tf.TensorSpec((None, None), tf.int32, name="token_type_ids"),
-          }
-      ]
+    input_signature=[
+      {
+        "input_ids": tf.TensorSpec((None, None), tf.int32, name="input_ids"),
+        "attention_mask": tf.TensorSpec((None, None), tf.int32, name="attention_mask"),
+        "token_type_ids": tf.TensorSpec((None, None), tf.int32, name="token_type_ids"),
+      }
+    ]
   )
   def serving(self, inputs):
     """
-        Method used for serving the model.
+    Method used for serving the model.
 
-        Args:
-            inputs (`Dict[str, tf.Tensor]`):
-                The input of the saved model as a dictionary of tensors.
-        """
+    Args:
+        inputs (`Dict[str, tf.Tensor]`):
+            The input of the saved model as a dictionary of tensors.
+    """
     output = self.call(inputs)
 
     return self.serving_output(output)
 
   def serving_output(self, output):
     """
-        Prepare the output of the saved model. Each model must implement this function.
+    Prepare the output of the saved model. Each model must implement this function.
 
-        Args:
-            output ([`TFBaseModelOutput`]):
-                The output returned by the model.
-        """
+    Args:
+        output ([`TFBaseModelOutput`]):
+            The output returned by the model.
+    """
     raise NotImplementedError
 
   def can_generate(self) -> bool:
     """
-        Returns whether this model can generate sequences with `.generate()`.
+    Returns whether this model can generate sequences with `.generate()`.
 
-        Returns:
-            `bool`: Whether this model can generate sequences with `.generate()`.
-        """
+    Returns:
+        `bool`: Whether this model can generate sequences with `.generate()`.
+    """
     # Detects whether `prepare_inputs_for_generation` has been overwritten, which is a requirement for generation
     if "GenerationMixin" in str(self.prepare_inputs_for_generation):
       return False
@@ -1184,11 +1191,11 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def get_input_embeddings(self) -> tf.keras.layers.Layer:
     """
-        Returns the model's input embeddings layer.
+    Returns the model's input embeddings layer.
 
-        Returns:
-            `tf.Variable`: The embeddings layer mapping vocabulary to hidden states.
-        """
+    Returns:
+        `tf.Variable`: The embeddings layer mapping vocabulary to hidden states.
+    """
     main_layer = getattr(self, self.base_model_prefix, self)
 
     if main_layer is not self:
@@ -1211,21 +1218,21 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def load_repo_checkpoint(self, repo_path_or_name):
     """
-        Loads a saved checkpoint (model weights and optimizer state) from a repo. Returns the current epoch count when
-        the checkpoint was made.
+    Loads a saved checkpoint (model weights and optimizer state) from a repo. Returns the current epoch count when
+    the checkpoint was made.
 
-        Args:
-            repo_path_or_name (`str`):
-                Can either be a repository name for your {object} in the Hub or a path to a local folder (in which case
-                the repository will have the name of that local folder).
+    Args:
+        repo_path_or_name (`str`):
+            Can either be a repository name for your {object} in the Hub or a path to a local folder (in which case
+            the repository will have the name of that local folder).
 
-        Returns:
-            `dict`: A dictionary of extra metadata from the checkpoint, most commonly an "epoch" count.
-        """
+    Returns:
+        `dict`: A dictionary of extra metadata from the checkpoint, most commonly an "epoch" count.
+    """
     if getattr(self, "optimizer", None) is None:
       raise RuntimeError(
-          "Checkpoint loading failed as no optimizer is attached to the model. "
-          "This is most likely caused by the model not being compiled."
+        "Checkpoint loading failed as no optimizer is attached to the model. "
+        "This is most likely caused by the model not being compiled."
       )
     if not os.path.isdir(repo_path_or_name):
       # If this isn't a local path, check that the remote repo exists and has a checkpoint in it
@@ -1264,51 +1271,51 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
     return {"epoch": extra_data["epoch"]}
 
   def prepare_tf_dataset(
-      self,
-      dataset: "datasets.Dataset",  # noqa:F821
-      batch_size: int = 8,
-      shuffle: bool = True,
-      tokenizer: Optional["PreTrainedTokenizerBase"] = None,
-      collate_fn: Optional[Callable] = None,
-      collate_fn_args: Optional[Dict[str, Any]] = None,
-      drop_remainder: Optional[bool] = None,
-      prefetch: bool = True,
+    self,
+    dataset: "datasets.Dataset",  # noqa:F821
+    batch_size: int = 8,
+    shuffle: bool = True,
+    tokenizer: Optional["PreTrainedTokenizerBase"] = None,
+    collate_fn: Optional[Callable] = None,
+    collate_fn_args: Optional[Dict[str, Any]] = None,
+    drop_remainder: Optional[bool] = None,
+    prefetch: bool = True,
   ):
     """
-        Wraps a HuggingFace [`~datasets.Dataset`] as a `tf.data.Dataset` with collation and batching. This method is
-        designed to create a "ready-to-use" dataset that can be passed directly to Keras methods like `fit()` without
-        further modification. The method will drop columns from the dataset if they don't match input names for the
-        model. If you want to specify the column names to return rather than using the names that match this model, we
-        recommend using `Dataset.to_tf_dataset()` instead.
+    Wraps a HuggingFace [`~datasets.Dataset`] as a `tf.data.Dataset` with collation and batching. This method is
+    designed to create a "ready-to-use" dataset that can be passed directly to Keras methods like `fit()` without
+    further modification. The method will drop columns from the dataset if they don't match input names for the
+    model. If you want to specify the column names to return rather than using the names that match this model, we
+    recommend using `Dataset.to_tf_dataset()` instead.
 
-        Args:
-            dataset (`Any`):
-                A [~`datasets.Dataset`] to be wrapped as a `tf.data.Dataset`.
-            batch_size (`int`, defaults to 8):
-                The size of batches to return.
-            shuffle (`bool`, defaults to `True`):
-                Whether to return samples from the dataset in random order. Usually `True` for training datasets and
-                `False` for validation/test datasets.
-            tokenizer ([`PreTrainedTokenizerBase`], *optional*):
-                A `PreTrainedTokenizer` that will be used to pad samples to create batches. Has no effect if a specific
-                `collate_fn` is passed instead.
-            collate_fn (`Callable`, *optional*):
-                A function that collates samples from the dataset into a single batch. Defaults to
-                `DefaultDataCollator` if no `tokenizer` is supplied or `DataCollatorWithPadding` if a `tokenizer` is
-                passed.
-            collate_fn_args (`Dict[str, Any]`, *optional*):
-                A dict of arguments to pass to the `collate_fn` alongside the list of samples.
-            drop_remainder (`bool`, *optional*):
-                Whether to drop the final batch, if the batch_size does not evenly divide the dataset length. Defaults
-                to the same setting as `shuffle`.
-            prefetch (`bool`, defaults to `True`):
-                Whether to add prefetching to the end of the `tf.data` pipeline. This is almost always beneficial for
-                performance, but can be disabled in edge cases.
+    Args:
+        dataset (`Any`):
+            A [~`datasets.Dataset`] to be wrapped as a `tf.data.Dataset`.
+        batch_size (`int`, defaults to 8):
+            The size of batches to return.
+        shuffle (`bool`, defaults to `True`):
+            Whether to return samples from the dataset in random order. Usually `True` for training datasets and
+            `False` for validation/test datasets.
+        tokenizer ([`PreTrainedTokenizerBase`], *optional*):
+            A `PreTrainedTokenizer` that will be used to pad samples to create batches. Has no effect if a specific
+            `collate_fn` is passed instead.
+        collate_fn (`Callable`, *optional*):
+            A function that collates samples from the dataset into a single batch. Defaults to
+            `DefaultDataCollator` if no `tokenizer` is supplied or `DataCollatorWithPadding` if a `tokenizer` is
+            passed.
+        collate_fn_args (`Dict[str, Any]`, *optional*):
+            A dict of arguments to pass to the `collate_fn` alongside the list of samples.
+        drop_remainder (`bool`, *optional*):
+            Whether to drop the final batch, if the batch_size does not evenly divide the dataset length. Defaults
+            to the same setting as `shuffle`.
+        prefetch (`bool`, defaults to `True`):
+            Whether to add prefetching to the end of the `tf.data` pipeline. This is almost always beneficial for
+            performance, but can be disabled in edge cases.
 
 
-        Returns:
-            `Dataset`: A `tf.data.Dataset` which is ready to pass to the Keras API.
-        """
+    Returns:
+        `Dataset`: A `tf.data.Dataset` which is ready to pass to the Keras API.
+    """
     requires_backends(self, ["datasets"])
     import datasets
 
@@ -1326,22 +1333,21 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
     model_labels = find_labels(self.__class__)
     if "cols_to_retain" in list(inspect.signature(dataset._get_output_signature).parameters.keys()):
       output_signature, _ = dataset._get_output_signature(
-          dataset,
-          batch_size=None,
-          collate_fn=collate_fn,
-          collate_fn_args=collate_fn_args,
-          cols_to_retain=model_inputs,
+        dataset,
+        batch_size=None,
+        collate_fn=collate_fn,
+        collate_fn_args=collate_fn_args,
+        cols_to_retain=model_inputs,
       )
     else:
       # TODO Matt: This is a workaround for older versions of datasets that are missing the `cols_to_retain`
       #            argument. We should remove this once the minimum supported version of datasets is > 2.3.2
       unwanted_columns = [
-          feature for feature in dataset.features
-          if feature not in model_inputs and feature not in ("label_ids", "label")
+        feature for feature in dataset.features if feature not in model_inputs and feature not in ("label_ids", "label")
       ]
       dataset = dataset.remove_columns(unwanted_columns)
       output_signature, _ = dataset._get_output_signature(
-          dataset, batch_size=None, collate_fn=collate_fn, collate_fn_args=collate_fn_args
+        dataset, batch_size=None, collate_fn=collate_fn, collate_fn_args=collate_fn_args
       )
     output_columns = list(output_signature.keys())
     feature_cols = [col for col in output_columns if col in model_inputs and col not in model_labels]
@@ -1350,38 +1356,38 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
     if drop_remainder is None:
       drop_remainder = shuffle
     tf_dataset = dataset.to_tf_dataset(
-        columns=feature_cols,
-        label_cols=label_cols,
-        batch_size=batch_size,
-        shuffle=shuffle,
-        drop_remainder=drop_remainder,
-        collate_fn=collate_fn,
-        collate_fn_args=collate_fn_args,
-        prefetch=prefetch,
+      columns=feature_cols,
+      label_cols=label_cols,
+      batch_size=batch_size,
+      shuffle=shuffle,
+      drop_remainder=drop_remainder,
+      collate_fn=collate_fn,
+      collate_fn_args=collate_fn_args,
+      prefetch=prefetch,
     )
     return tf_dataset
 
   def compile(
-      self,
-      optimizer="rmsprop",
-      loss="passthrough",
-      metrics=None,
-      loss_weights=None,
-      weighted_metrics=None,
-      run_eagerly=None,
-      steps_per_execution=None,
-      **kwargs
+    self,
+    optimizer="rmsprop",
+    loss="passthrough",
+    metrics=None,
+    loss_weights=None,
+    weighted_metrics=None,
+    run_eagerly=None,
+    steps_per_execution=None,
+    **kwargs,
   ):
     """
-        This is a thin wrapper that sets the model's loss output head as the loss if the user does not specify a loss
-        function themselves.
-        """
+    This is a thin wrapper that sets the model's loss output head as the loss if the user does not specify a loss
+    function themselves.
+    """
     if loss == "passthrough":
       logger.warning(
-          "No loss specified in compile() - the model's internal loss computation will be used as the "
-          "loss. Don't panic - this is a common way to train TensorFlow models in Transformers! "
-          "To disable this behaviour please pass a loss argument, or explicitly pass "
-          "`loss=None` if you do not want your model to compute a loss."
+        "No loss specified in compile() - the model's internal loss computation will be used as the "
+        "loss. Don't panic - this is a common way to train TensorFlow models in Transformers! "
+        "To disable this behaviour please pass a loss argument, or explicitly pass "
+        "`loss=None` if you do not want your model to compute a loss."
       )
       loss = dummy_loss
       self._using_dummy_loss = True
@@ -1391,25 +1397,25 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
     # This argument got renamed, we need to support both versions
     if "steps_per_execution" in parent_args:
       super().compile(
-          optimizer=optimizer,
-          loss=loss,
-          metrics=metrics,
-          loss_weights=loss_weights,
-          weighted_metrics=weighted_metrics,
-          run_eagerly=run_eagerly,
-          steps_per_execution=steps_per_execution,
-          **kwargs,
+        optimizer=optimizer,
+        loss=loss,
+        metrics=metrics,
+        loss_weights=loss_weights,
+        weighted_metrics=weighted_metrics,
+        run_eagerly=run_eagerly,
+        steps_per_execution=steps_per_execution,
+        **kwargs,
       )
     else:
       super().compile(
-          optimizer=optimizer,
-          loss=loss,
-          metrics=metrics,
-          loss_weights=loss_weights,
-          weighted_metrics=weighted_metrics,
-          run_eagerly=run_eagerly,
-          experimental_steps_per_execution=steps_per_execution,
-          **kwargs,
+        optimizer=optimizer,
+        loss=loss,
+        metrics=metrics,
+        loss_weights=loss_weights,
+        weighted_metrics=weighted_metrics,
+        run_eagerly=run_eagerly,
+        experimental_steps_per_execution=steps_per_execution,
+        **kwargs,
       )
 
   def compute_loss(self, *args, **kwargs):
@@ -1418,11 +1424,11 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
       return super().compute_loss(*args, **kwargs)
     else:
       warnings.warn(
-          "The old compute_loss method is deprecated as it conflicts with the Keras compute_loss "
-          "method added in TF 2.8. If you want the original HF compute_loss, please call "
-          "hf_compute_loss() instead. From TF versions >= 2.8, or Transformers versions >= 5, "
-          "calling compute_loss() will get the Keras method instead.",
-          FutureWarning,
+        "The old compute_loss method is deprecated as it conflicts with the Keras compute_loss "
+        "method added in TF 2.8. If you want the original HF compute_loss, please call "
+        "hf_compute_loss() instead. From TF versions >= 2.8, or Transformers versions >= 5, "
+        "calling compute_loss() will get the Keras method instead.",
+        FutureWarning,
       )
       return self.hf_compute_loss(*args, **kwargs)
 
@@ -1443,11 +1449,11 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def train_step(self, data):
     """
-        A modification of Keras's default `train_step` that correctly handles matching outputs to labels for our models
-        and supports directly training on the loss output head. In addition, it ensures input keys are copied to the
-        labels where appropriate. It will also copy label keys into the input dict when using the dummy loss, to ensure
-        that they are available to the model during the forward pass.
-        """
+    A modification of Keras's default `train_step` that correctly handles matching outputs to labels for our models
+    and supports directly training on the loss output head. In addition, it ensures input keys are copied to the
+    labels where appropriate. It will also copy label keys into the input dict when using the dummy loss, to ensure
+    that they are available to the model during the forward pass.
+    """
 
     # We hardcode the most common renamings; models with weirder names can set `self._label_to_output_map`
     arg_names = list(dict(inspect.signature(self.call).parameters).keys())
@@ -1469,7 +1475,6 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
     # When using a dummy loss, we ensure that separate labels are copied to the correct model arguments,
     # if those keys are not already present in the input dict
     if self._using_dummy_loss and y is not None:
-
       # If y is a tensor and the model only has one label-like input, map y to that input
       if len(label_kwargs) == 1 and isinstance(y, tf.Tensor):
         if isinstance(x, tf.Tensor):
@@ -1525,7 +1530,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
           y_pred = y_pred.to_tuple()[1:]
         else:
           y_pred = y_pred.to_tuple()
-        y_pred = y_pred[:len(y)]  # Remove unused fields in case those cause problems
+        y_pred = y_pred[: len(y)]  # Remove unused fields in case those cause problems
       else:
         # If the labels are a single tensor, match them to the first non-loss tensor in the output
         if list(y_pred.keys())[0] == "loss":
@@ -1552,11 +1557,11 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def test_step(self, data):
     """
-        A modification of Keras's default `train_step` that correctly handles matching outputs to labels for our models
-        and supports directly training on the loss output head. In addition, it ensures input keys are copied to the
-        labels where appropriate. It will also copy label keys into the input dict when using the dummy loss, to ensure
-        that they are available to the model during the forward pass.
-        """
+    A modification of Keras's default `train_step` that correctly handles matching outputs to labels for our models
+    and supports directly training on the loss output head. In addition, it ensures input keys are copied to the
+    labels where appropriate. It will also copy label keys into the input dict when using the dummy loss, to ensure
+    that they are available to the model during the forward pass.
+    """
     # We hardcode the most common renamings; models with weirder names can set `self._label_to_output_map`
     arg_names = list(dict(inspect.signature(self.call).parameters).keys())
     label_kwargs = find_labels(self.__class__)
@@ -1632,7 +1637,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
         y_pred = y_pred.to_tuple()[1:]
       else:
         y_pred = y_pred.to_tuple()
-      y_pred = y_pred[:len(y)]  # Remove unused fields in case those cause problems
+      y_pred = y_pred[: len(y)]  # Remove unused fields in case those cause problems
     else:
       # If the labels are a single tensor, match them to the first non-loss tensor in the output
       if list(y_pred.keys())[0] == "loss":
@@ -1655,60 +1660,60 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
     return return_metrics
 
   def create_model_card(
-      self,
-      output_dir,
-      model_name: str,
-      language: Optional[str] = None,
-      license: Optional[str] = None,
-      tags: Optional[str] = None,
-      finetuned_from: Optional[str] = None,
-      tasks: Optional[str] = None,
-      dataset_tags: Optional[Union[str, List[str]]] = None,
-      dataset: Optional[Union[str, List[str]]] = None,
-      dataset_args: Optional[Union[str, List[str]]] = None,
+    self,
+    output_dir,
+    model_name: str,
+    language: Optional[str] = None,
+    license: Optional[str] = None,
+    tags: Optional[str] = None,
+    finetuned_from: Optional[str] = None,
+    tasks: Optional[str] = None,
+    dataset_tags: Optional[Union[str, List[str]]] = None,
+    dataset: Optional[Union[str, List[str]]] = None,
+    dataset_args: Optional[Union[str, List[str]]] = None,
   ):
     """
-        Creates a draft of a model card using the information available to the `Trainer`.
+    Creates a draft of a model card using the information available to the `Trainer`.
 
-        Args:
-            output_dir (`str` or `os.PathLike`):
-                The folder in which to create the model card.
-            model_name (`str`, *optional*):
-                The name of the model.
-            language (`str`, *optional*):
-                The language of the model (if applicable)
-            license (`str`, *optional*):
-                The license of the model. Will default to the license of the pretrained model used, if the original
-                model given to the `Trainer` comes from a repo on the Hub.
-            tags (`str` or `List[str]`, *optional*):
-                Some tags to be included in the metadata of the model card.
-            finetuned_from (`str`, *optional*):
-                The name of the model used to fine-tune this one (if applicable). Will default to the name of the repo
-                of the original model given to the `Trainer` (if it comes from the Hub).
-            tasks (`str` or `List[str]`, *optional*):
-                One or several task identifiers, to be included in the metadata of the model card.
-            dataset_tags (`str` or `List[str]`, *optional*):
-                One or several dataset tags, to be included in the metadata of the model card.
-            dataset (`str` or `List[str]`, *optional*):
-                One or several dataset identifiers, to be included in the metadata of the model card.
-            dataset_args (`str` or `List[str]`, *optional*):
-               One or several dataset arguments, to be included in the metadata of the model card.
-        """
+    Args:
+        output_dir (`str` or `os.PathLike`):
+            The folder in which to create the model card.
+        model_name (`str`, *optional*):
+            The name of the model.
+        language (`str`, *optional*):
+            The language of the model (if applicable)
+        license (`str`, *optional*):
+            The license of the model. Will default to the license of the pretrained model used, if the original
+            model given to the `Trainer` comes from a repo on the Hub.
+        tags (`str` or `List[str]`, *optional*):
+            Some tags to be included in the metadata of the model card.
+        finetuned_from (`str`, *optional*):
+            The name of the model used to fine-tune this one (if applicable). Will default to the name of the repo
+            of the original model given to the `Trainer` (if it comes from the Hub).
+        tasks (`str` or `List[str]`, *optional*):
+            One or several task identifiers, to be included in the metadata of the model card.
+        dataset_tags (`str` or `List[str]`, *optional*):
+            One or several dataset tags, to be included in the metadata of the model card.
+        dataset (`str` or `List[str]`, *optional*):
+            One or several dataset identifiers, to be included in the metadata of the model card.
+        dataset_args (`str` or `List[str]`, *optional*):
+           One or several dataset arguments, to be included in the metadata of the model card.
+    """
     # Avoids a circular import by doing this when necessary.
     from .modelcard import TrainingSummary  # tests_ignore
 
     training_summary = TrainingSummary.from_keras(
-        self,
-        keras_history=self.history,
-        language=language,
-        license=license,
-        tags=tags,
-        model_name=model_name,
-        finetuned_from=finetuned_from,
-        tasks=tasks,
-        dataset_tags=dataset_tags,
-        dataset=dataset,
-        dataset_args=dataset_args,
+      self,
+      keras_history=self.history,
+      language=language,
+      license=license,
+      tags=tags,
+      model_name=model_name,
+      finetuned_from=finetuned_from,
+      tasks=tasks,
+      dataset_tags=dataset_tags,
+      dataset=dataset,
+      dataset_args=dataset_args,
     )
     model_card = training_summary.to_model_card()
     with open(os.path.join(output_dir, "README.md"), "w") as f:
@@ -1716,12 +1721,12 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def set_input_embeddings(self, value):
     """
-        Set model's input embeddings
+    Set model's input embeddings
 
-        Args:
-            value (`tf.Variable`):
-                The new weights mapping hidden states to vocabulary.
-        """
+    Args:
+        value (`tf.Variable`):
+            The new weights mapping hidden states to vocabulary.
+    """
     main_layer = getattr(self, self.base_model_prefix)
 
     if main_layer is None:
@@ -1736,11 +1741,11 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def get_output_embeddings(self) -> Union[None, tf.keras.layers.Layer]:
     """
-        Returns the model's output embeddings
+    Returns the model's output embeddings
 
-        Returns:
-            `tf.Variable`: The new weights mapping vocabulary to hidden states.
-        """
+    Returns:
+        `tf.Variable`: The new weights mapping vocabulary to hidden states.
+    """
     if self.get_lm_head() is not None:
       lm_head = self.get_lm_head()
 
@@ -1756,12 +1761,12 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def set_output_embeddings(self, value):
     """
-        Set model's output embeddings
+    Set model's output embeddings
 
-        Args:
-            value (`tf.Variable`):
-                The new weights mapping hidden states to vocabulary.
-        """
+    Args:
+        value (`tf.Variable`):
+            The new weights mapping hidden states to vocabulary.
+    """
     if self.get_lm_head() is not None:
       lm_head = self.get_lm_head()
       try:
@@ -1773,34 +1778,34 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def get_output_layer_with_bias(self) -> Union[None, tf.keras.layers.Layer]:
     """
-        Get the layer that handles a bias attribute in case the model has an LM head with weights tied to the
-        embeddings
+    Get the layer that handles a bias attribute in case the model has an LM head with weights tied to the
+    embeddings
 
-        Return:
-            `tf.keras.layers.Layer`: The layer that handles the bias, None if not an LM model.
-        """
+    Return:
+        `tf.keras.layers.Layer`: The layer that handles the bias, None if not an LM model.
+    """
     warnings.warn(
-        "The method get_output_layer_with_bias is deprecated. Please use `get_lm_head` instead.", FutureWarning
+      "The method get_output_layer_with_bias is deprecated. Please use `get_lm_head` instead.", FutureWarning
     )
     return self.get_lm_head()
 
   def get_prefix_bias_name(self) -> Union[None, str]:
     """
-        Get the concatenated _prefix name of the bias from the model name to the parent layer
+    Get the concatenated _prefix name of the bias from the model name to the parent layer
 
-        Return:
-            `str`: The _prefix name of the bias.
-        """
+    Return:
+        `str`: The _prefix name of the bias.
+    """
     warnings.warn("The method get_prefix_bias_name is deprecated. Please use `get_bias` instead.", FutureWarning)
     return None
 
   def get_bias(self) -> Union[None, Dict[str, tf.Variable]]:
     """
-        Dict of bias attached to an LM head. The key represents the name of the bias attribute.
+    Dict of bias attached to an LM head. The key represents the name of the bias attribute.
 
-        Return:
-            `tf.Variable`: The weights representing the bias, None if not an LM model.
-        """
+    Return:
+        `tf.Variable`: The weights representing the bias, None if not an LM model.
+    """
     if self.get_lm_head() is not None:
       lm_head = self.get_lm_head()
       try:
@@ -1813,12 +1818,12 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def set_bias(self, value):
     """
-        Set all the bias in the LM head.
+    Set all the bias in the LM head.
 
-        Args:
-            value (`Dict[tf.Variable]`):
-                All the new bias attached to an LM head.
-        """
+    Args:
+        value (`Dict[tf.Variable]`):
+            All the new bias attached to an LM head.
+    """
     if self.get_lm_head() is not None:
       lm_head = self.get_lm_head()
       try:
@@ -1829,29 +1834,30 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def get_lm_head(self) -> tf.keras.layers.Layer:
     """
-        The LM Head layer. This method must be overwritten by all the models that have a lm head.
+    The LM Head layer. This method must be overwritten by all the models that have a lm head.
 
-        Return:
-            `tf.keras.layers.Layer`: The LM head layer if the model has one, None if not.
-        """
+    Return:
+        `tf.keras.layers.Layer`: The LM head layer if the model has one, None if not.
+    """
     return None
 
-  def resize_token_embeddings(self,
-                              new_num_tokens: Optional[int] = None) -> Union[tf.keras.layers.Embedding, tf.Variable]:
+  def resize_token_embeddings(
+    self, new_num_tokens: Optional[int] = None
+  ) -> Union[tf.keras.layers.Embedding, tf.Variable]:
     """
-        Resizes input token embeddings matrix of the model if `new_num_tokens != config.vocab_size`.
+    Resizes input token embeddings matrix of the model if `new_num_tokens != config.vocab_size`.
 
-        Takes care of tying weights embeddings afterwards if the model class has a `tie_weights()` method.
+    Takes care of tying weights embeddings afterwards if the model class has a `tie_weights()` method.
 
-        Arguments:
-            new_num_tokens (`int`, *optional*):
-                The number of new tokens in the embedding matrix. Increasing the size will add newly initialized
-                vectors at the end. Reducing the size will remove vectors from the end. If not provided or `None`, just
-                returns a pointer to the input tokens without doing anything.
+    Arguments:
+        new_num_tokens (`int`, *optional*):
+            The number of new tokens in the embedding matrix. Increasing the size will add newly initialized
+            vectors at the end. Reducing the size will remove vectors from the end. If not provided or `None`, just
+            returns a pointer to the input tokens without doing anything.
 
-        Return:
-            `tf.Variable` or `tf.keras.layers.Embedding`: Pointer to the input tokens of the model.
-        """
+    Return:
+        `tf.Variable` or `tf.keras.layers.Embedding`: Pointer to the input tokens of the model.
+    """
     # TODO (joao): flagged for replacement (by `_v2_resized_token_embeddings`) due to embeddings refactor
 
     # Run the new code path if the model has a keras embeddings layer
@@ -1870,17 +1876,17 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def _v2_resized_token_embeddings(self, new_num_tokens: Optional[int] = None) -> tf.keras.layers.Embedding:
     """
-        Resizes input token embeddings matrix of the model if `new_num_tokens != config.vocab_size`.
+    Resizes input token embeddings matrix of the model if `new_num_tokens != config.vocab_size`.
 
-        Arguments:
-            new_num_tokens (`int`, *optional*):
-                The number of new tokens in the embedding matrix. Increasing the size will add newly initialized
-                vectors at the end. Reducing the size will remove vectors from the end. If not provided or `None`, just
-                returns a pointer to the input tokens without doing anything.
+    Arguments:
+        new_num_tokens (`int`, *optional*):
+            The number of new tokens in the embedding matrix. Increasing the size will add newly initialized
+            vectors at the end. Reducing the size will remove vectors from the end. If not provided or `None`, just
+            returns a pointer to the input tokens without doing anything.
 
-        Return:
-            `tf.keras.layers.Embedding`: Pointer to the input tokens of the model.
-        """
+    Return:
+        `tf.keras.layers.Embedding`: Pointer to the input tokens of the model.
+    """
     if new_num_tokens is None or new_num_tokens == self.config.vocab_size:
       return self.get_input_embeddings()
 
@@ -1968,21 +1974,21 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def _get_resized_lm_head_bias(self, old_lm_head_bias, new_num_tokens):
     """
-        Build a resized bias from the old ones. Increasing the size will add newly initialized vectors at the end.
-        Reducing the size will remove vectors from the end
+    Build a resized bias from the old ones. Increasing the size will add newly initialized vectors at the end.
+    Reducing the size will remove vectors from the end
 
-        Args:
-            old_lm_head_bias (`tf.Variable`):
-                Old lm head bias to be resized.
-            new_num_tokens (`int`, *optional*):
-                New number of tokens in the linear matrix.
+    Args:
+        old_lm_head_bias (`tf.Variable`):
+            Old lm head bias to be resized.
+        new_num_tokens (`int`, *optional*):
+            New number of tokens in the linear matrix.
 
-                Increasing the size will add newly initialized vectors at the end. Reducing the size will remove
-                vectors from the end. If not provided or `None`, just returns None
+            Increasing the size will add newly initialized vectors at the end. Reducing the size will remove
+            vectors from the end. If not provided or `None`, just returns None
 
-        Return:
-            `tf.Variable`: Pointer to the resized bias.
-        """
+    Return:
+        `tf.Variable`: Pointer to the resized bias.
+    """
     # TODO (joao): flagged for replacement (by `_v2_get_resized_lm_head_bias`) due to embeddings refactor
     new_lm_head_bias = {}
 
@@ -2005,10 +2011,10 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
         bias_mask = tf.fill(tf.convert_to_tensor(final_shape), True)
 
       new_bias = self.add_weight(
-          shape=final_shape,
-          initializer="zeros",
-          trainable=True,
-          name=weight.name.split(":")[0],
+        shape=final_shape,
+        initializer="zeros",
+        trainable=True,
+        name=weight.name.split(":")[0],
       )
       init_bias = tf.where(bias_mask, current_bias, new_bias.value())
 
@@ -2017,22 +2023,23 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
     return new_lm_head_bias
 
-  def _v2_get_resized_lm_head_bias(self, old_lm_head_bias: Dict[str, tf.Variable],
-                                   new_num_tokens: int) -> Dict[str, tf.Tensor]:
+  def _v2_get_resized_lm_head_bias(
+    self, old_lm_head_bias: Dict[str, tf.Variable], new_num_tokens: int
+  ) -> Dict[str, tf.Tensor]:
     """
-        Build a resized bias from the old ones. Increasing the size will add newly initialized vectors at the end.
-        Reducing the size will remove vectors from the end
+    Build a resized bias from the old ones. Increasing the size will add newly initialized vectors at the end.
+    Reducing the size will remove vectors from the end
 
-        Args:
-            old_lm_head_bias (`Dict[str, tf.Variable]`):
-                Old lm head bias to be resized.
-            new_num_tokens (`int`):
-                New number of tokens in the linear matrix. Increasing the size will add newly initialized vectors at
-                the end. Reducing the size will remove vectors from the end.
+    Args:
+        old_lm_head_bias (`Dict[str, tf.Variable]`):
+            Old lm head bias to be resized.
+        new_num_tokens (`int`):
+            New number of tokens in the linear matrix. Increasing the size will add newly initialized vectors at
+            the end. Reducing the size will remove vectors from the end.
 
-        Return:
-            `tf.Tensor`: Values for the resized bias.
-        """
+    Return:
+        `tf.Tensor`: Values for the resized bias.
+    """
     new_lm_head_bias = {}
 
     for attr, weight in old_lm_head_bias.items():
@@ -2052,35 +2059,35 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def _get_resized_lm_head_decoder(self, old_lm_head_decoder, new_num_tokens):
     """
-        Build a resized decoder from the old ones. Increasing the size will add newly initialized vectors at the end.
-        Reducing the size will remove vectors from the end
+    Build a resized decoder from the old ones. Increasing the size will add newly initialized vectors at the end.
+    Reducing the size will remove vectors from the end
 
-        Args:
-            old_lm_head_decoder (`tf.Variable`):
-                Old lm head decoder to be resized.
-            new_num_tokens (`int`, *optional*):
-                New number of tokens in the linear matrix.
+    Args:
+        old_lm_head_decoder (`tf.Variable`):
+            Old lm head decoder to be resized.
+        new_num_tokens (`int`, *optional*):
+            New number of tokens in the linear matrix.
 
-                Increasing the size will add newly initialized vectors at the end. Reducing the size will remove
-                vectors from the end. If not provided or `None`, just returns None
+            Increasing the size will add newly initialized vectors at the end. Reducing the size will remove
+            vectors from the end. If not provided or `None`, just returns None
 
-        Return:
-            `tf.Variable`: Pointer to the resized decoder or None if the output embeddings are different from the input
-            ones.
-        """
+    Return:
+        `tf.Variable`: Pointer to the resized decoder or None if the output embeddings are different from the input
+        ones.
+    """
     new_lm_head_decoder = old_lm_head_decoder
     is_input_output_equals = tf.reduce_any(
-        self._get_word_embedding_weight(self.get_input_embeddings()) == old_lm_head_decoder
+      self._get_word_embedding_weight(self.get_input_embeddings()) == old_lm_head_decoder
     )
 
     if old_lm_head_decoder is not None and not is_input_output_equals:
       old_embedding_dim = shape_list(old_lm_head_decoder)[1]
       decoder_mask, current_decoder = init_copy_embeddings(old_lm_head_decoder, new_num_tokens)
       new_lm_head_decoder = self.add_weight(
-          shape=(new_num_tokens, old_embedding_dim),
-          initializer="zeros",
-          trainable=True,
-          name=old_lm_head_decoder.name.split(":")[0],
+        shape=(new_num_tokens, old_embedding_dim),
+        initializer="zeros",
+        trainable=True,
+        name=old_lm_head_decoder.name.split(":")[0],
       )
       init_decoder = tf.where(decoder_mask, current_decoder, new_lm_head_decoder.value())
 
@@ -2090,32 +2097,32 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
   def _get_resized_embeddings(self, old_embeddings, new_num_tokens=None) -> tf.Variable:
     """
-        Build a resized Embedding weights from a provided token Embedding weights. Increasing the size will add newly
-        initialized vectors at the end. Reducing the size will remove vectors from the end
+    Build a resized Embedding weights from a provided token Embedding weights. Increasing the size will add newly
+    initialized vectors at the end. Reducing the size will remove vectors from the end
 
-        Args:
-            old_embeddings (`tf.Variable`):
-                Old embeddings to be resized.
-            new_num_tokens (`int`, *optional*):
-                New number of tokens in the embedding matrix.
+    Args:
+        old_embeddings (`tf.Variable`):
+            Old embeddings to be resized.
+        new_num_tokens (`int`, *optional*):
+            New number of tokens in the embedding matrix.
 
-                Increasing the size will add newly initialized vectors at the end. Reducing the size will remove
-                vectors from the end. If not provided or `None`, just returns a pointer to the input tokens
-                `tf.Variable` module of the model without doing anything.
+            Increasing the size will add newly initialized vectors at the end. Reducing the size will remove
+            vectors from the end. If not provided or `None`, just returns a pointer to the input tokens
+            `tf.Variable` module of the model without doing anything.
 
-        Return:
-            `tf.Variable`: Pointer to the resized Embedding Module or the old Embedding Module if `new_num_tokens` is
-            `None`
-        """
+    Return:
+        `tf.Variable`: Pointer to the resized Embedding Module or the old Embedding Module if `new_num_tokens` is
+        `None`
+    """
     # TODO (joao): flagged for replacement (by `_v2_get_resized_embeddings`) due to embeddings refactor
     old_embedding_dim = shape_list(old_embeddings)[1]
     init_range = getattr(self.config, "initializer_range", 0.02)
     embeddings_mask, current_embeddings = init_copy_embeddings(old_embeddings, new_num_tokens)
     new_embeddings = self.add_weight(
-        name=old_embeddings.name.split(":")[0],
-        shape=[new_num_tokens, old_embedding_dim],
-        initializer=get_initializer(init_range),
-        dtype=tf.float32,
+      name=old_embeddings.name.split(":")[0],
+      shape=[new_num_tokens, old_embedding_dim],
+      initializer=get_initializer(init_range),
+      dtype=tf.float32,
     )
     init_embeddings = tf.where(embeddings_mask, current_embeddings, new_embeddings.value())
 
@@ -2124,28 +2131,28 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
     return new_embeddings
 
   def _v2_get_resized_embeddings(
-      self, old_embeddings: tf.keras.layers.Embedding, new_num_tokens: int
+    self, old_embeddings: tf.keras.layers.Embedding, new_num_tokens: int
   ) -> tf.keras.layers.Embedding:
     """
-        Build a resized Embedding layer from a provided Embedding layer. Increasing the size will add newly initialized
-        vectors at the end. Reducing the size will remove vectors from the end.
+    Build a resized Embedding layer from a provided Embedding layer. Increasing the size will add newly initialized
+    vectors at the end. Reducing the size will remove vectors from the end.
 
-        Args:
-            old_embeddings (`tf.keras.layers.Embedding`):
-                Old embeddings to be resized.
-            new_num_tokens (`int`, *optional*):
-                New number of tokens in the embedding matrix.
+    Args:
+        old_embeddings (`tf.keras.layers.Embedding`):
+            Old embeddings to be resized.
+        new_num_tokens (`int`, *optional*):
+            New number of tokens in the embedding matrix.
 
-        Return:
-            `tf.keras.layers.Embedding`: Resized Embedding layer.
-        """
+    Return:
+        `tf.keras.layers.Embedding`: Resized Embedding layer.
+    """
 
     # Get the initialization range for the embeddings
     init_range = 0.02  # default value
     potential_initialization_variable_names = [
-        "initializer_range",  # most common
-        "initializer_factor",  # e.g. T5
-        "init_std",  # e.g BART
+      "initializer_range",  # most common
+      "initializer_factor",  # e.g. T5
+      "init_std",  # e.g BART
     ]
     for var_name in potential_initialization_variable_names:
       if hasattr(self.config, var_name):
@@ -2153,10 +2160,10 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
     # Get a new (initialized) embeddings layer
     new_embeddings = tf.keras.layers.Embedding(
-        input_dim=new_num_tokens,
-        output_dim=old_embeddings.output_dim,
-        embeddings_initializer=tf.keras.initializers.TruncatedNormal(stddev=init_range),
-        name=old_embeddings.embeddings.name[:-13],  # exact same scoped name except "/embeddings:0"
+      input_dim=new_num_tokens,
+      output_dim=old_embeddings.output_dim,
+      embeddings_initializer=tf.keras.initializers.TruncatedNormal(stddev=init_range),
+      name=old_embeddings.embeddings.name[:-13],  # exact same scoped name except "/embeddings:0"
     )
     new_embeddings(tf.constant([[0]]))
 
@@ -2165,73 +2172,73 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
       init_embeddings = old_embeddings.embeddings[:new_num_tokens]
     else:
       init_embeddings = tf.concat(
-          [old_embeddings.embeddings, new_embeddings.embeddings[old_embeddings.input_dim:]], axis=0
+        [old_embeddings.embeddings, new_embeddings.embeddings[old_embeddings.input_dim :]], axis=0
       )
     new_embeddings.embeddings.assign(init_embeddings)
     return new_embeddings
 
   def prune_heads(self, heads_to_prune):
     """
-        Prunes heads of the base model.
+    Prunes heads of the base model.
 
-        Arguments:
-            heads_to_prune (`Dict[int, List[int]]`):
-                Dictionary with keys being selected layer indices (`int`) and associated values being the list of heads
-                to prune in said layer (list of `int`). For instance {1: [0, 2], 2: [2, 3]} will prune heads 0 and 2 on
-                layer 1 and heads 2 and 3 on layer 2.
-        """
+    Arguments:
+        heads_to_prune (`Dict[int, List[int]]`):
+            Dictionary with keys being selected layer indices (`int`) and associated values being the list of heads
+            to prune in said layer (list of `int`). For instance {1: [0, 2], 2: [2, 3]} will prune heads 0 and 2 on
+            layer 1 and heads 2 and 3 on layer 2.
+    """
     raise NotImplementedError
 
   def save_pretrained(
-      self,
-      save_directory,
-      saved_model=False,
-      version=1,
-      push_to_hub=False,
-      signatures=None,
-      max_shard_size: Union[int, str] = "10GB",
-      create_pr: bool = False,
-      safe_serialization: bool = False,
-      **kwargs
+    self,
+    save_directory,
+    saved_model=False,
+    version=1,
+    push_to_hub=False,
+    signatures=None,
+    max_shard_size: Union[int, str] = "10GB",
+    create_pr: bool = False,
+    safe_serialization: bool = False,
+    **kwargs,
   ):
     """
-        Save a model and its configuration file to a directory, so that it can be re-loaded using the
-        [`~TFPreTrainedModel.from_pretrained`] class method.
+    Save a model and its configuration file to a directory, so that it can be re-loaded using the
+    [`~TFPreTrainedModel.from_pretrained`] class method.
 
-        Arguments:
-            save_directory (`str`):
-                Directory to which to save. Will be created if it doesn't exist.
-            saved_model (`bool`, *optional*, defaults to `False`):
-                If the model has to be saved in saved model format as well or not.
-            version (`int`, *optional*, defaults to 1):
-                The version of the saved model. A saved model needs to be versioned in order to be properly loaded by
-                TensorFlow Serving as detailed in the official documentation
-                https://www.tensorflow.org/tfx/serving/serving_basic
-            push_to_hub (`bool`, *optional*, defaults to `False`):
-                Whether or not to push your model to the Hugging Face model hub after saving it. You can specify the
-                repository you want to push to with `repo_id` (will default to the name of `save_directory` in your
-                namespace).
-            signatures (`dict` or `tf.function`, *optional*):
-                Model's signature used for serving. This will be passed to the `signatures` argument of model.save().
-            max_shard_size (`int` or `str`, *optional*, defaults to `"10GB"`):
-                The maximum size for a checkpoint before being sharded. Checkpoints shard will then be each of size
-                lower than this size. If expressed as a string, needs to be digits followed by a unit (like `"5MB"`).
+    Arguments:
+        save_directory (`str`):
+            Directory to which to save. Will be created if it doesn't exist.
+        saved_model (`bool`, *optional*, defaults to `False`):
+            If the model has to be saved in saved model format as well or not.
+        version (`int`, *optional*, defaults to 1):
+            The version of the saved model. A saved model needs to be versioned in order to be properly loaded by
+            TensorFlow Serving as detailed in the official documentation
+            https://www.tensorflow.org/tfx/serving/serving_basic
+        push_to_hub (`bool`, *optional*, defaults to `False`):
+            Whether or not to push your model to the Hugging Face model hub after saving it. You can specify the
+            repository you want to push to with `repo_id` (will default to the name of `save_directory` in your
+            namespace).
+        signatures (`dict` or `tf.function`, *optional*):
+            Model's signature used for serving. This will be passed to the `signatures` argument of model.save().
+        max_shard_size (`int` or `str`, *optional*, defaults to `"10GB"`):
+            The maximum size for a checkpoint before being sharded. Checkpoints shard will then be each of size
+            lower than this size. If expressed as a string, needs to be digits followed by a unit (like `"5MB"`).
 
-                <Tip warning={true}>
+            <Tip warning={true}>
 
-                If a single weight of the model is bigger than `max_shard_size`, it will be in its own checkpoint shard
-                which will be bigger than `max_shard_size`.
+            If a single weight of the model is bigger than `max_shard_size`, it will be in its own checkpoint shard
+            which will be bigger than `max_shard_size`.
 
-                </Tip>
+            </Tip>
 
-            create_pr (`bool`, *optional*, defaults to `False`):
-                Whether or not to create a PR with the uploaded files or directly commit.
-            safe_serialization (`bool`, *optional*, defaults to `False`):
-                Whether to save the model using `safetensors` or the traditional PyTorch way (that uses `pickle`).
+        create_pr (`bool`, *optional*, defaults to `False`):
+            Whether or not to create a PR with the uploaded files or directly commit.
+        safe_serialization (`bool`, *optional*, defaults to `False`):
+            Whether to save the model using `safetensors` or the traditional PyTorch way (that uses `pickle`).
 
-            kwargs:
-                Additional key word arguments passed along to the [`~utils.PushToHubMixin.push_to_hub`] method.
-        """
+        kwargs:
+            Additional key word arguments passed along to the [`~utils.PushToHubMixin.push_to_hub`] method.
+    """
     if os.path.isfile(save_directory):
       logger.error(f"Provided path ({save_directory}) should be a directory, not a file")
       return
@@ -2248,9 +2255,10 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
       if signatures is None:
         if any(spec.dtype == tf.int32 for spec in self.serving.input_signature[0].values()):
           int64_spec = {
-              key:
-              tf.TensorSpec(shape=spec.shape, dtype=tf.int64 if spec.dtype == tf.int32 else spec.dtype, name=spec.name)
-              for key, spec in self.serving.input_signature[0].items()
+            key: tf.TensorSpec(
+              shape=spec.shape, dtype=tf.int64 if spec.dtype == tf.int32 else spec.dtype, name=spec.name
+            )
+            for key, spec in self.serving.input_signature[0].items()
           }
           int64_serving = tf.function(self.eager_serving, input_signature=[int64_spec])
           signatures = {"serving_default": self.serving, "int64_serving": int64_serving}
@@ -2282,7 +2290,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
       # If we have a shard file that is not going to be replaced, we delete it, but only from the main process
       # in distributed settings to avoid race conditions.
       weights_no_suffix = weights_name.replace(".bin", "").replace(".safetensors", "")
-      if (filename.startswith(weights_no_suffix) and os.path.isfile(full_filename) and filename not in shards.keys()):
+      if filename.startswith(weights_no_suffix) and os.path.isfile(full_filename) and filename not in shards.keys():
         os.remove(full_filename)
 
     if index is None:
@@ -2299,9 +2307,9 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
         content = json.dumps(index, indent=2, sort_keys=True) + "\n"
         index_file.write(content)
       logger.info(
-          f"The model is bigger than the maximum size per checkpoint ({max_shard_size}) and is going to be "
-          f"split in {len(shards)} checkpoint shards. You can find where each parameters has been saved in the "
-          f"index located at {save_index_file}."
+        f"The model is bigger than the maximum size per checkpoint ({max_shard_size}) and is going to be "
+        f"split in {len(shards)} checkpoint shards. You can find where each parameters has been saved in the "
+        f"index located at {save_index_file}."
       )
       for shard_file, shard in shards.items():
         with h5py.File(os.path.join(save_directory, shard_file), mode="w") as shard_file:
@@ -2322,122 +2330,122 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
   @classmethod
   def from_pretrained(cls, pretrained_model_name_or_path, *model_args, **kwargs):
     r"""
-        Instantiate a pretrained TF 2.0 model from a pre-trained model configuration.
+    Instantiate a pretrained TF 2.0 model from a pre-trained model configuration.
 
-        The warning *Weights from XXX not initialized from pretrained model* means that the weights of XXX do not come
-        pretrained with the rest of the model. It is up to you to train those weights with a downstream fine-tuning
-        task.
+    The warning *Weights from XXX not initialized from pretrained model* means that the weights of XXX do not come
+    pretrained with the rest of the model. It is up to you to train those weights with a downstream fine-tuning
+    task.
 
-        The warning *Weights from XXX not used in YYY* means that the layer XXX is not used by YYY, therefore those
-        weights are discarded.
+    The warning *Weights from XXX not used in YYY* means that the layer XXX is not used by YYY, therefore those
+    weights are discarded.
 
-        Parameters:
-            pretrained_model_name_or_path (`str`, *optional*):
-                Can be either:
+    Parameters:
+        pretrained_model_name_or_path (`str`, *optional*):
+            Can be either:
 
-                    - A string, the *model id* of a pretrained model hosted inside a model repo on huggingface.co.
-                      Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
-                      user or organization name, like `dbmdz/bert-base-german-cased`.
-                    - A path to a *directory* containing model weights saved using
-                      [`~TFPreTrainedModel.save_pretrained`], e.g., `./my_model_directory/`.
-                    - A path or url to a *PyTorch state_dict save file* (e.g, `./pt_model/pytorch_model.bin`). In this
-                      case, `from_pt` should be set to `True` and a configuration object should be provided as `config`
-                      argument. This loading path is slower than converting the PyTorch model in a TensorFlow model
-                      using the provided conversion scripts and loading the TensorFlow model afterwards.
-                    - `None` if you are both providing the configuration and state dictionary (resp. with keyword
-                      arguments `config` and `state_dict`).
-            model_args (sequence of positional arguments, *optional*):
-                All remaining positional arguments will be passed to the underlying model's `__init__` method.
-            config (`Union[PretrainedConfig, str]`, *optional*):
-                Can be either:
+                - A string, the *model id* of a pretrained model hosted inside a model repo on huggingface.co.
+                  Valid model ids can be located at the root-level, like `bert-base-uncased`, or namespaced under a
+                  user or organization name, like `dbmdz/bert-base-german-cased`.
+                - A path to a *directory* containing model weights saved using
+                  [`~TFPreTrainedModel.save_pretrained`], e.g., `./my_model_directory/`.
+                - A path or url to a *PyTorch state_dict save file* (e.g, `./pt_model/pytorch_model.bin`). In this
+                  case, `from_pt` should be set to `True` and a configuration object should be provided as `config`
+                  argument. This loading path is slower than converting the PyTorch model in a TensorFlow model
+                  using the provided conversion scripts and loading the TensorFlow model afterwards.
+                - `None` if you are both providing the configuration and state dictionary (resp. with keyword
+                  arguments `config` and `state_dict`).
+        model_args (sequence of positional arguments, *optional*):
+            All remaining positional arguments will be passed to the underlying model's `__init__` method.
+        config (`Union[PretrainedConfig, str]`, *optional*):
+            Can be either:
 
-                    - an instance of a class derived from [`PretrainedConfig`],
-                    - a string valid as input to [`~PretrainedConfig.from_pretrained`].
+                - an instance of a class derived from [`PretrainedConfig`],
+                - a string valid as input to [`~PretrainedConfig.from_pretrained`].
 
-                Configuration for the model to use instead of an automatically loaded configuration. Configuration can
-                be automatically loaded when:
+            Configuration for the model to use instead of an automatically loaded configuration. Configuration can
+            be automatically loaded when:
 
-                    - The model is a model provided by the library (loaded with the *model id* string of a pretrained
-                      model).
-                    - The model was saved using [`~TFPreTrainedModel.save_pretrained`] and is reloaded by supplying the
-                      save directory.
-                    - The model is loaded by supplying a local directory as `pretrained_model_name_or_path` and a
-                      configuration JSON file named *config.json* is found in the directory.
-            from_pt (`bool`, *optional*, defaults to `False`):
-                Load the model weights from a PyTorch state_dict save file (see docstring of
-                `pretrained_model_name_or_path` argument).
-            ignore_mismatched_sizes (`bool`, *optional*, defaults to `False`):
-                Whether or not to raise an error if some of the weights from the checkpoint do not have the same size
-                as the weights of the model (if for instance, you are instantiating a model with 10 labels from a
-                checkpoint with 3 labels).
-            cache_dir (`str`, *optional*):
-                Path to a directory in which a downloaded pretrained model configuration should be cached if the
-                standard cache should not be used.
-            force_download (`bool`, *optional*, defaults to `False`):
-                Whether or not to force the (re-)download of the model weights and configuration files, overriding the
-                cached versions if they exist.
-            resume_download (`bool`, *optional*, defaults to `False`):
-                Whether or not to delete incompletely received files. Will attempt to resume the download if such a
-                file exists.
-            proxies:
-                (`Dict[str, str], `optional`): A dictionary of proxy servers to use by protocol or endpoint, e.g.,
-                `{'http': 'foo.bar:3128', 'http://hostname': 'foo.bar:4012'}`. The proxies are used on each request.
-                output_loading_info(`bool`, *optional*, defaults to `False`): Whether ot not to also return a
-                dictionary containing missing keys, unexpected keys and error messages.
-            local_files_only(`bool`, *optional*, defaults to `False`):
-                Whether or not to only look at local files (e.g., not try doanloading the model).
-            use_auth_token (`str` or `bool`, *optional*):
-                The token to use as HTTP bearer authorization for remote files. If `True`, or not specified, will use
-                the token generated when running `huggingface-cli login` (stored in `~/.huggingface`).
-            revision (`str`, *optional*, defaults to `"main"`):
-                The specific model version to use. It can be a branch name, a tag name, or a commit id, since we use a
-                git-based system for storing models and other artifacts on huggingface.co, so `revision` can be any
-                identifier allowed by git.
+                - The model is a model provided by the library (loaded with the *model id* string of a pretrained
+                  model).
+                - The model was saved using [`~TFPreTrainedModel.save_pretrained`] and is reloaded by supplying the
+                  save directory.
+                - The model is loaded by supplying a local directory as `pretrained_model_name_or_path` and a
+                  configuration JSON file named *config.json* is found in the directory.
+        from_pt (`bool`, *optional*, defaults to `False`):
+            Load the model weights from a PyTorch state_dict save file (see docstring of
+            `pretrained_model_name_or_path` argument).
+        ignore_mismatched_sizes (`bool`, *optional*, defaults to `False`):
+            Whether or not to raise an error if some of the weights from the checkpoint do not have the same size
+            as the weights of the model (if for instance, you are instantiating a model with 10 labels from a
+            checkpoint with 3 labels).
+        cache_dir (`str`, *optional*):
+            Path to a directory in which a downloaded pretrained model configuration should be cached if the
+            standard cache should not be used.
+        force_download (`bool`, *optional*, defaults to `False`):
+            Whether or not to force the (re-)download of the model weights and configuration files, overriding the
+            cached versions if they exist.
+        resume_download (`bool`, *optional*, defaults to `False`):
+            Whether or not to delete incompletely received files. Will attempt to resume the download if such a
+            file exists.
+        proxies:
+            (`Dict[str, str], `optional`): A dictionary of proxy servers to use by protocol or endpoint, e.g.,
+            `{'http': 'foo.bar:3128', 'http://hostname': 'foo.bar:4012'}`. The proxies are used on each request.
+            output_loading_info(`bool`, *optional*, defaults to `False`): Whether ot not to also return a
+            dictionary containing missing keys, unexpected keys and error messages.
+        local_files_only(`bool`, *optional*, defaults to `False`):
+            Whether or not to only look at local files (e.g., not try doanloading the model).
+        use_auth_token (`str` or `bool`, *optional*):
+            The token to use as HTTP bearer authorization for remote files. If `True`, or not specified, will use
+            the token generated when running `huggingface-cli login` (stored in `~/.huggingface`).
+        revision (`str`, *optional*, defaults to `"main"`):
+            The specific model version to use. It can be a branch name, a tag name, or a commit id, since we use a
+            git-based system for storing models and other artifacts on huggingface.co, so `revision` can be any
+            identifier allowed by git.
 
 
-                <Tip>
+            <Tip>
 
-                To test a pull request you made on the Hub, you can pass `revision="refs/pr/<pr_number>".
+            To test a pull request you made on the Hub, you can pass `revision="refs/pr/<pr_number>".
 
-                </Tip>
+            </Tip>
 
-            mirror (`str`, *optional*):
-                Mirror source to accelerate downloads in China. If you are from China and have an accessibility
-                problem, you can set this option to resolve it. Note that we do not guarantee the timeliness or safety.
-                Please refer to the mirror site for more information.
-            subfolder (`str`, *optional*, defaults to `""`):
-                In case the relevant files are located inside a subfolder of the model repo on huggingface.co, you can
-                specify the folder name here.
-            kwargs (remaining dictionary of keyword arguments, *optional*):
-                Can be used to update the configuration object (after it being loaded) and initiate the model (e.g.,
-                `output_attentions=True`). Behaves differently depending on whether a `config` is provided or
-                automatically loaded:
+        mirror (`str`, *optional*):
+            Mirror source to accelerate downloads in China. If you are from China and have an accessibility
+            problem, you can set this option to resolve it. Note that we do not guarantee the timeliness or safety.
+            Please refer to the mirror site for more information.
+        subfolder (`str`, *optional*, defaults to `""`):
+            In case the relevant files are located inside a subfolder of the model repo on huggingface.co, you can
+            specify the folder name here.
+        kwargs (remaining dictionary of keyword arguments, *optional*):
+            Can be used to update the configuration object (after it being loaded) and initiate the model (e.g.,
+            `output_attentions=True`). Behaves differently depending on whether a `config` is provided or
+            automatically loaded:
 
-                    - If a configuration is provided with `config`, `**kwargs` will be directly passed to the
-                      underlying model's `__init__` method (we assume all relevant updates to the configuration have
-                      already been done)
-                    - If a configuration is not provided, `kwargs` will be first passed to the configuration class
-                      initialization function ([`~PretrainedConfig.from_pretrained`]). Each key of `kwargs` that
-                      corresponds to a configuration attribute will be used to override said attribute with the
-                      supplied `kwargs` value. Remaining keys that do not correspond to any configuration attribute
-                      will be passed to the underlying model's `__init__` function.
+                - If a configuration is provided with `config`, `**kwargs` will be directly passed to the
+                  underlying model's `__init__` method (we assume all relevant updates to the configuration have
+                  already been done)
+                - If a configuration is not provided, `kwargs` will be first passed to the configuration class
+                  initialization function ([`~PretrainedConfig.from_pretrained`]). Each key of `kwargs` that
+                  corresponds to a configuration attribute will be used to override said attribute with the
+                  supplied `kwargs` value. Remaining keys that do not correspond to any configuration attribute
+                  will be passed to the underlying model's `__init__` function.
 
-        Examples:
+    Examples:
 
-        ```python
-        >>> from transformers import BertConfig, TFBertModel
+    ```python
+    >>> from transformers import BertConfig, TFBertModel
 
-        >>> # Download model and configuration from huggingface.co and cache.
-        >>> model = TFBertModel.from_pretrained("bert-base-uncased")
-        >>> # Model was saved using *save_pretrained('./test/saved_model/')* (for example purposes, not runnable).
-        >>> model = TFBertModel.from_pretrained("./test/saved_model/")
-        >>> # Update configuration during loading.
-        >>> model = TFBertModel.from_pretrained("bert-base-uncased", output_attentions=True)
-        >>> assert model.config.output_attentions == True
-        >>> # Loading from a Pytorch model file instead of a TensorFlow checkpoint (slower, for example purposes, not runnable).
-        >>> config = BertConfig.from_json_file("./pt_model/my_pt_model_config.json")
-        >>> model = TFBertModel.from_pretrained("./pt_model/my_pytorch_model.bin", from_pt=True, config=config)
-        ```"""
+    >>> # Download model and configuration from huggingface.co and cache.
+    >>> model = TFBertModel.from_pretrained("bert-base-uncased")
+    >>> # Model was saved using *save_pretrained('./test/saved_model/')* (for example purposes, not runnable).
+    >>> model = TFBertModel.from_pretrained("./test/saved_model/")
+    >>> # Update configuration during loading.
+    >>> model = TFBertModel.from_pretrained("bert-base-uncased", output_attentions=True)
+    >>> assert model.config.output_attentions == True
+    >>> # Loading from a Pytorch model file instead of a TensorFlow checkpoint (slower, for example purposes, not runnable).
+    >>> config = BertConfig.from_json_file("./pt_model/my_pt_model_config.json")
+    >>> model = TFBertModel.from_pretrained("./pt_model/my_pytorch_model.bin", from_pt=True, config=config)
+    ```"""
     config = kwargs.pop("config", None)
     cache_dir = kwargs.pop("cache_dir", None)
     from_pt = kwargs.pop("from_pt", False)
@@ -2459,8 +2467,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
     if trust_remote_code is True:
       logger.warning(
-          "The argument `trust_remote_code` is to be used with Auto classes. It has no effect here and is"
-          " ignored."
+        "The argument `trust_remote_code` is to be used with Auto classes. It has no effect here and is ignored."
       )
 
     user_agent = {"file_type": "model", "framework": "tensorflow", "from_auto_class": from_auto_class}
@@ -2475,19 +2482,19 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
     if not isinstance(config, PretrainedConfig):
       config_path = config if config is not None else pretrained_model_name_or_path
       config, model_kwargs = cls.config_class.from_pretrained(
-          config_path,
-          cache_dir=cache_dir,
-          return_unused_kwargs=True,
-          force_download=force_download,
-          resume_download=resume_download,
-          proxies=proxies,
-          local_files_only=local_files_only,
-          use_auth_token=use_auth_token,
-          revision=revision,
-          _from_auto=from_auto_class,
-          _from_pipeline=from_pipeline,
-          _commit_hash=commit_hash,
-          **kwargs,
+        config_path,
+        cache_dir=cache_dir,
+        return_unused_kwargs=True,
+        force_download=force_download,
+        resume_download=resume_download,
+        proxies=proxies,
+        local_files_only=local_files_only,
+        use_auth_token=use_auth_token,
+        revision=revision,
+        _from_auto=from_auto_class,
+        _from_pipeline=from_pipeline,
+        _commit_hash=commit_hash,
+        **kwargs,
       )
     else:
       model_kwargs = kwargs
@@ -2511,12 +2518,12 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
           archive_file = os.path.join(pretrained_model_name_or_path, WEIGHTS_INDEX_NAME)
           is_sharded = True
         elif is_safetensors_available() and os.path.isfile(
-            os.path.join(pretrained_model_name_or_path, SAFE_WEIGHTS_NAME)
+          os.path.join(pretrained_model_name_or_path, SAFE_WEIGHTS_NAME)
         ):
           # Load from a safetensors checkpoint
           archive_file = os.path.join(pretrained_model_name_or_path, SAFE_WEIGHTS_NAME)
         elif is_safetensors_available() and os.path.isfile(
-            os.path.join(pretrained_model_name_or_path, SAFE_WEIGHTS_INDEX_NAME)
+          os.path.join(pretrained_model_name_or_path, SAFE_WEIGHTS_INDEX_NAME)
         ):
           # Load from a sharded safetensors checkpoint
           archive_file = os.path.join(pretrained_model_name_or_path, SAFE_WEIGHTS_INDEX_NAME)
@@ -2530,17 +2537,18 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
           archive_file = os.path.join(pretrained_model_name_or_path, TF2_WEIGHTS_INDEX_NAME)
           is_sharded = True
         # At this stage we don't have a weight file so we will raise an error.
-        elif os.path.isfile(os.path.join(pretrained_model_name_or_path, WEIGHTS_NAME)
-                           ) or os.path.isfile(os.path.join(pretrained_model_name_or_path, WEIGHTS_INDEX_NAME)):
+        elif os.path.isfile(os.path.join(pretrained_model_name_or_path, WEIGHTS_NAME)) or os.path.isfile(
+          os.path.join(pretrained_model_name_or_path, WEIGHTS_INDEX_NAME)
+        ):
           raise EnvironmentError(
-              f"Error no file named {TF2_WEIGHTS_NAME} found in directory {pretrained_model_name_or_path} "
-              "but there is a file for PyTorch weights. Use `from_pt=True` to load this model from those "
-              "weights."
+            f"Error no file named {TF2_WEIGHTS_NAME} found in directory {pretrained_model_name_or_path} "
+            "but there is a file for PyTorch weights. Use `from_pt=True` to load this model from those "
+            "weights."
           )
         else:
           raise EnvironmentError(
-              f"Error no file named {TF2_WEIGHTS_NAME} or {WEIGHTS_NAME} found in directory "
-              f"{pretrained_model_name_or_path}."
+            f"Error no file named {TF2_WEIGHTS_NAME} or {WEIGHTS_NAME} found in directory "
+            f"{pretrained_model_name_or_path}."
           )
       elif os.path.isfile(pretrained_model_name_or_path):
         archive_file = pretrained_model_name_or_path
@@ -2563,17 +2571,17 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
         try:
           # Load from URL or cache if already cached
           cached_file_kwargs = dict(
-              cache_dir=cache_dir,
-              force_download=force_download,
-              proxies=proxies,
-              resume_download=resume_download,
-              local_files_only=local_files_only,
-              use_auth_token=use_auth_token,
-              user_agent=user_agent,
-              revision=revision,
-              subfolder=subfolder,
-              _raise_exceptions_for_missing_entries=False,
-              _commit_hash=commit_hash,
+            cache_dir=cache_dir,
+            force_download=force_download,
+            proxies=proxies,
+            resume_download=resume_download,
+            local_files_only=local_files_only,
+            use_auth_token=use_auth_token,
+            user_agent=user_agent,
+            revision=revision,
+            subfolder=subfolder,
+            _raise_exceptions_for_missing_entries=False,
+            _commit_hash=commit_hash,
           )
           resolved_archive_file = cached_file(pretrained_model_name_or_path, filename, **cached_file_kwargs)
 
@@ -2582,7 +2590,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
           if resolved_archive_file is None and filename == SAFE_WEIGHTS_NAME:
             # Maybe the checkpoint is sharded, we try to grab the index name in this case.
             resolved_archive_file = cached_file(
-                pretrained_model_name_or_path, SAFE_WEIGHTS_INDEX_NAME, **cached_file_kwargs
+              pretrained_model_name_or_path, SAFE_WEIGHTS_INDEX_NAME, **cached_file_kwargs
             )
             if resolved_archive_file is not None:
               is_sharded = True
@@ -2594,7 +2602,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
           if resolved_archive_file is None and filename == TF2_WEIGHTS_NAME:
             # Maybe the checkpoint is sharded, we try to grab the index name in this case.
             resolved_archive_file = cached_file(
-                pretrained_model_name_or_path, TF2_WEIGHTS_INDEX_NAME, **cached_file_kwargs
+              pretrained_model_name_or_path, TF2_WEIGHTS_INDEX_NAME, **cached_file_kwargs
             )
             if resolved_archive_file is not None:
               is_sharded = True
@@ -2607,20 +2615,20 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
             # Otherwise, maybe there is a PyTorch or Flax model file.  We try those to give a helpful error
             # message.
             has_file_kwargs = {
-                "revision": revision,
-                "proxies": proxies,
-                "use_auth_token": use_auth_token,
+              "revision": revision,
+              "proxies": proxies,
+              "use_auth_token": use_auth_token,
             }
             if has_file(pretrained_model_name_or_path, WEIGHTS_NAME, **has_file_kwargs):
               raise EnvironmentError(
-                  f"{pretrained_model_name_or_path} does not appear to have a file named"
-                  f" {TF2_WEIGHTS_NAME} but there is a file for PyTorch weights. Use `from_pt=True` to"
-                  " load this model from those weights."
+                f"{pretrained_model_name_or_path} does not appear to have a file named"
+                f" {TF2_WEIGHTS_NAME} but there is a file for PyTorch weights. Use `from_pt=True` to"
+                " load this model from those weights."
               )
             else:
               raise EnvironmentError(
-                  f"{pretrained_model_name_or_path} does not appear to have a file named {WEIGHTS_NAME},"
-                  f" {TF2_WEIGHTS_NAME} or {TF_WEIGHTS_NAME}"
+                f"{pretrained_model_name_or_path} does not appear to have a file named {WEIGHTS_NAME},"
+                f" {TF2_WEIGHTS_NAME} or {TF_WEIGHTS_NAME}"
               )
 
         except EnvironmentError:
@@ -2631,10 +2639,10 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
           # For any other exception, we throw a generic error.
 
           raise EnvironmentError(
-              f"Can't load the model for '{pretrained_model_name_or_path}'. If you were trying to load it"
-              " from 'https://huggingface.co/models', make sure you don't have a local directory with the"
-              f" same name. Otherwise, make sure '{pretrained_model_name_or_path}' is the correct path to a"
-              f" directory containing a file named {WEIGHTS_NAME}, {TF2_WEIGHTS_NAME} or {TF_WEIGHTS_NAME}"
+            f"Can't load the model for '{pretrained_model_name_or_path}'. If you were trying to load it"
+            " from 'https://huggingface.co/models', make sure you don't have a local directory with the"
+            f" same name. Otherwise, make sure '{pretrained_model_name_or_path}' is the correct path to a"
+            f" directory containing a file named {WEIGHTS_NAME}, {TF2_WEIGHTS_NAME} or {TF_WEIGHTS_NAME}"
           )
       if is_local:
         logger.info(f"loading weights file {archive_file}")
@@ -2649,17 +2657,17 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
     if is_sharded:
       # resolved_archive_file becomes a list of files that point to the different checkpoint shards in this case.
       resolved_archive_file, _ = get_checkpoint_shard_files(
-          pretrained_model_name_or_path,
-          resolved_archive_file,
-          cache_dir=cache_dir,
-          force_download=force_download,
-          proxies=proxies,
-          resume_download=resume_download,
-          local_files_only=local_files_only,
-          use_auth_token=use_auth_token,
-          user_agent=user_agent,
-          revision=revision,
-          _commit_hash=commit_hash,
+        pretrained_model_name_or_path,
+        resolved_archive_file,
+        cache_dir=cache_dir,
+        force_download=force_download,
+        proxies=proxies,
+        resume_download=resume_download,
+        local_files_only=local_files_only,
+        use_auth_token=use_auth_token,
+        user_agent=user_agent,
+        revision=revision,
+        _commit_hash=commit_hash,
       )
 
     safetensors_from_pt = False
@@ -2668,8 +2676,8 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
         safetensors_metadata = f.metadata()
       if safetensors_metadata is None or safetensors_metadata.get("format") not in ["pt", "tf", "flax"]:
         raise OSError(
-            f"The safetensors archive passed at {resolved_archive_file} does not contain the valid metadata."
-            " Make sure you save your model with the `save_pretrained` method."
+          f"The safetensors archive passed at {resolved_archive_file} does not contain the valid metadata."
+          " Make sure you save your model with the `save_pretrained` method."
         )
       safetensors_from_pt = safetensors_metadata.get("format") == "pt"
 
@@ -2688,7 +2696,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
       # Load from a PyTorch checkpoint
       return load_pytorch_checkpoint_in_tf2_model(
-          model, resolved_archive_file, allow_missing_keys=True, output_loading_info=output_loading_info
+        model, resolved_archive_file, allow_missing_keys=True, output_loading_info=output_loading_info
       )
 
     # we might need to extend the variable scope for composite models
@@ -2704,7 +2712,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
       state_dict = safe_load_file(resolved_archive_file)
       # Load from a PyTorch checkpoint
       return load_pytorch_state_dict_in_tf2_model(
-          model, state_dict, allow_missing_keys=True, output_loading_info=output_loading_info
+        model, state_dict, allow_missing_keys=True, output_loading_info=output_loading_info
       )
 
     # 'by_name' allow us to do transfer learning by skipping/adding layers
@@ -2715,32 +2723,32 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
           os.path.isfile(file), f"Error retrieving files {file}"
 
         missing_keys, unexpected_keys, mismatched_keys = load_tf_sharded_weights(
-            model,
-            resolved_archive_file,
-            ignore_mismatched_sizes=ignore_mismatched_sizes,
+          model,
+          resolved_archive_file,
+          ignore_mismatched_sizes=ignore_mismatched_sizes,
         )
       else:
         missing_keys, unexpected_keys, mismatched_keys = load_tf_weights(
-            model,
-            resolved_archive_file,
-            ignore_mismatched_sizes=ignore_mismatched_sizes,
-            _prefix=load_weight_prefix,
+          model,
+          resolved_archive_file,
+          ignore_mismatched_sizes=ignore_mismatched_sizes,
+          _prefix=load_weight_prefix,
         )
     except OSError as e:
       try:
         with open(resolved_archive_file) as f:
           if f.read().startswith("version"):
             raise OSError(
-                "You seem to have cloned a repository without having git-lfs installed. Please install "
-                "git-lfs and run `git lfs install` followed by `git lfs pull` in the folder "
-                "you cloned."
+              "You seem to have cloned a repository without having git-lfs installed. Please install "
+              "git-lfs and run `git lfs install` followed by `git lfs pull` in the folder "
+              "you cloned."
             )
           else:
             raise ValueError from e
       except (UnicodeDecodeError, ValueError):
         raise OSError(
-            "Unable to load weights from h5 file. "
-            "If you tried to load a TF 2.0 model from a PyTorch checkpoint, please set from_pt=True. "
+          "Unable to load weights from h5 file. "
+          "If you tried to load a TF 2.0 model from a PyTorch checkpoint, please set from_pt=True. "
         )
 
     model(model.dummy_inputs)  # Make sure restore ops are run
@@ -2755,60 +2763,58 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
     if len(unexpected_keys) > 0:
       logger.warning(
-          f"Some layers from the model checkpoint at {pretrained_model_name_or_path} were not used when"
-          f" initializing {model.__class__.__name__}: {unexpected_keys}\n- This IS expected if you are"
-          f" initializing {model.__class__.__name__} from the checkpoint of a model trained on another task or"
-          " with another architecture (e.g. initializing a BertForSequenceClassification model from a"
-          " BertForPreTraining model).\n- This IS NOT expected if you are initializing"
-          f" {model.__class__.__name__} from the checkpoint of a model that you expect to be exactly identical"
-          " (initializing a BertForSequenceClassification model from a BertForSequenceClassification model)."
+        f"Some layers from the model checkpoint at {pretrained_model_name_or_path} were not used when"
+        f" initializing {model.__class__.__name__}: {unexpected_keys}\n- This IS expected if you are"
+        f" initializing {model.__class__.__name__} from the checkpoint of a model trained on another task or"
+        " with another architecture (e.g. initializing a BertForSequenceClassification model from a"
+        " BertForPreTraining model).\n- This IS NOT expected if you are initializing"
+        f" {model.__class__.__name__} from the checkpoint of a model that you expect to be exactly identical"
+        " (initializing a BertForSequenceClassification model from a BertForSequenceClassification model)."
       )
     else:
       logger.warning(f"All model checkpoint layers were used when initializing {model.__class__.__name__}.\n")
 
     if len(missing_keys) > 0:
       logger.warning(
-          f"Some layers of {model.__class__.__name__} were not initialized from the model checkpoint at"
-          f" {pretrained_model_name_or_path} and are newly initialized: {missing_keys}\nYou should probably"
-          " TRAIN this model on a down-stream task to be able to use it for predictions and inference."
+        f"Some layers of {model.__class__.__name__} were not initialized from the model checkpoint at"
+        f" {pretrained_model_name_or_path} and are newly initialized: {missing_keys}\nYou should probably"
+        " TRAIN this model on a down-stream task to be able to use it for predictions and inference."
       )
     elif len(mismatched_keys) == 0:
       logger.warning(
-          f"All the layers of {model.__class__.__name__} were initialized from the model checkpoint at"
-          f" {pretrained_model_name_or_path}.\nIf your task is similar to the task the model of the checkpoint"
-          f" was trained on, you can already use {model.__class__.__name__} for predictions without further"
-          " training."
+        f"All the layers of {model.__class__.__name__} were initialized from the model checkpoint at"
+        f" {pretrained_model_name_or_path}.\nIf your task is similar to the task the model of the checkpoint"
+        f" was trained on, you can already use {model.__class__.__name__} for predictions without further"
+        " training."
       )
     if len(mismatched_keys) > 0:
-      mismatched_warning = "\n".join(
-          [
-              f"- {key}: found shape {shape1} in the checkpoint and {shape2} in the model instantiated"
-              for key, shape1, shape2 in mismatched_keys
-          ]
-      )
+      mismatched_warning = "\n".join([
+        f"- {key}: found shape {shape1} in the checkpoint and {shape2} in the model instantiated"
+        for key, shape1, shape2 in mismatched_keys
+      ])
       logger.warning(
-          f"Some weights of {model.__class__.__name__} were not initialized from the model checkpoint at"
-          f" {pretrained_model_name_or_path} and are newly initialized because the shapes did not"
-          f" match:\n{mismatched_warning}\nYou should probably TRAIN this model on a down-stream task to be able"
-          " to use it for predictions and inference."
+        f"Some weights of {model.__class__.__name__} were not initialized from the model checkpoint at"
+        f" {pretrained_model_name_or_path} and are newly initialized because the shapes did not"
+        f" match:\n{mismatched_warning}\nYou should probably TRAIN this model on a down-stream task to be able"
+        " to use it for predictions and inference."
       )
 
     # If it is a model with generation capabilities, attempt to load the generation config
     if model.can_generate():
       try:
         model.generation_config = GenerationConfig.from_pretrained(
-            pretrained_model_name_or_path,
-            cache_dir=cache_dir,
-            force_download=force_download,
-            resume_download=resume_download,
-            proxies=proxies,
-            local_files_only=local_files_only,
-            use_auth_token=use_auth_token,
-            revision=revision,
-            subfolder=subfolder,
-            _from_auto=from_auto_class,
-            _from_pipeline=from_pipeline,
-            **kwargs,
+          pretrained_model_name_or_path,
+          cache_dir=cache_dir,
+          force_download=force_download,
+          resume_download=resume_download,
+          proxies=proxies,
+          local_files_only=local_files_only,
+          use_auth_token=use_auth_token,
+          revision=revision,
+          subfolder=subfolder,
+          _from_auto=from_auto_class,
+          _from_pipeline=from_pipeline,
+          **kwargs,
         )
       except OSError:
         logger.info("Generation config file not found, using a generation config created from the model config.")
@@ -2816,9 +2822,9 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
     if output_loading_info:
       loading_info = {
-          "missing_keys": missing_keys,
-          "unexpected_keys": unexpected_keys,
-          "mismatched_keys": mismatched_keys,
+        "missing_keys": missing_keys,
+        "unexpected_keys": unexpected_keys,
+        "mismatched_keys": mismatched_keys,
       }
 
       return model, loading_info
@@ -2826,58 +2832,58 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
     return model
 
   def push_to_hub(
-      self,
-      repo_id: str,
-      use_temp_dir: Optional[bool] = None,
-      commit_message: Optional[str] = None,
-      private: Optional[bool] = None,
-      use_auth_token: Optional[Union[bool, str]] = None,
-      max_shard_size: Optional[Union[int, str]] = "10GB",
-      **model_card_kwargs
+    self,
+    repo_id: str,
+    use_temp_dir: Optional[bool] = None,
+    commit_message: Optional[str] = None,
+    private: Optional[bool] = None,
+    use_auth_token: Optional[Union[bool, str]] = None,
+    max_shard_size: Optional[Union[int, str]] = "10GB",
+    **model_card_kwargs,
   ) -> str:
     """
-        Upload the model files to the 🤗 Model Hub while synchronizing a local clone of the repo in `repo_path_or_name`.
+    Upload the model files to the 🤗 Model Hub while synchronizing a local clone of the repo in `repo_path_or_name`.
 
-        Parameters:
-            repo_id (`str`):
-                The name of the repository you want to push your model to. It should contain your organization name
-                when pushing to a given organization.
-            use_temp_dir (`bool`, *optional*):
-                Whether or not to use a temporary directory to store the files saved before they are pushed to the Hub.
-                Will default to `True` if there is no directory named like `repo_id`, `False` otherwise.
-            commit_message (`str`, *optional*):
-                Message to commit while pushing. Will default to `"Upload model"`.
-            private (`bool`, *optional*):
-                Whether or not the repository created should be private.
-            use_auth_token (`bool` or `str`, *optional*):
-                The token to use as HTTP bearer authorization for remote files. If `True`, will use the token generated
-                when running `huggingface-cli login` (stored in `~/.huggingface`). Will default to `True` if `repo_url`
-                is not specified.
-            max_shard_size (`int` or `str`, *optional*, defaults to `"10GB"`):
-                Only applicable for models. The maximum size for a checkpoint before being sharded. Checkpoints shard
-                will then be each of size lower than this size. If expressed as a string, needs to be digits followed
-                by a unit (like `"5MB"`).
-            model_card_kwargs:
-                Additional keyword arguments passed along to the [`~TFPreTrainedModel.create_model_card`] method.
+    Parameters:
+        repo_id (`str`):
+            The name of the repository you want to push your model to. It should contain your organization name
+            when pushing to a given organization.
+        use_temp_dir (`bool`, *optional*):
+            Whether or not to use a temporary directory to store the files saved before they are pushed to the Hub.
+            Will default to `True` if there is no directory named like `repo_id`, `False` otherwise.
+        commit_message (`str`, *optional*):
+            Message to commit while pushing. Will default to `"Upload model"`.
+        private (`bool`, *optional*):
+            Whether or not the repository created should be private.
+        use_auth_token (`bool` or `str`, *optional*):
+            The token to use as HTTP bearer authorization for remote files. If `True`, will use the token generated
+            when running `huggingface-cli login` (stored in `~/.huggingface`). Will default to `True` if `repo_url`
+            is not specified.
+        max_shard_size (`int` or `str`, *optional*, defaults to `"10GB"`):
+            Only applicable for models. The maximum size for a checkpoint before being sharded. Checkpoints shard
+            will then be each of size lower than this size. If expressed as a string, needs to be digits followed
+            by a unit (like `"5MB"`).
+        model_card_kwargs:
+            Additional keyword arguments passed along to the [`~TFPreTrainedModel.create_model_card`] method.
 
-        Examples:
+    Examples:
 
-        ```python
-        from transformers import TFAutoModel
+    ```python
+    from transformers import TFAutoModel
 
-        model = TFAutoModel.from_pretrained("bert-base-cased")
+    model = TFAutoModel.from_pretrained("bert-base-cased")
 
-        # Push the model to your namespace with the name "my-finetuned-bert".
-        model.push_to_hub("my-finetuned-bert")
+    # Push the model to your namespace with the name "my-finetuned-bert".
+    model.push_to_hub("my-finetuned-bert")
 
-        # Push the model to an organization with the name "my-finetuned-bert".
-        model.push_to_hub("huggingface/my-finetuned-bert")
-        ```
-        """
+    # Push the model to an organization with the name "my-finetuned-bert".
+    model.push_to_hub("huggingface/my-finetuned-bert")
+    ```
+    """
     if "repo_path_or_name" in model_card_kwargs:
       warnings.warn(
-          "The `repo_path_or_name` argument is deprecated and will be removed in v5 of Transformers. Use "
-          "`repo_id` instead."
+        "The `repo_path_or_name` argument is deprecated and will be removed in v5 of Transformers. Use "
+        "`repo_id` instead."
       )
       repo_id = model_card_kwargs.pop("repo_path_or_name")
     # Deprecation warning will be sent after for repo_url and organization
@@ -2891,7 +2897,7 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
       working_dir = repo_id.split("/")[-1]
 
     repo_id, token = self._create_repo(
-        repo_id, private=private, use_auth_token=use_auth_token, repo_url=repo_url, organization=organization
+      repo_id, private=private, use_auth_token=use_auth_token, repo_url=repo_url, organization=organization
     )
 
     if use_temp_dir is None:
@@ -2905,8 +2911,8 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
       if hasattr(self, "history") and hasattr(self, "create_model_card"):
         # This is a Keras model and we might be able to fish out its History and make a model card out of it
         base_model_card_args = {
-            "output_dir": work_dir,
-            "model_name": Path(repo_id).name,
+          "output_dir": work_dir,
+          "model_name": Path(repo_id).name,
         }
         base_model_card_args.update(model_card_kwargs)
         self.create_model_card(**base_model_card_args)
@@ -2916,19 +2922,19 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
   @classmethod
   def register_for_auto_class(cls, auto_class="TFAutoModel"):
     """
-        Register this class with a given auto class. This should only be used for custom models as the ones in the
-        library are already mapped with an auto class.
+    Register this class with a given auto class. This should only be used for custom models as the ones in the
+    library are already mapped with an auto class.
 
-        <Tip warning={true}>
+    <Tip warning={true}>
 
-        This API is experimental and may have some slight breaking changes in the next releases.
+    This API is experimental and may have some slight breaking changes in the next releases.
 
-        </Tip>
+    </Tip>
 
-        Args:
-            auto_class (`str` or `type`, *optional*, defaults to `"TFAutoModel"`):
-                The auto class to register this new model with.
-        """
+    Args:
+        auto_class (`str` or `type`, *optional*, defaults to `"TFAutoModel"`):
+            The auto class to register this new model with.
+    """
     if not isinstance(auto_class, str):
       auto_class = auto_class.__name__
 
@@ -2942,20 +2948,20 @@ class TFPreTrainedModel(tf.keras.Model, TFModelUtilsMixin, TFGenerationMixin, Pu
 
 class TFConv1D(tf.keras.layers.Layer):
   """
-    1D-convolutional layer as defined by Radford et al. for OpenAI GPT (and also used in GPT-2).
+  1D-convolutional layer as defined by Radford et al. for OpenAI GPT (and also used in GPT-2).
 
-    Basically works like a linear layer but the weights are transposed.
+  Basically works like a linear layer but the weights are transposed.
 
-    Args:
-        nf (`int`):
-            The number of output features.
-        nx (`int`):
-            The number of input features.
-        initializer_range (`float`, *optional*, defaults to 0.02):
-            The standard deviation to use to initialize the weights.
-        kwargs:
-            Additional keyword arguments passed along to the `__init__` of `tf.keras.layers.Layer`.
-    """
+  Args:
+      nf (`int`):
+          The number of output features.
+      nx (`int`):
+          The number of input features.
+      initializer_range (`float`, *optional*, defaults to 0.02):
+          The standard deviation to use to initialize the weights.
+      kwargs:
+          Additional keyword arguments passed along to the `__init__` of `tf.keras.layers.Layer`.
+  """
 
   def __init__(self, nf, nx, initializer_range=0.02, **kwargs):
     super().__init__(**kwargs)
@@ -2965,7 +2971,7 @@ class TFConv1D(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     self.weight = self.add_weight(
-        "weight", shape=[self.nx, self.nf], initializer=get_initializer(self.initializer_range)
+      "weight", shape=[self.nx, self.nf], initializer=get_initializer(self.initializer_range)
     )
     self.bias = self.add_weight("bias", shape=[1, self.nf], initializer=tf.zeros_initializer())
 
@@ -2982,22 +2988,22 @@ class TFConv1D(tf.keras.layers.Layer):
 
 class TFSharedEmbeddings(tf.keras.layers.Layer):
   r"""
-    Construct shared token embeddings.
+  Construct shared token embeddings.
 
-    The weights of the embedding layer is usually shared with the weights of the linear decoder when doing language
-    modeling.
+  The weights of the embedding layer is usually shared with the weights of the linear decoder when doing language
+  modeling.
 
-    Args:
-        vocab_size (`int`):
-            The size of the vocabulary, e.g., the number of unique tokens.
-        hidden_size (`int`):
-            The size of the embedding vectors.
-        initializer_range (`float`, *optional*):
-            The standard deviation to use when initializing the weights. If no value is provided, it will default to
-            \\(1/\sqrt{hidden\_size}\\).
-        kwargs:
-            Additional keyword arguments passed along to the `__init__` of `tf.keras.layers.Layer`.
-    """
+  Args:
+      vocab_size (`int`):
+          The size of the vocabulary, e.g., the number of unique tokens.
+      hidden_size (`int`):
+          The size of the embedding vectors.
+      initializer_range (`float`, *optional*):
+          The standard deviation to use when initializing the weights. If no value is provided, it will default to
+          \\(1/\sqrt{hidden\_size}\\).
+      kwargs:
+          Additional keyword arguments passed along to the `__init__` of `tf.keras.layers.Layer`.
+  """
 
   # TODO (joao): flagged for delection due to embeddings refactor
 
@@ -3009,19 +3015,19 @@ class TFSharedEmbeddings(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     """
-        Build shared token embedding layer Shared weights logic adapted from
-        https://github.com/tensorflow/models/blob/a009f4fb9d2fc4949e32192a944688925ef78659/official/transformer/v2/embedding_layer.py#L24
-        """
+    Build shared token embedding layer Shared weights logic adapted from
+    https://github.com/tensorflow/models/blob/a009f4fb9d2fc4949e32192a944688925ef78659/official/transformer/v2/embedding_layer.py#L24
+    """
     self.weight = self.add_weight(
-        "weight", shape=[self.vocab_size, self.hidden_size], initializer=get_initializer(self.initializer_range)
+      "weight", shape=[self.vocab_size, self.hidden_size], initializer=get_initializer(self.initializer_range)
     )
     super().build(input_shape)
 
   def get_config(self):
     config = {
-        "vocab_size": self.vocab_size,
-        "hidden_size": self.hidden_size,
-        "initializer_range": self.initializer_range,
+      "vocab_size": self.vocab_size,
+      "hidden_size": self.hidden_size,
+      "initializer_range": self.initializer_range,
     }
     base_config = super().get_config()
 
@@ -3029,29 +3035,29 @@ class TFSharedEmbeddings(tf.keras.layers.Layer):
 
   def call(self, inputs: tf.Tensor, mode: str = "embedding") -> tf.Tensor:
     """
-        Get token embeddings of inputs or decode final hidden state.
+    Get token embeddings of inputs or decode final hidden state.
 
-        Args:
-            inputs (`tf.Tensor`):
-                In embedding mode, should be an int64 tensor with shape `[batch_size, length]`.
+    Args:
+        inputs (`tf.Tensor`):
+            In embedding mode, should be an int64 tensor with shape `[batch_size, length]`.
 
-                In linear mode, should be a float tensor with shape `[batch_size, length, hidden_size]`.
-            mode (`str`, defaults to `"embedding"`):
-               A valid value is either `"embedding"` or `"linear"`, the first one indicates that the layer should be
-               used as an embedding layer, the second one that the layer should be used as a linear decoder.
+            In linear mode, should be a float tensor with shape `[batch_size, length, hidden_size]`.
+        mode (`str`, defaults to `"embedding"`):
+           A valid value is either `"embedding"` or `"linear"`, the first one indicates that the layer should be
+           used as an embedding layer, the second one that the layer should be used as a linear decoder.
 
-        Returns:
-            `tf.Tensor`: In embedding mode, the output is a float32 embedding tensor, with shape `[batch_size, length,
-            embedding_size]`.
+    Returns:
+        `tf.Tensor`: In embedding mode, the output is a float32 embedding tensor, with shape `[batch_size, length,
+        embedding_size]`.
 
-            In linear mode, the output is a float32 with shape `[batch_size, length, vocab_size]`.
+        In linear mode, the output is a float32 with shape `[batch_size, length, vocab_size]`.
 
-        Raises:
-            ValueError: if `mode` is not valid.
+    Raises:
+        ValueError: if `mode` is not valid.
 
-        Shared weights logic is adapted from
-        [here](https://github.com/tensorflow/models/blob/a009f4fb9d2fc4949e32192a944688925ef78659/official/transformer/v2/embedding_layer.py#L24).
-        """
+    Shared weights logic is adapted from
+    [here](https://github.com/tensorflow/models/blob/a009f4fb9d2fc4949e32192a944688925ef78659/official/transformer/v2/embedding_layer.py#L24).
+    """
     if mode == "embedding":
       return self._embedding(inputs)
     elif mode == "linear":
@@ -3065,14 +3071,14 @@ class TFSharedEmbeddings(tf.keras.layers.Layer):
 
   def _linear(self, inputs):
     """
-        Computes logits by running inputs through a linear layer.
+    Computes logits by running inputs through a linear layer.
 
-        Args:
-            inputs: A float32 tensor with shape [..., hidden_size]
+    Args:
+        inputs: A float32 tensor with shape [..., hidden_size]
 
-        Returns:
-            float32 tensor with shape [..., vocab_size].
-        """
+    Returns:
+        float32 tensor with shape [..., vocab_size].
+    """
     first_dims = shape_list(inputs)[:-1]
     x = tf.reshape(inputs, [-1, self.hidden_size])
     logits = tf.matmul(x, self.weight, transpose_b=True)
@@ -3082,33 +3088,33 @@ class TFSharedEmbeddings(tf.keras.layers.Layer):
 
 class TFSequenceSummary(tf.keras.layers.Layer):
   """
-    Compute a single vector summary of a sequence hidden states.
+  Compute a single vector summary of a sequence hidden states.
 
-    Args:
-        config ([`PretrainedConfig`]):
-            The config used by the model. Relevant arguments in the config class of the model are (refer to the actual
-            config class of your model for the default values it uses):
+  Args:
+      config ([`PretrainedConfig`]):
+          The config used by the model. Relevant arguments in the config class of the model are (refer to the actual
+          config class of your model for the default values it uses):
 
-            - **summary_type** (`str`) -- The method to use to make this summary. Accepted values are:
+          - **summary_type** (`str`) -- The method to use to make this summary. Accepted values are:
 
-                - `"last"` -- Take the last token hidden state (like XLNet)
-                - `"first"` -- Take the first token hidden state (like Bert)
-                - `"mean"` -- Take the mean of all tokens hidden states
-                - `"cls_index"` -- Supply a Tensor of classification token position (GPT/GPT-2)
-                - `"attn"` -- Not implemented now, use multi-head attention
+              - `"last"` -- Take the last token hidden state (like XLNet)
+              - `"first"` -- Take the first token hidden state (like Bert)
+              - `"mean"` -- Take the mean of all tokens hidden states
+              - `"cls_index"` -- Supply a Tensor of classification token position (GPT/GPT-2)
+              - `"attn"` -- Not implemented now, use multi-head attention
 
-            - **summary_use_proj** (`bool`) -- Add a projection after the vector extraction.
-            - **summary_proj_to_labels** (`bool`) -- If `True`, the projection outputs to `config.num_labels` classes
-              (otherwise to `config.hidden_size`).
-            - **summary_activation** (`Optional[str]`) -- Set to `"tanh"` to add a tanh activation to the output,
-              another string or `None` will add no activation.
-            - **summary_first_dropout** (`float`) -- Optional dropout probability before the projection and activation.
-            - **summary_last_dropout** (`float`)-- Optional dropout probability after the projection and activation.
+          - **summary_use_proj** (`bool`) -- Add a projection after the vector extraction.
+          - **summary_proj_to_labels** (`bool`) -- If `True`, the projection outputs to `config.num_labels` classes
+            (otherwise to `config.hidden_size`).
+          - **summary_activation** (`Optional[str]`) -- Set to `"tanh"` to add a tanh activation to the output,
+            another string or `None` will add no activation.
+          - **summary_first_dropout** (`float`) -- Optional dropout probability before the projection and activation.
+          - **summary_last_dropout** (`float`)-- Optional dropout probability after the projection and activation.
 
-        initializer_range (`float`, defaults to 0.02): The standard deviation to use to initialize the weights.
-        kwargs:
-            Additional keyword arguments passed along to the `__init__` of `tf.keras.layers.Layer`.
-    """
+      initializer_range (`float`, defaults to 0.02): The standard deviation to use to initialize the weights.
+      kwargs:
+          Additional keyword arguments passed along to the `__init__` of `tf.keras.layers.Layer`.
+  """
 
   def __init__(self, config: PretrainedConfig, initializer_range: float = 0.02, **kwargs):
     super().__init__(**kwargs)
@@ -3127,7 +3133,7 @@ class TFSequenceSummary(tf.keras.layers.Layer):
       else:
         num_classes = config.hidden_size
       self.summary = tf.keras.layers.Dense(
-          num_classes, kernel_initializer=get_initializer(initializer_range), name="summary"
+        num_classes, kernel_initializer=get_initializer(initializer_range), name="summary"
       )
 
     self.has_activation = False
@@ -3165,7 +3171,7 @@ class TFSequenceSummary(tf.keras.layers.Layer):
       hidden_shape = shape_list(hidden_states)  # e.g. [batch, num choices, seq length, hidden dims]
       if cls_index is None:
         cls_index = tf.fill(
-            hidden_shape[:-2], hidden_shape[-2] - 1
+          hidden_shape[:-2], hidden_shape[-2] - 1
         )  # A tensor full of shape [batch] or [batch, num choices] full of sequence length
       cls_shape = shape_list(cls_index)
       if len(cls_shape) <= len(hidden_shape) - 2:
@@ -3196,12 +3202,12 @@ class TFSequenceSummary(tf.keras.layers.Layer):
 
 def get_initializer(initializer_range: float = 0.02) -> tf.initializers.TruncatedNormal:
   """
-    Creates a `tf.initializers.TruncatedNormal` with the given range.
+  Creates a `tf.initializers.TruncatedNormal` with the given range.
 
-    Args:
-        initializer_range (*float*, defaults to 0.02): Standard deviation of the initializer range.
+  Args:
+      initializer_range (*float*, defaults to 0.02): Standard deviation of the initializer range.
 
-    Returns:
-        `tf.initializers.TruncatedNormal`: The truncated normal initializer.
-    """
+  Returns:
+      `tf.initializers.TruncatedNormal`: The truncated normal initializer.
+  """
   return tf.keras.initializers.TruncatedNormal(stddev=initializer_range)

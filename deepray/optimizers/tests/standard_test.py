@@ -22,15 +22,15 @@ from deepray.optimizers import KerasLegacyOptimizer
 from deepray.utils.test_utils import discover_classes
 
 class_exceptions = [
-    "MultiOptimizer",  # is wrapper
-    "SGDW",  # is wrapper
-    "AdamW",  # is wrapper
-    "SWA",  # is wrapper
-    "AveragedOptimizerWrapper",  # is wrapper
-    "ConditionalGradient",  # is wrapper
-    "Lookahead",  # is wrapper
-    "MovingAverage",  # is wrapper
-    "KerasLegacyOptimizer",  # is a constantc
+  "MultiOptimizer",  # is wrapper
+  "SGDW",  # is wrapper
+  "AdamW",  # is wrapper
+  "SWA",  # is wrapper
+  "AveragedOptimizerWrapper",  # is wrapper
+  "ConditionalGradient",  # is wrapper
+  "Lookahead",  # is wrapper
+  "MovingAverage",  # is wrapper
+  "KerasLegacyOptimizer",  # is a constantc
 ]
 
 classes_to_test = discover_classes(optimizers, KerasLegacyOptimizer, class_exceptions)
@@ -40,9 +40,9 @@ classes_to_test = discover_classes(optimizers, KerasLegacyOptimizer, class_excep
 @pytest.mark.parametrize("serialize", [True, False])
 def test_optimizer_minimize_serialize(optimizer, serialize, tmpdir):
   """
-    Purpose of this test is to confirm that the optimizer can minimize the loss in toy conditions.
-    It also tests for serialization as a parameter.
-    """
+  Purpose of this test is to confirm that the optimizer can minimize the loss in toy conditions.
+  It also tests for serialization as a parameter.
+  """
   model = tf.keras.Sequential([tf.keras.Input(shape=[1]), tf.keras.layers.Dense(1)])
 
   x = np.array(np.ones([1]))

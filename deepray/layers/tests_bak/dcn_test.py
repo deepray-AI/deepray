@@ -56,7 +56,7 @@ class CrossTest(tf.test.TestCase):
     with self.assertRaisesRegexp(ValueError, r"`diag_scale` should be non-negative"):
       x0 = np.asarray([[0.1, 0.2, 0.3]]).astype(np.float32)
       x = np.asarray([[0.4, 0.5, 0.6]]).astype(np.float32)
-      layer = Cross(diag_scale=-1.)
+      layer = Cross(diag_scale=-1.0)
       layer(x0, x)
 
   def test_bias(self):
@@ -64,7 +64,7 @@ class CrossTest(tf.test.TestCase):
     x = np.asarray([[0.4, 0.5, 0.6]]).astype(np.float32)
     layer = Cross(projection_dim=None, kernel_initializer="ones", bias_initializer="ones")
     output = layer(x0, x)
-    self.assertAllClose(np.asarray([[0.65, 1., 1.35]]), output)
+    self.assertAllClose(np.asarray([[0.65, 1.0, 1.35]]), output)
 
   def test_serialization(self):
     layer = Cross(projection_dim=None, preactivation="swish")
@@ -75,7 +75,7 @@ class CrossTest(tf.test.TestCase):
   def test_diag_scale(self):
     x0 = np.asarray([[0.1, 0.2, 0.3]]).astype(np.float32)
     x = np.asarray([[0.4, 0.5, 0.6]]).astype(np.float32)
-    layer = Cross(projection_dim=None, diag_scale=1., kernel_initializer="ones")
+    layer = Cross(projection_dim=None, diag_scale=1.0, kernel_initializer="ones")
     output = layer(x0, x)
     self.assertAllClose(np.asarray([[0.59, 0.9, 1.23]]), output)
 
@@ -87,7 +87,6 @@ class CrossTest(tf.test.TestCase):
     self.assertAllClose(x, output)
 
   def test_save_model(self):
-
     def get_model():
       x0 = tf.keras.layers.Input(shape=(13,))
       x1 = Cross(projection_dim=None)(x0, x0)

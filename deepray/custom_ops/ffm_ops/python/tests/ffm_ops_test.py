@@ -21,7 +21,6 @@ from deepray.custom_ops.ffm_ops import ffm
 
 
 class FFMOpsTest(test.TestCase):
-
   def _test_ffm_mul(self, use_gpu=False):
     with self.cached_session(use_gpu=use_gpu):
       left = tf.random.uniform(shape=(8, 10 * 4), minval=0, maxval=10)
@@ -46,7 +45,7 @@ class FFMOpsTest(test.TestCase):
     with self.cached_session(use_gpu=use_gpu):
       left = tf.random.uniform(shape=(8, 10 * 4), minval=0, maxval=10)
       right = tf.random.uniform(shape=(8, 12 * 4), minval=0, maxval=10)
-      output = ffm(left=left, right=right, dim_size=4, int_type='dot')
+      output = ffm(left=left, right=right, dim_size=4, int_type="dot")
       self.assertTrue(output.shape == (8, 120))
 
   def _test_ffm_dot_grad(self, use_gpu=False):
@@ -56,7 +55,7 @@ class FFMOpsTest(test.TestCase):
       with tf.GradientTape() as g:
         g.watch(left)
         g.watch(right)
-        out = ffm(left=left, right=right, dim_size=4, int_type='dot')
+        out = ffm(left=left, right=right, dim_size=4, int_type="dot")
         loss = tf.reduce_sum(out)
         left_grad, right_grad = g.gradient(loss, [left, right])
 

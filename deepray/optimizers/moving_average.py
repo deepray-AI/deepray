@@ -26,62 +26,61 @@ from typeguard import typechecked
 class MovingAverage(AveragedOptimizerWrapper):
   """Optimizer that computes a moving average of the variables.
 
-    Empirically it has been found that using the moving average of the trained
-    parameters of a deep network is better than using its trained parameters
-    directly. This optimizer allows you to compute this moving average and swap
-    the variables at save time so that any code outside of the training loop
-    will use by default the average values instead of the original ones.
+  Empirically it has been found that using the moving average of the trained
+  parameters of a deep network is better than using its trained parameters
+  directly. This optimizer allows you to compute this moving average and swap
+  the variables at save time so that any code outside of the training loop
+  will use by default the average values instead of the original ones.
 
-    Example of usage:
+  Example of usage:
 
-    ```python
-    opt = tf.keras.optimizers.SGD(learning_rate)
-    opt = dp.optimizers.MovingAverage(opt)
+  ```python
+  opt = tf.keras.optimizers.SGD(learning_rate)
+  opt = dp.optimizers.MovingAverage(opt)
 
-    ```
-    """
+  ```
+  """
 
   @typechecked
   def __init__(
-      self,
-      optimizer: types.Optimizer,
-      average_decay: types.FloatTensorLike = 0.99,
-      num_updates: Union[None, int, tf.Variable] = None,
-      start_step: int = 0,
-      dynamic_decay: bool = False,
-      name: str = "MovingAverage",
-      **kwargs,
+    self,
+    optimizer: types.Optimizer,
+    average_decay: types.FloatTensorLike = 0.99,
+    num_updates: Union[None, int, tf.Variable] = None,
+    start_step: int = 0,
+    dynamic_decay: bool = False,
+    name: str = "MovingAverage",
+    **kwargs,
   ):
     r"""Construct a new MovingAverage optimizer.
 
-        Args:
-            optimizer: str or `tf.keras.optimizers.legacy.Optimizer` that will be
-                used to compute and apply gradients.
-            average_decay: float. Decay to use to maintain the moving averages
-                of trained variables.
-            num_updates: Optional count of the number of updates applied to
-                variables.
-            start_step: int. What step to start the moving average.
-            dynamic_decay: bool. Whether to change the decay based on the number
-                of optimizer updates. Decay will start at 0.1 and gradually
-                increase up to `average_decay` after each optimizer update.
-            name: Optional name for the operations created when applying
-                gradients. Defaults to "MovingAverage".
-            **kwargs: keyword arguments. Allowed to be {`clipnorm`,
-                `clipvalue`, `lr`, `decay`}. `clipnorm` is clip gradients by
-                norm; `clipvalue` is clip gradients by value, `decay` is
-                included for backward compatibility to allow time inverse
-                decay of learning rate. `lr` is included for backward
-                compatibility, recommended to use `learning_rate` instead.
-        """
+    Args:
+        optimizer: str or `tf.keras.optimizers.legacy.Optimizer` that will be
+            used to compute and apply gradients.
+        average_decay: float. Decay to use to maintain the moving averages
+            of trained variables.
+        num_updates: Optional count of the number of updates applied to
+            variables.
+        start_step: int. What step to start the moving average.
+        dynamic_decay: bool. Whether to change the decay based on the number
+            of optimizer updates. Decay will start at 0.1 and gradually
+            increase up to `average_decay` after each optimizer update.
+        name: Optional name for the operations created when applying
+            gradients. Defaults to "MovingAverage".
+        **kwargs: keyword arguments. Allowed to be {`clipnorm`,
+            `clipvalue`, `lr`, `decay`}. `clipnorm` is clip gradients by
+            norm; `clipvalue` is clip gradients by value, `decay` is
+            included for backward compatibility to allow time inverse
+            decay of learning rate. `lr` is included for backward
+            compatibility, recommended to use `learning_rate` instead.
+    """
     super().__init__(optimizer, name, **kwargs)
     self._num_updates = num_updates
     if self._num_updates is not None:
       if isinstance(self._num_updates, tf.Variable):
         tf.debugging.assert_integer(
-            self._num_updates,
-            ('type of argument "num_updates" must be '
-             "int; got {} instead".format(self._num_updates.dtype)),
+          self._num_updates,
+          ('type of argument "num_updates" must be int; got {} instead'.format(self._num_updates.dtype)),
         )
       num_updates = tf.cast(self._num_updates, tf.float32, name="num_updates")
       average_decay = tf.minimum(average_decay, (1.0 + num_updates) / (10.0 + num_updates))
@@ -112,10 +111,10 @@ class MovingAverage(AveragedOptimizerWrapper):
 
   def get_config(self):
     config = {
-        "average_decay": self._serialize_hyperparameter("average_decay"),
-        "num_updates": self._num_updates,
-        "start_step": self._start_step,
-        "dynamic_decay": self._dynamic_decay,
+      "average_decay": self._serialize_hyperparameter("average_decay"),
+      "num_updates": self._num_updates,
+      "start_step": self._start_step,
+      "dynamic_decay": self._dynamic_decay,
     }
     base_config = super().get_config()
     return {**base_config, **config}
@@ -143,21 +142,19 @@ class MovingAverage(AveragedOptimizerWrapper):
   def swap_weights(self):
     """Swap the average and moving weights.
 
-        This is a convenience method to allow one to evaluate the averaged weights
-        at test time. Loads the weights stored in `self._average_weights` into the model,
-        keeping a copy of the original model weights. Swapping twice will return
-        the original weights.
-        """
+    This is a convenience method to allow one to evaluate the averaged weights
+    at test time. Loads the weights stored in `self._average_weights` into the model,
+    keeping a copy of the original model weights. Swapping twice will return
+    the original weights.
+    """
     if tf.distribute.in_cross_replica_context():
       strategy = tf.distribute.get_strategy()
       return strategy.run(self._swap_weights, args=())
     else:
-      raise ValueError("Swapping weights must occur under a "
-                       "tf.distribute.Strategy")
+      raise ValueError("Swapping weights must occur under a tf.distribute.Strategy")
 
   @tf.function
   def _swap_weights(self):
-
     def fn_0(a, b):
       return a.assign_add(b, use_locking=self._use_locking)
 

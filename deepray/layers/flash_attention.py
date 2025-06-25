@@ -24,16 +24,16 @@ class FlashAttentionLayer(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      max_query_length,
-      max_key_length,
-      num_heads,
-      dim_head,
-      dropout_rate=0.0,
-      is_causal=False,
-      num_splits=1,
-      dtype=tf.half,
-      **kwargs
+    self,
+    max_query_length,
+    max_key_length,
+    num_heads,
+    dim_head,
+    dropout_rate=0.0,
+    is_causal=False,
+    num_splits=1,
+    dtype=tf.half,
+    **kwargs,
   ):
     """vim
     Args:
@@ -55,10 +55,10 @@ class FlashAttentionLayer(tf.keras.layers.Layer):
     self.num_heads = num_heads
     if dim_head % 8 != 0:
       raise ValueError(
-          "Head dimensions that are multiples of 8,"
-          "up to 128 (e.g., 8, 16, 24, ..., 128)."
-          "Head dim > 64 backward requires A100 or H100."
-          "You set to %s" % dim_head
+        "Head dimensions that are multiples of 8,"
+        "up to 128 (e.g., 8, 16, 24, ..., 128)."
+        "Head dim > 64 backward requires A100 or H100."
+        "You set to %s" % dim_head
       )
     self.dim_head = dim_head
     self.dropout_rate = dropout_rate
@@ -130,19 +130,30 @@ class FlashAttentionLayer(tf.keras.layers.Layer):
     # [B X S, H, K] => [B X S, H, K]
     # The attention of the recommendation system currently does not require causal
     attn_weight = gen_flash_attention_ops.fmha_forward(
-        query, key, value, cu_seqlens_q, cu_seqlens_k, max_len_q, max_len_k, self.dropout_rate, self.softmax_scale,
-        zero_tensors, self.is_causal, return_softmax, self.num_splits
+      query,
+      key,
+      value,
+      cu_seqlens_q,
+      cu_seqlens_k,
+      max_len_q,
+      max_len_k,
+      self.dropout_rate,
+      self.softmax_scale,
+      zero_tensors,
+      self.is_causal,
+      return_softmax,
+      self.num_splits,
     )
 
     # output attn_weight: [B, S, H, K]
     attn_weight = tf.reshape(attn_weight, [-1, self.max_query_length, self.num_heads, self.dim_head])
-    tf.logging.info('self attention output shape {}'.format(attn_weight))
+    tf.logging.info("self attention output shape {}".format(attn_weight))
     return attn_weight
 
   def compute_output_shape(self, input_shape):
     return input_shape[0][:2] + (self.num_heads, self.dim_head)
 
   def get_config(self):
-    config = {'dropout_rate': self.dropout_rate}
+    config = {"dropout_rate": self.dropout_rate}
     base_config = super(FlashAttentionLayer, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))

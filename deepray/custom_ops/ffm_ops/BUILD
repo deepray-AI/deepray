@@ -1,5 +1,4 @@
 load("//deepray:deepray.bzl", "custom_op_library")
-load("@local_config_tf//:build_defs.bzl", "CPLUSPLUS_VERSION")
 
 licenses(["notice"])  # Apache 2.0
 
@@ -10,10 +9,13 @@ custom_op_library(
         "cc/kernels/ffm_kernels.h",
         "cc/ops/ffm_ops.cc",
     ],
-    copts = [CPLUSPLUS_VERSION],
-    cuda_srcs = [
+    copts = ["-Wno-unused-result"],
+    gpu_srcs = [
         "cc/kernels/ffm_kernels.h",
         "cc/kernels/ffm_kernels.cu.cc",
+    ],
+    deps = [
+        "//deepray/custom_ops/utils:ok_status_util",
     ],
 )
 
@@ -42,5 +44,9 @@ py_test(
     main = "python/tests/run_all_test.py",
     deps = [
         ":ffm_ops",
+        "//deepray/layers",
+        "@pypi_numpy//:pkg",
+        "@pypi_pytest//:pkg",
+        "@pypi_tensorflow//:pkg",
     ],
 )

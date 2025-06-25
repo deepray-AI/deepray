@@ -37,8 +37,8 @@ def test_config(multioutput):
 
 
 def initialize_vars(
-    multioutput: str = "uniform_average",
-    num_regressors: tf.int32 = 0,
+  multioutput: str = "uniform_average",
+  num_regressors: tf.int32 = 0,
 ):
   return RSquare(multioutput=multioutput, num_regressors=num_regressors)
 
@@ -146,10 +146,10 @@ def test_r2_sklearn_comparison(multioutput):
     r2_obj = initialize_vars(multioutput=multioutput)
     # Update
     update_obj_states(
-        r2_obj,
-        tensor_actuals,
-        tensor_preds,
-        sample_weight=tensor_sample_weight,
+      r2_obj,
+      tensor_actuals,
+      tensor_preds,
+      sample_weight=tensor_sample_weight,
     )
     # Check results by comparing to results of scikit-learn r2 implementation
     sklearn_result = sklearn_r2_score(actuals, preds, sample_weight=sample_weight, multioutput=multioutput)

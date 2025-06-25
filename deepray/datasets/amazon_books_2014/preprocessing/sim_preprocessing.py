@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Preprocessing script for SIM models."""
+
 import logging
 import multiprocessing
 import os
@@ -32,19 +33,19 @@ TEST_DATA_DIR = "test"
 TEST_DATA_FILE = "part.0.parquet"
 CATEGORIZED_METADATA_FILE = "metadata.json"
 OUTPUT_META = {
-    "label": "int8",
-    "uid": "int64",
-    "item": "int32",
-    "cat": "int32",
-    "item_sequence": "list",
-    "cat_sequence": "list",
-    "neg_item_sequence": "list",
-    "neg_cat_sequence": "list",
+  "label": "int8",
+  "uid": "int64",
+  "item": "int32",
+  "cat": "int32",
+  "item_sequence": "list",
+  "cat_sequence": "list",
+  "neg_item_sequence": "list",
+  "neg_cat_sequence": "list",
 }
 
 logging.basicConfig(
-    level=logging.INFO,
-    format="[%(asctime)s] %(levelname)s: %(message)s",
+  level=logging.INFO,
+  format="[%(asctime)s] %(levelname)s: %(message)s",
 )
 
 
@@ -77,8 +78,8 @@ def filter_too_short_sequences(reviews: cudf.DataFrame, min_seq_length: int) -> 
 
 
 def add_items_and_categories_indices(
-    reviews: cudf.DataFrame,
-    item_and_cat_with_ids: cudf.DataFrame,
+  reviews: cudf.DataFrame,
+  item_and_cat_with_ids: cudf.DataFrame,
 ) -> cudf.DataFrame:
   return reviews.merge(item_and_cat_with_ids, how="left", on="item")
 
@@ -98,14 +99,16 @@ def create_sampling_df(all_items: cudf.DataFrame, item_and_cat_with_ids: cudf.Da
 def aggregate_per_user(df):
   df = df.sort_values(by=["unixReviewTime", "item"])
   df = df.groupby("uid").agg({
-      "item_id": list,
-      "cat_id": list,
+    "item_id": list,
+    "cat_id": list,
   })
   df.reset_index(inplace=True)
-  df = df.rename(columns={
+  df = df.rename(
+    columns={
       "item_id": "item_sequence",
       "cat_id": "cat_sequence",
-  })
+    }
+  )
 
   df["item"] = df["item_sequence"].list.get(-1)
   df["cat"] = df["cat_sequence"].list.get(-1)
@@ -118,9 +121,9 @@ def aggregate_per_user(df):
 
 def explode_sequence(df: cudf.DataFrame, min_elements: int, max_elements: int) -> cudf.DataFrame:
   df = ExplodeSequence(
-      col_names=["item_sequence", "cat_sequence"],
-      keep_cols=["uid"],
-      max_elements=max_elements + 1,
+    col_names=["item_sequence", "cat_sequence"],
+    keep_cols=["uid"],
+    max_elements=max_elements + 1,
   ).transform(df)
 
   df["item"] = df["item_sequence"].list.get(-1)
@@ -140,10 +143,10 @@ def add_negative_label(pos_df: cudf.DataFrame, sampling_df: cudf.DataFrame) -> c
   neg_df["label"] = cupy.int8(0)
 
   neg = cupy.random.randint(
-      low=0,
-      high=len(sampling_df),
-      size=len(neg_df),
-      dtype=int,
+    low=0,
+    high=len(sampling_df),
+    size=len(neg_df),
+    dtype=int,
   )
 
   neg_item_ids = sampling_df["item_id"].iloc[neg].values
@@ -161,10 +164,10 @@ def add_negative_sampling(df: cudf.DataFrame, sampling_df: cudf.DataFrame) -> cu
   df = add_negative_label(df, sampling_df)
 
   neg = cupy.random.randint(
-      low=0,
-      high=len(sampling_df),
-      size=int(df.item_sequence.list.len().sum()),
-      dtype=int,
+    low=0,
+    high=len(sampling_df),
+    size=int(df.item_sequence.list.len().sum()),
+    dtype=int,
   )
   item_samples = sampling_df["item_id"].iloc[neg]
   cat_samples = sampling_df["cat_id"].iloc[neg]
@@ -185,15 +188,14 @@ def pad_with_zeros(df: cudf.DataFrame, max_elements: int) -> cudf.DataFrame:
 
 
 def create_train_dataset(
-    df: cudf.DataFrame,
-    sampling_df: cudf.DataFrame,
-    min_elements: int,
-    max_elements: int,
-    output_path: str,
-    seed: int,
-    dask_scheduler: str = "processes",
+  df: cudf.DataFrame,
+  sampling_df: cudf.DataFrame,
+  min_elements: int,
+  max_elements: int,
+  output_path: str,
+  seed: int,
+  dask_scheduler: str = "processes",
 ) -> None:
-
   def transform(df, sampling_df, partition_info):
     part_seed = seed + partition_info["number"] + 1
     cupy.random.seed(part_seed)
@@ -215,10 +217,10 @@ def create_train_dataset(
 
 
 def create_test_dataset(
-    df: cudf.DataFrame,
-    sampling_df: cudf.DataFrame,
-    max_elements: int,
-    output_path: str,
+  df: cudf.DataFrame,
+  sampling_df: cudf.DataFrame,
+  max_elements: int,
+  output_path: str,
 ) -> None:
   df = add_negative_sampling(df, sampling_df)
   df = pad_with_zeros(df, max_elements)
@@ -233,74 +235,74 @@ def create_test_dataset(
 
 @click.command()
 @click.option(
-    "--amazon_dataset_path",
-    required=True,
-    help="Path to the dataset. Must contain both reviews and metadata json files.",
-    type=str,
+  "--amazon_dataset_path",
+  required=True,
+  help="Path to the dataset. Must contain both reviews and metadata json files.",
+  type=str,
 )
 @click.option(
-    "--output_path",
-    required=True,
-    help="Path where preprocessed dataset is saved.",
-    type=str,
+  "--output_path",
+  required=True,
+  help="Path where preprocessed dataset is saved.",
+  type=str,
 )
 @click.option(
-    "--metadata_file_name",
-    default="meta_Books.json",
-    help="Path to the dataset. Must contain both reviews and metadata json files.",
-    type=str,
+  "--metadata_file_name",
+  default="meta_Books.json",
+  help="Path to the dataset. Must contain both reviews and metadata json files.",
+  type=str,
 )
 @click.option(
-    "--reviews_file_name",
-    default="reviews_Books.json",
-    help="Path where preprocessed dataset is saved.",
-    type=str,
+  "--reviews_file_name",
+  default="reviews_Books.json",
+  help="Path where preprocessed dataset is saved.",
+  type=str,
 )
 @click.option(
-    "--max_sequence_length",
-    default=100,
-    help="Take only `max_sequence_length` last elements of a sequence.",
+  "--max_sequence_length",
+  default=100,
+  help="Take only `max_sequence_length` last elements of a sequence.",
 )
 @click.option(
-    "--shortest_sequence_for_user",
-    default=20,
-    help="Specifies what is a minimal length of a sequence. "
-    "Every user with a sequence shorter than this value will be discarded."
+  "--shortest_sequence_for_user",
+  default=20,
+  help="Specifies what is a minimal length of a sequence. "
+  "Every user with a sequence shorter than this value will be discarded.",
 )
 @click.option(
-    "--shortest_sequence_for_training",
-    default=1,
-    help="Specifies what is a minimal length of a sequence in a training set.",
+  "--shortest_sequence_for_training",
+  default=1,
+  help="Specifies what is a minimal length of a sequence in a training set.",
 )
 @click.option(
-    "--metadata_loader_n_proc",
-    default=multiprocessing.cpu_count(),
-    help="Specifies the number of processes used to parse metadata.",
+  "--metadata_loader_n_proc",
+  default=multiprocessing.cpu_count(),
+  help="Specifies the number of processes used to parse metadata.",
 )
 @click.option(
-    "--review_loader_num_workers",
-    default=20,
-    help="Specifies the number of dask workers used to read reviews data. "
-    "Note that, as each worker is a new process, too high value might cause GPU OOM errors."
+  "--review_loader_num_workers",
+  default=20,
+  help="Specifies the number of dask workers used to read reviews data. "
+  "Note that, as each worker is a new process, too high value might cause GPU OOM errors.",
 )
 @click.option(
-    "--seed",
-    default=12345,
-    help="Seed for reproducibility."
-    "Note that the results can still differ between machines because of dask/cudf non-determinism.",
-    type=int,
+  "--seed",
+  default=12345,
+  help="Seed for reproducibility."
+  "Note that the results can still differ between machines because of dask/cudf non-determinism.",
+  type=int,
 )
 def main(
-    amazon_dataset_path: str,
-    output_path: str,
-    metadata_file_name: str,
-    reviews_file_name: str,
-    max_sequence_length: int,
-    shortest_sequence_for_user: int,
-    shortest_sequence_for_training: int,
-    metadata_loader_n_proc: int,
-    review_loader_num_workers: int,
-    seed: int,
+  amazon_dataset_path: str,
+  output_path: str,
+  metadata_file_name: str,
+  reviews_file_name: str,
+  max_sequence_length: int,
+  shortest_sequence_for_user: int,
+  shortest_sequence_for_training: int,
+  metadata_loader_n_proc: int,
+  review_loader_num_workers: int,
+  seed: int,
 ):
   cupy.random.seed(seed)
   rmm.reinitialize(managed_memory=True)
@@ -335,28 +337,28 @@ def main(
 
   logging.info("Creating train dataset")
   create_train_dataset(
-      df,
-      sampling_df,
-      min_elements=shortest_sequence_for_training,
-      max_elements=max_sequence_length,
-      output_path=os.path.join(output_path, TRAIN_DATA_DIR),
-      seed=seed,
+    df,
+    sampling_df,
+    min_elements=shortest_sequence_for_training,
+    max_elements=max_sequence_length,
+    output_path=os.path.join(output_path, TRAIN_DATA_DIR),
+    seed=seed,
   )
 
   logging.info("Creating test dataset")
   create_test_dataset(
-      df,
-      sampling_df,
-      max_elements=max_sequence_length,
-      output_path=os.path.join(output_path, TEST_DATA_DIR),
+    df,
+    sampling_df,
+    max_elements=max_sequence_length,
+    output_path=os.path.join(output_path, TEST_DATA_DIR),
   )
 
   logging.info("Saving metadata")
   save_metadata(
-      number_of_items=len(item_and_cat_with_ids),
-      number_of_categories=item_and_cat_with_ids["cat_id"].nunique(),
-      number_of_users=len(df),
-      output_path=os.path.join(output_path, CATEGORIZED_METADATA_FILE),
+    number_of_items=len(item_and_cat_with_ids),
+    number_of_categories=item_and_cat_with_ids["cat_id"].nunique(),
+    number_of_users=len(df),
+    output_path=os.path.join(output_path, CATEGORIZED_METADATA_FILE),
   )
 
 

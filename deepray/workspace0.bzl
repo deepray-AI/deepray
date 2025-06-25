@@ -1,9 +1,9 @@
 """TensorFlow workspace initialization. Consult the WORKSPACE on how to use it."""
 
+load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
+load("@rules_compressor//tensorflow:workspace2.bzl", rules_compressor_deps = "tf_workspace2")
 load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
 load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
-load("@rules_compressor//tensorflow:workspace2.bzl", rules_compressor_deps = "tf_workspace2")
-load("@com_github_nelhage_rules_boost//:boost/boost.bzl", "boost_deps")
 
 def workspace():
     # If a target is bound twice, the later one wins, so we have to do tf bindings

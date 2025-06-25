@@ -28,9 +28,9 @@ function is_macos() {
 }
 
 if is_windows; then
-  PIP_FILE_PREFIX="bazel-bin/build_pip_pkg.exe.runfiles/__main__/"
+  PIP_FILE_PREFIX="bazel-bin/build_pip_pkg.exe.runfiles/deepray/"
 else
-  PIP_FILE_PREFIX="bazel-bin/build_pip_pkg.runfiles/__main__/"
+  PIP_FILE_PREFIX="bazel-bin/build_pip_pkg.runfiles/deepray/"
 fi
 
 function abspath() {

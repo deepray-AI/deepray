@@ -13,8 +13,8 @@ RUN touch /ok.txt
 # -------------------------------
 FROM python:3.9 as valid_build_files
 
-COPY tools/install_deps/tensorflow-cpu.txt ./
-RUN pip install --default-timeout=1000 -r tensorflow-cpu.txt
+COPY tools/install_deps/tensorflow.txt ./
+RUN pip install --default-timeout=1000 -r tensorflow.txt
 
 RUN apt-get update && apt-get install sudo
 COPY tools/install_deps/install_bazelisk.sh .bazelversion ./
@@ -58,8 +58,8 @@ RUN touch /ok.txt
 # docs tests
 FROM python:3.9 as docs_tests
 
-COPY tools/install_deps/tensorflow-cpu.txt ./
-RUN pip install --default-timeout=1000 -r tensorflow-cpu.txt
+COPY tools/install_deps/tensorflow.txt ./
+RUN pip install --default-timeout=1000 -r tensorflow.txt
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 
@@ -78,8 +78,8 @@ RUN touch /ok.txt
 # test the editable mode
 FROM python:3.9 as test_editable_mode
 
-COPY tools/install_deps/tensorflow-cpu.txt ./
-RUN pip install --default-timeout=1000 -r tensorflow-cpu.txt
+COPY tools/install_deps/tensorflow.txt ./
+RUN pip install --default-timeout=1000 -r tensorflow.txt
 COPY requirements.txt ./
 RUN pip install -r requirements.txt
 COPY tools/install_deps/pytest.txt ./

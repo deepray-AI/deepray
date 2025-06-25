@@ -92,7 +92,7 @@ def _get_nondefault_flags_as_dict():
   nondefault_flags = {}
   for flag_name in flags.FLAGS:
     flag_value = getattr(flags.FLAGS, flag_name)
-    if (flag_name != flags.FLAGS[flag_name].short_name and flag_value != flags.FLAGS[flag_name].default):
+    if flag_name != flags.FLAGS[flag_name].short_name and flag_value != flags.FLAGS[flag_name].default:
       nondefault_flags[flag_name] = flag_value
   return nondefault_flags
 
@@ -120,48 +120,10 @@ def get_nondefault_flags_as_str():
   flag_strings = []
   for name, value in sorted(nondefault_flags.items()):
     if isinstance(value, bool):
-      flag_str = '--{}'.format(name) if value else '--no{}'.format(name)
+      flag_str = "--{}".format(name) if value else "--no{}".format(name)
     elif isinstance(value, list):
-      flag_str = '--{}={}'.format(name, ','.join(value))
+      flag_str = "--{}={}".format(name, ",".join(value))
     else:
-      flag_str = '--{}={}'.format(name, value)
+      flag_str = "--{}={}".format(name, value)
     flag_strings.append(flag_str)
-  return ' '.join(shlex_quote(flag_str) for flag_str in flag_strings)
-
-
-def parse_flags(flags_obj):
-  """Convenience function to turn flags into params."""
-  num_gpus = get_num_gpus(flags_obj)
-
-  batch_size = flags_obj.batch_size
-  eval_batch_size = flags_obj.eval_batch_size or flags_obj.batch_size
-
-  return {
-      "epochs": flags_obj.epochs,
-      "batches_per_step": 1,
-      "use_seed": flags_obj.random_seed is not None,
-      "batch_size": batch_size,
-      "eval_batch_size": eval_batch_size,
-      "learning_rate": flags_obj.learning_rate,
-      "mf_dim": flags_obj.num_factors,
-      "model_layers": [int(layer) for layer in flags_obj.layers],
-      "mf_regularization": flags_obj.mf_regularization,
-      "mlp_reg_layers": [float(reg) for reg in flags_obj.mlp_regularization],
-      "num_neg": flags_obj.num_neg,
-      "distribution_strategy": flags_obj.distribution_strategy,
-      "num_gpus": num_gpus,
-      "use_tpu": flags_obj.tpu is not None,
-      "tpu": flags_obj.tpu,
-      "tpu_zone": flags_obj.tpu_zone,
-      "tpu_gcp_project": flags_obj.tpu_gcp_project,
-      "beta1": flags_obj.beta1,
-      "beta2": flags_obj.beta2,
-      "epsilon": flags_obj.epsilon,
-      "match_mlperf": flags_obj.ml_perf,
-      # "epochs_between_evals": flags_obj.epochs_between_evals,
-      "keras_use_ctl": flags_obj.keras_use_ctl,
-      "hr_threshold": flags_obj.hr_threshold,
-      "stream_files": flags_obj.tpu is not None,
-      "train_dataset_path": flags_obj.train_dataset_path,
-      "eval_dataset_path": flags_obj.eval_dataset_path,
-  }
+  return " ".join(shlex_quote(flag_str) for flag_str in flag_strings)

@@ -9,11 +9,20 @@ custom_op_library(
         "multiplex_1_kernel.cc",
         "multiplex_1_op.cc",
     ],
+    deps = [
+        "//deepray/custom_ops/utils:ok_status_util",
+    ],
 )
 
 py_library(
-    name = "multiplex_1_op",
-    srcs = ["multiplex_1_op.py"],
+    name = "multiplex_1",
+    srcs = glob(
+        [
+            "python/*.py",
+            "python/**/*.py",
+            "*.py",
+        ],
+    ),
     data = [":multiplex_1_kernel.so"],
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -29,6 +38,8 @@ py_test(
         "no_mac",  # TODO(b/216321151): Re-enable this test.
     ],
     deps = [
-        ":multiplex_1_op",
+        ":multiplex_1",
+        "@pypi_numpy//:pkg",
+        "@pypi_tensorflow//:pkg",
     ],
 )

@@ -24,8 +24,6 @@ from absl import flags
 
 from deepray.utils.horovod_utils import is_main_process
 
-FLAGS = flags.FLAGS
-
 
 def _collective_communication(all_reduce_alg):
   """Return a CollectiveCommunication based on all_reduce_alg.
@@ -41,14 +39,14 @@ def _collective_communication(all_reduce_alg):
     ValueError: if `all_reduce_alg` not in [None, "ring", "nccl"]
   """
   collective_communication_options = {
-      None: tf.distribute.experimental.CollectiveCommunication.AUTO,
-      "ring": tf.distribute.experimental.CollectiveCommunication.RING,
-      "nccl": tf.distribute.experimental.CollectiveCommunication.NCCL
+    None: tf.distribute.experimental.CollectiveCommunication.AUTO,
+    "ring": tf.distribute.experimental.CollectiveCommunication.RING,
+    "nccl": tf.distribute.experimental.CollectiveCommunication.NCCL,
   }
   if all_reduce_alg not in collective_communication_options:
     raise ValueError(
-        "When used with `multi_worker_mirrored`, valid values for "
-        "all_reduce_alg are [`ring`, `nccl`].  Supplied value: {}".format(all_reduce_alg)
+      "When used with `multi_worker_mirrored`, valid values for "
+      "all_reduce_alg are [`ring`, `nccl`].  Supplied value: {}".format(all_reduce_alg)
     )
   return collective_communication_options[all_reduce_alg]
 
@@ -69,13 +67,13 @@ def _mirrored_cross_device_ops(all_reduce_alg, num_packs):
   if all_reduce_alg is None:
     return None
   mirrored_all_reduce_options = {
-      "nccl": tf.distribute.NcclAllReduce,
-      "hierarchical_copy": tf.distribute.HierarchicalCopyAllReduce
+    "nccl": tf.distribute.NcclAllReduce,
+    "hierarchical_copy": tf.distribute.HierarchicalCopyAllReduce,
   }
   if all_reduce_alg not in mirrored_all_reduce_options:
     raise ValueError(
-        "When used with `mirrored`, valid values for all_reduce_alg are "
-        "[`nccl`, `hierarchical_copy`].  Supplied value: {}".format(all_reduce_alg)
+      "When used with `mirrored`, valid values for all_reduce_alg are "
+      "[`nccl`, `hierarchical_copy`].  Supplied value: {}".format(all_reduce_alg)
     )
   cross_device_ops_class = mirrored_all_reduce_options[all_reduce_alg]
   return cross_device_ops_class(num_packs=num_packs)
@@ -97,7 +95,7 @@ def tpu_initialize(tpu_address):
   return cluster_resolver
 
 
-def get_distribution_strategy(distribution_strategy=None, all_reduce_alg=None, num_packs=1, **kwargs):
+def get_distribution_strategy(distribution_strategy="off", all_reduce_alg=None, num_packs=1, **kwargs):
   """Return a Strategy for running the model.
   Args:
     distribution_strategy: a string specifying which distribution strategy to
@@ -126,23 +124,23 @@ def get_distribution_strategy(distribution_strategy=None, all_reduce_alg=None, n
       `distribution_strategy` is `tpu` but `tpu_address` is not specified.
   """
   del kwargs
-  if FLAGS.num_gpus < 0:
+  if flags.FLAGS.num_gpus < 0:
     raise ValueError("`num_gpus` can not be negative.")
 
-  if FLAGS.use_horovod:
+  if flags.FLAGS.use_horovod:
     distribution_strategy = "off"
     if is_main_process():
-      logging.info("Run horovod and turn off distribution strategy.")
+      logging.info("Run horovod and turn off TF distribution strategy.")
   else:
-    distribution_strategy = FLAGS.distribution_strategy
+    distribution_strategy = flags.FLAGS.distribution_strategy
 
   if not isinstance(distribution_strategy, str):
-    msg = ("distribution_strategy must be a string but got: %s." % (distribution_strategy,))
+    msg = "distribution_strategy must be a string but got: %s." % (distribution_strategy,)
     if distribution_strategy == False:  # pylint: disable=singleton-comparison,g-explicit-bool-comparison
       msg += (
-          " If you meant to pass the string 'off', make sure you add "
-          "quotes around 'off' so that yaml interprets it as a string "
-          "instead of a bool."
+        " If you meant to pass the string 'off', make sure you add "
+        "quotes around 'off' so that yaml interprets it as a string "
+        "instead of a bool."
       )
     raise ValueError(msg)
 
@@ -152,55 +150,55 @@ def get_distribution_strategy(distribution_strategy=None, all_reduce_alg=None, n
 
   if distribution_strategy == "tpu":
     # When tpu_address is an empty string, we communicate with local TPUs.
-    cluster_resolver = tpu_initialize(FLAGS.tpu)
+    cluster_resolver = tpu_initialize(flags.FLAGS.tpu_address)
     return tf.distribute.TPUStrategy(cluster_resolver)
 
   if distribution_strategy == "multi_worker_mirrored":
     return tf.distribute.experimental.MultiWorkerMirroredStrategy(
-        communication=_collective_communication(all_reduce_alg)
+      communication=_collective_communication(all_reduce_alg)
     )
 
   if distribution_strategy == "one_device":
-    if FLAGS.num_gpus == 0:
+    if flags.FLAGS.num_gpus == 0:
       return tf.distribute.OneDeviceStrategy("device:CPU:0")
-    if FLAGS.num_gpus > 1:
-      raise ValueError("`OneDeviceStrategy` can not be used for more than "
-                       "one device.")
+    if flags.FLAGS.num_gpus > 1:
+      raise ValueError("`OneDeviceStrategy` can not be used for more than one device.")
     return tf.distribute.OneDeviceStrategy("device:GPU:0")
 
   if distribution_strategy == "mirrored":
-    if FLAGS.num_gpus == 0:
+    if flags.FLAGS.num_gpus == 0:
       devices = ["device:CPU:0"]
     else:
-      devices = ["device:GPU:%d" % i for i in range(FLAGS.num_gpus)]
+      devices = ["device:GPU:%d" % i for i in range(flags.FLAGS.num_gpus)]
     return tf.distribute.MirroredStrategy(
-        devices=devices, cross_device_ops=_mirrored_cross_device_ops(all_reduce_alg, num_packs)
+      devices=devices, cross_device_ops=_mirrored_cross_device_ops(all_reduce_alg, num_packs)
     )
 
   if distribution_strategy == "parameter_server":
     cluster_resolver = tf.distribute.cluster_resolver.TFConfigClusterResolver()
-    return tf.distribute.experimental.ParameterServerStrategy(cluster_resolver)
+    return tf.distribute.ParameterServerStrategy(cluster_resolver)
 
   raise ValueError("Unrecognized Distribution Strategy: %r" % distribution_strategy)
 
 
-def make_distributed_iterator(strategy, dataset_or_fn: Callable[..., tf.data.Dataset], *args,
-                              **kwargs) -> Optional[Iterator[Any]]:
+def make_distributed_iterator(
+  strategy, dataset_or_fn: Callable[..., tf.data.Dataset], *args, **kwargs
+) -> Optional[Iterator[Any]]:
   """A utility function to help create a `tf.distribute.DistributedDataset`.
 
-    Args:
-      dataset_or_fn: A instance of `tf.data.Dataset`, or a "dataset function"
-        returning a `tf.data.Dataset`. If it is a function, it may optionally have
-        an argument named `input_context` which will be passed a
-        `tf.distribute.InputContext` instance.
-      *args: Any positional arguments to pass through to `dataset_or_fn`.
-      **kwargs: Any keyword arguments to pass through to `dataset_or_fn`, except
-        that the `input_options` keyword is used to specify a
-        `tf.distribute.InputOptions` for making the distributed dataset.
+  Args:
+    dataset_or_fn: A instance of `tf.data.Dataset`, or a "dataset function"
+      returning a `tf.data.Dataset`. If it is a function, it may optionally have
+      an argument named `input_context` which will be passed a
+      `tf.distribute.InputContext` instance.
+    *args: Any positional arguments to pass through to `dataset_or_fn`.
+    **kwargs: Any keyword arguments to pass through to `dataset_or_fn`, except
+      that the `input_options` keyword is used to specify a
+      `tf.distribute.InputOptions` for making the distributed dataset.
 
-    Returns:
-      A distributed Dataset.
-    """
+  Returns:
+    A distributed Dataset.
+  """
   input_options = kwargs.pop("input_options", None)
 
   if isinstance(dataset_or_fn, tf.data.Dataset):
@@ -210,8 +208,7 @@ def make_distributed_iterator(strategy, dataset_or_fn: Callable[..., tf.data.Dat
       return iter(dataset_or_fn)
 
   if not callable(dataset_or_fn):
-    raise ValueError("`dataset_or_fn` should be either callable or an instance "
-                     "of `tf.data.Dataset`.")
+    raise ValueError("`dataset_or_fn` should be either callable or an instance of `tf.data.Dataset`.")
 
   def dataset_fn(input_context: Optional[tf.distribute.InputContext] = None):
     """Wraps `dataset_or_fn` for strategy.distribute_datasets_from_function."""
@@ -244,24 +241,17 @@ def configure_cluster(worker_hosts=None, task_index=-1):
   """
   tf_config = json.loads(os.environ.get("TF_CONFIG", "{}"))
   if tf_config:
-    num_workers = (len(tf_config["cluster"].get("chief", [])) + len(tf_config["cluster"].get("worker", [])))
+    num_workers = len(tf_config["cluster"].get("chief", [])) + len(tf_config["cluster"].get("worker", []))
   elif worker_hosts:
     workers = worker_hosts.split(",")
     num_workers = len(workers)
     if num_workers > 1 and task_index < 0:
       raise ValueError("Must specify task_index when number of workers > 1")
     task_index = 0 if num_workers == 1 else task_index
-    os.environ["TF_CONFIG"] = json.dumps(
-        {
-            "cluster": {
-                "worker": workers
-            },
-            "task": {
-                "type": "worker",
-                "index": task_index
-            }
-        }
-    )
+    os.environ["TF_CONFIG"] = json.dumps({
+      "cluster": {"worker": workers},
+      "task": {"type": "worker", "index": task_index},
+    })
   else:
     num_workers = 1
   return num_workers
@@ -277,7 +267,6 @@ def get_strategy_scope(strategy):
 
 
 class DummyContextManager(object):
-
   def __enter__(self):
     pass
 
@@ -293,7 +282,7 @@ def get_v1_distribution_strategy(params):
       logging.getLogger(name).setLevel(logging.ERROR)
 
     tpu_cluster_resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
-        tpu=params["tpu"], zone=params["tpu_zone"], project=params["tpu_gcp_project"], coordinator_name="coordinator"
+      tpu=params["tpu"], zone=params["tpu_zone"], project=params["tpu_gcp_project"], coordinator_name="coordinator"
     )
 
     logging.info("Issuing reset command to TPU to ensure a clean state.")
@@ -303,9 +292,9 @@ def get_v1_distribution_strategy(params):
     # by reading the `TF_CONFIG` environment variable, and the coordinator
     # is used by StreamingFilesDataset.
     tf_config_env = {
-        "session_master": tpu_cluster_resolver.get_master(),
-        "eval_session_master": tpu_cluster_resolver.get_master(),
-        "coordinator": tpu_cluster_resolver.cluster_spec().as_dict()["coordinator"]
+      "session_master": tpu_cluster_resolver.get_master(),
+      "eval_session_master": tpu_cluster_resolver.get_master(),
+      "coordinator": tpu_cluster_resolver.cluster_spec().as_dict()["coordinator"],
     }
     os.environ["TF_CONFIG"] = json.dumps(tf_config_env)
 

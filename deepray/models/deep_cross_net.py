@@ -6,7 +6,7 @@ from deepray.layers.cross import CrossNet
 categorical_columns = []
 for feature, vocabulary_list in CATEGORIES_Dict.items():
   cat_col = tf.feature_column.categorical_column_with_vocabulary_list(
-      key=feature, vocabulary_list=vocabulary_list, num_oov_buckets=1
+    key=feature, vocabulary_list=vocabulary_list, num_oov_buckets=1
   )
   categorical_columns.append(tf.feature_column.embedding_column(cat_col, 16))
 
@@ -20,9 +20,8 @@ numberical_columns_layer = tf.keras.layers.DenseFeatures(numberical_columns)
 
 
 class MyModel(tf.keras.Model):
-
   def __init__(self):
-    super(MyModel, self).__init__(name='my_model')
+    super(MyModel, self).__init__(name="my_model")
     self.input_1 = categorical_columns_layer
     self.input_2 = numberical_columns_layer
     self.deep1 = layers.Dense(400)
@@ -33,7 +32,7 @@ class MyModel(tf.keras.Model):
     self.dropout2 = layers.Dropout(0.1)
     self.norm1 = layers.BatchNormalization()
     self.norm2 = layers.BatchNormalization()
-    self.sigmoid = layers.Dense(1, activation='sigmoid')
+    self.sigmoid = layers.Dense(1, activation="sigmoid")
     self.cross = CrossNet(layer_num=3)
 
   def call(self, inputs, training=None):

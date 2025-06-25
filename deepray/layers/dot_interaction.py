@@ -41,7 +41,7 @@ class DotInteraction(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self, self_interaction: bool = False, skip_gather: bool = False, name: Optional[str] = None, **kwargs
+    self, self_interaction: bool = False, skip_gather: bool = False, name: Optional[str] = None, **kwargs
   ) -> None:
     self._self_interaction = self_interaction
     self._skip_gather = skip_gather
@@ -73,8 +73,7 @@ class DotInteraction(tf.keras.layers.Layer):
       concat_features = tf.concat(inputs, axis=-1)
       concat_features = tf.reshape(concat_features, [self.batch_size, -1, self.feature_dim])
     except (ValueError, tf.errors.InvalidArgumentError) as e:
-      raise ValueError(f"Input tensors` dimensions must be equal, original"
-                       f"error message: {e}")
+      raise ValueError(f"Input tensors` dimensions must be equal, originalerror message: {e}")
 
     # Interact features, select lower-triangular portion, and re-shape.
     xactions = tf.matmul(concat_features, concat_features, transpose_b=True)

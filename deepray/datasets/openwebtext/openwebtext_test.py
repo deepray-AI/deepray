@@ -12,8 +12,6 @@ from absl import app, flags
 
 from .openwebtext import Openwebtext
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
@@ -21,11 +19,11 @@ def runner(argv=None):
   if len(argv) <= 1:
     dir_path = os.path.dirname(os.path.realpath(__file__))
     argv = [
-        sys.argv[0],
-        "--batch_size=10240",
-        "-epochs=1",
-        f"--train_data=/workspaces/dataset/openwebtext/pretrain_tfrecords/*",
-        # "--label=clicked",
+      sys.argv[0],
+      "--batch_size=10240",
+      "-epochs=1",
+      f"--train_data=/workspaces/dataset/openwebtext/pretrain_tfrecords/*",
+      # "--label=clicked",
     ]
   if argv:
     FLAGS(argv, known_only=True)

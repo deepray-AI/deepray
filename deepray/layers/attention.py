@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -23,15 +24,13 @@ import math
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import tf_keras as keras
 
 from deepray.layers import dense_einsum
 from deepray.layers import masked_softmax
 
 
-# @tf.keras.utils.register_keras_serializable(package="Text")
-class Attention(tf.keras.layers.Layer):
+class Attention(keras.layers.Layer):
   """Attention layer.
 
   This is an implementation of multi-headed attention based on "Attention
@@ -63,82 +62,82 @@ class Attention(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      num_heads,
-      head_size,
-      dropout_rate=0.0,
-      kernel_initializer="glorot_uniform",
-      bias_initializer="zeros",
-      kernel_regularizer=None,
-      bias_regularizer=None,
-      activity_regularizer=None,
-      kernel_constraint=None,
-      bias_constraint=None,
-      **kwargs
+    self,
+    num_heads,
+    head_size,
+    dropout_rate=0.0,
+    kernel_initializer="glorot_uniform",
+    bias_initializer="zeros",
+    kernel_regularizer=None,
+    bias_regularizer=None,
+    activity_regularizer=None,
+    kernel_constraint=None,
+    bias_constraint=None,
+    **kwargs,
   ):
     super(Attention, self).__init__(**kwargs)
     self._num_heads = num_heads
     self._head_size = head_size
     self._dropout_rate = dropout_rate
-    self._kernel_initializer = tf.keras.initializers.get(kernel_initializer)
-    self._bias_initializer = tf.keras.initializers.get(bias_initializer)
-    self._kernel_regularizer = tf.keras.regularizers.get(kernel_regularizer)
-    self._bias_regularizer = tf.keras.regularizers.get(bias_regularizer)
-    self._kernel_constraint = tf.keras.constraints.get(kernel_constraint)
-    self._bias_constraint = tf.keras.constraints.get(bias_constraint)
+    self._kernel_initializer = keras.initializers.get(kernel_initializer)
+    self._bias_initializer = keras.initializers.get(bias_initializer)
+    self._kernel_regularizer = keras.regularizers.get(kernel_regularizer)
+    self._bias_regularizer = keras.regularizers.get(bias_regularizer)
+    self._kernel_constraint = keras.constraints.get(kernel_constraint)
+    self._bias_constraint = keras.constraints.get(bias_constraint)
 
     self._query_dense = dense_einsum.DenseEinsum(
-        output_shape=(self._num_heads, self._head_size),
-        kernel_initializer=self._kernel_initializer,
-        bias_initializer=self._bias_initializer,
-        kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer,
-        activity_regularizer=self._activity_regularizer,
-        kernel_constraint=self._kernel_constraint,
-        bias_constraint=self._bias_constraint,
-        name="query"
+      output_shape=(self._num_heads, self._head_size),
+      kernel_initializer=self._kernel_initializer,
+      bias_initializer=self._bias_initializer,
+      kernel_regularizer=self._kernel_regularizer,
+      bias_regularizer=self._bias_regularizer,
+      activity_regularizer=self._activity_regularizer,
+      kernel_constraint=self._kernel_constraint,
+      bias_constraint=self._bias_constraint,
+      name="query",
     )
 
     self._key_dense = dense_einsum.DenseEinsum(
-        output_shape=(self._num_heads, self._head_size),
-        kernel_initializer=self._kernel_initializer,
-        bias_initializer=self._bias_initializer,
-        kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer,
-        activity_regularizer=self._activity_regularizer,
-        kernel_constraint=self._kernel_constraint,
-        bias_constraint=self._bias_constraint,
-        name="key"
+      output_shape=(self._num_heads, self._head_size),
+      kernel_initializer=self._kernel_initializer,
+      bias_initializer=self._bias_initializer,
+      kernel_regularizer=self._kernel_regularizer,
+      bias_regularizer=self._bias_regularizer,
+      activity_regularizer=self._activity_regularizer,
+      kernel_constraint=self._kernel_constraint,
+      bias_constraint=self._bias_constraint,
+      name="key",
     )
 
     self._value_dense = dense_einsum.DenseEinsum(
-        output_shape=(self._num_heads, self._head_size),
-        kernel_initializer=self._kernel_initializer,
-        bias_initializer=self._bias_initializer,
-        kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer,
-        activity_regularizer=self._activity_regularizer,
-        kernel_constraint=self._kernel_constraint,
-        bias_constraint=self._bias_constraint,
-        name="value"
+      output_shape=(self._num_heads, self._head_size),
+      kernel_initializer=self._kernel_initializer,
+      bias_initializer=self._bias_initializer,
+      kernel_regularizer=self._kernel_regularizer,
+      bias_regularizer=self._bias_regularizer,
+      activity_regularizer=self._activity_regularizer,
+      kernel_constraint=self._kernel_constraint,
+      bias_constraint=self._bias_constraint,
+      name="value",
     )
 
     self._masked_softmax = masked_softmax.MaskedSoftmax(mask_expansion_axes=[1])
 
-    self._dropout = tf.keras.layers.Dropout(rate=self._dropout_rate)
+    self._dropout = keras.layers.Dropout(rate=self._dropout_rate)
 
   def get_config(self):
     config = {
-        "num_heads": self._num_heads,
-        "head_size": self._head_size,
-        "dropout_rate": self._dropout_rate,
-        "kernel_initializer": tf.keras.initializers.serialize(self._kernel_initializer),
-        "bias_initializer": tf.keras.initializers.serialize(self._bias_initializer),
-        "kernel_regularizer": tf.keras.regularizers.serialize(self._kernel_regularizer),
-        "bias_regularizer": tf.keras.regularizers.serialize(self._bias_regularizer),
-        "activity_regularizer": tf.keras.regularizers.serialize(self._activity_regularizer),
-        "kernel_constraint": tf.keras.constraints.serialize(self._kernel_constraint),
-        "bias_constraint": tf.keras.constraints.serialize(self._bias_constraint)
+      "num_heads": self._num_heads,
+      "head_size": self._head_size,
+      "dropout_rate": self._dropout_rate,
+      "kernel_initializer": keras.initializers.serialize(self._kernel_initializer),
+      "bias_initializer": keras.initializers.serialize(self._bias_initializer),
+      "kernel_regularizer": keras.regularizers.serialize(self._kernel_regularizer),
+      "bias_regularizer": keras.regularizers.serialize(self._bias_regularizer),
+      "activity_regularizer": keras.regularizers.serialize(self._activity_regularizer),
+      "kernel_constraint": keras.constraints.serialize(self._kernel_constraint),
+      "bias_constraint": keras.constraints.serialize(self._bias_constraint),
     }
     base_config = super(Attention, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))
@@ -190,7 +189,6 @@ class Attention(tf.keras.layers.Layer):
     return tf.einsum("BNFT,BTNH->BFNH", attention_probs, value_tensor)
 
 
-# @tf.keras.utils.register_keras_serializable(package="Text")
 class CachedAttention(Attention):
   """Attention layer with cache used for auto-agressive decoding.
 
@@ -213,7 +211,7 @@ class CachedAttention(Attention):
       key_tensor = cache["key"] + key_tensor * indices
       value_seq_dim = cache["value"].shape.as_list()[1]
       indices = tf.reshape(
-          tf.one_hot(decode_loop_step, value_seq_dim, dtype=value_tensor.dtype), [1, value_seq_dim, 1, 1]
+        tf.one_hot(decode_loop_step, value_seq_dim, dtype=value_tensor.dtype), [1, value_seq_dim, 1, 1]
       )
       value_tensor = cache["value"] + value_tensor * indices
     else:
@@ -266,34 +264,34 @@ class CachedAttention(Attention):
     return tf.einsum("BNFT,BTNH->BFNH", attention_probs, value_tensor), cache
 
 
-class WindowAttention(tf.keras.layers.Layer):
+class WindowAttention(keras.layers.Layer):
   """
-    ## Window based multi-head self-attention
+  ## Window based multi-head self-attention
 
-    Usually Transformers perform global self-attention, where the relationships between
-    a token and all other tokens are computed. The global computation leads to quadratic
-    complexity with respect to the number of tokens. Here, as the [original paper](https://arxiv.org/abs/2103.14030)
-    suggests, we compute self-attention within local windows, in a non-overlapping manner.
-    Global self-attention leads to quadratic computational complexity in the number of patches,
-    whereas window-based self-attention leads to linear complexity and is easily scalable.
-    """
+  Usually Transformers perform global self-attention, where the relationships between
+  a token and all other tokens are computed. The global computation leads to quadratic
+  complexity with respect to the number of tokens. Here, as the [original paper](https://arxiv.org/abs/2103.14030)
+  suggests, we compute self-attention within local windows, in a non-overlapping manner.
+  Global self-attention leads to quadratic computational complexity in the number of patches,
+  whereas window-based self-attention leads to linear complexity and is easily scalable.
+  """
 
   def __init__(self, dim, window_size, num_heads, qkv_bias=True, dropout_rate=0.0, **kwargs):
     super().__init__(**kwargs)
     self.dim = dim
     self.window_size = window_size
     self.num_heads = num_heads
-    self.scale = (dim // num_heads)**-0.5
-    self.qkv = layers.Dense(dim * 3, use_bias=qkv_bias)
-    self.dropout = layers.Dropout(dropout_rate)
-    self.proj = layers.Dense(dim)
+    self.scale = (dim // num_heads) ** -0.5
+    self.qkv = keras.layers.Dense(dim * 3, use_bias=qkv_bias)
+    self.dropout = keras.layers.Dropout(dropout_rate)
+    self.proj = keras.layers.Dense(dim)
 
   def build(self, input_shape):
     num_window_elements = (2 * self.window_size[0] - 1) * (2 * self.window_size[1] - 1)
     self.relative_position_bias_table = self.add_weight(
-        shape=(num_window_elements, self.num_heads),
-        initializer=tf.initializers.Zeros(),
-        trainable=True,
+      shape=(num_window_elements, self.num_heads),
+      initializer=tf.initializers.Zeros(),
+      trainable=True,
     )
     coords_h = np.arange(self.window_size[0])
     coords_w = np.arange(self.window_size[1])
@@ -308,7 +306,7 @@ class WindowAttention(tf.keras.layers.Layer):
     relative_position_index = relative_coords.sum(-1)
 
     self.relative_position_index = tf.Variable(
-        initial_value=tf.convert_to_tensor(relative_position_index), trainable=False
+      initial_value=tf.convert_to_tensor(relative_position_index), trainable=False
     )
 
   def call(self, x, mask=None):
@@ -332,7 +330,7 @@ class WindowAttention(tf.keras.layers.Layer):
     if mask is not None:
       nW = mask.get_shape()[0]
       mask_float = tf.cast(tf.expand_dims(tf.expand_dims(mask, axis=1), axis=0), tf.float32)
-      attn = (tf.reshape(attn, shape=(-1, nW, self.num_heads, size, size)) + mask_float)
+      attn = tf.reshape(attn, shape=(-1, nW, self.num_heads, size, size)) + mask_float
       attn = tf.reshape(attn, shape=(-1, self.num_heads, size, size))
       attn = keras.activations.softmax(attn, axis=-1)
     else:

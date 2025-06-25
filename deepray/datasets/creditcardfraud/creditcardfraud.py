@@ -12,58 +12,54 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Fashion-MNIST dataset."""
+"""Credit Card Fraud dataset."""
 
-import gzip
-import os
 import sys
+
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from absl import flags
-import pandas as pd
-from keras.utils.data_utils import get_file
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 
-FLAGS = flags.FLAGS
-FLAGS([
-    sys.argv[0],
-    "--num_train_examples=182280",
+flags.FLAGS([
+  sys.argv[0],
+  "--num_train_examples=182280",
 ])
 
 
-class CreditCardFraud(DataPipeLine):
-
-  def __init__(self, url='https://storage.googleapis.com/download.tensorflow.org/data/creditcard.csv'):
+class CreditCardFraud(DataPipeline):
+  def __init__(self, url="https://storage.googleapis.com/download.tensorflow.org/data/creditcard.csv"):
     super().__init__()
-    csv_file = tf.keras.utils.get_file('creditcard.csv', url)
+    csv_file = tf.keras.utils.get_file("creditcard.csv", url)
     raw_df = pd.read_csv(csv_file)
 
-    raw_df[['Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V26', 'V27', 'V28', 'Amount', 'Class']].describe()
+    raw_df[["Time", "V1", "V2", "V3", "V4", "V5", "V26", "V27", "V28", "Amount", "Class"]].describe()
 
-    neg, pos = np.bincount(raw_df['Class'])
+    neg, pos = np.bincount(raw_df["Class"])
     total = neg + pos
-    print('Examples:\n    Total: {}\n    Positive: {} ({:.2f}% of total)\n'.format(total, pos, 100 * pos / total))
+    print("Examples:\n    Total: {}\n    Positive: {} ({:.2f}% of total)\n".format(total, pos, 100 * pos / total))
 
     cleaned_df = raw_df.copy()
 
     # You don't want the `Time` column.
-    cleaned_df.pop('Time')
+    cleaned_df.pop("Time")
 
     # The `Amount` column covers a huge range. Convert to log-space.
     eps = 0.001  # 0 => 0.1¢
-    cleaned_df['Log Amount'] = np.log(cleaned_df.pop('Amount') + eps)
+    cleaned_df["Log Amount"] = np.log(cleaned_df.pop("Amount") + eps)
 
     train_df, test_df = train_test_split(cleaned_df, test_size=0.2)
     train_df, val_df = train_test_split(train_df, test_size=0.2)
 
     # Form np arrays of labels and features.
-    self.train_labels = np.array(train_df.pop('Class'))
+    self.train_labels = np.array(train_df.pop("Class"))
     self.bool_train_labels = self.train_labels != 0
-    self.val_labels = np.array(val_df.pop('Class'))
-    self.test_labels = np.array(test_df.pop('Class'))
+    self.val_labels = np.array(val_df.pop("Class"))
+    self.test_labels = np.array(test_df.pop("Class"))
 
     train_features = np.array(train_df)
     val_features = np.array(val_df)
@@ -86,19 +82,12 @@ class CreditCardFraud(DataPipeLine):
     pass
 
   def build_dataset(
-      self,
-      input_file_pattern,
-      batch_size,
-      is_training=True,
-      context: tf.distribute.InputContext = None,
-      use_horovod=False,
-      *args,
-      **kwargs
+    self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
     if is_training:
       ds = tf.data.Dataset.from_tensor_slices((self.train_features, self.train_labels))
 
     else:
       ds = tf.data.Dataset.from_tensor_slices((self.val_features, self.val_labels))
-    ds = ds.repeat(FLAGS.epochs).shuffle(10000).batch(batch_size)
+    ds = ds.repeat(flags.FLAGS.epochs).shuffle(10000).batch(batch_size)
     return ds

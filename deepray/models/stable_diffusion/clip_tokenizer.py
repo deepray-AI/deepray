@@ -26,15 +26,15 @@ from tensorflow import keras
 def bytes_to_unicode():
   """Return a list of utf-8 bytes and a corresponding list of unicode strings.
 
-    The reversible bpe codes work on unicode strings.
-    This means you need a large # of unicode characters in your vocab if you
-    want to avoid UNKs. When you're at something like a 10B token dataset you
-    end up needing around 5K for decent coverage. This is a significant
-    percentage of your normal, say, 32K bpe vocab. To avoid that, we want
-    lookup tables between utf-8 bytes and unicode strings.
-    And avoids mapping to whitespace/control characters the bpe code barfs on.
-    """
-  bs = (list(range(ord("!"), ord("~") + 1)) + list(range(ord("¡"), ord("¬") + 1)) + list(range(ord("®"), ord("ÿ") + 1)))
+  The reversible bpe codes work on unicode strings.
+  This means you need a large # of unicode characters in your vocab if you
+  want to avoid UNKs. When you're at something like a 10B token dataset you
+  end up needing around 5K for decent coverage. This is a significant
+  percentage of your normal, say, 32K bpe vocab. To avoid that, we want
+  lookup tables between utf-8 bytes and unicode strings.
+  And avoids mapping to whitespace/control characters the bpe code barfs on.
+  """
+  bs = list(range(ord("!"), ord("~") + 1)) + list(range(ord("¡"), ord("¬") + 1)) + list(range(ord("®"), ord("ÿ") + 1))
   cs = bs[:]
   n = 0
   for b in range(2**8):
@@ -49,9 +49,9 @@ def bytes_to_unicode():
 def get_pairs(word):
   """Return set of symbol pairs in a word.
 
-    A word is represented as tuple of symbols(symbols being variable-length
-    strings).
-    """
+  A word is represented as tuple of symbols(symbols being variable-length
+  strings).
+  """
   pairs = set()
   prev_char = word[0]
   for char in word[1:]:
@@ -72,17 +72,16 @@ def whitespace_clean(text):
 
 
 class SimpleTokenizer:
-
   def __init__(self, bpe_path=None):
     bpe_path = bpe_path or keras.utils.get_file(
-        "bpe_simple_vocab_16e6.txt.gz",
-        "https://github.com/openai/CLIP/blob/main/clip/bpe_simple_vocab_16e6.txt.gz?raw=true",  # noqa: E501
-        file_hash="924691ac288e54409236115652ad4aa250f48203de50a9e4722a6ecd48d6804a",  # noqa: E501
+      "bpe_simple_vocab_16e6.txt.gz",
+      "https://github.com/openai/CLIP/blob/main/clip/bpe_simple_vocab_16e6.txt.gz?raw=true",  # noqa: E501
+      file_hash="924691ac288e54409236115652ad4aa250f48203de50a9e4722a6ecd48d6804a",  # noqa: E501
     )
     self.byte_encoder = bytes_to_unicode()
     self.byte_decoder = {v: k for k, v in self.byte_encoder.items()}
     merges = gzip.open(bpe_path).read().decode("utf-8").split("\n")
-    merges = merges[1:49152 - 256 - 2 + 1]
+    merges = merges[1 : 49152 - 256 - 2 + 1]
     merges = [tuple(merge.split()) for merge in merges]
     vocab = list(bytes_to_unicode().values())
     vocab = vocab + [v + "</w>" for v in vocab]
@@ -95,12 +94,12 @@ class SimpleTokenizer:
     self.bpe_ranks = dict(zip(merges, range(len(merges))))
 
     self.special_tokens = {
-        "<|startoftext|>": "<|startoftext|>",
-        "<|endoftext|>": "<|endoftext|>",
+      "<|startoftext|>": "<|startoftext|>",
+      "<|endoftext|>": "<|endoftext|>",
     }
     self.cache = {
-        "<|startoftext|>": "<|startoftext|>",
-        "<|endoftext|>": "<|endoftext|>",
+      "<|startoftext|>": "<|startoftext|>",
+      "<|endoftext|>": "<|endoftext|>",
     }
     self.pat = self._create_pat()
 
@@ -112,9 +111,9 @@ class SimpleTokenizer:
 
   def _create_pat(self):
     return re.compile(
-        "|".join([re.escape(key) for key in self.special_tokens.keys()]) +
-        r"""|'s|'t|'re|'ve|'m|'ll|'d|[\p{L}]+|[\p{N}]|[^\s\p{L}\p{N}]+""",
-        re.IGNORECASE,
+      "|".join([re.escape(key) for key in self.special_tokens.keys()])
+      + r"""|'s|'t|'re|'ve|'m|'ll|'d|[\p{L}]+|[\p{N}]|[^\s\p{L}\p{N}]+""",
+      re.IGNORECASE,
     )
 
   @property
@@ -166,7 +165,7 @@ class SimpleTokenizer:
           new_word.extend(word[i:])
           break
 
-        if (word[i] == first and i < len(word) - 1 and word[i + 1] == second):
+        if word[i] == first and i < len(word) - 1 and word[i + 1] == second:
           new_word.append(first + second)
           i += 2
         else:
@@ -192,5 +191,5 @@ class SimpleTokenizer:
 
   def decode(self, tokens):
     text = "".join([self.decoder[token] for token in tokens])
-    text = (bytearray([self.byte_decoder[c] for c in text]).decode("utf-8", errors="replace").replace("</w>", " "))
+    text = bytearray([self.byte_decoder[c] for c in text]).decode("utf-8", errors="replace").replace("</w>", " ")
     return text

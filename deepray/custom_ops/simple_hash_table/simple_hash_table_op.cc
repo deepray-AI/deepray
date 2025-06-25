@@ -15,16 +15,9 @@ limitations under the License.
 
 #include <string>
 
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
-
-/* After TensorFlow version 2.10.0, "Status::OK()" upgraded to "OkStatus()".
-This code is for compatibility.*/
-#if TF_VERSION_INTEGER >= 2100
-#define TFOkStatus ::tensorflow::OkStatus()
-#else
-#define TFOkStatus ::tensorflow::Status::OK()
-#endif
 
 // Please use the appropriate namespace for your project
 namespace tensorflow {

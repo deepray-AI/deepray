@@ -1,12 +1,10 @@
 import tensorflow as tf
 
-from keras.engine.base_layer import Layer
 
-
-class Pooling(Layer):
+class Pooling(tf.keras.layers.Layer):
   """
-    input shape: (batch_size, seq_len, emb_dim)
-    output shape: (batch_size, 1, emb_dim)
+  input shape: (batch_size, seq_len, emb_dim)
+  output shape: (batch_size, 1, emb_dim)
   """
 
   def __init__(self, combiner, **kwargs):
@@ -19,18 +17,18 @@ class Pooling(Layer):
     super(Pooling, self).build(input_shape)
 
   def call(self, x, mask=None, **kwargs):
-    if self.combiner == 'max':
+    if self.combiner == "max":
       if mask is not None:
-        x = tf.where(tf.expand_dims(mask, axis=-1), x, tf.ones_like(x, dtype=tf.float32) * (-2**32 + 1))
+        x = tf.where(tf.expand_dims(mask, axis=-1), x, tf.ones_like(x, dtype=tf.float32) * (-(2**32) + 1))
       return tf.reduce_max(x, axis=1, keepdims=True)
 
     # sum
-    if self.combiner == 'sum':
+    if self.combiner == "sum":
       if mask is not None:
         x = tf.where(tf.expand_dims(mask, axis=-1), x, tf.zeros_like(x, dtype=tf.float32))
       return tf.reduce_sum(x, axis=1, keepdims=True)
 
-    if self.combiner == 'mean':
+    if self.combiner == "mean":
       if mask is not None:
         mask = tf.expand_dims(mask, axis=-1)
         x = tf.where(mask, x, tf.zeros_like(x, dtype=tf.float32))
@@ -40,7 +38,9 @@ class Pooling(Layer):
 
     return x
 
-  def get_config(self,):
-    config = {'combiner': self.combiner}
+  def get_config(
+    self,
+  ):
+    config = {"combiner": self.combiner}
     base_config = super(Pooling, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))

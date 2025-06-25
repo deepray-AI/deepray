@@ -15,20 +15,18 @@
 # ==============================================================================
 set -x -e
 
-OPENMPI_VERSION=${1:-"5.0.0"}
+OPENMPI_VERSION=${1:-"5.0.7"}
 
 # Install Open MPI
 mkdir /tmp/openmpi &&
-    cd /tmp/openmpi &&
-    wget --progress=dot:mega -O openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${OPENMPI_VERSION}.tar.gz &&
+    cd /tmp/openmpi
+wget --progress=dot:mega -O openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${OPENMPI_VERSION}.tar.gz &&
     tar -zxf openmpi-${OPENMPI_VERSION}.tar.gz &&
     cd openmpi-${OPENMPI_VERSION} &&
     ./configure --enable-orterun-prefix-by-default &&
-    make -j $(nproc) all &&
+    make -j $(nproc) &&
     make install &&
-    ldconfig &&
-    mpirun --version &&
-    rm -rf /tmp/openmpi
+    ldconfig
 
 # Install OpenSSH for MPI to communicate between containers
 apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
@@ -43,3 +41,6 @@ apt-get update && apt-get install -y --allow-downgrades --allow-change-held-pack
 sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config &&
     echo "    UserKnownHostsFile /dev/null" >>/etc/ssh/ssh_config &&
     sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config
+
+mpirun --version &&
+    rm -rf /tmp/openmpi

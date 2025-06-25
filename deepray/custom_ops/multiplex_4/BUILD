@@ -10,6 +10,9 @@ custom_op_library(
         "multiplex_4_kernel.cc",
         "multiplex_4_op.cc",
     ],
+    deps = [
+        "//deepray/custom_ops/utils:ok_status_util",
+    ],
 )
 
 py_library(
@@ -38,6 +41,8 @@ py_test(
     deps = [
         ":model_using_multiplex",
         ":multiplex_4_op",
+        "@pypi_numpy//:pkg",
+        "@pypi_tensorflow//:pkg",
     ],
 )
 

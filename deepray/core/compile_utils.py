@@ -1,14 +1,19 @@
 import horovod.tensorflow as hvd
 import tensorflow as tf
 from absl import flags
-from keras.engine.compile_utils import MetricsContainer, match_dtype_and_rank, get_mask, apply_mask
-# Keras = 2.9.0
+from packaging.version import parse
 
-FLAGS = flags.FLAGS
+if parse(tf.__version__.replace("-tf", "+tf")) < parse("2.11"):
+  from keras.engine.compile_utils import MetricsContainer, match_dtype_and_rank, get_mask, apply_mask
+elif parse(tf.__version__) > parse("2.16.0"):
+  from tf_keras.src.engine.compile_utils import MetricsContainer, match_dtype_and_rank
+  from tf_keras.src.utils.losses_utils import get_mask, apply_mask
+else:
+  from keras.src.engine.compile_utils import MetricsContainer, match_dtype_and_rank
+  from keras.src.utils.losses_utils import get_mask, apply_mask
 
 
 class HvdMetricsContainer(MetricsContainer):
-
   def update_state(self, y_true, y_pred, sample_weight=None):
     """Updates the state of per-output metrics."""
     y_true = self._conform_to_outputs(y_pred, y_true)
@@ -22,11 +27,11 @@ class HvdMetricsContainer(MetricsContainer):
     sample_weight = tf.nest.flatten(sample_weight)
 
     zip_args = (
-        y_true,
-        y_pred,
-        sample_weight,
-        self._metrics,
-        self._weighted_metrics,
+      y_true,
+      y_pred,
+      sample_weight,
+      self._metrics,
+      self._weighted_metrics,
     )
     for y_t, y_p, sw, metric_objs, weighted_metric_objs in zip(*zip_args):
       # Ok to have no metrics for an output.
@@ -37,12 +42,12 @@ class HvdMetricsContainer(MetricsContainer):
       mask = get_mask(y_p)
       sw = apply_mask(y_p, sw, mask)
 
-      if FLAGS.use_horovod:
+      if flags.FLAGS.use_horovod:
         y_t = hvd.allgather(y_t)
         y_p = hvd.allgather(y_p)
-        if mask:
+        if mask is not None:
           mask = hvd.allgather(mask)
-        if sw:
+        if sw is not None:
           sw = hvd.allgather(sw)
 
       for metric_obj in metric_objs:

@@ -6,6 +6,7 @@ Last modified: 2020/05/29
 Description: Implement a miniature version of GPT and train it to generate text.
 Accelerator: GPU
 """
+
 """
 ## Introduction
 
@@ -41,6 +42,7 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers import TextVectorization
 
 import deepray as dp
+
 """
 ## Implement a Transformer block as a layer
 """
@@ -48,10 +50,10 @@ import deepray as dp
 
 def causal_attention_mask(batch_size, n_dest, n_src, dtype):
   """
-    Mask the upper half of the dot product matrix in self attention.
-    This prevents flow of information from future tokens to current token.
-    1's in the lower triangle, counting from the lower right corner.
-    """
+  Mask the upper half of the dot product matrix in self attention.
+  This prevents flow of information from future tokens to current token.
+  1's in the lower triangle, counting from the lower right corner.
+  """
   i = tf.range(n_dest)[:, None]
   j = tf.range(n_src)
   m = i >= j - n_src + n_dest
@@ -62,13 +64,12 @@ def causal_attention_mask(batch_size, n_dest, n_src, dtype):
 
 
 class TransformerBlock(layers.Layer):
-
   def __init__(self, embed_dim, num_heads, ff_dim, rate=0.1):
     super().__init__()
     self.att = layers.MultiHeadAttention(num_heads, embed_dim)
     self.ffn = keras.Sequential([
-        layers.Dense(ff_dim, activation="relu"),
-        layers.Dense(embed_dim),
+      layers.Dense(ff_dim, activation="relu"),
+      layers.Dense(embed_dim),
     ])
     self.layernorm1 = layers.LayerNormalization(epsilon=1e-6)
     self.layernorm2 = layers.LayerNormalization(epsilon=1e-6)
@@ -97,7 +98,6 @@ Create two separate embedding layers: one for tokens and one for token index
 
 
 class TokenAndPositionEmbedding(layers.Layer):
-
   def __init__(self, maxlen, vocab_size, embed_dim):
     super().__init__()
     self.token_emb = dp.layers.Embedding(vocabulary_size=vocab_size, embedding_dim=embed_dim)
@@ -131,8 +131,8 @@ def create_model():
   model = keras.Model(inputs=inputs, outputs=[outputs, x])
   loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
   model.compile(
-      "adam",
-      loss=[loss_fn, None],
+    "adam",
+    loss=[loss_fn, None],
   )  # No loss and optimization based on word embeddings from transformer block
   return model
 
@@ -155,10 +155,10 @@ batch_size = 128
 # Create a list all files
 filenames = []
 directories = [
-    "/workspaces/dataset/aclImdb/train/pos",
-    "/workspaces/dataset/aclImdb/train/neg",
-    "/workspaces/dataset/aclImdb/test/pos",
-    "/workspaces/dataset/aclImdb/test/neg",
+  "/workspaces/dataset/aclImdb/train/pos",
+  "/workspaces/dataset/aclImdb/train/neg",
+  "/workspaces/dataset/aclImdb/test/pos",
+  "/workspaces/dataset/aclImdb/test/neg",
 ]
 for dir in directories:
   for f in os.listdir(dir):
@@ -182,10 +182,10 @@ def custom_standardization(input_string):
 
 # Create a vectorization layer and adapt it to the text
 vectorize_layer = TextVectorization(
-    standardize=custom_standardization,
-    max_tokens=vocab_size - 1,
-    output_mode="int",
-    output_sequence_length=maxlen + 1,
+  standardize=custom_standardization,
+  max_tokens=vocab_size - 1,
+  output_mode="int",
+  output_sequence_length=maxlen + 1,
 )
 vectorize_layer.adapt(text_ds)
 vocab = vectorize_layer.get_vocabulary()  # To get words back from token indices
@@ -193,10 +193,10 @@ vocab = vectorize_layer.get_vocabulary()  # To get words back from token indices
 
 def prepare_lm_inputs_labels(text):
   """
-    Shift word sequences by 1 position so that the target for position (i) is
-    word at position (i+1). The model will use all words up till position (i)
-    to predict the next word.
-    """
+  Shift word sequences by 1 position so that the target for position (i) is
+  word at position (i+1). The model will use all words up till position (i)
+  to predict the next word.
+  """
   text = tf.expand_dims(text, -1)
   tokenized_sentences = vectorize_layer(text)
   x = tokenized_sentences[:, :-1]
@@ -213,17 +213,17 @@ text_ds = text_ds.prefetch(tf.data.AUTOTUNE)
 
 class TextGenerator(keras.callbacks.Callback):
   """A callback to generate text from a trained model.
-    1. Feed some starting prompt to the model
-    2. Predict probabilities for the next token
-    3. Sample the next token and add it to the next input
+  1. Feed some starting prompt to the model
+  2. Predict probabilities for the next token
+  3. Sample the next token and add it to the next input
 
-    Arguments:
-        max_tokens: Integer, the number of tokens to be generated after prompt.
-        start_tokens: List of integers, the token indices for the starting prompt.
-        index_to_word: List of strings, obtained from the TextVectorization layer.
-        top_k: Integer, sample from the `top_k` token predictions.
-        print_every: Integer, print after this many epochs.
-    """
+  Arguments:
+      max_tokens: Integer, the number of tokens to be generated after prompt.
+      start_tokens: List of integers, the token indices for the starting prompt.
+      index_to_word: List of strings, obtained from the TextVectorization layer.
+      top_k: Integer, sample from the `top_k` token predictions.
+      print_every: Integer, print after this many epochs.
+  """
 
   def __init__(self, max_tokens, start_tokens, index_to_word, top_k=10, print_every=1):
     self.max_tokens = max_tokens

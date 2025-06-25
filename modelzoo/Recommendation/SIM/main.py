@@ -21,25 +21,22 @@ from __future__ import print_function
 import sys
 from absl import app, flags
 import tensorflow as tf
-from deepray.core.base_trainer import Trainer
+from deepray.core.trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets.movielens import Movielens100kRating
 from deepray.models.rec.sim_model import SIMModel
 from deepray.models.rec.din_model import DINModel
 from deepray.models.rec.dien_model import DIENModel
 
-FLAGS = flags.FLAGS
-FLAGS(
-    [
-        sys.argv[0],
-        "--train_data=movielens/100k-ratings",
-        # "--distribution_strategy=off",
-        # "--run_eagerly=true",
-        "--steps_per_summary=20",
-        "--use_dynamic_embedding=True",
-        # "--batch_size=1024",
-    ]
-)
+FLAGS([
+  sys.argv[0],
+  "--train_data=movielens/100k-ratings",
+  # "--distribution_strategy=off",
+  # "--run_eagerly=true",
+  "--steps_per_execution=20",
+  "--use_dynamic_embedding=True",
+  # "--batch_size=1024",
+])
 
 
 def build_sim_loss_fn(alpha=1.0, beta=1.0):
@@ -67,21 +64,21 @@ def dien_auxiliary_loss_fn(click_probs, noclick_probs, mask=None):
 def build_model_and_loss(model_params):
   if FLAGS.model_name == "sim":
     model = SIMModel(
-        model_params['feature_spec'],
-        mlp_hidden_dims=model_params["mlp_hidden_dims"],
-        embedding_dim=model_params["embedding_dim"],
-        dropout_rate=model_params["dropout_rate"]
+      model_params["feature_spec"],
+      mlp_hidden_dims=model_params["mlp_hidden_dims"],
+      embedding_dim=model_params["embedding_dim"],
+      dropout_rate=model_params["dropout_rate"],
     )
     classification_loss_fn = build_sim_loss_fn()
 
     def classification_loss(targets, output_dict):
-      """ compute loss."""
+      """compute loss."""
       return classification_loss_fn(targets, output_dict["stage_one_logits"], output_dict["stage_two_logits"])
 
     dien_aux_loss = dien_auxiliary_loss_fn(
-        output_dict["aux_click_probs"],
-        output_dict["aux_noclick_probs"],
-        mask=mask_for_aux_loss,
+      output_dict["aux_click_probs"],
+      output_dict["aux_noclick_probs"],
+      mask=mask_for_aux_loss,
     )
 
     total_loss = classification_loss + dien_aux_loss
@@ -101,26 +98,26 @@ def build_model_and_loss(model_params):
       loss_dict = {"total_loss": total_loss, "classification_loss": classification_loss, "dien_aux_loss": dien_aux_loss}
 
       return (targets, logits), loss_dict
+
   elif FLAGS.model_name == "dien":
     model = DIENModel(
-        model_params['feature_spec'],
-        mlp_hidden_dims={
-            "classifier": model_params["mlp_hidden_dims"]["stage_2"],
-            "aux": model_params["mlp_hidden_dims"]["aux"],
-        },
-        embedding_dim=model_params["embedding_dim"],
+      model_params["feature_spec"],
+      mlp_hidden_dims={
+        "classifier": model_params["mlp_hidden_dims"]["stage_2"],
+        "aux": model_params["mlp_hidden_dims"]["aux"],
+      },
+      embedding_dim=model_params["embedding_dim"],
     )
     classification_loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
     class CustomLossClass:
-
       def __call__(self, targets, output_dict):
         classification_loss = classification_loss_fn(targets, output_dict["logits"])
 
         dien_aux_loss = dien_auxiliary_loss_fn(
-            output_dict["aux_click_probs"],
-            output_dict["aux_noclick_probs"],
-            mask=input_data["short_sequence_mask"][:, 1:],
+          output_dict["aux_click_probs"],
+          output_dict["aux_noclick_probs"],
+          mask=input_data["short_sequence_mask"][:, 1:],
         )
 
         total_loss = classification_loss + dien_aux_loss
@@ -138,9 +135,9 @@ def build_model_and_loss(model_params):
       classification_loss = classification_loss_fn(targets, output_dict["logits"])
 
       dien_aux_loss = dien_auxiliary_loss_fn(
-          output_dict["aux_click_probs"],
-          output_dict["aux_noclick_probs"],
-          mask=mask_for_aux_loss,
+        output_dict["aux_click_probs"],
+        output_dict["aux_noclick_probs"],
+        mask=mask_for_aux_loss,
       )
 
       total_loss = classification_loss + dien_aux_loss
@@ -150,11 +147,12 @@ def build_model_and_loss(model_params):
       loss_dict = {"total_loss": total_loss, "classification_loss": classification_loss, "dien_aux_loss": dien_aux_loss}
 
       return (targets, logits), loss_dict
+
   elif FLAGS.model_name == "din":
     model = DINModel(
-        model_params['feature_spec'],
-        mlp_hidden_dims=model_params["mlp_hidden_dims"]["stage_2"],
-        embedding_dim=model_params["embedding_dim"]
+      model_params["feature_spec"],
+      mlp_hidden_dims=model_params["mlp_hidden_dims"]["stage_2"],
+      embedding_dim=model_params["embedding_dim"],
     )
     classification_loss_fn = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
@@ -184,12 +182,14 @@ def main(_):
     model = build_model_and_loss()
 
   trainer = Trainer(
-      model=model,
-      loss=tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.SUM),
+    model=model,
+    loss=tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.SUM),
   )
 
   train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
-  trainer.fit(train_input=train_input_fn,)
+  trainer.fit(
+    train_input=train_input_fn,
+  )
 
 
 if __name__ == "__main__":

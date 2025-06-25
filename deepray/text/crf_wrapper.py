@@ -6,16 +6,15 @@ from deepray.utils import types
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 class CRFModelWrapper(tf.keras.Model):
-
   def __init__(
-      self,
-      base_model: tf.keras.Model,
-      units: int,
-      chain_initializer: types.Initializer = "orthogonal",
-      use_boundary: bool = True,
-      boundary_initializer: types.Initializer = "zeros",
-      use_kernel: bool = True,
-      **kwargs,
+    self,
+    base_model: tf.keras.Model,
+    units: int,
+    chain_initializer: types.Initializer = "orthogonal",
+    use_boundary: bool = True,
+    boundary_initializer: types.Initializer = "zeros",
+    use_kernel: bool = True,
+    **kwargs,
   ):
     super().__init__()
 
@@ -24,12 +23,12 @@ class CRFModelWrapper(tf.keras.Model):
     from deepray.layers.crf import CRF  # noqa
 
     self.crf_layer = CRF(
-        units=units,
-        chain_initializer=chain_initializer,
-        use_boundary=use_boundary,
-        boundary_initializer=boundary_initializer,
-        use_kernel=use_kernel,
-        **kwargs,
+      units=units,
+      chain_initializer=chain_initializer,
+      use_boundary=use_boundary,
+      boundary_initializer=boundary_initializer,
+      use_kernel=use_kernel,
+      **kwargs,
     )
 
     self.base_model = base_model

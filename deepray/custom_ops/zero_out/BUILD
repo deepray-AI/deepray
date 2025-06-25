@@ -10,6 +10,9 @@ custom_op_library(
         "cc/kernels/zero_out_kernels.cc",
         "cc/ops/zero_out_ops.cc",
     ],
+    deps = [
+        "//deepray/custom_ops/utils:ok_status_util",
+    ],
 )
 
 py_library(
@@ -37,5 +40,8 @@ py_test(
     main = "python/tests/run_all_test.py",
     deps = [
         ":zero_out_ops",
+        "@pypi_numpy//:pkg",
+        "@pypi_pytest//:pkg",
+        "@pypi_tensorflow//:pkg",
     ],
 )

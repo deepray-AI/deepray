@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Keras-based relative attention layers."""
+
 import math
 import string
 import tensorflow as tf
@@ -126,37 +127,37 @@ class MultiHeadRelativeAttention(tf.keras.layers.MultiHeadAttention):
       key_shape = key
 
     common_kwargs = dict(
-        kernel_initializer=self._kernel_initializer,
-        bias_initializer=self._bias_initializer,
-        kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer,
-        activity_regularizer=self._activity_regularizer,
-        kernel_constraint=self._kernel_constraint,
-        bias_constraint=self._bias_constraint
+      kernel_initializer=self._kernel_initializer,
+      bias_initializer=self._bias_initializer,
+      kernel_regularizer=self._kernel_regularizer,
+      bias_regularizer=self._bias_regularizer,
+      activity_regularizer=self._activity_regularizer,
+      kernel_constraint=self._kernel_constraint,
+      bias_constraint=self._bias_constraint,
     )
 
     with tf.init_scope():
       einsum_equation, _, output_rank = _build_proj_equation(key_shape.rank - 1, bound_dims=1, output_dims=2)
       self._encoding_dense = tf.keras.layers.EinsumDense(
-          einsum_equation,
-          output_shape=_get_output_shape(output_rank - 1, [self._num_heads, self._key_dim]),
-          bias_axes=None,
-          name="encoding",
-          **common_kwargs
+        einsum_equation,
+        output_shape=_get_output_shape(output_rank - 1, [self._num_heads, self._key_dim]),
+        bias_axes=None,
+        name="encoding",
+        **common_kwargs,
       )
 
   def compute_attention(
-      self,
-      query,
-      key,
-      value,
-      position,
-      content_attention_bias,
-      positional_attention_bias,
-      segment_matrix=None,
-      segment_encoding=None,
-      segment_attention_bias=None,
-      attention_mask=None
+    self,
+    query,
+    key,
+    value,
+    position,
+    content_attention_bias,
+    positional_attention_bias,
+    segment_matrix=None,
+    segment_encoding=None,
+    segment_attention_bias=None,
+    attention_mask=None,
   ):
     """Computes the attention.
 
@@ -196,11 +197,11 @@ class MultiHeadRelativeAttention(tf.keras.layers.MultiHeadAttention):
       segment_attention = tf.einsum("bind,snd->bnis", query + segment_attention_bias, segment_encoding)
       target_shape = tf.shape(positional_attention)
       segment_attention = tf.where(
-          tf.broadcast_to(tf.expand_dims(segment_matrix, 1), target_shape),
-          tf.broadcast_to(segment_attention[:, :, :, 1:], target_shape),
-          tf.broadcast_to(segment_attention[:, :, :, :1], target_shape)
+        tf.broadcast_to(tf.expand_dims(segment_matrix, 1), target_shape),
+        tf.broadcast_to(segment_attention[:, :, :, 1:], target_shape),
+        tf.broadcast_to(segment_attention[:, :, :, :1], target_shape),
       )
-      attention_sum = (content_attention + positional_attention + segment_attention)
+      attention_sum = content_attention + positional_attention + segment_attention
     else:
       attention_sum = content_attention + positional_attention
 
@@ -214,18 +215,18 @@ class MultiHeadRelativeAttention(tf.keras.layers.MultiHeadAttention):
     return attention_output
 
   def call(
-      self,
-      query,
-      value,
-      content_attention_bias,
-      positional_attention_bias,
-      key=None,
-      relative_position_encoding=None,
-      segment_matrix=None,
-      segment_encoding=None,
-      segment_attention_bias=None,
-      state=None,
-      attention_mask=None
+    self,
+    query,
+    value,
+    content_attention_bias,
+    positional_attention_bias,
+    key=None,
+    relative_position_encoding=None,
+    segment_matrix=None,
+    segment_encoding=None,
+    segment_attention_bias=None,
+    state=None,
+    attention_mask=None,
   ):
     """Compute multi-head relative attention over inputs.
 
@@ -289,16 +290,16 @@ class MultiHeadRelativeAttention(tf.keras.layers.MultiHeadAttention):
     position = self._encoding_dense(relative_position_encoding)
 
     attention_output = self.compute_attention(
-        query=query,
-        key=key,
-        value=value,
-        position=position,
-        content_attention_bias=content_attention_bias,
-        positional_attention_bias=positional_attention_bias,
-        segment_matrix=segment_matrix,
-        segment_encoding=segment_encoding,
-        segment_attention_bias=segment_attention_bias,
-        attention_mask=attention_mask
+      query=query,
+      key=key,
+      value=value,
+      position=position,
+      content_attention_bias=content_attention_bias,
+      positional_attention_bias=positional_attention_bias,
+      segment_matrix=segment_matrix,
+      segment_encoding=segment_encoding,
+      segment_attention_bias=segment_attention_bias,
+      attention_mask=attention_mask,
     )
 
     # `attention_output` = [B, S, N, H]
@@ -353,19 +354,19 @@ class TwoStreamRelativeAttention(MultiHeadRelativeAttention):
   """
 
   def call(
-      self,
-      content_stream,
-      content_attention_bias,
-      positional_attention_bias,
-      query_stream,
-      relative_position_encoding,
-      target_mapping=None,
-      segment_matrix=None,
-      segment_encoding=None,
-      segment_attention_bias=None,
-      state=None,
-      content_attention_mask=None,
-      query_attention_mask=None
+    self,
+    content_stream,
+    content_attention_bias,
+    positional_attention_bias,
+    query_stream,
+    relative_position_encoding,
+    target_mapping=None,
+    segment_matrix=None,
+    segment_encoding=None,
+    segment_attention_bias=None,
+    state=None,
+    content_attention_mask=None,
+    query_attention_mask=None,
   ):
     """Compute multi-head relative attention over inputs.
 
@@ -438,16 +439,16 @@ class TwoStreamRelativeAttention(MultiHeadRelativeAttention):
     position = self._encoding_dense(relative_position_encoding)
 
     content_attention_output = self.compute_attention(
-        query=query,
-        key=key,
-        value=value,
-        position=position,
-        content_attention_bias=content_attention_bias,
-        positional_attention_bias=positional_attention_bias,
-        segment_matrix=segment_matrix,
-        segment_encoding=segment_encoding,
-        segment_attention_bias=segment_attention_bias,
-        attention_mask=content_attention_mask
+      query=query,
+      key=key,
+      value=value,
+      position=position,
+      content_attention_bias=content_attention_bias,
+      positional_attention_bias=positional_attention_bias,
+      segment_matrix=segment_matrix,
+      segment_encoding=segment_encoding,
+      segment_attention_bias=segment_attention_bias,
+      attention_mask=content_attention_mask,
     )
 
     # `content_attention_output` = [B, S, N, H]
@@ -459,30 +460,30 @@ class TwoStreamRelativeAttention(MultiHeadRelativeAttention):
       if target_mapping is not None:
         query = tf.einsum("bmnd,bml->blnd", query, target_mapping)
         query_attention_output = self.compute_attention(
-            query=query,
-            key=key,
-            value=value,
-            position=position,
-            content_attention_bias=content_attention_bias,
-            positional_attention_bias=positional_attention_bias,
-            segment_matrix=segment_matrix,
-            segment_encoding=segment_encoding,
-            segment_attention_bias=segment_attention_bias,
-            attention_mask=query_attention_mask
+          query=query,
+          key=key,
+          value=value,
+          position=position,
+          content_attention_bias=content_attention_bias,
+          positional_attention_bias=positional_attention_bias,
+          segment_matrix=segment_matrix,
+          segment_encoding=segment_encoding,
+          segment_attention_bias=segment_attention_bias,
+          attention_mask=query_attention_mask,
         )
         query_attention_output = tf.einsum("blnd,bml->bmnd", query_attention_output, target_mapping)
       else:
         query_attention_output = self.compute_attention(
-            query=query,
-            key=key,
-            value=value,
-            position=position,
-            content_attention_bias=content_attention_bias,
-            positional_attention_bias=positional_attention_bias,
-            segment_matrix=segment_matrix,
-            segment_encoding=segment_encoding,
-            segment_attention_bias=segment_attention_bias,
-            attention_mask=query_attention_mask
+          query=query,
+          key=key,
+          value=value,
+          position=position,
+          content_attention_bias=content_attention_bias,
+          positional_attention_bias=positional_attention_bias,
+          segment_matrix=segment_matrix,
+          segment_encoding=segment_encoding,
+          segment_attention_bias=segment_attention_bias,
+          attention_mask=query_attention_mask,
         )
       query_attention_output = self._output_dense(query_attention_output)
 

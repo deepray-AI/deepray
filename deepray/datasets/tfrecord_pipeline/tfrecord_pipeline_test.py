@@ -11,8 +11,6 @@ from absl import app, flags
 from deepray.datasets.tfrecord_pipeline import TFRecordPipeline
 from deepray.utils.benchmark import PerformanceCalculator
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
@@ -21,15 +19,13 @@ def runner(argv=None):
 
   if len(argv) <= 1:
     argv = [
-        sys.argv[0],
-        "--batch_size=256",
-        "--epochs=1",
-        "--prebatch=1",
-        "--train_data=/workspaces/dataset/huxiao/2023-04-16_boss/*.tfrecord",
-        # "--white_list=easy_arsenal/huxiao/white_list.txt",
-        # "--black_list=easy_arsenal/huxiao/black_list.txt",
-        "--feature_map=easy_arsenal/huxiao/feature_map.csv",
-        "--label=label",
+      sys.argv[0],
+      "--batch_size=256",
+      "--epochs=1",
+      "--prebatch=1",
+      "--train_data=/workspaces/dataset/*.tfrecord",
+      "--feature_map=feature_map.csv",
+      "--label=label",
     ]
   if argv:
     FLAGS(argv, known_only=True)
@@ -47,7 +43,7 @@ def runner(argv=None):
     step += 1
     num_examples += FLAGS.batch_size
     step_throughput = _performance_calculator(1, FLAGS.batch_size)
-    print(f'step {step}, Perf {step_throughput} samples/s')
+    print(f"step {step}, Perf {step_throughput} samples/s")
   # print(batch)
 
   print(num_examples)

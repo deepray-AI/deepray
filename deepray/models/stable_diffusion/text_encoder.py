@@ -18,7 +18,6 @@ from tensorflow.experimental import numpy as tfnp
 
 
 class TextEncoder(keras.Model):
-
   def __init__(self, max_length, vocab_size=49408, name=None, download_weights=True):
     tokens = keras.layers.Input(shape=(max_length,), dtype="int32", name="tokens")
     positions = keras.layers.Input(shape=(max_length,), dtype="int32", name="positions")
@@ -30,14 +29,13 @@ class TextEncoder(keras.Model):
 
     if download_weights:
       text_encoder_weights_fpath = keras.utils.get_file(
-          origin="https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_encoder.h5",  # noqa: E501
-          file_hash="4789e63e07c0e54d6a34a29b45ce81ece27060c499a709d556c7755b42bb0dc4",  # noqa: E501
+        origin="https://huggingface.co/fchollet/stable-diffusion/resolve/main/kcv_encoder.h5",  # noqa: E501
+        file_hash="4789e63e07c0e54d6a34a29b45ce81ece27060c499a709d556c7755b42bb0dc4",  # noqa: E501
       )
       self.load_weights(text_encoder_weights_fpath)
 
 
 class TextEncoderV2(keras.Model):
-
   def __init__(self, max_length, vocab_size=49408, name=None, download_weights=True):
     tokens = keras.layers.Input(shape=(max_length,), dtype="int32", name="tokens")
     positions = keras.layers.Input(shape=(max_length,), dtype="int32", name="positions")
@@ -49,8 +47,8 @@ class TextEncoderV2(keras.Model):
 
     if download_weights:
       text_encoder_weights_fpath = keras.utils.get_file(
-          origin="https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/text_encoder_v2_1.h5",  # noqa: E501
-          file_hash="985002e68704e1c5c3549de332218e99c5b9b745db7171d5f31fcd9a6089f25b",  # noqa: E501
+        origin="https://huggingface.co/ianstenbit/keras-sd2.1/resolve/main/text_encoder_v2_1.h5",  # noqa: E501
+        file_hash="985002e68704e1c5c3549de332218e99c5b9b745db7171d5f31fcd9a6089f25b",  # noqa: E501
       )
       self.load_weights(text_encoder_weights_fpath)
 
@@ -60,7 +58,6 @@ def quick_gelu(x):
 
 
 class CLIPEmbedding(keras.layers.Layer):
-
   def __init__(self, input_dim=49408, output_dim=768, max_length=77, **kwargs):
     super().__init__(**kwargs)
     self.token_embedding = keras.layers.Embedding(input_dim, output_dim)
@@ -74,7 +71,6 @@ class CLIPEmbedding(keras.layers.Layer):
 
 
 class CLIPEncoderLayer(keras.layers.Layer):
-
   def __init__(self, embed_dim, num_heads, activation=None, **kwargs):
     super().__init__(**kwargs)
     self.layer_norm1 = keras.layers.LayerNormalization(epsilon=1e-5)
@@ -98,7 +94,6 @@ class CLIPEncoderLayer(keras.layers.Layer):
 
 
 class CLIPAttention(keras.layers.Layer):
-
   def __init__(self, embed_dim=768, num_heads=12, causal=True, **kwargs):
     super().__init__(**kwargs)
     self.embed_dim = embed_dim
@@ -119,8 +114,8 @@ class CLIPAttention(keras.layers.Layer):
     if attention_mask is None and self.causal:
       length = tf.shape(inputs)[1]
       attention_mask = tfnp.triu(
-          tf.ones((1, 1, length, length), dtype=self.compute_dtype) * -tfnp.inf,
-          k=1,
+        tf.ones((1, 1, length, length), dtype=self.compute_dtype) * -tfnp.inf,
+        k=1,
       )
 
     _, tgt_len, embed_dim = inputs.shape

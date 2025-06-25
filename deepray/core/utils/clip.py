@@ -17,9 +17,9 @@ def cow_clip(w, g, ratio=1, ids=None, cnts=None, min_w=0.03, const=False):
       clipnorm = tf.maximum(clipnorm, min_w)
     # scale by cnting
     cnts = tf.tensor_scatter_nd_update(
-        tf.ones([clipnorm.shape[0]], dtype=tf.int32),
-        tf.expand_dims(ids, -1),
-        cnts,
+      tf.ones([clipnorm.shape[0]], dtype=tf.int32),
+      tf.expand_dims(ids, -1),
+      cnts,
     )
     clipnorm = clipnorm * tf.cast(cnts, tf.float32)
 

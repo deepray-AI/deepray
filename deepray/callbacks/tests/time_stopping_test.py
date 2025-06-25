@@ -10,7 +10,6 @@ from deepray.callbacks.time_stopping import TimeStopping
 
 
 class SleepLayer(tf.keras.layers.Layer):
-
   def __init__(self, secs):
     self.secs = secs
     super().__init__(dynamic=True)

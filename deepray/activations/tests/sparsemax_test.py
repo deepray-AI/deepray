@@ -97,8 +97,8 @@ def test_sparsemax_against_numpy_high_rank(dtype):
 
   tf_sparsemax_out = sparsemax(z.astype(dtype))
   np_sparsemax = np.reshape(
-      _np_sparsemax(np.reshape(z, [test_obs * test_obs, 10])),
-      [test_obs, test_obs, 10],
+    _np_sparsemax(np.reshape(z, [test_obs * test_obs, 10])),
+    [test_obs, test_obs, 10],
   ).astype(dtype)
 
   test_utils.assert_allclose_according_to_type(np_sparsemax, tf_sparsemax_out)
@@ -111,12 +111,12 @@ def test_sparsemax_of_nan(dtype):
 
   tf_sparsemax_nan = sparsemax(z_nan)
   np.testing.assert_equal(
-      np.array([
-          [np.nan, np.nan, np.nan],
-          [np.nan, np.nan, np.nan],
-          [np.nan, np.nan, np.nan],
-      ]),
-      tf_sparsemax_nan,
+    np.array([
+      [np.nan, np.nan, np.nan],
+      [np.nan, np.nan, np.nan],
+      [np.nan, np.nan, np.nan],
+    ]),
+    tf_sparsemax_nan,
   )
 
 
@@ -132,22 +132,22 @@ def test_sparsemax_of_inf(dtype):
 
   tf_sparsemax_pos = sparsemax(z_pos)
   np.testing.assert_equal(
-      np.array([
-          [np.nan, np.nan, np.nan],
-          [np.nan, np.nan, np.nan],
-          [np.nan, np.nan, np.nan],
-      ]),
-      tf_sparsemax_pos,
+    np.array([
+      [np.nan, np.nan, np.nan],
+      [np.nan, np.nan, np.nan],
+      [np.nan, np.nan, np.nan],
+    ]),
+    tf_sparsemax_pos,
   )
 
   tf_sparsemax_mix = sparsemax(z_mix)
   np.testing.assert_equal(
-      np.array([
-          [np.nan, np.nan, np.nan],
-          [np.nan, np.nan, np.nan],
-          [np.nan, np.nan, np.nan],
-      ]),
-      tf_sparsemax_mix,
+    np.array([
+      [np.nan, np.nan, np.nan],
+      [np.nan, np.nan, np.nan],
+      [np.nan, np.nan, np.nan],
+    ]),
+    tf_sparsemax_mix,
   )
 
 

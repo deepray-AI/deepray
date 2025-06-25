@@ -1,4 +1,4 @@
-name,dtype,ftype,dim,length,voc_size,lr,optimizer,storage_type,composition_factor,ev_filter
+name,dtype,ftype,dim,length,voc_size
 user_rating,int64,Label,1,1
 user_id,int64,Categorical,32,1
 movie_id,int64,Categorical,32,1

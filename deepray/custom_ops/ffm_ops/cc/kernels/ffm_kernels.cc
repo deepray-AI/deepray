@@ -28,7 +28,7 @@ using CPUDevice = Eigen::ThreadPoolDevice;
 
 template <>
 struct FFMImpl<CPUDevice> {
-  static void Compute(OpKernelContext *ctx, const std::string &int_type,
+  static void Compute(OpKernelContext* ctx, const std::string& int_type,
                       TTypes<float>::ConstMatrix left_matrix, int left_feat_num,
                       TTypes<float>::ConstMatrix right_matrix,
                       int right_feat_num, int batch_size, int dim_size,
@@ -63,7 +63,7 @@ struct FFMImpl<CPUDevice> {
 
 template <>
 struct FFMGradImpl<CPUDevice> {
-  static void Compute(OpKernelContext *ctx, const std::string &int_type,
+  static void Compute(OpKernelContext* ctx, const std::string& int_type,
                       TTypes<float>::ConstMatrix grad_matrix, int grad_feat_num,
                       TTypes<float>::ConstMatrix left_matrix, int left_feat_num,
                       TTypes<float>::ConstMatrix right_matrix,

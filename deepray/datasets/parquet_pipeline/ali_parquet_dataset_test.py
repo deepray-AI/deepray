@@ -4,49 +4,46 @@
 # @license : Copyright(C),  <hailin.fu@>
 import os
 import sys
-from datetime import datetime
 
-from absl import app, flags
+from absl import flags
 
-from deepray.datasets.parquet_pipeline.ali_parquet_dataset import ParquetPipeLine
+import deepray as dp
+from deepray.datasets.parquet_pipeline.ali_parquet_dataset import ParquetPipeline
 from deepray.utils.benchmark import PerformanceCalculator
 
-FLAGS = flags.FLAGS
-
-TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
-def runner(argv=None):
-  dir_path = os.path.dirname(os.path.realpath(__file__))
+def define_flags():
+  argv = sys.argv + [
+    "--batch_size=4096",
+    "--epochs=1",
+    "--dataset=ps_test",
+    "--feature_map=/workspaces/one-code/shadow-tf/datasets/feature_map.csv",
+    "--config_file=/workspaces/one-code/shadow-tf/train_feature_process.yaml",
+  ]
+  flags.FLAGS(argv)
 
-  if len(argv) <= 1:
-    argv = [
-        sys.argv[0],
-        "--batch_size=2",
-        "--epochs=1",
-        "--train_data=/workspaces/dataset/ali_display_ad_click/output/*.parquet",
-        "--feature_map=/workspaces/Deepray2/deepray/datasets/ali_display_ad_click/feature_map.csv",
-        # "--white_list=examples/Recommendation/yekuan/data_pipeline/white_list",
-        # f"--feature_map={dir_path}/bz_search_1to3.csv",
-        "--label=label",
-    ]
-  if argv:
-    FLAGS(argv, known_only=True)
 
-  data_pipe = ParquetPipeLine()
+def main():
+  define_flags()
+  filenames = [
+    "/workspaces/datasets/00000-1-038360cf-9d9d-454c-8381-6a57bdbf6d57-00001.parquet",
+    "/workspaces/datasets/01799-1800-26382079-2024-439e-84bf-e7b2231e0a2f-00001.parquet",
+  ]
+  data_pipe = ParquetPipeline(column_names=["f_c0", "f_c1", "f_c14"])
   # create data pipline of train & test dataset
-  train_dataset = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
+  train_dataset = data_pipe(batch_size=flags.FLAGS.batch_size, input_file_pattern=filenames, is_training=True)
   _performance_calculator = PerformanceCalculator(0, 1000)
 
-  # partitions = data_pipe.get_supported_partitions()
-  # print(partitions)
   num_examples = 0
   step = 0
   for batch in train_dataset.take(1000):
     step += 1
-    num_examples += FLAGS.batch_size
-    step_throughput = _performance_calculator(1, FLAGS.batch_size)
-    print(f'step {step}, Perf {step_throughput} samples/s')
+    num_examples += flags.FLAGS.batch_size
+    step_throughput = _performance_calculator(1, flags.FLAGS.batch_size)
+    print(f"step {step}, Perf {step_throughput} samples/s")
+  print(batch)
 
   print(num_examples)
   results_perf = _performance_calculator.results
@@ -57,4 +54,4 @@ def runner(argv=None):
 
 
 if __name__ == "__main__":
-  app.run(runner)
+  dp.runner(main)

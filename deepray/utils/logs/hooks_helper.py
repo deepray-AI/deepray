@@ -24,12 +24,13 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf  # pylint: disable=g-bad-import-order
+from absl import logging
 
 from official.utils.logs import hooks
 from official.utils.logs import logger
 from official.utils.logs import metric_hook
 
-_TENSORS_TO_LOG = dict((x, x) for x in ['learning_rate', 'cross_entropy', 'train_accuracy'])
+_TENSORS_TO_LOG = dict((x, x) for x in ["learning_rate", "cross_entropy", "train_accuracy"])
 
 
 def get_train_hooks(name_list, use_tpu=False, **kwargs):
@@ -55,8 +56,7 @@ def get_train_hooks(name_list, use_tpu=False, **kwargs):
 
   if use_tpu:
     logging.warning(
-        'hooks_helper received name_list `{}`, but a '
-        'TPU is specified. No hooks will be used.'.format(name_list)
+      "hooks_helper received name_list `{}`, but a TPU is specified. No hooks will be used.".format(name_list)
     )
     return []
 
@@ -64,7 +64,7 @@ def get_train_hooks(name_list, use_tpu=False, **kwargs):
   for name in name_list:
     hook_name = HOOKS.get(name.strip().lower())
     if hook_name is None:
-      raise ValueError('Unrecognized training hook requested: {}'.format(name))
+      raise ValueError("Unrecognized training hook requested: {}".format(name))
     else:
       train_hooks.append(hook_name(**kwargs))
 
@@ -122,10 +122,10 @@ def get_examples_per_second_hook(every_n_steps=100, batch_size=128, warm_steps=5
     profiling tools like chrome://tracing.
   """
   return hooks.ExamplesPerSecondHook(
-      batch_size=batch_size,
-      every_n_steps=every_n_steps,
-      warm_steps=warm_steps,
-      metric_logger=logger.get_benchmark_logger()
+    batch_size=batch_size,
+    every_n_steps=every_n_steps,
+    warm_steps=warm_steps,
+    metric_logger=logger.get_benchmark_logger(),
   )
 
 
@@ -145,7 +145,7 @@ def get_logging_metric_hook(tensors_to_log=None, every_n_secs=600, **kwargs):  #
   if tensors_to_log is None:
     tensors_to_log = _TENSORS_TO_LOG
   return metric_hook.LoggingMetricHook(
-      tensors=tensors_to_log, metric_logger=logger.get_benchmark_logger(), every_n_secs=every_n_secs
+    tensors=tensors_to_log, metric_logger=logger.get_benchmark_logger(), every_n_secs=every_n_secs
   )
 
 
@@ -157,9 +157,9 @@ def get_step_counter_hook(**kwargs):
 
 # A dictionary to map one hook name and its corresponding function
 HOOKS = {
-    'loggingtensorhook': get_logging_tensor_hook,
-    'profilerhook': get_profiler_hook,
-    'examplespersecondhook': get_examples_per_second_hook,
-    'loggingmetrichook': get_logging_metric_hook,
-    'stepcounterhook': get_step_counter_hook
+  "loggingtensorhook": get_logging_tensor_hook,
+  "profilerhook": get_profiler_hook,
+  "examplespersecondhook": get_examples_per_second_hook,
+  "loggingmetrichook": get_logging_metric_hook,
+  "stepcounterhook": get_step_counter_hook,
 }

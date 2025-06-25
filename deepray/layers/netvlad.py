@@ -23,19 +23,19 @@ from typeguard import typechecked
 class NetVLAD(tf.keras.layers.Layer):
   """Applies NetVLAD to the input.
 
-    This is a fully-differentiable version of "Vector of Locally Aggregated Descriptors" commonly used in image
-    retrieval.
+  This is a fully-differentiable version of "Vector of Locally Aggregated Descriptors" commonly used in image
+  retrieval.
 
-    See [NetVLAD: CNN architecture for weakly supervised place recognition](https://arxiv.org/abs/1511.07247), and.
-    [Towards Learning a Universal Non-Semantic Representation of Speech](https://arxiv.org/abs/2002.12764)
+  See [NetVLAD: CNN architecture for weakly supervised place recognition](https://arxiv.org/abs/1511.07247), and.
+  [Towards Learning a Universal Non-Semantic Representation of Speech](https://arxiv.org/abs/2002.12764)
 
-    Args:
-        num_clusters: The number of clusters to use.
-    Input shape:
-        3D tensor with shape: `(batch_size, time, feature_dim)`.
-    Output shape:
-        2D tensor with shape: `(batch_size, feature_dim * num_clusters)`.
-    """
+  Args:
+      num_clusters: The number of clusters to use.
+  Input shape:
+      3D tensor with shape: `(batch_size, time, feature_dim)`.
+  Output shape:
+      2D tensor with shape: `(batch_size, feature_dim * num_clusters)`.
+  """
 
   @typechecked
   def __init__(self, num_clusters: int, **kwargs):
@@ -50,30 +50,30 @@ class NetVLAD(tf.keras.layers.Layer):
     if not isinstance(feature_dim, int):
       feature_dim = feature_dim.value
     self.fc = tf.keras.layers.Dense(
-        units=self.num_clusters,
-        activation=tf.nn.softmax,
-        kernel_regularizer=tf.keras.regularizers.l2(1e-5),
+      units=self.num_clusters,
+      activation=tf.nn.softmax,
+      kernel_regularizer=tf.keras.regularizers.l2(1e-5),
     )
     self.cluster_centers = self.add_weight(
-        name="cluster_centers",
-        shape=(1, feature_dim, self.num_clusters),
-        initializer=tf.keras.initializers.TruncatedNormal(stddev=1.0 / math.sqrt(feature_dim)),
-        trainable=True,
+      name="cluster_centers",
+      shape=(1, feature_dim, self.num_clusters),
+      initializer=tf.keras.initializers.TruncatedNormal(stddev=1.0 / math.sqrt(feature_dim)),
+      trainable=True,
     )
     super(NetVLAD, self).build(input_shape)
 
   def call(self, frames):
     """Apply the NetVLAD module to the given frames.
 
-        Args:
-            frames: A tensor with shape [batch_size, max_frames, feature_dim].
+    Args:
+        frames: A tensor with shape [batch_size, max_frames, feature_dim].
 
-        Returns:
-            A tensor with shape [batch_size, feature_dim * num_clusters].
+    Returns:
+        A tensor with shape [batch_size, feature_dim * num_clusters].
 
-        Raises:
-            ValueError: If the `feature_dim` of input is not defined.
-        """
+    Raises:
+        ValueError: If the `feature_dim` of input is not defined.
+    """
     frames.shape.assert_has_rank(3)
     feature_dim = frames.shape.as_list()[-1]
     if feature_dim is None:

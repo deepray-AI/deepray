@@ -3,7 +3,6 @@ from tensorflow.keras import layers
 
 
 class Word2Vec(tf.keras.Model):
-
   def __init__(self, vocab_size, embedding_dim):
     super(Word2Vec, self).__init__()
     self.target_embedding = layers.Embedding(vocab_size, embedding_dim, input_length=1, name="w2v_embedding")
@@ -20,6 +19,6 @@ class Word2Vec(tf.keras.Model):
     # word_emb: (batch, embed)
     context_emb = self.context_embedding(context)
     # context_emb: (batch, context, embed)
-    dots = tf.einsum('be,bce->bc', word_emb, context_emb)
+    dots = tf.einsum("be,bce->bc", word_emb, context_emb)
     # dots: (batch, context)
     return dots

@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
 
@@ -39,7 +40,7 @@ static Status HandleGradAndIndicesInputs(InferenceContext* c, bool sparse,
   ShapeHandle grad = ShapeOrHandleShape(c, grad_idx);
   if (!sparse) {
     TF_RETURN_IF_ERROR(c->Merge(*s, grad, s));
-    return Status::OK();
+    return TFOkStatus;
   }
   // Indices is a vector where indices.dim[0].rank == grad[0].rank.
   ShapeHandle indices;
@@ -53,7 +54,7 @@ static Status HandleGradAndIndicesInputs(InferenceContext* c, bool sparse,
       c->ReplaceDim(grad, 0, c->UnknownDim(), &grad_unknown_first));
   TF_RETURN_IF_ERROR(c->Merge(*s, grad_unknown_first, s));
 
-  return Status::OK();
+  return TFOkStatus;
 }
 
 static Status ApplyAdamShapeFn(InferenceContext* c, bool sparse) {
@@ -72,7 +73,7 @@ static Status ApplyAdamShapeFn(InferenceContext* c, bool sparse) {
   if (c->num_outputs() > 0) {
     c->set_output(0, s);
   }
-  return Status::OK();
+  return TFOkStatus;
 }
 
 REGISTER_OP("SparseApplyAdam")
@@ -114,12 +115,50 @@ REGISTER_OP("ResourceSparseApplyAdam")
       return ApplyAdamShapeFn(c, true /* sparse */);
     });
 
-REGISTER_OP("ResourceApplyAdam")
+static Status ApplyAdamAsyncShapeFn(InferenceContext* c, bool sparse) {
+  ShapeHandle unused;
+  ShapeHandle s = ShapeOrHandleShape(c, 0);                       // var
+  TF_RETURN_IF_ERROR(c->Merge(s, ShapeOrHandleShape(c, 1), &s));  // m
+  TF_RETURN_IF_ERROR(c->Merge(s, ShapeOrHandleShape(c, 2), &s));  // v
+  TF_RETURN_IF_ERROR(c->WithRank(c->input(3), 0, &unused));       // beta1_power
+  TF_RETURN_IF_ERROR(c->WithRank(c->input(4), 0, &unused));       // beta2_power
+  TF_RETURN_IF_ERROR(c->WithRank(c->input(5), 0, &unused));       // lr
+  TF_RETURN_IF_ERROR(c->WithRank(c->input(6), 0, &unused));       // beta1
+  TF_RETURN_IF_ERROR(c->WithRank(c->input(7), 0, &unused));       // beta2
+  TF_RETURN_IF_ERROR(c->WithRank(c->input(8), 0, &unused));       // epsilon
+  TF_RETURN_IF_ERROR(
+      HandleGradAndIndicesInputs(c, sparse, 9 /* grad_idx */, &s));
+  if (c->num_outputs() > 0) {
+    c->set_output(0, s);
+  }
+  return TFOkStatus;
+}
+
+REGISTER_OP("ApplyAdamAsync")
+    .Input("var: Ref(T)")
+    .Input("m: Ref(T)")
+    .Input("v: Ref(T)")
+    .Input("beta1_power: Ref(T)")
+    .Input("beta2_power: Ref(T)")
+    .Input("lr: T")
+    .Input("beta1: T")
+    .Input("beta2: T")
+    .Input("epsilon: T")
+    .Input("grad: T")
+    .Output("out: Ref(T)")
+    .Attr("T: numbertype")
+    .Attr("use_locking: bool = false")
+    .Attr("use_nesterov: bool = false")
+    .SetShapeFn([](InferenceContext* c) {
+      return ApplyAdamAsyncShapeFn(c, false /* sparse */);
+    });
+
+REGISTER_OP("ResourceApplyAdamAsync")
     .Input("var: resource")
     .Input("m: resource")
     .Input("v: resource")
-    .Input("beta1_power: T")
-    .Input("beta2_power: T")
+    .Input("beta1_power: resource")
+    .Input("beta2_power: resource")
     .Input("lr: T")
     .Input("beta1: T")
     .Input("beta2: T")
@@ -129,7 +168,7 @@ REGISTER_OP("ResourceApplyAdam")
     .Attr("use_locking: bool = false")
     .Attr("use_nesterov: bool = false")
     .SetShapeFn([](InferenceContext* c) {
-      return ApplyAdamShapeFn(c, false /* sparse */);
+      return ApplyAdamAsyncShapeFn(c, false /* sparse */);
     });
 
 }  // namespace tensorflow

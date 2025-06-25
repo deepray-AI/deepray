@@ -18,14 +18,14 @@ import tensorflow as tf
 from deepray import activations
 
 ALL_ACTIVATIONS = [
-    "hardshrink",
-    "lisht",
-    "mish",
-    "rrelu",
-    "softshrink",
-    "sparsemax",
-    "tanhshrink",
-    "snake",
+  "hardshrink",
+  "lisht",
+  "mish",
+  "rrelu",
+  "softshrink",
+  "sparsemax",
+  "tanhshrink",
+  "snake",
 ]
 
 

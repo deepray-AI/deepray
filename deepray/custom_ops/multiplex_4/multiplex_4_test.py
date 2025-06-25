@@ -21,6 +21,7 @@ import tensorflow as tf
 
 from deepray.custom_ops.multiplex_4 import model_using_multiplex
 from deepray.custom_ops.multiplex_4 import multiplex_4_op
+
 # This pylint disable is only needed for internal google users
 from tensorflow.python.framework import errors_impl  # pylint: disable=g-direct-tensorflow-import
 from tensorflow.python.framework import test_util  # pylint: disable=g-direct-tensorflow-import
@@ -28,7 +29,6 @@ from tensorflow.python.framework import test_util  # pylint: disable=g-direct-te
 
 @test_util.with_eager_op_as_function
 class MultiplexOpTest(tf.test.TestCase):
-
   @test_util.run_in_graph_and_eager_modes
   def test_multiplex_int(self):
     a = tf.constant([1, 2, 3, 4, 5], dtype=tf.int64)
@@ -56,7 +56,7 @@ class MultiplexOpTest(tf.test.TestCase):
     self.assertAllEqual(result, expect)
 
   def test_multiplex_saved_model(self):
-    path = os.path.join(self.create_tempdir(), 'model')
+    path = os.path.join(self.create_tempdir(), "model")
     model_using_multiplex.save(multiplex_4_op.multiplex, path)
     result = model_using_multiplex.load_and_use(path)
     self.assertAllEqual(result, tf.constant([1, 20, 3, 40, 5], dtype=tf.int64))
@@ -94,15 +94,15 @@ class MultiplexOpTest(tf.test.TestCase):
     b = tf.constant([101, 102, 103, 104, 105], dtype=tf.int64)
     cond = tf.constant([False, False, True, False, False], dtype=bool)
     with self.assertRaisesRegex(
-        (errors_impl.InvalidArgumentError, ValueError),
-        # Eager mode raises InvalidArgumentError with the following message
-        r'(a_values\[0\] and b_values must have the same shape'
-        r')|('
-        # Graph mode raises ValueError with the following message
-        r'Shapes must be equal rank, but are 2 and 1)'
+      (errors_impl.InvalidArgumentError, ValueError),
+      # Eager mode raises InvalidArgumentError with the following message
+      r"(a_values\[0\] and b_values must have the same shape"
+      r")|("
+      # Graph mode raises ValueError with the following message
+      r"Shapes must be equal rank, but are 2 and 1)",
     ):
       self.evaluate(multiplex_4_op.multiplex(cond, a, b))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

@@ -16,12 +16,11 @@ import tensorflow as tf
 from tensorflow import keras
 
 from .padded_conv2d import (
-    PaddedConv2D,
+  PaddedConv2D,
 )
 
 
 class AttentionBlock(keras.layers.Layer):
-
   def __init__(self, output_dim, **kwargs):
     super().__init__(**kwargs)
     self.output_dim = output_dim

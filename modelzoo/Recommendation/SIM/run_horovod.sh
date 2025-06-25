@@ -52,10 +52,10 @@ else
 fi
 
 if [ "$model" = "din" ] ; then
-    use_din_tag="--steps_per_summary=100"
+    use_din_tag="--steps_per_execution=100"
     echo "$model activated"
 else
-    use_din_tag="--steps_per_summary=1"
+    use_din_tag="--steps_per_execution=1"
 fi
 
 

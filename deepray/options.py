@@ -49,9 +49,9 @@ def warn_fallback(op_name):
 def enable_custom_kernel():
   """Prefer custom C++/CUDA kernel to pure python operations.
 
-    Enable using custom C++/CUDA kernel instead of pure python operations.
-    It has the same effect as setting environment variable `DEEPRAY_PY_OPS=0`.
-    """
+  Enable using custom C++/CUDA kernel instead of pure python operations.
+  It has the same effect as setting environment variable `DEEPRAY_PY_OPS=0`.
+  """
   global _DEEPRAY_PY_OPS
   _DEEPRAY_PY_OPS = False
 
@@ -59,9 +59,9 @@ def enable_custom_kernel():
 def disable_custom_kernel():
   """Prefer pure python operations to custom C++/CUDA kernel.
 
-    Disable using custom C++/CUDA kernel instead of pure python operations.
-    It has the same effect as setting environment variable `DEEPRAY_PY_OPS=1`.
-    """
+  Disable using custom C++/CUDA kernel instead of pure python operations.
+  It has the same effect as setting environment variable `DEEPRAY_PY_OPS=1`.
+  """
   global _DEEPRAY_PY_OPS
   _DEEPRAY_PY_OPS = True
 

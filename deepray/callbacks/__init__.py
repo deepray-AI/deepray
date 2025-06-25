@@ -15,6 +15,7 @@
 """Additional callbacks that conform to Keras API."""
 
 from deepray.callbacks.average_model_checkpoint import AverageModelCheckpoint
+from deepray.callbacks.callbacks import HvdCallbackList
+from deepray.callbacks.model_checkpoint import ModelCheckpoint
 from deepray.callbacks.time_stopping import TimeStopping
 from deepray.callbacks.tqdm_progress_bar import TQDMProgressBar
-from deepray.callbacks.callbacks import HvdCallbackList

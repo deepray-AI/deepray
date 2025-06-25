@@ -37,11 +37,28 @@ from deepray.datasets.movielens import constants
 # pylint: enable=g-bad-import-order
 
 # URL to download dataset
-_DATA_URL = "http://minio1.arsenal.kanzhun-inc.com/datasets/movielens/"
+_DATA_URL = "https://files.grouplens.org/datasets/movielens/"
 
 GENRES = [
-    'Action', 'Adventure', 'Animation', "Children", 'Comedy', 'Crime', 'Documentary', 'Drama', 'Fantasy', 'Film-Noir',
-    'Horror', "IMAX", 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western'
+  "Action",
+  "Adventure",
+  "Animation",
+  "Children",
+  "Comedy",
+  "Crime",
+  "Documentary",
+  "Drama",
+  "Fantasy",
+  "Film-Noir",
+  "Horror",
+  "IMAX",
+  "Musical",
+  "Mystery",
+  "Romance",
+  "Sci-Fi",
+  "Thriller",
+  "War",
+  "Western",
 ]
 N_GENRE = len(GENRES)
 
@@ -95,8 +112,7 @@ def _download_and_clean(dataset, data_dir):
       if not tf.io.gfile.exists(os.path.join(data_subdir, fname)):
         tf.io.gfile.copy(os.path.join(temp_dir, fname), os.path.join(data_subdir, fname))
       else:
-        logging.info("Skipping copy of {}, as it already exists in the "
-                     "destination folder.".format(fname))
+        logging.info("Skipping copy of {}, as it already exists in the destination folder.".format(fname))
 
   finally:
     tf.io.gfile.rmtree(temp_dir)
@@ -115,9 +131,7 @@ def _transform_csv(input_path, output_path, names, skip_first, separator=","):
   if six.PY2:
     names = [six.ensure_text(n, "utf-8") for n in names]
 
-  with tf.io.gfile.GFile(output_path, "wb") as f_out, \
-      tf.io.gfile.GFile(input_path, "rb") as f_in:
-
+  with tf.io.gfile.GFile(output_path, "wb") as f_out, tf.io.gfile.GFile(input_path, "rb") as f_in:
     # Write column names to the csv.
     f_out.write(",".join(names).encode("utf-8"))
     f_out.write(b"\n")
@@ -152,19 +166,19 @@ def _regularize_1m_dataset(temp_dir):
   working_dir = os.path.join(temp_dir, constants.ML_1M)
 
   _transform_csv(
-      input_path=os.path.join(working_dir, "ratings.dat"),
-      output_path=os.path.join(temp_dir, constants.RATINGS_FILE),
-      names=constants.RATING_COLUMNS,
-      skip_first=False,
-      separator="::"
+    input_path=os.path.join(working_dir, "ratings.dat"),
+    output_path=os.path.join(temp_dir, constants.RATINGS_FILE),
+    names=constants.RATING_COLUMNS,
+    skip_first=False,
+    separator="::",
   )
 
   _transform_csv(
-      input_path=os.path.join(working_dir, "movies.dat"),
-      output_path=os.path.join(temp_dir, constants.MOVIES_FILE),
-      names=constants.MOVIE_COLUMNS,
-      skip_first=False,
-      separator="::"
+    input_path=os.path.join(working_dir, "movies.dat"),
+    output_path=os.path.join(temp_dir, constants.MOVIES_FILE),
+    names=constants.MOVIE_COLUMNS,
+    skip_first=False,
+    separator="::",
   )
 
   tf.io.gfile.rmtree(working_dir)
@@ -192,19 +206,19 @@ def _regularize_20m_dataset(temp_dir):
   working_dir = os.path.join(temp_dir, constants.ML_20M)
 
   _transform_csv(
-      input_path=os.path.join(working_dir, "ratings.csv"),
-      output_path=os.path.join(temp_dir, constants.RATINGS_FILE),
-      names=constants.RATING_COLUMNS,
-      skip_first=True,
-      separator=","
+    input_path=os.path.join(working_dir, "ratings.csv"),
+    output_path=os.path.join(temp_dir, constants.RATINGS_FILE),
+    names=constants.RATING_COLUMNS,
+    skip_first=True,
+    separator=",",
   )
 
   _transform_csv(
-      input_path=os.path.join(working_dir, "movies.csv"),
-      output_path=os.path.join(temp_dir, constants.MOVIES_FILE),
-      names=constants.MOVIE_COLUMNS,
-      skip_first=True,
-      separator=","
+    input_path=os.path.join(working_dir, "movies.csv"),
+    output_path=os.path.join(temp_dir, constants.MOVIES_FILE),
+    names=constants.MOVIE_COLUMNS,
+    skip_first=True,
+    separator=",",
   )
 
   tf.io.gfile.rmtree(working_dir)
@@ -276,5 +290,4 @@ def main(_):
 
 
 if __name__ == "__main__":
-  FLAGS = flags.FLAGS
   app.run(main)

@@ -15,35 +15,34 @@
 """Implements GeometricMean."""
 
 import tensorflow as tf
-from tensorflow.keras import backend as K
-from tensorflow.keras.metrics import Metric
-
+import tf_keras as keras
+from tf_keras import backend as K
 from typeguard import typechecked
 from deepray.utils.types import AcceptableDTypes
 from deepray.metrics.utils import sample_weight_shape_match
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class GeometricMean(Metric):
+class GeometricMean(keras.metrics.Metric):
   """Compute Geometric Mean
 
-    The geometric mean is a kind of mean. Unlike the arithmetic mean
-    that uses the sum of values, it uses the product of the values to
-    represent typical values in a set of numbers.
+  The geometric mean is a kind of mean. Unlike the arithmetic mean
+  that uses the sum of values, it uses the product of the values to
+  represent typical values in a set of numbers.
 
-    Note: `dp.metrics.GeometricMean` can be used the same as `tf.keras.metrics.Mean`.
+  Note: `dp.metrics.GeometricMean` can be used the same as `tf.keras.metrics.Mean`.
 
-    Args:
-        name: (Optional) String name of the metric instance.
-        dtype: (Optional) Data type of the metric result.
+  Args:
+      name: (Optional) String name of the metric instance.
+      dtype: (Optional) Data type of the metric result.
 
-    Usage:
+  Usage:
 
-    >>> metric = dp.metrics.GeometricMean()
-    >>> metric.update_state([1, 3, 5, 7, 9])
-    >>> metric.result().numpy()
-    3.9362833
-    """
+  >>> metric = dp.metrics.GeometricMean()
+  >>> metric.update_state([1, 3, 5, 7, 9])
+  >>> metric.result().numpy()
+  3.9362833
+  """
 
   @typechecked
   def __init__(self, name: str = "geometric_mean", dtype: AcceptableDTypes = None, **kwargs):

@@ -1,8 +1,12 @@
 """Deepray workspace initialization. Consult the WORKSPACE on how to use it."""
 
-# Import external repository rules.
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("//third_party:repo.bzl", "tf_http_archive")
+
+# Sanitize a dependency so that it works correctly from code that includes
+# TensorFlow as a submodule.
+def clean_dep(dep):
+    return str(Label(dep))
 
 # Define all external repositories required by TensorFlow
 def _tf_repositories():
@@ -20,12 +24,6 @@ def _tf_repositories():
         build_file = Label("//third_party:double_conversion.BUILD"),
         sha256 = "3dbcdf186ad092a8b71228a5962009b5c96abde9a315257a3452eb988414ea3b",
         strip_prefix = "double-conversion-3.2.0",
-    )
-
-    git_repository(
-        name = "rules_python",
-        remote = "https://github.com/bazelbuild/rules_python.git",
-        tag = "0.16.2",
     )
 
     http_archive(
@@ -47,17 +45,18 @@ def _tf_repositories():
         type = "tar.gz",
         strip_prefix = "OpenBLAS-{}".format(OPENBLAS_VERSION),
         build_file = Label("//third_party:openblas.BUILD"),
-        # sha256 = "5d9491d07168a5d00116cdc068a40022c3455bf9293c7cb86a65b1054d7e5114",
+        sha256 = "4c25cb30c4bb23eddca05d7d0a85997b8db6144f5464ba7f8c09ce91e2f35543",
     )
 
-    ARROW_VERSION = "7.0.0"
     http_archive(
-        name = "com_github_apache_arrow",
-        sha256 = "57e13c62f27b710e1de54fd30faed612aefa22aa41fa2c0c3bacd204dd18a8f3",
+        name = "org_apache_arrow",
         build_file = Label("//third_party/arrow:arrow.BUILD"),
-        strip_prefix = "arrow-apache-arrow-" + ARROW_VERSION,
+        patches = ["//third_party/arrow:arrow-20.patch"],
+        patch_args = ["-p1"],
+        sha256 = "89efbbf852f5a1f79e9c99ab4c217e2eb7f991837c005cba2d4a2fbd35fad212",
+        strip_prefix = "apache-arrow-20.0.0",
         urls = [
-            "https://github.com/apache/arrow/archive/apache-arrow-{}.tar.gz".format(ARROW_VERSION),
+            "https://github.com/apache/arrow/releases/download/apache-arrow-20.0.0/apache-arrow-20.0.0.tar.gz",
         ],
     )
 
@@ -94,7 +93,7 @@ def _tf_repositories():
     )
 
     http_archive(
-        name = "com_github_apache_thrift",  # Apache License 2.0
+        name = "org_apache_thrift",  # Apache License 2.0
         build_file = Label("//third_party/thrift:thrift.BUILD"),
         sha256 = "5da60088e60984f4f0801deeea628d193c33cec621e78c8a43a5d8c4055f7ad9",
         strip_prefix = "thrift-0.13.0",
@@ -183,30 +182,6 @@ def _tf_repositories():
     )
 
     http_archive(
-        name = "libcuckoo",
-        build_file = "//third_party:libcuckoo.BUILD",
-        patch_args = ["-p1"],
-        patches = [
-            "//third_party:cuckoohash_map.patch",
-        ],
-        sha256 = "7238436b7346a0edf4ce57c12f43f71af5347b8b15f9bf2f0e24bfdca6225fc5",
-        strip_prefix = "libcuckoo-0.3",
-        urls = [
-            "https://github.com/efficient/libcuckoo/archive/v0.3.zip",
-        ],
-    )
-
-    http_archive(
-        name = "sparsehash",
-        build_file = "//third_party:sparsehash.BUILD",
-        sha256 = "d4a43cad1e27646ff0ef3a8ce3e18540dbcb1fdec6cc1d1cb9b5095a9ca2a755",
-        strip_prefix = "sparsehash-c11-2.11.1",
-        urls = [
-            "https://github.com/sparsehash/sparsehash-c11/archive/v2.11.1.tar.gz",
-        ],
-    )
-
-    http_archive(
         name = "murmurhash",
         build_file = "//third_party:murmurhash.BUILD",
         sha256 = "19a7ccc176ca4185db94047de6847d8a0332e8f4c14e8e88b9048f74bdafe879",
@@ -228,23 +203,115 @@ def _tf_repositories():
     )
 
     http_archive(
+        name = "com_github_NVIDIA_cuCollections",
+        # sha256 = "6560547c63e4af82b0f202cb710ceabb3f21347a4b996db565a411da5b17aba0",
+        build_file = "//third_party/cuCollections:cuCollections.BUILD",
+        strip_prefix = "cuCollections-2303a7a2a03e38385dbe1bbc91c55007a94a9192",
+        urls = [
+            "https://github.com/NVIDIA/cuCollections/archive/2303a7a2a03e38385dbe1bbc91c55007a94a9192.zip",
+        ],
+    )
+
+    tf_http_archive(
         name = "cuCollections",  # Apache License 2.0
-        # patches = ["//third_party/cucollection:cucollection.patch"],
-        build_file = "//third_party/cucollection:cuco.BUILD",
+        patch_file = [clean_dep("//third_party/cuCollections:cucollection.patch")],
+        build_file = clean_dep("//third_party/cuCollections:cuco.BUILD"),
         sha256 = "c5c77a1f96b439b67280e86483ce8d5994aa4d14b7627b1d3bd7880be6be23fa",
         strip_prefix = "cuCollections-193de1aa74f5721717f991ca757dc610c852bb17",
         urls = [
             "https://github.com/NVIDIA/cuCollections/archive/193de1aa74f5721717f991ca757dc610c852bb17.zip",
+            "https://github.com/NVIDIA/cuCollections/archive/193de1aa74f5721717f991ca757dc610c852bb17.zip",
         ],
     )
 
-    http_archive(
-        name = "sparsehash_c11",
-        build_file = "//third_party:sparsehash_c11.BUILD",
+    tf_http_archive(
+        name = "sparsehash_c11",  # BSD-3-Clause License
+        build_file = clean_dep("//third_party/sparsehash_c11:sparsehash_c11.BUILD"),
+        patch_file = [
+            clean_dep("//third_party/sparsehash_c11:sparsehash_c11.patch"),
+        ],
         sha256 = "d4a43cad1e27646ff0ef3a8ce3e18540dbcb1fdec6cc1d1cb9b5095a9ca2a755",
         strip_prefix = "sparsehash-c11-2.11.1",
         urls = [
             "https://github.com/sparsehash/sparsehash-c11/archive/v2.11.1.tar.gz",
+            "https://github.com/sparsehash/sparsehash-c11/archive/v2.11.1.tar.gz",
+        ],
+    )
+
+    # http_archive(
+    #     name = "sparsehash_c11",  # BSD-3-Clause License
+    #     build_file = "//third_party/sparsehash_c11:sparsehash_c11.BUILD",
+    #     patch_args = ["-p1"],
+    #     patches = ["//third_party/sparsehash_c11:sparsehash_c11.patch"],
+    #     sha256 = "d4a43cad1e27646ff0ef3a8ce3e18540dbcb1fdec6cc1d1cb9b5095a9ca2a755",
+    #     strip_prefix = "sparsehash-c11-2.11.1",
+    #     urls = [
+    #         "https://github.com/sparsehash/sparsehash-c11/archive/v2.11.1.tar.gz",
+    #         # "https://github.com/sparsehash/sparsehash-c11/archive/v2.11.1.tar.gz",
+    #     ],
+    # )
+
+    http_archive(
+        name = "cutlass",
+        urls = ["https://github.com/NVIDIA/cutlass/archive/319a389f42b776fae5701afcb943fc03be5b5c25.zip"],
+        build_file = "//third_party:cutlass.BUILD",
+        strip_prefix = "cutlass-319a389f42b776fae5701afcb943fc03be5b5c25",
+    )
+
+    http_archive(
+        name = "flash_attn",
+        urls = ["https://github.com/Dao-AILab/flash-attention/archive/9818f85fee29ac6b60c9214bce841f8109a18b1b.zip"],  # v1.0.4
+        build_file = "//third_party/flash_attn:flash_attn.BUILD",
+        sha256 = "15f29a1095600ba2a3af688fa96a0a48635edb90fffec56c6eb7c48a4a322d2b",
+        strip_prefix = "flash-attention-9818f85fee29ac6b60c9214bce841f8109a18b1b",
+        patches = [
+            "//third_party/flash_attn:flash_attn.patch",
+        ],
+        patch_args = ["-p1"],
+    )
+
+    http_archive(
+        name = "libcuckoo",
+        build_file = "//third_party:libcuckoo.BUILD",
+        patch_args = ["-p1"],
+        patches = [
+            "//third_party:cuckoohash_map.patch",
+        ],
+        sha256 = "7238436b7346a0edf4ce57c12f43f71af5347b8b15f9bf2f0e24bfdca6225fc5",
+        strip_prefix = "libcuckoo-0.3",
+        urls = [
+            "https://github.com/efficient/libcuckoo/archive/v0.3.zip",
+        ],
+    )
+
+    http_archive(
+        name = "com_github_google_leveldb",
+        sha256 = "f99dc5dcb6f23e500b197db02e993ee0d3bafd1ac84b85ab50de9009b36fbf03",
+        strip_prefix = "leveldb-5d94ad4d95c09d3ac203ddaf9922e55e730706a8",
+        build_file = "//third_party:leveldb.BUILD",
+        urls = [
+            "https://github.com/google/leveldb/archive/5d94ad4d95c09d3ac203ddaf9922e55e730706a8.tar.gz",
+        ],
+    )
+
+    tf_http_archive(
+        name = "readerwriterqueue_archive",
+        build_file = clean_dep("//third_party:readerwriterqueue.BUILD"),
+        sha256 = "fc68f55bbd49a8b646462695e1777fb8f2c0b4f342d5e6574135211312ba56c1",
+        strip_prefix = "readerwriterqueue-1.0.6",
+        urls = [
+            "https://storage.googleapis.com/mirror.tensorflow.org/github.com/cameron314/readerwriterqueue/archive/v1.0.6.tar.gz",
+            "https://github.com/cameron314/readerwriterqueue/archive/v1.0.6.tar.gz",
+        ],
+    )
+
+    http_archive(
+        name = "openssl",
+        sha256 = "9f54d42aed56f62889e8384895c968e24d57eae701012776d5f18fb9f2ae48b0",
+        build_file = "//third_party:openssl.BUILD",
+        strip_prefix = "openssl-openssl-3.0.2",
+        urls = [
+            "https://github.com/openssl/openssl/archive/refs/tags/openssl-3.0.2.tar.gz",
         ],
     )
 

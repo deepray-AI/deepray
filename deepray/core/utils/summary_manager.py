@@ -55,7 +55,7 @@ class SummaryManager(SummaryManagerInterface):
       return self._summary_writers[relative_path]
     if self._enabled:
       self._summary_writers[relative_path] = tf.summary.create_file_writer(
-          os.path.join(self._summary_dir, relative_path)
+        os.path.join(self._summary_dir, relative_path)
       )
     else:
       self._summary_writers[relative_path] = tf.summary.create_noop_writer()

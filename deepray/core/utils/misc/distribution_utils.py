@@ -41,14 +41,14 @@ def _collective_communication(all_reduce_alg):
     ValueError: if `all_reduce_alg` not in [None, 'ring', 'nccl']
   """
   collective_communication_options = {
-      None: tf.distribute.experimental.CollectiveCommunication.AUTO,
-      "ring": tf.distribute.experimental.CollectiveCommunication.RING,
-      "nccl": tf.distribute.experimental.CollectiveCommunication.NCCL
+    None: tf.distribute.experimental.CollectiveCommunication.AUTO,
+    "ring": tf.distribute.experimental.CollectiveCommunication.RING,
+    "nccl": tf.distribute.experimental.CollectiveCommunication.NCCL,
   }
   if all_reduce_alg not in collective_communication_options:
     raise ValueError(
-        "When used with `multi_worker_mirrored`, valid values for "
-        "all_reduce_alg are ['ring', 'nccl'].  Supplied value: {}".format(all_reduce_alg)
+      "When used with `multi_worker_mirrored`, valid values for "
+      "all_reduce_alg are ['ring', 'nccl'].  Supplied value: {}".format(all_reduce_alg)
     )
   return collective_communication_options[all_reduce_alg]
 
@@ -69,20 +69,20 @@ def _mirrored_cross_device_ops(all_reduce_alg, num_packs):
   if all_reduce_alg is None:
     return None
   mirrored_all_reduce_options = {
-      "nccl": tf.distribute.NcclAllReduce,
-      "hierarchical_copy": tf.distribute.HierarchicalCopyAllReduce
+    "nccl": tf.distribute.NcclAllReduce,
+    "hierarchical_copy": tf.distribute.HierarchicalCopyAllReduce,
   }
   if all_reduce_alg not in mirrored_all_reduce_options:
     raise ValueError(
-        "When used with `mirrored`, valid values for all_reduce_alg are "
-        "['nccl', 'hierarchical_copy'].  Supplied value: {}".format(all_reduce_alg)
+      "When used with `mirrored`, valid values for all_reduce_alg are "
+      "['nccl', 'hierarchical_copy'].  Supplied value: {}".format(all_reduce_alg)
     )
   cross_device_ops_class = mirrored_all_reduce_options[all_reduce_alg]
   return cross_device_ops_class(num_packs=num_packs)
 
 
 def get_distribution_strategy(
-    distribution_strategy="mirrored", num_gpus=0, num_workers=1, all_reduce_alg=None, num_packs=1, tpu_address=None
+  distribution_strategy="mirrored", num_gpus=0, num_workers=1, all_reduce_alg=None, num_packs=1, tpu_address=None
 ):
   """Return a DistributionStrategy for running the model.
 
@@ -124,15 +124,14 @@ def get_distribution_strategy(
 
   if distribution_strategy == "multi_worker_mirrored":
     return tf.distribute.experimental.MultiWorkerMirroredStrategy(
-        communication=_collective_communication(all_reduce_alg)
+      communication=_collective_communication(all_reduce_alg)
     )
 
   if distribution_strategy == "one_device":
     if num_gpus == 0:
       return tf.distribute.OneDeviceStrategy("device:CPU:0")
     if num_gpus > 1:
-      raise ValueError("`OneDeviceStrategy` can not be used for more than "
-                       "one device.")
+      raise ValueError("`OneDeviceStrategy` can not be used for more than one device.")
     return tf.distribute.OneDeviceStrategy("device:GPU:0")
 
   if distribution_strategy == "mirrored":
@@ -141,7 +140,7 @@ def get_distribution_strategy(
     else:
       devices = ["device:GPU:%d" % i for i in range(num_gpus)]
     return tf.distribute.MirroredStrategy(
-        devices=devices, cross_device_ops=_mirrored_cross_device_ops(all_reduce_alg, num_packs)
+      devices=devices, cross_device_ops=_mirrored_cross_device_ops(all_reduce_alg, num_packs)
     )
 
   if distribution_strategy == "parameter_server":
@@ -174,9 +173,9 @@ def per_replica_batch_size(batch_size, num_gpus):
   remainder = batch_size % num_gpus
   if remainder:
     err = (
-        'When running with multiple GPUs, batch size '
-        'must be a multiple of the number of available GPUs. Found {} '
-        'GPUs with a batch size of {}; try --batch_size={} instead.'
+      "When running with multiple GPUs, batch size "
+      "must be a multiple of the number of available GPUs. Found {} "
+      "GPUs with a batch size of {}; try --batch_size={} instead."
     ).format(num_gpus, batch_size, batch_size - remainder)
     raise ValueError(err)
   return int(batch_size / num_gpus)
@@ -191,7 +190,7 @@ class SyntheticDataset(object):
 
   def __init__(self, dataset, split_by=1):
     # dataset.take(1) doesn't have GPU kernel.
-    with tf.device('device:CPU:0'):
+    with tf.device("device:CPU:0"):
       tensor = tf.data.experimental.get_single_element(dataset.take(1))
     flat_tensor = tf.nest.flatten(tensor)
     variable_data = []
@@ -206,7 +205,7 @@ class SyntheticDataset(object):
     self._iterator = SyntheticIterator(input_data, initializers)
 
   def _random_name(self, size=10, chars=string.ascii_uppercase + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
+    return "".join(random.choice(chars) for _ in range(size))
 
   def __iter__(self):
     return self._iterator
@@ -248,7 +247,7 @@ def _monkey_patch_dataset_method(strategy):
   """Monkey-patch `strategy`'s `make_dataset_iterator` method."""
 
   def make_dataset(self, dataset):
-    logging.info('Using pure synthetic data.')
+    logging.info("Using pure synthetic data.")
     with self.scope():
       if self.extended._global_batch_size:  # pylint: disable=protected-access
         return SyntheticDataset(dataset, self.num_replicas_in_sync)
@@ -266,9 +265,9 @@ def _monkey_patch_dataset_method(strategy):
 
 
 def _undo_monkey_patch_dataset_method(strategy):
-  if hasattr(strategy, 'orig_make_dataset_iterator'):
+  if hasattr(strategy, "orig_make_dataset_iterator"):
     strategy.make_dataset_iterator = strategy.orig_make_dataset_iterator
-  if hasattr(strategy, 'orig_distribute_dataset'):
+  if hasattr(strategy, "orig_distribute_dataset"):
     strategy.make_dataset_iterator = strategy.orig_distribute_dataset
 
 
@@ -284,40 +283,6 @@ def undo_set_up_synthetic_data():
   _undo_monkey_patch_dataset_method(tf.distribute.experimental.MultiWorkerMirroredStrategy)
 
 
-def configure_cluster(worker_hosts=None, task_index=-1):
-  """Set multi-worker cluster spec in TF_CONFIG environment variable.
-
-  Args:
-    worker_hosts: comma-separated list of worker ip:port pairs.
-
-  Returns:
-    Number of workers in the cluster.
-  """
-  tf_config = json.loads(os.environ.get('TF_CONFIG', '{}'))
-  if tf_config:
-    num_workers = (len(tf_config['cluster'].get('chief', [])) + len(tf_config['cluster'].get('worker', [])))
-  elif worker_hosts:
-    workers = worker_hosts.split(',')
-    num_workers = len(workers)
-    if num_workers > 1 and task_index < 0:
-      raise ValueError('Must specify task_index when number of workers > 1')
-    task_index = 0 if num_workers == 1 else task_index
-    os.environ['TF_CONFIG'] = json.dumps(
-        {
-            'cluster': {
-                'worker': workers
-            },
-            'task': {
-                'type': 'worker',
-                'index': task_index
-            }
-        }
-    )
-  else:
-    num_workers = 1
-  return num_workers
-
-
 def get_strategy_scope(strategy):
   if strategy:
     strategy_scope = strategy.scope()
@@ -328,7 +293,6 @@ def get_strategy_scope(strategy):
 
 
 class DummyContextManager(object):
-
   def __enter__(self):
     pass
 

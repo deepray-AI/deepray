@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -24,7 +25,6 @@ import tensorflow as tf
 _CHR_IDX = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m"]
 
 
-# @tf.keras.utils.register_keras_serializable(package="Text")
 class DenseEinsum(tf.keras.layers.Layer):
   """A densely connected layer that uses tf.einsum as the backing computation.
 
@@ -58,19 +58,19 @@ class DenseEinsum(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      output_shape,
-      num_summed_dimensions=1,
-      activation=None,
-      use_bias=True,
-      kernel_initializer="glorot_uniform",
-      bias_initializer="zeros",
-      kernel_regularizer=None,
-      bias_regularizer=None,
-      activity_regularizer=None,
-      kernel_constraint=None,
-      bias_constraint=None,
-      **kwargs
+    self,
+    output_shape,
+    num_summed_dimensions=1,
+    activation=None,
+    use_bias=True,
+    kernel_initializer="glorot_uniform",
+    bias_initializer="zeros",
+    kernel_regularizer=None,
+    bias_regularizer=None,
+    activity_regularizer=None,
+    kernel_constraint=None,
+    bias_constraint=None,
+    **kwargs,
   ):
     super(DenseEinsum, self).__init__(**kwargs)
     self._output_shape = output_shape if isinstance(output_shape, (list, tuple)) else (output_shape,)
@@ -118,26 +118,26 @@ class DenseEinsum(tf.keras.layers.Layer):
     self._einsum_string = self._build_einsum_string(free_input_dims, self._num_summed_dimensions, output_dims)
 
     # This is only saved for testing purposes.
-    self._kernel_shape = (input_shape[free_input_dims:].concatenate(self._output_shape))
+    self._kernel_shape = input_shape[free_input_dims:].concatenate(self._output_shape)
 
     self._kernel = self.add_weight(
-        "kernel",
-        shape=self._kernel_shape,
-        initializer=self._kernel_initializer,
-        regularizer=self._kernel_regularizer,
-        constraint=self._kernel_constraint,
-        dtype=self.dtype,
-        trainable=True
+      "kernel",
+      shape=self._kernel_shape,
+      initializer=self._kernel_initializer,
+      regularizer=self._kernel_regularizer,
+      constraint=self._kernel_constraint,
+      dtype=self.dtype,
+      trainable=True,
     )
     if self._use_bias:
       self._bias = self.add_weight(
-          "bias",
-          shape=self._output_shape,
-          initializer=self._bias_initializer,
-          regularizer=self._bias_regularizer,
-          constraint=self._bias_constraint,
-          dtype=self.dtype,
-          trainable=True
+        "bias",
+        shape=self._output_shape,
+        initializer=self._bias_initializer,
+        regularizer=self._bias_regularizer,
+        constraint=self._bias_constraint,
+        dtype=self.dtype,
+        trainable=True,
       )
     else:
       self._bias = None
@@ -145,16 +145,16 @@ class DenseEinsum(tf.keras.layers.Layer):
 
   def get_config(self):
     config = {
-        "output_shape": self._output_shape,
-        "activation": tf.keras.activations.serialize(self._activation),
-        "use_bias": self._use_bias,
-        "kernel_initializer": tf.keras.initializers.serialize(self._kernel_initializer),
-        "bias_initializer": tf.keras.initializers.serialize(self._bias_initializer),
-        "kernel_regularizer": tf.keras.regularizers.serialize(self._kernel_regularizer),
-        "bias_regularizer": tf.keras.regularizers.serialize(self._bias_regularizer),
-        "activity_regularizer": tf.keras.regularizers.serialize(self._activity_regularizer),
-        "kernel_constraint": tf.keras.constraints.serialize(self._kernel_constraint),
-        "bias_constraint": tf.keras.constraints.serialize(self._bias_constraint)
+      "output_shape": self._output_shape,
+      "activation": tf.keras.activations.serialize(self._activation),
+      "use_bias": self._use_bias,
+      "kernel_initializer": tf.keras.initializers.serialize(self._kernel_initializer),
+      "bias_initializer": tf.keras.initializers.serialize(self._bias_initializer),
+      "kernel_regularizer": tf.keras.regularizers.serialize(self._kernel_regularizer),
+      "bias_regularizer": tf.keras.regularizers.serialize(self._bias_regularizer),
+      "activity_regularizer": tf.keras.regularizers.serialize(self._activity_regularizer),
+      "kernel_constraint": tf.keras.constraints.serialize(self._kernel_constraint),
+      "bias_constraint": tf.keras.constraints.serialize(self._bias_constraint),
     }
     base_config = super(DenseEinsum, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))

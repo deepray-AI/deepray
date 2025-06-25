@@ -71,3 +71,11 @@ TEST_CPP_COPTS = DEFAULT_CPP_COPTS + [
 TEST_LINKOPTS = DEFAULT_LINKOPTS + [
     "-fsanitize=address",
 ]
+
+# cc_* rules should include this list in copts. If additional cc_*-wide
+# customization appears, we might want to switch to macros.
+
+"""This is the definition site for things we want to keep consistent, like copts."""
+
+FCP_COPTS = [
+]

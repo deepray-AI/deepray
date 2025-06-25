@@ -26,11 +26,11 @@ from deepray.utils import types
 class Snake(tf.keras.layers.Layer):
   """Snake layer to learn periodic functions with the trainable `frequency` scalar.
 
-    See [Neural Networks Fail to Learn Periodic Functions and How to Fix It](https://arxiv.org/abs/2006.08195).
+  See [Neural Networks Fail to Learn Periodic Functions and How to Fix It](https://arxiv.org/abs/2006.08195).
 
-    Args:
-        frequency_initializer: Initializer for the `frequency` scalar.
-    """
+  Args:
+      frequency_initializer: Initializer for the `frequency` scalar.
+  """
 
   @typechecked
   def __init__(self, frequency_initializer: types.Initializer = "ones", **kwargs):
@@ -43,7 +43,7 @@ class Snake(tf.keras.layers.Layer):
 
   def get_config(self):
     config = {
-        "frequency_initializer": tf.keras.initializers.serialize(self.frequency_initializer),
+      "frequency_initializer": tf.keras.initializers.serialize(self.frequency_initializer),
     }
     base_config = super().get_config()
     return {**base_config, **config}

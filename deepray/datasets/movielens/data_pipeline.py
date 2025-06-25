@@ -61,7 +61,7 @@ class DatasetManager(object):
   """
 
   def __init__(
-      self, is_training, stream_files, batches_per_epoch, shard_root=None, deterministic=False, num_train_epochs=None
+    self, is_training, stream_files, batches_per_epoch, shard_root=None, deterministic=False, num_train_epochs=None
   ):
     # type: (bool, bool, int, typing.Optional[str], bool, int) -> None
     """Constructs a `DatasetManager` instance.
@@ -94,12 +94,12 @@ class DatasetManager(object):
 
   @property
   def current_data_root(self):
-    subdir = (rconst.TRAIN_FOLDER_TEMPLATE.format(self._epochs_completed) if self._is_training else rconst.EVAL_FOLDER)
+    subdir = rconst.TRAIN_FOLDER_TEMPLATE.format(self._epochs_completed) if self._is_training else rconst.EVAL_FOLDER
     return os.path.join(self._shard_root, subdir)
 
   def buffer_reached(self):
     # Only applicable for training.
-    return (self._epochs_completed - self._epochs_requested >= rconst.CYCLES_TO_BUFFER and self._is_training)
+    return self._epochs_completed - self._epochs_requested >= rconst.CYCLES_TO_BUFFER and self._is_training
 
   @staticmethod
   def serialize(data):
@@ -130,16 +130,16 @@ class DatasetManager(object):
 
       if is_training:
         return {
-            rconst.USER_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
-            rconst.ITEM_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
-            rconst.VALID_POINT_MASK: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
-            "labels": tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64)
+          rconst.USER_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
+          rconst.ITEM_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
+          rconst.VALID_POINT_MASK: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
+          "labels": tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
         }
       else:
         return {
-            rconst.USER_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
-            rconst.ITEM_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
-            rconst.DUPLICATE_MASK: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64)
+          rconst.USER_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
+          rconst.ITEM_COLUMN: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
+          rconst.DUPLICATE_MASK: tf.io.FixedLenFeature([batch_size, 1], dtype=tf.int64),
         }
 
     features = tf.io.parse_single_example(serialized_data, _get_feature_map(batch_size, is_training=is_training))
@@ -150,21 +150,21 @@ class DatasetManager(object):
       valid_point_mask = tf.cast(features[rconst.VALID_POINT_MASK], tf.bool)
       fake_dup_mask = tf.zeros_like(users)
       return {
-          rconst.USER_COLUMN: users,
-          rconst.ITEM_COLUMN: items,
-          rconst.VALID_POINT_MASK: valid_point_mask,
-          rconst.TRAIN_LABEL_KEY: tf.reshape(tf.cast(features["labels"], tf.bool), (batch_size, 1)),
-          rconst.DUPLICATE_MASK: fake_dup_mask
+        rconst.USER_COLUMN: users,
+        rconst.ITEM_COLUMN: items,
+        rconst.VALID_POINT_MASK: valid_point_mask,
+        rconst.TRAIN_LABEL_KEY: tf.reshape(tf.cast(features["labels"], tf.bool), (batch_size, 1)),
+        rconst.DUPLICATE_MASK: fake_dup_mask,
       }
     else:
       labels = tf.cast(tf.zeros_like(users), tf.bool)
       fake_valid_pt_mask = tf.cast(tf.zeros_like(users), tf.bool)
       return {
-          rconst.USER_COLUMN: users,
-          rconst.ITEM_COLUMN: items,
-          rconst.DUPLICATE_MASK: tf.cast(features[rconst.DUPLICATE_MASK], tf.bool),
-          rconst.VALID_POINT_MASK: fake_valid_pt_mask,
-          rconst.TRAIN_LABEL_KEY: labels
+        rconst.USER_COLUMN: users,
+        rconst.ITEM_COLUMN: items,
+        rconst.DUPLICATE_MASK: tf.cast(features[rconst.DUPLICATE_MASK], tf.bool),
+        rconst.VALID_POINT_MASK: fake_valid_pt_mask,
+        rconst.TRAIN_LABEL_KEY: labels,
       }
 
   def put(self, index, data):
@@ -248,19 +248,18 @@ class DatasetManager(object):
     self.increment_request_epoch()
     if self._stream_files:
       if epochs_between_evals > 1:
-        raise ValueError("epochs_between_evals > 1 not supported for file "
-                         "based dataset.")
+        raise ValueError("epochs_between_evals > 1 not supported for file based dataset.")
       epoch_data_dir = self._result_queue.get(timeout=300)
       if not self._is_training:
         self._result_queue.put(epoch_data_dir)  # Eval data is reused.
 
       file_pattern = os.path.join(epoch_data_dir, rconst.SHARD_TEMPLATE.format("*"))
       dataset = StreamingFilesDataset(
-          files=file_pattern,
-          worker_job=popen_helper.worker_job(),
-          num_parallel_reads=rconst.NUM_FILE_SHARDS,
-          num_epochs=1,
-          sloppy=not self._deterministic
+        files=file_pattern,
+        worker_job=popen_helper.worker_job(),
+        num_parallel_reads=rconst.NUM_FILE_SHARDS,
+        num_epochs=1,
+        sloppy=not self._deterministic,
       )
       map_fn = functools.partial(self.deserialize, batch_size=batch_size, is_training=self._is_training)
       dataset = dataset.map(map_fn, num_parallel_calls=16)
@@ -268,8 +267,8 @@ class DatasetManager(object):
     else:
       types = {rconst.USER_COLUMN: rconst.USER_DTYPE, rconst.ITEM_COLUMN: rconst.ITEM_DTYPE}
       shapes = {
-          rconst.USER_COLUMN: tf.TensorShape([batch_size, 1]),
-          rconst.ITEM_COLUMN: tf.TensorShape([batch_size, 1])
+        rconst.USER_COLUMN: tf.TensorShape([batch_size, 1]),
+        rconst.ITEM_COLUMN: tf.TensorShape([batch_size, 1]),
       }
 
       if self._is_training:
@@ -297,15 +296,14 @@ class DatasetManager(object):
       # Estimator passes batch_size during training and eval_batch_size during
       # eval.
       param_batch_size = (
-          params["batch_size"] if self._is_training else params.get("eval_batch_size") or params["batch_size"]
+        params["batch_size"] if self._is_training else params.get("eval_batch_size") or params["batch_size"]
       )
       if batch_size != param_batch_size:
         raise ValueError(
-            "producer batch size ({}) differs from params batch "
-            "size ({})".format(batch_size, param_batch_size)
+          "producer batch size ({}) differs from params batch size ({})".format(batch_size, param_batch_size)
         )
 
-      epochs_between_evals = (params.get("epochs_between_evals", 1) if self._is_training else 1)
+      epochs_between_evals = params.get("epochs_between_evals", 1) if self._is_training else 1
       return self.get_dataset(batch_size=batch_size, epochs_between_evals=epochs_between_evals)
 
     return input_fn
@@ -324,26 +322,26 @@ class BaseDataConstructor(threading.Thread):
   """
 
   def __init__(
-      self,
-      maximum_number_epochs,  # type: int
-      num_users,  # type: int
-      num_items,  # type: int
-      user_map,  # type: dict
-      item_map,  # type: dict
-      train_pos_users,  # type: np.ndarray
-      train_pos_items,  # type: np.ndarray
-      train_batch_size,  # type: int
-      batches_per_train_step,  # type: int
-      num_train_negatives,  # type: int
-      eval_pos_users,  # type: np.ndarray
-      eval_pos_items,  # type: np.ndarray
-      eval_batch_size,  # type: int
-      batches_per_eval_step,  # type: int
-      stream_files,  # type: bool
-      deterministic=False,  # type: bool
-      epoch_dir=None,  # type: str
-      num_train_epochs=None,  # type: int
-      create_data_offline=False  # type: bool
+    self,
+    maximum_number_epochs,  # type: int
+    num_users,  # type: int
+    num_items,  # type: int
+    user_map,  # type: dict
+    item_map,  # type: dict
+    train_pos_users,  # type: np.ndarray
+    train_pos_items,  # type: np.ndarray
+    train_batch_size,  # type: int
+    batches_per_train_step,  # type: int
+    num_train_negatives,  # type: int
+    eval_pos_users,  # type: np.ndarray
+    eval_pos_items,  # type: np.ndarray
+    eval_batch_size,  # type: int
+    batches_per_eval_step,  # type: int
+    stream_files,  # type: bool
+    deterministic=False,  # type: bool
+    epoch_dir=None,  # type: str
+    num_train_epochs=None,  # type: int
+    create_data_offline=False,  # type: bool
   ):
     # General constants
     self._maximum_number_epochs = maximum_number_epochs
@@ -365,26 +363,26 @@ class BaseDataConstructor(threading.Thread):
     # Training
     if self._train_pos_users.shape != self._train_pos_items.shape:
       raise ValueError(
-          "User positives ({}) is different from item positives ({})".format(
-              self._train_pos_users.shape, self._train_pos_items.shape
-          )
+        "User positives ({}) is different from item positives ({})".format(
+          self._train_pos_users.shape, self._train_pos_items.shape
+        )
       )
 
     (self._train_pos_count,) = self._train_pos_users.shape
     self._elements_in_epoch = (1 + num_train_negatives) * self._train_pos_count
     self.train_batches_per_epoch = self._count_batches(
-        self._elements_in_epoch, train_batch_size, batches_per_train_step
+      self._elements_in_epoch, train_batch_size, batches_per_train_step
     )
 
     # Evaluation
     if eval_batch_size % (1 + rconst.NUM_EVAL_NEGATIVES):
       raise ValueError(
-          "Eval batch size {} is not divisible by {}".format(eval_batch_size, 1 + rconst.NUM_EVAL_NEGATIVES)
+        "Eval batch size {} is not divisible by {}".format(eval_batch_size, 1 + rconst.NUM_EVAL_NEGATIVES)
       )
     self._eval_users_per_batch = int(eval_batch_size // (1 + rconst.NUM_EVAL_NEGATIVES))
     self._eval_elements_in_epoch = num_users * (1 + rconst.NUM_EVAL_NEGATIVES)
     self.eval_batches_per_epoch = self._count_batches(
-        self._eval_elements_in_epoch, eval_batch_size, batches_per_eval_step
+      self._eval_elements_in_epoch, eval_batch_size, batches_per_eval_step
     )
 
     # Intermediate artifacts
@@ -400,10 +398,10 @@ class BaseDataConstructor(threading.Thread):
       self._shard_root = None
 
     self._train_dataset = DatasetManager(
-        True, stream_files, self.train_batches_per_epoch, self._shard_root, deterministic, num_train_epochs
+      True, stream_files, self.train_batches_per_epoch, self._shard_root, deterministic, num_train_epochs
     )
     self._eval_dataset = DatasetManager(
-        False, stream_files, self.eval_batches_per_epoch, self._shard_root, deterministic, num_train_epochs
+      False, stream_files, self.eval_batches_per_epoch, self._shard_root, deterministic, num_train_epochs
     )
 
     # Threading details
@@ -414,18 +412,18 @@ class BaseDataConstructor(threading.Thread):
     self.deterministic = deterministic
 
   def __str__(self):
-    multiplier = ("(x{} devices)".format(self._batches_per_train_step) if self._batches_per_train_step > 1 else "")
+    multiplier = "(x{} devices)".format(self._batches_per_train_step) if self._batches_per_train_step > 1 else ""
     summary = SUMMARY_TEMPLATE.format(
-        spacer="  ",
-        num_users=self._num_users,
-        num_items=self._num_items,
-        train_pos_ct=self._train_pos_count,
-        train_batch_size=self.train_batch_size,
-        train_batch_ct=self.train_batches_per_epoch,
-        eval_pos_ct=self._num_users,
-        eval_batch_size=self.eval_batch_size,
-        eval_batch_ct=self.eval_batches_per_epoch,
-        multiplier=multiplier
+      spacer="  ",
+      num_users=self._num_users,
+      num_items=self._num_items,
+      train_pos_ct=self._train_pos_count,
+      train_batch_size=self.train_batch_size,
+      train_batch_ct=self.train_batches_per_epoch,
+      eval_pos_ct=self._num_users,
+      eval_batch_size=self.eval_batch_size,
+      eval_batch_ct=self.eval_batches_per_epoch,
+      multiplier=multiplier,
     )
     return super(BaseDataConstructor, self).__str__() + "\n" + summary
 
@@ -484,7 +482,7 @@ class BaseDataConstructor(threading.Thread):
       i: The index of the batch. This is used when stream_files=True to assign
         data to file shards.
     """
-    batch_indices = self._current_epoch_order[i * self.train_batch_size:(i + 1) * self.train_batch_size]
+    batch_indices = self._current_epoch_order[i * self.train_batch_size : (i + 1) * self.train_batch_size]
     (mask_start_index,) = batch_indices.shape
 
     batch_ind_mod = np.mod(batch_indices, self._train_pos_count)
@@ -514,12 +512,13 @@ class BaseDataConstructor(threading.Thread):
       labels = np.concatenate([labels, label_pad])
 
     self._train_dataset.put(
-        i, {
-            rconst.USER_COLUMN: np.reshape(users, (self.train_batch_size, 1)),
-            rconst.ITEM_COLUMN: np.reshape(items, (self.train_batch_size, 1)),
-            rconst.MASK_START_INDEX: np.array(mask_start_index, dtype=np.int32),
-            "labels": np.reshape(labels, (self.train_batch_size, 1)),
-        }
+      i,
+      {
+        rconst.USER_COLUMN: np.reshape(users, (self.train_batch_size, 1)),
+        rconst.ITEM_COLUMN: np.reshape(items, (self.train_batch_size, 1)),
+        rconst.MASK_START_INDEX: np.array(mask_start_index, dtype=np.int32),
+        "labels": np.reshape(labels, (self.train_batch_size, 1)),
+      },
     )
 
   def _wait_to_construct_train_epoch(self):
@@ -543,7 +542,7 @@ class BaseDataConstructor(threading.Thread):
     map_args = list(range(self.train_batches_per_epoch))
     self._current_epoch_order = next(self._shuffle_iterator)
 
-    get_pool = (popen_helper.get_fauxpool if self.deterministic else popen_helper.get_threadpool)
+    get_pool = popen_helper.get_fauxpool if self.deterministic else popen_helper.get_threadpool
     with get_pool(6) as pool:
       pool.map(self._get_training_batch, map_args)
     self._train_dataset.end_construction()
@@ -599,18 +598,19 @@ class BaseDataConstructor(threading.Thread):
     high_index = (i + 1) * self._eval_users_per_batch
     users = np.repeat(self._eval_pos_users[low_index:high_index, np.newaxis], 1 + rconst.NUM_EVAL_NEGATIVES, axis=1)
     positive_items = self._eval_pos_items[low_index:high_index, np.newaxis]
-    negative_items = (self.lookup_negative_items(negative_users=users[:, :-1]).reshape(-1, rconst.NUM_EVAL_NEGATIVES))
+    negative_items = self.lookup_negative_items(negative_users=users[:, :-1]).reshape(-1, rconst.NUM_EVAL_NEGATIVES)
 
     users, items, duplicate_mask = self._assemble_eval_batch(
-        users, positive_items, negative_items, self._eval_users_per_batch
+      users, positive_items, negative_items, self._eval_users_per_batch
     )
 
     self._eval_dataset.put(
-        i, {
-            rconst.USER_COLUMN: np.reshape(users.flatten(), (self.eval_batch_size, 1)),
-            rconst.ITEM_COLUMN: np.reshape(items.flatten(), (self.eval_batch_size, 1)),
-            rconst.DUPLICATE_MASK: np.reshape(duplicate_mask.flatten(), (self.eval_batch_size, 1)),
-        }
+      i,
+      {
+        rconst.USER_COLUMN: np.reshape(users.flatten(), (self.eval_batch_size, 1)),
+        rconst.ITEM_COLUMN: np.reshape(items.flatten(), (self.eval_batch_size, 1)),
+        rconst.DUPLICATE_MASK: np.reshape(duplicate_mask.flatten(), (self.eval_batch_size, 1)),
+      },
     )
 
   def _construct_eval_epoch(self):
@@ -623,7 +623,7 @@ class BaseDataConstructor(threading.Thread):
     self._eval_dataset.start_construction()
     map_args = [i for i in range(self.eval_batches_per_epoch)]
 
-    get_pool = (popen_helper.get_fauxpool if self.deterministic else popen_helper.get_threadpool)
+    get_pool = popen_helper.get_fauxpool if self.deterministic else popen_helper.get_threadpool
     with get_pool(6) as pool:
       pool.map(self._get_eval_batch, map_args)
     self._eval_dataset.end_construction()
@@ -637,8 +637,9 @@ class BaseDataConstructor(threading.Thread):
       raise ValueError("Fatal exception in the data production loop: {}".format(self._fatal_exception))
 
     return (
-        self._train_dataset.make_input_fn(self.train_batch_size)
-        if is_training else self._eval_dataset.make_input_fn(self.eval_batch_size)
+      self._train_dataset.make_input_fn(self.train_batch_size)
+      if is_training
+      else self._eval_dataset.make_input_fn(self.eval_batch_size)
     )
 
   def increment_request_epoch(self):
@@ -671,7 +672,7 @@ class DummyConstructor(threading.Thread):
 
       # Estimator passes batch_size during training and eval_batch_size during
       # eval.
-      batch_size = (params["batch_size"] if is_training else params.get("eval_batch_size") or params["batch_size"])
+      batch_size = params["batch_size"] if is_training else params.get("eval_batch_size") or params["batch_size"]
       num_users = params["num_users"]
       num_items = params["num_items"]
 
@@ -681,21 +682,24 @@ class DummyConstructor(threading.Thread):
       if is_training:
         valid_point_mask = tf.cast(tf.random.uniform([batch_size, 1], dtype=tf.int32, minval=0, maxval=2), tf.bool)
         labels = tf.cast(tf.random.uniform([batch_size, 1], dtype=tf.int32, minval=0, maxval=2), tf.bool)
-        data = {
+        data = (
+          {
             rconst.USER_COLUMN: users,
             rconst.ITEM_COLUMN: items,
             rconst.VALID_POINT_MASK: valid_point_mask,
-        }, labels
+          },
+          labels,
+        )
       else:
         dupe_mask = tf.cast(tf.random.uniform([batch_size, 1], dtype=tf.int32, minval=0, maxval=2), tf.bool)
         data = {
-            rconst.USER_COLUMN: users,
-            rconst.ITEM_COLUMN: items,
-            rconst.DUPLICATE_MASK: dupe_mask,
+          rconst.USER_COLUMN: users,
+          rconst.ITEM_COLUMN: items,
+          rconst.DUPLICATE_MASK: dupe_mask,
         }
 
       dataset = tf.data.Dataset.from_tensors(data).repeat(
-          rconst.SYNTHETIC_BATCHES_PER_EPOCH * params["batches_per_step"]
+        rconst.SYNTHETIC_BATCHES_PER_EPOCH * params["batches_per_step"]
       )
       dataset = dataset.prefetch(32)
       return dataset
@@ -762,10 +766,10 @@ class MaterializedDataConstructor(BaseDataConstructor):
     # call does not parallelize well. Multiprocessing incurs too much
     # serialization overhead to be worthwhile.
     for i in range(self._num_users):
-      positives = self._train_pos_items[index_bounds[i]:index_bounds[i + 1]]
+      positives = self._train_pos_items[index_bounds[i] : index_bounds[i + 1]]
       negatives = np.delete(full_set, positives)
       self._per_user_neg_count[i] = self._num_items - positives.shape[0]
-      self._negative_table[i, :self._per_user_neg_count[i]] = negatives
+      self._negative_table[i, : self._per_user_neg_count[i]] = negatives
 
     logging.info("Negative sample table built. Time: {:.1f} seconds".format(timeit.default_timer() - start_time))
 
@@ -791,7 +795,7 @@ class BisectionDataConstructor(BaseDataConstructor):
     self._total_negatives = None
 
   def _index_segment(self, user):
-    lower, upper = self.index_bounds[user:user + 2]
+    lower, upper = self.index_bounds[user : user + 2]
     items = self._sorted_train_pos_items[lower:upper]
 
     negatives_since_last_positive = np.concatenate([items[0][np.newaxis], items[1:] - items[:-1] - 1])
@@ -810,7 +814,7 @@ class BisectionDataConstructor(BaseDataConstructor):
     self._sorted_train_pos_items = self._train_pos_items.copy()
 
     for i in range(self._num_users):
-      lower, upper = self.index_bounds[i:i + 2]
+      lower, upper = self.index_bounds[i : i + 2]
       self._sorted_train_pos_items[lower:upper].sort()
 
     self._total_negatives = np.concatenate([self._index_segment(i) for i in range(self._num_users)])
@@ -842,7 +846,7 @@ class BisectionDataConstructor(BaseDataConstructor):
     # not worth implementing.
     use_shortcut = neg_item_choice >= self._total_negatives[right_index]
     output[use_shortcut] = (
-        self._sorted_train_pos_items[right_index] + 1 + (neg_item_choice - self._total_negatives[right_index])
+      self._sorted_train_pos_items[right_index] + 1 + (neg_item_choice - self._total_negatives[right_index])
     )[use_shortcut]
 
     if np.all(use_shortcut):
@@ -870,8 +874,8 @@ class BisectionDataConstructor(BaseDataConstructor):
 
     assert np.all((right_index - left_index) <= 1)
 
-    output[not_use_shortcut] = (
-        self._sorted_train_pos_items[right_index] - (self._total_negatives[right_index] - neg_item_choice)
+    output[not_use_shortcut] = self._sorted_train_pos_items[right_index] - (
+      self._total_negatives[right_index] - neg_item_choice
     )
 
     assert np.all(output >= 0)

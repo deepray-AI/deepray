@@ -46,7 +46,6 @@ class TestTrainer(standard_runner.StandardTrainer):
     self.global_step.assign(0)
 
   def train_step(self, iterator):
-
     def replica_step(_):
       self.global_step.assign_add(1)
 
@@ -69,7 +68,6 @@ class TestEvaluator(standard_runner.StandardEvaluator):
     self.global_step.assign(0)
 
   def eval_step(self, iterator):
-
     def replica_step(_):
       self.global_step.assign_add(1)
 
@@ -95,7 +93,6 @@ class TestEvaluatorWithOutputsAggregation(standard_runner.StandardEvaluator):
     return state
 
   def eval_step(self, iterator):
-
     def replica_step(x):
       x = tf.cast(x, tf.float32)
       return tf.reduce_sum(x)
@@ -107,7 +104,6 @@ class TestEvaluatorWithOutputsAggregation(standard_runner.StandardEvaluator):
 
 
 class StandardRunnerTest(parameterized.TestCase):
-
   def test_default_trainer(self):
     trainer = TestTrainer()
     self.assertEqual(trainer.train(tf.constant(10)), 10)
@@ -130,7 +126,7 @@ class StandardRunnerTest(parameterized.TestCase):
     self.assertEqual(evaluator.evaluate(tf.constant(10)), 45)
 
   @parameterized.named_parameters(
-      ("recreate_iterator_for_each_eval", True, 10, 10), ("not_recreate_iterator_for_each_eval", False, 10, 35)
+    ("recreate_iterator_for_each_eval", True, 10, 10), ("not_recreate_iterator_for_each_eval", False, 10, 35)
   )
   def test_evaluator_with_repeat_dataset(self, recreate_iterator_for_each_eval, sum_for_1st_time, sum_for_2nd_time):
     options = standard_runner.StandardEvaluatorOptions(recreate_iterator_for_each_eval=recreate_iterator_for_each_eval)

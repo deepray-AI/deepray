@@ -11,7 +11,7 @@ custom_op_library(
         "sleep_op.cc",
     ],
     deps = [
-        "@com_google_absl//absl/container:flat_hash_map",
+        "//deepray/custom_ops/utils:ok_status_util",
     ],
 )
 
@@ -45,5 +45,6 @@ py_test(
     ],
     deps = [
         ":sleep_op",
+        "@pypi_tensorflow//:pkg",
     ],
 )

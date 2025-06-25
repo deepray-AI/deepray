@@ -38,9 +38,8 @@ def test_compatibility_with_some_opts_only(tmp_path):
   x, y, model = get_data_and_model(optimizer="rmsprop")
   avg_model_ckpt = AverageModelCheckpoint(update_weights=True, filepath=test_model_filepath)
   with pytest.raises(
-      TypeError,
-      match="AverageModelCheckpoint is only used when trainingwith"
-      " MovingAverage or StochasticAverage",
+    TypeError,
+    match="AverageModelCheckpoint is only used when trainingwith MovingAverage or StochasticAverage",
   ):
     model.fit(x, y, epochs=EPOCHS, batch_size=BATCH_SIZE, callbacks=[avg_model_ckpt])
 
@@ -60,19 +59,19 @@ def test_mode_auto(tmp_path):
   save_best_only = False
   mode = "auto"
   avg_model_ckpt = AverageModelCheckpoint(
-      update_weights=True,
-      filepath=test_model_filepath,
-      monitor=monitor,
-      save_best_only=save_best_only,
-      mode=mode,
+    update_weights=True,
+    filepath=test_model_filepath,
+    monitor=monitor,
+    save_best_only=save_best_only,
+    mode=mode,
   )
   model.fit(
-      x,
-      y,
-      epochs=EPOCHS,
-      batch_size=BATCH_SIZE,
-      validation_data=(x, y),
-      callbacks=[avg_model_ckpt],
+    x,
+    y,
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE,
+    validation_data=(x, y),
+    callbacks=[avg_model_ckpt],
   )
   assert os.path.exists(test_model_filepath)
 
@@ -84,19 +83,19 @@ def test_mode_min(tmp_path):
   save_best_only = False
   mode = "min"
   avg_model_ckpt = AverageModelCheckpoint(
-      update_weights=True,
-      filepath=test_model_filepath,
-      monitor=monitor,
-      save_best_only=save_best_only,
-      mode=mode,
+    update_weights=True,
+    filepath=test_model_filepath,
+    monitor=monitor,
+    save_best_only=save_best_only,
+    mode=mode,
   )
   model.fit(
-      x,
-      y,
-      epochs=EPOCHS,
-      batch_size=BATCH_SIZE,
-      validation_data=(x, y),
-      callbacks=[avg_model_ckpt],
+    x,
+    y,
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE,
+    validation_data=(x, y),
+    callbacks=[avg_model_ckpt],
   )
   assert os.path.exists(test_model_filepath)
 
@@ -108,19 +107,19 @@ def test_mode_max(tmp_path):
   monitor = "val_acc"
   save_best_only = False
   avg_model_ckpt = AverageModelCheckpoint(
-      update_weights=True,
-      filepath=test_model_filepath,
-      monitor=monitor,
-      save_best_only=save_best_only,
-      mode=mode,
+    update_weights=True,
+    filepath=test_model_filepath,
+    monitor=monitor,
+    save_best_only=save_best_only,
+    mode=mode,
   )
   model.fit(
-      x,
-      y,
-      epochs=EPOCHS,
-      batch_size=BATCH_SIZE,
-      validation_data=(x, y),
-      callbacks=[avg_model_ckpt],
+    x,
+    y,
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE,
+    validation_data=(x, y),
+    callbacks=[avg_model_ckpt],
   )
   assert os.path.exists(test_model_filepath)
 
@@ -130,15 +129,15 @@ def test_save_best_only(tmp_path):
   x, y, model = get_data_and_model()
   save_best_only = True
   avg_model_ckpt = AverageModelCheckpoint(
-      update_weights=True, filepath=test_model_filepath, save_best_only=save_best_only
+    update_weights=True, filepath=test_model_filepath, save_best_only=save_best_only
   )
   model.fit(
-      x,
-      y,
-      epochs=EPOCHS,
-      batch_size=BATCH_SIZE,
-      validation_data=(x, y),
-      callbacks=[avg_model_ckpt],
+    x,
+    y,
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE,
+    validation_data=(x, y),
+    callbacks=[avg_model_ckpt],
   )
   assert os.path.exists(test_model_filepath)
 
@@ -148,18 +147,18 @@ def test_metric_unavailable(tmp_path):
   x, y, model = get_data_and_model()
   monitor = "unknown"
   avg_model_ckpt = AverageModelCheckpoint(
-      update_weights=False,
-      filepath=test_model_filepath,
-      monitor=monitor,
-      save_best_only=True,
+    update_weights=False,
+    filepath=test_model_filepath,
+    monitor=monitor,
+    save_best_only=True,
   )
   model.fit(
-      x,
-      y,
-      epochs=EPOCHS,
-      batch_size=BATCH_SIZE,
-      validation_data=(x, y),
-      callbacks=[avg_model_ckpt],
+    x,
+    y,
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE,
+    validation_data=(x, y),
+    callbacks=[avg_model_ckpt],
   )
   assert not os.path.exists(test_model_filepath)
 
@@ -170,12 +169,12 @@ def test_save_freq(tmp_path):
   save_freq = "epoch"
   avg_model_ckpt = AverageModelCheckpoint(update_weights=False, filepath=test_filepath, save_freq=save_freq)
   model.fit(
-      x,
-      y,
-      epochs=EPOCHS,
-      batch_size=BATCH_SIZE,
-      validation_data=(x, y),
-      callbacks=[avg_model_ckpt],
+    x,
+    y,
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE,
+    validation_data=(x, y),
+    callbacks=[avg_model_ckpt],
   )
   assert os.path.exists(test_filepath.format(epoch=1))
   assert os.path.exists(test_filepath.format(epoch=2))
@@ -199,11 +198,11 @@ def test_loss_scale_optimizer(tmp_path):
   save_freq = "epoch"
   avg_model_ckpt = AverageModelCheckpoint(update_weights=False, filepath=test_model_filepath, save_freq=save_freq)
   model.fit(
-      x,
-      y,
-      epochs=EPOCHS,
-      batch_size=BATCH_SIZE,
-      validation_data=(x, y),
-      callbacks=[avg_model_ckpt],
+    x,
+    y,
+    epochs=EPOCHS,
+    batch_size=BATCH_SIZE,
+    validation_data=(x, y),
+    callbacks=[avg_model_ckpt],
   )
   assert not os.path.exists(test_model_filepath)

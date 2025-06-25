@@ -26,8 +26,6 @@ from absl import flags
 
 from .warmup import WarmUpPolynomial
 
-FLAGS = flags.FLAGS
-
 
 def create_optimizer(init_lr, num_train_steps, num_warmup_steps, optimizer_type="adam"):
   """Creates an optimizer with learning rate schedule."""
@@ -35,55 +33,53 @@ def create_optimizer(init_lr, num_train_steps, num_warmup_steps, optimizer_type=
   if optimizer_type == "adam":
     power = 1.0
     decayed_learning_rate_at_crossover_point = init_lr * (
-        (1.0 - float(num_warmup_steps) / float(num_train_steps))**power
+      (1.0 - float(num_warmup_steps) / float(num_train_steps)) ** power
     )
   else:
     power = 0.5
     decayed_learning_rate_at_crossover_point = init_lr
   init_lr = init_lr * (init_lr / decayed_learning_rate_at_crossover_point)
   print(
-      'decayed_learning_rate_at_crossover_point = %e, adjusted_init_lr = %e' %
-      (decayed_learning_rate_at_crossover_point, init_lr)
+    "decayed_learning_rate_at_crossover_point = %e, adjusted_init_lr = %e"
+    % (decayed_learning_rate_at_crossover_point, init_lr)
   )
 
   learning_rate_fn = tf.keras.optimizers.schedules.PolynomialDecay(
-      initial_learning_rate=init_lr, decay_steps=num_train_steps, end_learning_rate=0.0, power=power
+    initial_learning_rate=init_lr, decay_steps=num_train_steps, end_learning_rate=0.0, power=power
   )
   if num_warmup_steps:
     learning_rate_fn = WarmUpPolynomial(
-        initial_learning_rate=init_lr, decay_schedule_fn=learning_rate_fn, warmup_steps=num_warmup_steps
+      initial_learning_rate=init_lr, decay_schedule_fn=learning_rate_fn, warmup_steps=num_warmup_steps
     )
-  if optimizer_type == 'adamw':
+  if optimizer_type == "adamw":
     optimizer = AdamWeightDecay(
-        learning_rate=learning_rate_fn,
-        weight_decay_rate=0.01,
-        beta_1=0.9,
-        beta_2=0.999,
-        epsilon=1e-6,
-        exclude_from_weight_decay=['LayerNorm', 'layer_norm', 'bias']
+      learning_rate=learning_rate_fn,
+      weight_decay_rate=0.01,
+      beta_1=0.9,
+      beta_2=0.999,
+      epsilon=1e-6,
+      exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"],
     )
-  elif optimizer_type == 'adam':
+  elif optimizer_type == "adam":
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate_fn, beta_1=0.9, beta_2=0.999, epsilon=1e-6)
   else:
-    skip_list = ['None']  # to avoid exclude_from_layer_adaptation set to exclude_from_weight_decay if the arg is None
+    skip_list = ["None"]  # to avoid exclude_from_layer_adaptation set to exclude_from_weight_decay if the arg is None
     import deepray.optimizers as dp_optimizers
+
     optimizer = dp_optimizers.LAMB(
-        learning_rate=learning_rate_fn,
-        weight_decay_rate=0.01,
-        beta_1=0.9,
-        beta_2=0.999,
-        epsilon=1e-6,
-        exclude_from_weight_decay=['LayerNorm', 'layer_norm', 'bias'],
-        exclude_from_layer_adaptation=skip_list
+      learning_rate=learning_rate_fn,
+      weight_decay_rate=0.01,
+      beta_1=0.9,
+      beta_2=0.999,
+      epsilon=1e-6,
+      exclude_from_weight_decay=["LayerNorm", "layer_norm", "bias"],
+      exclude_from_layer_adaptation=skip_list,
     )
   # Horovod: add Horovod DistributedOptimizer.
   # ValueError: Unknown decay: WarmUp. Please ensure this object is passed to the `custom_objects` argument. See https://www.tensorflow.org/guide/keras/save_and_serialize#registering_the_custom_object for details.
   # if FLAGS.use_horovod:
   #   import horovod.tensorflow.keras as hvd
   #   optimizer = hvd.DistributedOptimizer(optimizer, backward_passes_per_step=1, average_aggregated_gradients=True)
-  if FLAGS.use_dynamic_embedding:
-    from tensorflow_recommenders_addons import dynamic_embedding as de
-    optimizer = de.DynamicEmbeddingOptimizer(optimizer, synchronous=FLAGS.use_horovod)
   return optimizer
 
 
@@ -127,17 +123,17 @@ class AdamWeightDecay(tf.keras.optimizers.Adam):
   """
 
   def __init__(
-      self,
-      learning_rate: Union[float, tf.keras.optimizers.schedules.LearningRateSchedule] = 0.001,
-      beta_1: float = 0.9,
-      beta_2: float = 0.999,
-      epsilon: float = 1e-7,
-      amsgrad: bool = False,
-      weight_decay_rate: float = 0.0,
-      include_in_weight_decay: Optional[List[str]] = None,
-      exclude_from_weight_decay: Optional[List[str]] = None,
-      name: str = "AdamWeightDecay",
-      **kwargs,
+    self,
+    learning_rate: Union[float, tf.keras.optimizers.schedules.LearningRateSchedule] = 0.001,
+    beta_1: float = 0.9,
+    beta_2: float = 0.999,
+    epsilon: float = 1e-7,
+    amsgrad: bool = False,
+    weight_decay_rate: float = 0.0,
+    include_in_weight_decay: Optional[List[str]] = None,
+    exclude_from_weight_decay: Optional[List[str]] = None,
+    name: str = "AdamWeightDecay",
+    **kwargs,
   ):
     super().__init__(learning_rate, beta_1, beta_2, epsilon, amsgrad, name, **kwargs)
     self.weight_decay_rate = weight_decay_rate
@@ -152,15 +148,16 @@ class AdamWeightDecay(tf.keras.optimizers.Adam):
 
   def _prepare_local(self, var_device, var_dtype, apply_state):
     super(AdamWeightDecay, self)._prepare_local(var_device, var_dtype, apply_state)
-    apply_state[(var_device,
-                 var_dtype)]["weight_decay_rate"] = tf.constant(self.weight_decay_rate, name="adam_weight_decay_rate")
+    apply_state[(var_device, var_dtype)]["weight_decay_rate"] = tf.constant(
+      self.weight_decay_rate, name="adam_weight_decay_rate"
+    )
 
   def _decay_weights_op(self, var, learning_rate, apply_state):
     do_decay = self._do_use_weight_decay(var.name)
     if do_decay:
       return var.assign_sub(
-          learning_rate * var * apply_state[(var.device, var.dtype.base_dtype)]["weight_decay_rate"],
-          use_locking=self._use_locking,
+        learning_rate * var * apply_state[(var.device, var.dtype.base_dtype)]["weight_decay_rate"],
+        use_locking=self._use_locking,
       )
     return tf.no_op()
 
@@ -219,11 +216,11 @@ class AdamWeightDecay(tf.keras.optimizers.Adam):
 class GradientAccumulator:
   """Gradient accumulation utility.
 
-      When used with a distribution strategy, the accumulator should be called in a
-      replica context. Gradients will be accumulated locally on each replica and
-      without synchronization. Users should then call ``.gradients``, scale the
-      gradients if required, and pass the result to ``apply_gradients``.
-      """
+  When used with a distribution strategy, the accumulator should be called in a
+  replica context. Gradients will be accumulated locally on each replica and
+  without synchronization. Users should then call ``.gradients``, scale the
+  gradients if required, and pass the result to ``apply_gradients``.
+  """
 
   def __init__(self):
     """Initializes the accumulator."""
@@ -235,10 +232,10 @@ class GradientAccumulator:
     """Number of accumulated steps."""
     if self._accum_steps is None:
       self._accum_steps = tf.Variable(
-          tf.constant(0, dtype=tf.int64),
-          trainable=False,
-          synchronization=tf.VariableSynchronization.ON_READ,
-          aggregation=tf.VariableAggregation.ONLY_FIRST_REPLICA,
+        tf.constant(0, dtype=tf.int64),
+        trainable=False,
+        synchronization=tf.VariableSynchronization.ON_READ,
+        aggregation=tf.VariableAggregation.ONLY_FIRST_REPLICA,
       )
     return self._accum_steps.value()
 
@@ -259,12 +256,12 @@ class GradientAccumulator:
   def add_gradients(self, grads):
     if not self._gradients:
       _ = self.step
-      self._gradients.extend(
-          [
-              tf.Variable(tf.zeros_like(g), trainable=False, synchronization=tf.VariableSynchronization.ON_READ)
-              if g is not None else None for g in grads
-          ]
-      )
+      self._gradients.extend([
+        tf.Variable(tf.zeros_like(g), trainable=False, synchronization=tf.VariableSynchronization.ON_READ)
+        if g is not None
+        else None
+        for g in grads
+      ])
     if len(grads) != len(self._gradients):
       raise ValueError("Expected %s gradients, but got %d" % (len(self._gradients), len(grads)))
 

@@ -19,16 +19,16 @@ from deepray.optimizers.average_wrapper import AveragedOptimizerWrapper
 from deepray.optimizers.conditional_gradient import ConditionalGradient
 from deepray.optimizers.cyclical_learning_rate import CyclicalLearningRate
 from deepray.optimizers.cyclical_learning_rate import (
-    TriangularCyclicalLearningRate,
+  TriangularCyclicalLearningRate,
 )
 from deepray.optimizers.cyclical_learning_rate import (
-    Triangular2CyclicalLearningRate,
+  Triangular2CyclicalLearningRate,
 )
 from deepray.optimizers.cyclical_learning_rate import (
-    ExponentialCyclicalLearningRate,
+  ExponentialCyclicalLearningRate,
 )
 from deepray.optimizers.multi_optimizer import (
-    MultiOptimizer,
+  MultiOptimizer,
 )
 from deepray.optimizers.lamb import LAMB
 from deepray.optimizers.lazy_adam import LazyAdam
@@ -38,15 +38,18 @@ from deepray.optimizers.novograd import NovoGrad
 from deepray.optimizers.proximal_adagrad import ProximalAdagrad
 from deepray.optimizers.rectified_adam import RectifiedAdam
 from deepray.optimizers.stochastic_weight_averaging import SWA
-from deepray.optimizers.weight_decay_optimizers import AdamW
 from deepray.optimizers.adabelief import AdaBelief
 from deepray.optimizers.weight_decay_optimizers import SGDW
 from deepray.optimizers.weight_decay_optimizers import (
-    extend_with_decoupled_weight_decay,
+  extend_with_decoupled_weight_decay,
 )
 from deepray.optimizers.weight_decay_optimizers import (
-    DecoupledWeightDecayExtension,
+  DecoupledWeightDecayExtension,
 )
 from deepray.optimizers.yogi import Yogi
 from deepray.optimizers.cocob import COCOB
 from deepray.optimizers.adam import Adam
+from deepray.optimizers.adam_async import AdamAsync
+from deepray.optimizers.gradient_descent import SGD
+from deepray.optimizers.adagrad import Adagrad
+from deepray.optimizers.ftrl import FtrlOptimizer

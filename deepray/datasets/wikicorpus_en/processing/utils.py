@@ -159,79 +159,79 @@ def printable_text(text):
 
 
 def get_readable_time(elapsed):
-  d, h, m, s = [int(x) for x in time.strftime("%d:%H:%M:%S", time.gmtime(elapsed)).split(':')]
+  d, h, m, s = [int(x) for x in time.strftime("%d:%H:%M:%S", time.gmtime(elapsed)).split(":")]
   d -= 1
-  return '{:2d}h{:2d}m{:2d}s'.format(24 * d + h, m, s)
+  return "{:2d}h{:2d}m{:2d}s".format(24 * d + h, m, s)
 
 
 def setup_logger(args):
   os.makedirs(args.log_dir, exist_ok=True)
   if not args.json_summary:
-    log_path = os.path.join(args.log_dir, 'dllogger_rank{}.log'.format(get_rank()))
+    log_path = os.path.join(args.log_dir, "dllogger_rank{}.log".format(get_rank()))
   else:
     log_path = "{}_rank{}".format(args.json_summary, get_rank())
 
   if is_main_process():
     dllogger.init(
-        backends=[
-            dllogger.JSONStreamBackend(verbosity=1, filename=log_path),
-            dllogger.StdOutBackend(verbosity=dllogger.Verbosity.VERBOSE, step_format=format_step)
-        ]
+      backends=[
+        dllogger.JSONStreamBackend(verbosity=1, filename=log_path),
+        dllogger.StdOutBackend(verbosity=dllogger.Verbosity.VERBOSE, step_format=format_step),
+      ]
     )
   else:
     dllogger.init(backends=[dllogger.JSONStreamBackend(verbosity=1, filename=log_path)])
 
   for k, v in vars(args).items():
-    dllogger.log(step='PARAMETER', data={k: v}, verbosity=0)
+    dllogger.log(step="PARAMETER", data={k: v}, verbosity=0)
 
   container_setup_info = {
-      'NVIDIA_TENSORFLOW_VERSION': os.environ.get('NVIDIA_TENSORFLOW_VERSION'),
-      'TENSORFLOW_VERSION': os.environ.get('TENSORFLOW_VERSION'),
-      'CUBLAS_VERSION': os.environ.get('CUBLAS_VERSION'),
-      'NCCL_VERSION': os.environ.get('NCCL_VERSION'),
-      'CUDA_DRIVER_VERSION': os.environ.get('CUDA_DRIVER_VERSION'),
-      'CUDNN_VERSION': os.environ.get('CUDNN_VERSION'),
-      'CUDA_VERSION': os.environ.get('CUDA_VERSION'),
-      'NVIDIA_PIPELINE_ID': os.environ.get('NVIDIA_PIPELINE_ID'),
-      'NVIDIA_BUILD_ID': os.environ.get('NVIDIA_BUILD_ID'),
-      'NVIDIA_TF32_OVERRIDE': os.environ.get('NVIDIA_TF32_OVERRIDE'),
+    "NVIDIA_TENSORFLOW_VERSION": os.environ.get("NVIDIA_TENSORFLOW_VERSION"),
+    "TENSORFLOW_VERSION": os.environ.get("TENSORFLOW_VERSION"),
+    "CUBLAS_VERSION": os.environ.get("CUBLAS_VERSION"),
+    "NCCL_VERSION": os.environ.get("NCCL_VERSION"),
+    "CUDA_DRIVER_VERSION": os.environ.get("CUDA_DRIVER_VERSION"),
+    "CUDNN_VERSION": os.environ.get("CUDNN_VERSION"),
+    "CUDA_VERSION": os.environ.get("CUDA_VERSION"),
+    "NVIDIA_PIPELINE_ID": os.environ.get("NVIDIA_PIPELINE_ID"),
+    "NVIDIA_BUILD_ID": os.environ.get("NVIDIA_BUILD_ID"),
+    "NVIDIA_TF32_OVERRIDE": os.environ.get("NVIDIA_TF32_OVERRIDE"),
   }
-  dllogger.log(step='PARAMETER', data=container_setup_info, verbosity=0)
+  dllogger.log(step="PARAMETER", data=container_setup_info, verbosity=0)
 
 
 def postprocess_dllog(args):
   if not args.json_summary:
-    log_path = os.path.join(args.log_dir, 'dllogger_rank{}.log')
+    log_path = os.path.join(args.log_dir, "dllogger_rank{}.log")
   else:
     log_path = str(args.json_summary) + "_rank{}"
-  logfiles = [open(log_path.format(i), 'r') for i in range(get_world_size())]
+  logfiles = [open(log_path.format(i), "r") for i in range(get_world_size())]
 
   if not args.json_summary:
-    log_path = os.path.join(args.log_dir, 'dllogger.log')
+    log_path = os.path.join(args.log_dir, "dllogger.log")
   else:
     log_path = str(args.json_summary)
 
-  with open(log_path, 'w') as dest_file:
+  with open(log_path, "w") as dest_file:
     for lines in zip(*[f.readlines() for f in logfiles]):
       json_lines = [json.loads(l[5:]) for l in lines]
 
-      assert all(x['type'] == json_lines[0]['type'] for x in json_lines)
-      if json_lines[0]['type'] != 'LOG':
+      assert all(x["type"] == json_lines[0]["type"] for x in json_lines)
+      if json_lines[0]["type"] != "LOG":
         dest_file.write(lines[0])
         continue
 
-      assert all(x['step'] == json_lines[0]['step'] for x in json_lines)
-      if json_lines[0]['step'] == 'PARAMETER':
+      assert all(x["step"] == json_lines[0]["step"] for x in json_lines)
+      if json_lines[0]["step"] == "PARAMETER":
         dest_file.write(lines[0])
       else:
-        d = dict.fromkeys(json_lines[0]['data'])
+        d = dict.fromkeys(json_lines[0]["data"])
         for k in d.keys():
-          vs = [line['data'][k] for line in json_lines]
+          vs = [line["data"][k] for line in json_lines]
           d[k] = sum(vs) / len(vs)
-        json_lines[0]['data'] = d
-        dest_file.write('DLLL ')
+        json_lines[0]["data"] = d
+        dest_file.write("DLLL ")
         dest_file.write(json.dumps(json_lines[0]))
-        dest_file.write('\n')
+        dest_file.write("\n")
 
   for l in logfiles:
     l.close()

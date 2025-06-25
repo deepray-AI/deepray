@@ -13,8 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
+
+using namespace tensorflow;
 
 // Use a namespace when registering by prepending the
 // package's name to the op’s name and separate with a '>'.
@@ -52,7 +55,7 @@ REGISTER_OP("Examples>MultiplexSparse")
       c->set_output(0, c->Matrix(num_rows, dense_rank));
       c->set_output(1, c->Vector(num_rows));
       c->set_output(2, c->Vector(dense_rank));
-      return ::tensorflow::Status::OK();
+      return TFOkStatus;
     })
     .Doc(R"doc(
 Return elements chosen from `a` or `b` depending on `cond`.

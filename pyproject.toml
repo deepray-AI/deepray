@@ -1,0 +1,152 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.mypy]
+show_error_codes = true
+disable_error_code = "attr-defined, name-defined, annotation-unchecked"
+no_implicit_optional = true
+warn_redundant_casts = true
+allow_redefinition = true
+
+[[tool.mypy.overrides]]
+module = [
+    "IPython.*",
+    "absl.*",
+    "colorama.*",
+    "etils.*",
+    "filelock.*",
+    "flatbuffers.*",
+    "flax.*",
+    "google.colab.*",
+    "hypothesis.*",
+    "jraph.*",
+    "libtpu.*",
+    "matplotlib.*",
+    "mlir.*",
+    "ml_dtypes.*",
+    "nvidia.*",
+    "numpy.*",
+    "opt_einsum.*",
+    "optax.*",
+    "portpicker.*",
+    "pygments.*",
+    "pytest.*",
+    "rich.*",
+    "scipy.*",
+    "setuptools.*",
+    "xprof.convert.*",
+    "web_pdb.*",
+    "zstandard.*",
+    "kubernetes.*"
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+markers = [
+    "multiaccelerator: indicates that a test can make use of and possibly requires multiple accelerators",
+    "SlurmMultiNodeGpuTest: mark a test for Slurm multinode GPU nightly CI"
+]
+filterwarnings = [
+    "error",
+
+    # TODO(jakevdp): remove when array_api_tests stabilize
+    "default:.*not machine-readable.*:UserWarning",
+    "default:Special cases found for .* but none were parsed.*:UserWarning",
+
+    # jax.profiler imports tensorflow.python.profiler.trace internally, which
+    # will fail with python 3.12 and some versions of protobuf because the
+    # "error" entry above promotes DeprecationWarnings into errors. See also:
+    # https://github.com/protocolbuffers/protobuf/issues/12186#issuecomment-1745679358
+    "ignore:Type google\\._upb\\._message\\.(Scalar|Message)MapContainer uses PyType_Spec with a metaclass that has custom tp_new\\. This is deprecated and will no longer be allowed in Python 3\\.14\\.:DeprecationWarning",
+
+    # TODO(b/401588349): Remove this once transparent hugepages are enabled.
+    "ignore:Transparent hugepages",
+
+    # NOTE: this is probably not where you want to add code to suppress a
+    # warning. Only pytest tests look at this list, whereas Bazel tests also
+    # check for warnings and do not check this list. Most likely, you should
+    # add a @jtu.ignore_warning decorator to your test instead.
+]
+doctest_optionflags = [
+    "NUMBER",
+    "NORMALIZE_WHITESPACE"
+]
+addopts = "--doctest-glob='*.rst' --ignore='examples/ffi' --import-mode=importlib"
+
+[tool.ruff]
+preview = true
+exclude = [
+    ".git",
+    "build",
+    "__pycache__",
+    "deepray/datasets/",
+    "modelzoo/LanguageModeling/ELECTRA/"
+]
+line-length = 120
+indent-width = 2
+target-version = "py310"
+
+[tool.ruff.lint]
+ignore = [
+    # Unnecessary collection call
+    "C408",
+    # Unnecessary map usage
+    "C417",
+    # Unnecessary dict comprehension for iterable
+    "C420",
+    # Object names too complex
+    "C901",
+    # Local variable is assigned to but never used
+    "F841",
+    # Class could be dataclass or namedtuple
+    "B903",
+    # Raise with from clause inside except block
+    "B904",
+    # Zip without explicit strict parameter
+    "B905",
+    # imported but unused
+    "F401",
+    # Unnecessary list comprehension
+    "C419",
+    # Unnecessary generator (rewrite as a set comprehension)
+    "C401",
+    "C402",
+    "C403",
+    "F821",
+    "C400",
+    "C416",
+    "YTT202",
+]
+select = [
+    "B9",
+    "C",
+    "F",
+    "W",
+    "YTT",
+    "ASYNC",
+    "E101",
+    "E112",
+    "E113",
+    "E115",
+    "E117",
+    "E225",
+    "E227",
+    "E228",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 18
+
+[tool.ruff.lint.per-file-ignores]
+# F811: Redefinition of unused name.
+# F821: Undefined name.
+"docs/autodidax.py" = ["F811"]
+"docs/pallas/tpu/matmul.ipynb" = ["F811"]
+"docs/pallas/tpu/distributed.ipynb" = ["F811"]
+"docs/pallas/quickstart.ipynb" = ["F811"]
+"docs/notebooks/autodiff_cookbook.ipynb" = ["F811", "F821"]
+"docs/notebooks/autodiff_remat.ipynb" = ["F811", "F821"]
+"docs/notebooks/Custom_derivative_rules_for_Python_code.ipynb" = ["F811"]
+"docs/jep/9407-type-promotion.ipynb" = ["F811"]
+"docs/autodidax.ipynb" = ["F811"]

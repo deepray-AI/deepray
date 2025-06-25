@@ -15,83 +15,88 @@
 """Implements ESN Cell."""
 
 import tensorflow as tf
-import tensorflow.keras as keras
+from packaging.version import parse
+
+if parse(tf.__version__) > parse("2.16.0"):
+  from tf_keras.src.layers.rnn.abstract_rnn_cell import AbstractRNNCell
+else:
+  from tensorflow.keras.layers.AbstractRNNCell import AbstractRNNCell
 from typeguard import typechecked
 
 from deepray.utils.types import (
-    Activation,
-    Initializer,
+  Activation,
+  Initializer,
 )
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class ESNCell(keras.layers.AbstractRNNCell):
+class ESNCell(AbstractRNNCell):
   """Echo State recurrent Network (ESN) cell.
-    This implements the recurrent cell from the paper:
-        H. Jaeger
-        "The "echo state" approach to analysing and training recurrent neural networks".
-        GMD Report148, German National Research Center for Information Technology, 2001.
-        https://www.researchgate.net/publication/215385037
+  This implements the recurrent cell from the paper:
+      H. Jaeger
+      "The "echo state" approach to analysing and training recurrent neural networks".
+      GMD Report148, German National Research Center for Information Technology, 2001.
+      https://www.researchgate.net/publication/215385037
 
-    Example:
+  Example:
 
-    >>> inputs = np.random.random([30,23,9]).astype(np.float32)
-    >>> ESNCell = dp.rnn.ESNCell(4)
-    >>> rnn = tf.keras.layers.RNN(ESNCell, return_sequences=True, return_state=True)
-    >>> outputs, memory_state = rnn(inputs)
-    >>> outputs.shape
-    TensorShape([30, 23, 4])
-    >>> memory_state.shape
-    TensorShape([30, 4])
+  >>> inputs = np.random.random([30,23,9]).astype(np.float32)
+  >>> ESNCell = dp.rnn.ESNCell(4)
+  >>> rnn = tf.keras.layers.RNN(ESNCell, return_sequences=True, return_state=True)
+  >>> outputs, memory_state = rnn(inputs)
+  >>> outputs.shape
+  TensorShape([30, 23, 4])
+  >>> memory_state.shape
+  TensorShape([30, 4])
 
-    Args:
-        units: Positive integer, dimensionality in the reservoir.
-        connectivity: Float between 0 and 1.
-            Connection probability between two reservoir units.
-            Default: 0.1.
-        leaky: Float between 0 and 1.
-            Leaking rate of the reservoir.
-            If you pass 1, it is the special case the model does not have leaky
-            integration.
-            Default: 1.
-        spectral_radius: Float between 0 and 1.
-            Desired spectral radius of recurrent weight matrix.
-            Default: 0.9.
-        use_norm2: Boolean, whether to use the p-norm function (with p=2) as an upper
-            bound of the spectral radius so that the echo state property is satisfied.
-            It  avoids to compute the eigenvalues which has an exponential complexity.
-            Default: False.
-        use_bias: Boolean, whether the layer uses a bias vector.
-            Default: True.
-        activation: Activation function to use.
-            Default: hyperbolic tangent (`tanh`).
-        kernel_initializer: Initializer for the `kernel` weights matrix,
-            used for the linear transformation of the inputs.
-            Default: `glorot_uniform`.
-        recurrent_initializer: Initializer for the `recurrent_kernel` weights matrix,
-            used for the linear transformation of the recurrent state.
-            Default: `glorot_uniform`.
-        bias_initializer: Initializer for the bias vector.
-            Default: `zeros`.
-    Call arguments:
-        inputs: A 2D tensor (batch x num_units).
-        states: List of state tensors corresponding to the previous timestep.
-    """
+  Args:
+      units: Positive integer, dimensionality in the reservoir.
+      connectivity: Float between 0 and 1.
+          Connection probability between two reservoir units.
+          Default: 0.1.
+      leaky: Float between 0 and 1.
+          Leaking rate of the reservoir.
+          If you pass 1, it is the special case the model does not have leaky
+          integration.
+          Default: 1.
+      spectral_radius: Float between 0 and 1.
+          Desired spectral radius of recurrent weight matrix.
+          Default: 0.9.
+      use_norm2: Boolean, whether to use the p-norm function (with p=2) as an upper
+          bound of the spectral radius so that the echo state property is satisfied.
+          It  avoids to compute the eigenvalues which has an exponential complexity.
+          Default: False.
+      use_bias: Boolean, whether the layer uses a bias vector.
+          Default: True.
+      activation: Activation function to use.
+          Default: hyperbolic tangent (`tanh`).
+      kernel_initializer: Initializer for the `kernel` weights matrix,
+          used for the linear transformation of the inputs.
+          Default: `glorot_uniform`.
+      recurrent_initializer: Initializer for the `recurrent_kernel` weights matrix,
+          used for the linear transformation of the recurrent state.
+          Default: `glorot_uniform`.
+      bias_initializer: Initializer for the bias vector.
+          Default: `zeros`.
+  Call arguments:
+      inputs: A 2D tensor (batch x num_units).
+      states: List of state tensors corresponding to the previous timestep.
+  """
 
   @typechecked
   def __init__(
-      self,
-      units: int,
-      connectivity: float = 0.1,
-      leaky: float = 1,
-      spectral_radius: float = 0.9,
-      use_norm2: bool = False,
-      use_bias: bool = True,
-      activation: Activation = "tanh",
-      kernel_initializer: Initializer = "glorot_uniform",
-      recurrent_initializer: Initializer = "glorot_uniform",
-      bias_initializer: Initializer = "zeros",
-      **kwargs,
+    self,
+    units: int,
+    connectivity: float = 0.1,
+    leaky: float = 1,
+    spectral_radius: float = 0.9,
+    use_norm2: bool = False,
+    use_bias: bool = True,
+    activation: Activation = "tanh",
+    kernel_initializer: Initializer = "glorot_uniform",
+    recurrent_initializer: Initializer = "glorot_uniform",
+    bias_initializer: Initializer = "zeros",
+    **kwargs,
   ):
     super().__init__(**kwargs)
     self.units = units
@@ -125,8 +130,8 @@ class ESNCell(keras.layers.AbstractRNNCell):
       recurrent_weights = tf.keras.initializers.get(self.recurrent_initializer)(shape, dtype)
 
       connectivity_mask = tf.cast(
-          tf.math.less_equal(tf.random.uniform(shape), self.connectivity),
-          dtype,
+        tf.math.less_equal(tf.random.uniform(shape), self.connectivity),
+        dtype,
       )
       recurrent_weights = tf.math.multiply(recurrent_weights, connectivity_mask)
 
@@ -146,27 +151,27 @@ class ESNCell(keras.layers.AbstractRNNCell):
       return recurrent_weights
 
     self.recurrent_kernel = self.add_weight(
-        name="recurrent_kernel",
-        shape=[self.units, self.units],
-        initializer=_esn_recurrent_initializer,
-        trainable=False,
-        dtype=self.dtype,
+      name="recurrent_kernel",
+      shape=[self.units, self.units],
+      initializer=_esn_recurrent_initializer,
+      trainable=False,
+      dtype=self.dtype,
     )
     self.kernel = self.add_weight(
-        name="kernel",
-        shape=[input_size, self.units],
-        initializer=self.kernel_initializer,
-        trainable=False,
-        dtype=self.dtype,
+      name="kernel",
+      shape=[input_size, self.units],
+      initializer=self.kernel_initializer,
+      trainable=False,
+      dtype=self.dtype,
     )
 
     if self.use_bias:
       self.bias = self.add_weight(
-          name="bias",
-          shape=[self.units],
-          initializer=self.bias_initializer,
-          trainable=False,
-          dtype=self.dtype,
+        name="bias",
+        shape=[self.units],
+        initializer=self.bias_initializer,
+        trainable=False,
+        dtype=self.dtype,
       )
 
     self.built = True
@@ -185,16 +190,16 @@ class ESNCell(keras.layers.AbstractRNNCell):
 
   def get_config(self):
     config = {
-        "units": self.units,
-        "connectivity": self.connectivity,
-        "leaky": self.leaky,
-        "spectral_radius": self.spectral_radius,
-        "use_norm2": self.use_norm2,
-        "use_bias": self.use_bias,
-        "activation": tf.keras.activations.serialize(self.activation),
-        "kernel_initializer": tf.keras.initializers.serialize(self.kernel_initializer),
-        "recurrent_initializer": tf.keras.initializers.serialize(self.recurrent_initializer),
-        "bias_initializer": tf.keras.initializers.serialize(self.bias_initializer),
+      "units": self.units,
+      "connectivity": self.connectivity,
+      "leaky": self.leaky,
+      "spectral_radius": self.spectral_radius,
+      "use_norm2": self.use_norm2,
+      "use_bias": self.use_bias,
+      "activation": tf.keras.activations.serialize(self.activation),
+      "kernel_initializer": tf.keras.initializers.serialize(self.kernel_initializer),
+      "recurrent_initializer": tf.keras.initializers.serialize(self.recurrent_initializer),
+      "bias_initializer": tf.keras.initializers.serialize(self.bias_initializer),
     }
     base_config = super().get_config()
     return {**base_config, **config}

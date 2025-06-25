@@ -20,14 +20,13 @@ import tensorflow as tf
 from official.utils.accelerator import tpu as tpu_utils
 
 TEST_CASES = [
-    dict(embedding_dim=256, vocab_size=1000, sequence_length=64, batch_size=32, seed=54131),
-    dict(embedding_dim=8, vocab_size=15, sequence_length=12, batch_size=256, seed=536413),
-    dict(embedding_dim=2048, vocab_size=512, sequence_length=50, batch_size=8, seed=35124)
+  dict(embedding_dim=256, vocab_size=1000, sequence_length=64, batch_size=32, seed=54131),
+  dict(embedding_dim=8, vocab_size=15, sequence_length=12, batch_size=256, seed=536413),
+  dict(embedding_dim=2048, vocab_size=512, sequence_length=50, batch_size=8, seed=35124),
 ]
 
 
 class TPUBaseTester(tf.test.TestCase):
-
   def construct_embedding_and_values(self, embedding_dim, vocab_size, sequence_length, batch_size, seed):
     np.random.seed(seed)
 
@@ -36,7 +35,7 @@ class TPUBaseTester(tf.test.TestCase):
 
     tokens = np.random.randint(low=1, high=vocab_size - 1, size=(batch_size, sequence_length))
     for i in range(batch_size):
-      tokens[i, np.random.randint(low=0, high=sequence_length - 1):] = 0
+      tokens[i, np.random.randint(low=0, high=sequence_length - 1) :] = 0
     values = tf.convert_to_tensor(value=tokens, dtype=tf.int32)
     mask = tf.cast(tf.not_equal(values, 0), dtype=tf.float32)
     return embedding_table, values, mask
@@ -46,14 +45,14 @@ class TPUBaseTester(tf.test.TestCase):
 
     with self.test_session():
       embedding_table, values, mask = self.construct_embedding_and_values(
-          embedding_dim=embedding_dim,
-          vocab_size=vocab_size,
-          sequence_length=sequence_length,
-          batch_size=batch_size,
-          seed=seed
+        embedding_dim=embedding_dim,
+        vocab_size=vocab_size,
+        sequence_length=sequence_length,
+        batch_size=batch_size,
+        seed=seed,
       )
 
-      embedding = (tf.nn.embedding_lookup(params=embedding_table, ids=values) * tf.expand_dims(mask, -1))
+      embedding = tf.nn.embedding_lookup(params=embedding_table, ids=values) * tf.expand_dims(mask, -1)
 
       matmul_embedding = tpu_utils.embedding_matmul(embedding_table=embedding_table, values=values, mask=mask)
 
@@ -63,11 +62,11 @@ class TPUBaseTester(tf.test.TestCase):
     """Test that matmul embedding properly zeros masked positions."""
     with self.test_session():
       embedding_table, values, mask = self.construct_embedding_and_values(
-          embedding_dim=embedding_dim,
-          vocab_size=vocab_size,
-          sequence_length=sequence_length,
-          batch_size=batch_size,
-          seed=seed
+        embedding_dim=embedding_dim,
+        vocab_size=vocab_size,
+        sequence_length=sequence_length,
+        batch_size=batch_size,
+        seed=seed,
       )
 
       matmul_embedding = tpu_utils.embedding_matmul(embedding_table=embedding_table, values=values, mask=mask)

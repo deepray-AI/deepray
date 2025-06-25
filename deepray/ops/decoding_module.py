@@ -110,11 +110,11 @@ class DecodingModule(tf.Module, metaclass=abc.ABCMeta):
   """A base class for the API required for decoding (go/decoding-tf-nlp)."""
 
   def __init__(
-      self,
-      length_normalization_fn: Callable[[int, tf.DType], float],
-      dtype: tf.DType = tf.float32,
-      decoding_name: Optional[str] = None,
-      extra_cache_output: bool = False
+    self,
+    length_normalization_fn: Callable[[int, tf.DType], float],
+    dtype: tf.DType = tf.float32,
+    decoding_name: Optional[str] = None,
+    extra_cache_output: bool = False,
   ):
     """Initialize the Decoding Module.
 
@@ -131,10 +131,7 @@ class DecodingModule(tf.Module, metaclass=abc.ABCMeta):
     self.decoding_name = decoding_name
 
   def generate(
-      self,
-      initial_ids: tf.Tensor,
-      initial_cache: Dict[str, tf.Tensor],
-      initial_log_probs: Optional[tf.Tensor] = None
+    self, initial_ids: tf.Tensor, initial_cache: Dict[str, tf.Tensor], initial_log_probs: Optional[tf.Tensor] = None
   ) -> Output:
     """Implements the decoding strategy (beam_search or sampling).
 
@@ -151,7 +148,7 @@ class DecodingModule(tf.Module, metaclass=abc.ABCMeta):
         finished_scores: [batch]
         first_cache: The cache after init token
     """
-    batch_size = (initial_ids.shape.as_list()[0] if self.padded_decode else tf.shape(initial_ids)[0])
+    batch_size = initial_ids.shape.as_list()[0] if self.padded_decode else tf.shape(initial_ids)[0]
 
     state, state_shapes = self._create_initial_state(initial_ids, initial_cache, batch_size, initial_log_probs)
 
@@ -172,32 +169,33 @@ class DecodingModule(tf.Module, metaclass=abc.ABCMeta):
           new_state.update({StateKeys.INITIAL_OUTPUT_CACHE: cache})
 
         tf.cond(
-            tf.equal(i, 0), lambda: update_with_cache(new_state, new_cache),
-            lambda: update_with_cache(new_state, old_cache)
+          tf.equal(i, 0),
+          lambda: update_with_cache(new_state, new_cache),
+          lambda: update_with_cache(new_state, old_cache),
         )
       return [new_state]
 
     finished_state = tf.nest.map_structure(
-        tf.stop_gradient,
-        tf.while_loop(
-            self._continue_search,
-            _generate_step,
-            loop_vars=[state],
-            shape_invariants=[state_shapes],
-            parallel_iterations=1,
-            name=self.decoding_name
-        )
+      tf.stop_gradient,
+      tf.while_loop(
+        self._continue_search,
+        _generate_step,
+        loop_vars=[state],
+        shape_invariants=[state_shapes],
+        parallel_iterations=1,
+        name=self.decoding_name,
+      ),
     )
     final_state = self._process_finished_state(finished_state[0])
     return final_state
 
   @abc.abstractmethod
   def _create_initial_state(
-      self,
-      initial_ids: tf.Tensor,
-      initial_cache: Dict[str, tf.Tensor],
-      batch_size: int,
-      initial_log_probs: Optional[tf.Tensor] = None
+    self,
+    initial_ids: tf.Tensor,
+    initial_cache: Dict[str, tf.Tensor],
+    batch_size: int,
+    initial_log_probs: Optional[tf.Tensor] = None,
   ) -> InitialState:
     """Return initial state dictionary and its shape invariants."""
     pass
@@ -221,7 +219,7 @@ class DecodingModule(tf.Module, metaclass=abc.ABCMeta):
 
   @abc.abstractmethod
   def _get_new_alive_state(
-      self, new_seq: tf.Tensor, new_log_probs: tf.Tensor, new_finished_flags: tf.Tensor, new_cache: Dict[str, tf.Tensor]
+    self, new_seq: tf.Tensor, new_log_probs: tf.Tensor, new_finished_flags: tf.Tensor, new_cache: Dict[str, tf.Tensor]
   ) -> Dict[str, Any]:
     """Gather the sequences that are still alive.
 
@@ -240,8 +238,12 @@ class DecodingModule(tf.Module, metaclass=abc.ABCMeta):
 
   @abc.abstractmethod
   def _get_new_finished_state(
-      self, state: Dict[str, Any], new_seq: tf.Tensor, new_log_probs: tf.Tensor, new_finished_flags: tf.Tensor,
-      batch_size: int
+    self,
+    state: Dict[str, Any],
+    new_seq: tf.Tensor,
+    new_log_probs: tf.Tensor,
+    new_finished_flags: tf.Tensor,
+    batch_size: int,
   ) -> Dict[str, tf.Tensor]:
     """Combine new and old finished sequences.
 

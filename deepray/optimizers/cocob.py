@@ -24,31 +24,31 @@ from deepray.optimizers import KerasLegacyOptimizer
 class COCOB(KerasLegacyOptimizer):
   """Optimizer that implements COCOB Backprop Algorithm
 
-        Reference:
-            - [COntinuos COin Betting (COCOB) Backprop optimizer
-    ](https://arxiv.org/abs/1705.07795)
-    """
+      Reference:
+          - [COntinuos COin Betting (COCOB) Backprop optimizer
+  ](https://arxiv.org/abs/1705.07795)
+  """
 
   @typechecked
   def __init__(
-      self,
-      alpha: float = 100,
-      use_locking: bool = False,
-      name: str = "COCOB",
-      **kwargs,
+    self,
+    alpha: float = 100,
+    use_locking: bool = False,
+    name: str = "COCOB",
+    **kwargs,
   ):
     """Constructs a new COCOB-Backprop optimizer
 
-        Arguments:
-            `aplha`: Default value is set to 100 as per paper.
-                     This has the effect of restricting the value of the
-                     parameters in the first iterations of the algorithm.
-                     (Refer to Paper for indepth understanding)
+    Arguments:
+        `aplha`: Default value is set to 100 as per paper.
+                 This has the effect of restricting the value of the
+                 parameters in the first iterations of the algorithm.
+                 (Refer to Paper for indepth understanding)
 
-        Rasies:
-            `ValueError`: If the value of `alpha` is less than 1.
-            `NotImplementedError`: If the data is in sparse format.
-        """
+    Rasies:
+        `ValueError`: If the value of `alpha` is less than 1.
+        `NotImplementedError`: If the data is in sparse format.
+    """
 
     if alpha < 1:
       raise ValueError("`alpha` must be greater than Zero")
@@ -91,24 +91,21 @@ class COCOB(KerasLegacyOptimizer):
     lr_update_op = lr.assign(lr_update)
     reward_update_op = reward.assign(reward_update)
 
-    return tf.group(
-        *[
-            gradients_sum_update_op,
-            var_update_op,
-            grad_norm_sum_update_op,
-            tilde_w_update_op,
-            reward_update_op,
-            lr_update_op,
-        ]
-    )
+    return tf.group(*[
+      gradients_sum_update_op,
+      var_update_op,
+      grad_norm_sum_update_op,
+      tilde_w_update_op,
+      reward_update_op,
+      lr_update_op,
+    ])
 
   def _resource_apply_sparse(self, grad, handle, indices, apply_state=None):
     raise NotImplementedError()
 
   def get_config(self):
-
     config = {
-        "alpha": self._serialize_hyperparameter("alpha"),
+      "alpha": self._serialize_hyperparameter("alpha"),
     }
     base_config = super().get_config()
     return {**base_config, **config}

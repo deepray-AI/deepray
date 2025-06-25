@@ -21,7 +21,6 @@ from deepray.layers.rnn import PeepholeLSTMCell
 
 
 def test_peephole_lstm_cell():
-
   def _run_cell(cell_fn, **kwargs):
     inputs = tf.one_hot([1, 2, 3, 4], 4)
     cell = cell_fn(5, **kwargs)
@@ -32,25 +31,25 @@ def test_peephole_lstm_cell():
 
   tf.random.set_seed(12345)
   first_implementation_output = _run_cell(
-      PeepholeLSTMCell,
-      kernel_initializer="ones",
-      recurrent_activation="sigmoid",
-      implementation=1,
+    PeepholeLSTMCell,
+    kernel_initializer="ones",
+    recurrent_activation="sigmoid",
+    implementation=1,
   )
   second_implementation_output = _run_cell(
-      PeepholeLSTMCell,
-      kernel_initializer="ones",
-      recurrent_activation="sigmoid",
-      implementation=2,
+    PeepholeLSTMCell,
+    kernel_initializer="ones",
+    recurrent_activation="sigmoid",
+    implementation=2,
   )
   expected_output = np.asarray(
-      [
-          [0.417551, 0.417551, 0.417551, 0.417551, 0.417551],
-          [0.417551, 0.417551, 0.417551, 0.417551, 0.417551],
-          [0.417551, 0.417551, 0.417551, 0.417551, 0.417551],
-          [0.0, 0.0, 0.0, 0.0, 0.0],
-      ],
-      dtype=np.float32,
+    [
+      [0.417551, 0.417551, 0.417551, 0.417551, 0.417551],
+      [0.417551, 0.417551, 0.417551, 0.417551, 0.417551],
+      [0.417551, 0.417551, 0.417551, 0.417551, 0.417551],
+      [0.0, 0.0, 0.0, 0.0, 0.0],
+    ],
+    dtype=np.float32,
   )
   np.testing.assert_allclose(first_implementation_output, second_implementation_output)
   np.testing.assert_allclose(first_implementation_output, expected_output, rtol=1e-6, atol=1e-6)

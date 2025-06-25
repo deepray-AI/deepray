@@ -20,13 +20,12 @@ from deepray.models.rec.sequential_recommender_model import SequentialRecommende
 
 
 class DINModel(SequentialRecommenderModel):
-
   def __init__(
-      self,
-      feature_spec,
-      mlp_hidden_dims=(200, 80),
-      embedding_dim=4,
-      item_item_interaction="dot",
+    self,
+    feature_spec,
+    mlp_hidden_dims=(200, 80),
+    embedding_dim=4,
+    item_item_interaction="dot",
   ):
     super(DINModel, self).__init__(feature_spec, embedding_dim, mlp_hidden_dims)
     if item_item_interaction == "dot":
@@ -55,9 +54,11 @@ class DINModel(SequentialRecommenderModel):
 
     sequence_embeddings = sequence_embeddings * tf.expand_dims(mask, axis=-1)
 
-    item_sequence_interaction_embedding, _ = self.item_seq_interaction(
-        (target_item_embedding, sequence_embeddings, mask)
-    )
+    item_sequence_interaction_embedding, _ = self.item_seq_interaction((
+      target_item_embedding,
+      sequence_embeddings,
+      mask,
+    ))
 
     combined_embeddings = tf.concat([target_item_embedding, item_sequence_interaction_embedding, user_embedding], -1)
 

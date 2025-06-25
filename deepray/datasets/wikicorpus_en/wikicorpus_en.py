@@ -21,15 +21,13 @@ from absl import flags
 
 from deepray.datasets.tfrecord_pipeline import TFRecordPipeline
 
-FLAGS = flags.FLAGS
 FLAGS([
-    sys.argv[0],
-    "--num_train_examples=24324736",
+  sys.argv[0],
+  "--num_train_examples=24324736",
 ])
 
 
 class Wikicorpus_en(TFRecordPipeline):
-
   def __init__(self, max_seq_length, **kwargs):
     super().__init__(**kwargs)
     self._max_seq_length = max_seq_length
@@ -38,9 +36,9 @@ class Wikicorpus_en(TFRecordPipeline):
   @property
   def features(self):
     return {
-        "input_ids": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
-        "input_mask": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
-        "segment_ids": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
+      "input_ids": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
+      "input_mask": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
+      "segment_ids": tf.io.FixedLenFeature([self._max_seq_length], tf.int64),
     }
 
   def parser(self, record):

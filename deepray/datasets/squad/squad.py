@@ -21,28 +21,23 @@ from __future__ import print_function
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 from deepray.utils.horovod_utils import get_rank, get_world_size
 
-FLAGS = flags.FLAGS
 
-
-class Squad(DataPipeLine):
-
+class Squad(DataPipeline):
   def __init__(self, max_seq_length, dataset_type="squad", **kwargs):
     super().__init__(**kwargs)
     self._max_seq_length = max_seq_length
     self.dataset_type = dataset_type
 
-  def build_dataset(
-      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
-  ):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, epochs=1, shuffle=True, *args, **kwargs):
     if self.dataset_type == "squad":
       return self.create_squad_dataset(
-          input_file_pattern,
-          self._max_seq_length,
-          batch_size,
-          is_training=is_training,
+        input_file_pattern,
+        self._max_seq_length,
+        batch_size,
+        is_training=is_training,
       )
     elif self.dataset_type == "pretrain":
       return self.create_pretrain_dataset()
@@ -79,27 +74,27 @@ class Squad(DataPipeLine):
     # same input file is sent to all workers.
     if isinstance(input_file, str) or len(input_file) == 1:
       options = tf.data.Options()
-      options.experimental_distribute.auto_shard_policy = (tf.data.experimental.AutoShardPolicy.OFF)
+      options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF
       d = d.with_options(options)
     return d
 
   def create_pretrain_dataset(
-      self,
-      input_patterns,
-      seq_length,
-      max_predictions_per_seq,
-      batch_size,
-      is_training=True,
+    self,
+    input_patterns,
+    seq_length,
+    max_predictions_per_seq,
+    batch_size,
+    is_training=True,
   ):
     """Creates input dataset from (tf)records files for pretraining."""
     name_to_features = {
-        'input_ids': tf.io.FixedLenFeature([seq_length], tf.int64),
-        'input_mask': tf.io.FixedLenFeature([seq_length], tf.int64),
-        'segment_ids': tf.io.FixedLenFeature([seq_length], tf.int64),
-        'masked_lm_positions': tf.io.FixedLenFeature([max_predictions_per_seq], tf.int64),
-        'masked_lm_ids': tf.io.FixedLenFeature([max_predictions_per_seq], tf.int64),
-        'masked_lm_weights': tf.io.FixedLenFeature([max_predictions_per_seq], tf.float32),
-        'next_sentence_labels': tf.io.FixedLenFeature([1], tf.int64),
+      "input_ids": tf.io.FixedLenFeature([seq_length], tf.int64),
+      "input_mask": tf.io.FixedLenFeature([seq_length], tf.int64),
+      "segment_ids": tf.io.FixedLenFeature([seq_length], tf.int64),
+      "masked_lm_positions": tf.io.FixedLenFeature([max_predictions_per_seq], tf.int64),
+      "masked_lm_ids": tf.io.FixedLenFeature([max_predictions_per_seq], tf.int64),
+      "masked_lm_weights": tf.io.FixedLenFeature([max_predictions_per_seq], tf.float32),
+      "next_sentence_labels": tf.io.FixedLenFeature([1], tf.int64),
     }
 
     dataset = tf.data.Dataset.list_files(input_patterns, shuffle=is_training)
@@ -120,7 +115,7 @@ class Squad(DataPipeLine):
     # parallel. You may want to increase this number if you have a large number of
     # CPU cores.
     dataset = dataset.interleave(
-        tf.data.TFRecordDataset, cycle_length=8, num_parallel_calls=tf.data.experimental.AUTOTUNE
+      tf.data.TFRecordDataset, cycle_length=8, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
 
     decode_fn = lambda record: self.decode_record(record, name_to_features)
@@ -129,16 +124,16 @@ class Squad(DataPipeLine):
     def _select_data_from_record(record):
       """Filter out features to use for pretraining."""
       x = {
-          'input_word_ids': record['input_ids'],
-          'input_mask': record['input_mask'],
-          'input_type_ids': record['segment_ids'],
-          'masked_lm_positions': record['masked_lm_positions'],
-          'masked_lm_ids': record['masked_lm_ids'],
-          'masked_lm_weights': record['masked_lm_weights'],
-          'next_sentence_labels': record['next_sentence_labels'],
+        "input_word_ids": record["input_ids"],
+        "input_mask": record["input_mask"],
+        "input_type_ids": record["segment_ids"],
+        "masked_lm_positions": record["masked_lm_positions"],
+        "masked_lm_ids": record["masked_lm_ids"],
+        "masked_lm_weights": record["masked_lm_weights"],
+        "next_sentence_labels": record["next_sentence_labels"],
       }
 
-      y = record['masked_lm_weights']
+      y = record["masked_lm_weights"]
 
       return x, y
 
@@ -154,11 +149,11 @@ class Squad(DataPipeLine):
   def create_classifier_dataset(self, file_path, seq_length, batch_size, is_training=True):
     """Creates input dataset from (tf)records files for train/eval."""
     name_to_features = {
-        'input_ids': tf.io.FixedLenFeature([seq_length], tf.int64),
-        'input_mask': tf.io.FixedLenFeature([seq_length], tf.int64),
-        'segment_ids': tf.io.FixedLenFeature([seq_length], tf.int64),
-        'label_ids': tf.io.FixedLenFeature([], tf.int64),
-        'is_real_example': tf.io.FixedLenFeature([], tf.int64),
+      "input_ids": tf.io.FixedLenFeature([seq_length], tf.int64),
+      "input_mask": tf.io.FixedLenFeature([seq_length], tf.int64),
+      "segment_ids": tf.io.FixedLenFeature([seq_length], tf.int64),
+      "label_ids": tf.io.FixedLenFeature([], tf.int64),
+      "is_real_example": tf.io.FixedLenFeature([], tf.int64),
     }
     dataset = self.single_file_dataset(file_path, name_to_features)
 
@@ -169,11 +164,11 @@ class Squad(DataPipeLine):
 
     def _select_data_from_record(record):
       x = {
-          'input_word_ids': record['input_ids'],
-          'input_mask': record['input_mask'],
-          'input_type_ids': record['segment_ids']
+        "input_word_ids": record["input_ids"],
+        "input_mask": record["input_mask"],
+        "input_type_ids": record["segment_ids"],
       }
-      y = record['label_ids']
+      y = record["label_ids"]
       return x, y
 
     dataset = dataset.map(_select_data_from_record)
@@ -189,15 +184,15 @@ class Squad(DataPipeLine):
   def create_squad_dataset(self, file_path, seq_length, batch_size, is_training=True):
     """Creates input dataset from (tf)records files for train/eval."""
     name_to_features = {
-        'input_ids': tf.io.FixedLenFeature([seq_length], tf.int64),
-        'input_mask': tf.io.FixedLenFeature([seq_length], tf.int64),
-        'segment_ids': tf.io.FixedLenFeature([seq_length], tf.int64),
+      "input_ids": tf.io.FixedLenFeature([seq_length], tf.int64),
+      "input_mask": tf.io.FixedLenFeature([seq_length], tf.int64),
+      "segment_ids": tf.io.FixedLenFeature([seq_length], tf.int64),
     }
     if is_training:
-      name_to_features['start_positions'] = tf.io.FixedLenFeature([], tf.int64)
-      name_to_features['end_positions'] = tf.io.FixedLenFeature([], tf.int64)
+      name_to_features["start_positions"] = tf.io.FixedLenFeature([], tf.int64)
+      name_to_features["end_positions"] = tf.io.FixedLenFeature([], tf.int64)
     else:
-      name_to_features['unique_ids'] = tf.io.FixedLenFeature([], tf.int64)
+      name_to_features["unique_ids"] = tf.io.FixedLenFeature([], tf.int64)
 
     dataset = self.single_file_dataset(file_path, name_to_features)
 
@@ -210,12 +205,12 @@ class Squad(DataPipeLine):
       """Dispatches record to features and labels."""
       x, y = {}, {}
       for name, tensor in record.items():
-        if name in ('start_positions', 'end_positions'):
+        if name in ("start_positions", "end_positions"):
           y[name] = tensor
-        elif name == 'input_ids':
-          x['input_word_ids'] = tensor
-        elif name == 'segment_ids':
-          x['input_type_ids'] = tensor
+        elif name == "input_ids":
+          x["input_word_ids"] = tensor
+        elif name == "segment_ids":
+          x["input_type_ids"] = tensor
         else:
           x[name] = tensor
       return x, y
@@ -224,7 +219,7 @@ class Squad(DataPipeLine):
 
     if is_training:
       dataset = dataset.shuffle(100)
-      dataset = dataset.repeat(FLAGS.epochs)
+      dataset = dataset.repeat(flags.FLAGS.epochs)
 
     dataset = dataset.batch(batch_size, drop_remainder=True)
     dataset = dataset.prefetch(1024)

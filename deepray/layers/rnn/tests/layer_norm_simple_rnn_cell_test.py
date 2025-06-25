@@ -15,7 +15,7 @@
 """Tests for LayerNormSimpleRNN Cell."""
 
 import numpy as np
-import tensorflow.keras as keras
+import tf_keras as keras
 
 from deepray.layers.rnn import LayerNormSimpleRNNCell
 
@@ -27,15 +27,15 @@ def test_constraints_layernorm_rnn():
   b_constraint = keras.constraints.max_norm(0.01)
   g_constraint = keras.constraints.max_norm(0.01)
   layer = keras.layers.RNN(
-      LayerNormSimpleRNNCell(
-          units=5,
-          kernel_constraint=k_constraint,
-          recurrent_constraint=r_constraint,
-          bias_constraint=b_constraint,
-          gamma_constraint=g_constraint,
-      ),
-      input_shape=(None, embedding_dim),
-      return_sequences=False,
+    LayerNormSimpleRNNCell(
+      units=5,
+      kernel_constraint=k_constraint,
+      recurrent_constraint=r_constraint,
+      bias_constraint=b_constraint,
+      gamma_constraint=g_constraint,
+    ),
+    input_shape=(None, embedding_dim),
+    return_sequences=False,
   )
   layer.build((None, None, embedding_dim))
   assert layer.cell.kernel.constraint == k_constraint
@@ -58,15 +58,15 @@ def test_with_masking_layer_layernorm_rnn():
 def test_regularizers_layernorm_rnn():
   embedding_dim = 4
   layer = keras.layers.RNN(
-      LayerNormSimpleRNNCell(
-          units=5,
-          kernel_regularizer=keras.regularizers.l1(0.01),
-          recurrent_regularizer=keras.regularizers.l1(0.01),
-          bias_regularizer="l2",
-          gamma_regularizer="l2",
-      ),
-      input_shape=(None, embedding_dim),
-      return_sequences=False,
+    LayerNormSimpleRNNCell(
+      units=5,
+      kernel_regularizer=keras.regularizers.l1(0.01),
+      recurrent_regularizer=keras.regularizers.l1(0.01),
+      bias_regularizer="l2",
+      gamma_regularizer="l2",
+    ),
+    input_shape=(None, embedding_dim),
+    return_sequences=False,
   )
   layer.build((None, None, 2))
   assert len(layer.losses) == 4

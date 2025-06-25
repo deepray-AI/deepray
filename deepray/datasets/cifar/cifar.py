@@ -22,19 +22,17 @@ from keras import backend
 import numpy as np
 import tensorflow as tf
 from absl import flags
-from keras.utils.data_utils import get_file
+from keras.src.utils.data_utils import get_file
 from tensorflow import keras
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 
-FLAGS = flags.FLAGS
-FLAGS([
-    sys.argv[0],
-    "--num_train_examples=60000",
+flags.FLAGS([
+  sys.argv[0],
+  "--num_train_examples=60000",
 ])
 
 
-class CIFAR(DataPipeLine):
-
+class CIFAR(DataPipeline):
   def load_batch(self, fpath, label_key="labels"):
     """Internal utility for parsing CIFAR data.
 
@@ -61,7 +59,6 @@ class CIFAR(DataPipeLine):
 
 
 class CIFAR10(CIFAR):
-
   def __init__(self, **kwargs):
     """Loads the CIFAR10 dataset.
 
@@ -115,15 +112,15 @@ class CIFAR10(CIFAR):
     dirname = "cifar-10-batches-py"
     origin = "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
     self.path = get_file(
-        dirname,
-        origin=origin,
-        untar=True,
-        file_hash=(  # noqa: E501
-            "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
-        ),
+      dirname,
+      origin=origin,
+      untar=True,
+      file_hash=(  # noqa: E501
+        "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+      ),
     )
 
-  def build_dataset(self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, *args, **kwargs):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, *args, **kwargs):
     if is_training:
       num_train_samples = 50000
 
@@ -133,8 +130,8 @@ class CIFAR10(CIFAR):
       for i in range(1, 6):
         fpath = os.path.join(self.path, "data_batch_" + str(i))
         (
-            x[(i - 1) * 10000:i * 10000, :, :, :],
-            y[(i - 1) * 10000:i * 10000],
+          x[(i - 1) * 10000 : i * 10000, :, :, :],
+          y[(i - 1) * 10000 : i * 10000],
         ) = self.load_batch(fpath)
     else:
       fpath = os.path.join(self.path, "test_batch")
@@ -150,70 +147,68 @@ class CIFAR10(CIFAR):
     y = keras.utils.to_categorical(y, num_classes)
 
     dataset = tf.data.Dataset.from_tensor_slices((x / 255.0, y))
-    dataset = dataset.repeat(FLAGS.epochs).shuffle(10000).batch(batch_size)
+    dataset = dataset.repeat(flags.FLAGS.epochs).shuffle(10000).batch(batch_size)
     return dataset
 
 
 class CIFAR100(CIFAR):
-
   def __init__(self, label_mode="fine", **kwargs):
     """Loads the CIFAR100 dataset.
 
-        This is a dataset of 50,000 32x32 color training images and
-        10,000 test images, labeled over 100 fine-grained classes that are
-        grouped into 20 coarse-grained classes. See more info at the
-        [CIFAR homepage](https://www.cs.toronto.edu/~kriz/cifar.html).
+    This is a dataset of 50,000 32x32 color training images and
+    10,000 test images, labeled over 100 fine-grained classes that are
+    grouped into 20 coarse-grained classes. See more info at the
+    [CIFAR homepage](https://www.cs.toronto.edu/~kriz/cifar.html).
 
-        Args:
-          label_mode: one of "fine", "coarse". If it is "fine" the category labels
-            are the fine-grained labels, if it is "coarse" the output labels are the
-            coarse-grained superclasses.
+    Args:
+      label_mode: one of "fine", "coarse". If it is "fine" the category labels
+        are the fine-grained labels, if it is "coarse" the output labels are the
+        coarse-grained superclasses.
 
-        Returns:
-          Tuple of NumPy arrays: `(x_train, y_train), (x_test, y_test)`.
+    Returns:
+      Tuple of NumPy arrays: `(x_train, y_train), (x_test, y_test)`.
 
-        **x_train**: uint8 NumPy array of grayscale image data with shapes
-          `(50000, 32, 32, 3)`, containing the training data. Pixel values range
-          from 0 to 255.
+    **x_train**: uint8 NumPy array of grayscale image data with shapes
+      `(50000, 32, 32, 3)`, containing the training data. Pixel values range
+      from 0 to 255.
 
-        **y_train**: uint8 NumPy array of labels (integers in range 0-99)
-          with shape `(50000, 1)` for the training data.
+    **y_train**: uint8 NumPy array of labels (integers in range 0-99)
+      with shape `(50000, 1)` for the training data.
 
-        **x_test**: uint8 NumPy array of grayscale image data with shapes
-          `(10000, 32, 32, 3)`, containing the test data. Pixel values range
-          from 0 to 255.
+    **x_test**: uint8 NumPy array of grayscale image data with shapes
+      `(10000, 32, 32, 3)`, containing the test data. Pixel values range
+      from 0 to 255.
 
-        **y_test**: uint8 NumPy array of labels (integers in range 0-99)
-          with shape `(10000, 1)` for the test data.
+    **y_test**: uint8 NumPy array of labels (integers in range 0-99)
+      with shape `(10000, 1)` for the test data.
 
-        Example:
+    Example:
 
-        ```python
-        (x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
-        assert x_train.shape == (50000, 32, 32, 3)
-        assert x_test.shape == (10000, 32, 32, 3)
-        assert y_train.shape == (50000, 1)
-        assert y_test.shape == (10000, 1)
-        ```
-        """
+    ```python
+    (x_train, y_train), (x_test, y_test) = keras.datasets.cifar100.load_data()
+    assert x_train.shape == (50000, 32, 32, 3)
+    assert x_test.shape == (10000, 32, 32, 3)
+    assert y_train.shape == (50000, 1)
+    assert y_test.shape == (10000, 1)
+    ```
+    """
     super().__init__(**kwargs)
     if label_mode not in ["fine", "coarse"]:
-      raise ValueError('`label_mode` must be one of `"fine"`, `"coarse"`. '
-                       f"Received: label_mode={label_mode}.")
+      raise ValueError(f'`label_mode` must be one of `"fine"`, `"coarse"`. Received: label_mode={label_mode}.')
 
     dirname = "cifar-100-python"
-    origin = "http://minio1.arsenal.kanzhun-inc.com/datasets/cifar100/cifar-100-python.tar.gz"  #"https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
+    origin = "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
     self.path = get_file(
-        dirname,
-        origin=origin,
-        untar=True,
-        file_hash=(  # noqa: E501
-            "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
-        ),
+      dirname,
+      origin=origin,
+      untar=True,
+      file_hash=(  # noqa: E501
+        "85cd44d02ba6437773c5bbd22e183051d648de2e7d6b014e1ef29b855ba677a7"
+      ),
     )
     self.label_mode = label_mode
 
-  def build_dataset(self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, *args, **kwargs):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, *args, **kwargs):
     if is_training:
       fpath = os.path.join(self.path, "train")
 
@@ -230,5 +225,5 @@ class CIFAR100(CIFAR):
     y = keras.utils.to_categorical(y, num_classes)
 
     dataset = tf.data.Dataset.from_tensor_slices((x / 255.0, y))
-    dataset = dataset.repeat(FLAGS.epochs).shuffle(10000).batch(batch_size)
+    dataset = dataset.repeat(flags.FLAGS.epochs).shuffle(10000).batch(batch_size)
     return dataset

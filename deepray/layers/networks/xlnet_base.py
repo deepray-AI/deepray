@@ -72,7 +72,7 @@ def _create_causal_attention_mask(seq_length, memory_length, dtype=tf.float32, s
     lower_triangular = tf.linalg.band_part(ones_matrix, -1, 0)
     strictly_lower_triangular = lower_triangular - diagonal
     causal_attention_mask = tf.concat(
-        [causal_attention_mask[:, :seq_length] + strictly_lower_triangular, causal_attention_mask[:, seq_length:]], 1
+      [causal_attention_mask[:, :seq_length] + strictly_lower_triangular, causal_attention_mask[:, seq_length:]], 1
     )
 
   return 1 - causal_attention_mask
@@ -102,7 +102,7 @@ def _combine_masks(mask1, mask2, dtype, how="and"):
 
 
 def _compute_attention_mask(
-    input_mask, permutation_mask, attention_type, seq_length, memory_length, batch_size, dtype=tf.float32
+  input_mask, permutation_mask, attention_type, seq_length, memory_length, batch_size, dtype=tf.float32
 ):
   """Combines all input attention masks for XLNet.
 
@@ -146,7 +146,7 @@ def _compute_attention_mask(
   # `1` values mean do not attend to this position.
   if attention_type == "uni":
     causal_attention_mask = _create_causal_attention_mask(
-        seq_length=seq_length, memory_length=memory_length, dtype=dtype
+      seq_length=seq_length, memory_length=memory_length, dtype=dtype
     )
     causal_attention_mask = causal_attention_mask[None, None, :, :]
     # `causal_attention_mask`: [1, 1, S, S + M]
@@ -181,8 +181,7 @@ def _compute_attention_mask(
     # This ensures that the mask allows the model to attend to positions in
     # content positions (e.g. the content diagonal).
     non_target_mask = tf.concat(
-        [tf.zeros([seq_length, memory_length], dtype=dtype),
-         tf.eye(seq_length, dtype=dtype)], axis=-1
+      [tf.zeros([seq_length, memory_length], dtype=dtype), tf.eye(seq_length, dtype=dtype)], axis=-1
     )
     content_attention_mask = _combine_masks(attention_mask, non_target_mask, how="or", dtype=dtype)
   else:
@@ -232,9 +231,9 @@ def _compute_segment_matrix(segment_ids, memory_length, batch_size, use_cls_mask
 
     # segment_ids: [B, S]
     # padded_segment_ids: [B, S + M]
-    broadcasted_segment_class_indices = (tf.equal(segment_ids, tf.constant([_SEG_ID_CLS]))[:, :, None])
+    broadcasted_segment_class_indices = tf.equal(segment_ids, tf.constant([_SEG_ID_CLS]))[:, :, None]
 
-    broadcasted_padded_class_indices = (tf.equal(padded_segment_ids, tf.constant([_SEG_ID_CLS]))[:, None, :])
+    broadcasted_padded_class_indices = tf.equal(padded_segment_ids, tf.constant([_SEG_ID_CLS]))[:, None, :]
 
     class_index_matrix = tf.logical_or(broadcasted_segment_class_indices, broadcasted_padded_class_indices)
 
@@ -247,15 +246,15 @@ def _compute_segment_matrix(segment_ids, memory_length, batch_size, use_cls_mask
 
 
 def _compute_positional_encoding(
-    attention_type,
-    position_encoding_layer,
-    hidden_size,
-    batch_size,
-    total_length,
-    seq_length,
-    clamp_length,
-    bi_data,
-    dtype=tf.float32
+  attention_type,
+  position_encoding_layer,
+  hidden_size,
+  batch_size,
+  total_length,
+  seq_length,
+  clamp_length,
+  bi_data,
+  dtype=tf.float32,
 ):
   """Computes the relative position encoding.
 
@@ -339,7 +338,7 @@ class RelativePositionEncoding(tf.keras.layers.Layer):
   def __init__(self, hidden_size, **kwargs):
     super().__init__(**kwargs)
     self._hidden_size = hidden_size
-    self._inv_freq = 1.0 / (10000.0**(tf.range(0, self._hidden_size, 2.0) / self._hidden_size))
+    self._inv_freq = 1.0 / (10000.0 ** (tf.range(0, self._hidden_size, 2.0) / self._hidden_size))
 
   def call(self, pos_seq, batch_size=None):
     """Implements call() for the layer.
@@ -406,27 +405,27 @@ class XLNetBase(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      vocab_size,
-      num_layers,
-      hidden_size,
-      num_attention_heads,
-      head_size,
-      inner_size,
-      dropout_rate,
-      attention_dropout_rate,
-      attention_type,
-      bi_data,
-      initializer,
-      two_stream=False,
-      tie_attention_biases=True,
-      memory_length=None,
-      clamp_length=-1,
-      reuse_length=None,
-      inner_activation="relu",
-      use_cls_mask=False,
-      embedding_width=None,
-      **kwargs
+    self,
+    vocab_size,
+    num_layers,
+    hidden_size,
+    num_attention_heads,
+    head_size,
+    inner_size,
+    dropout_rate,
+    attention_dropout_rate,
+    attention_type,
+    bi_data,
+    initializer,
+    two_stream=False,
+    tie_attention_biases=True,
+    memory_length=None,
+    clamp_length=-1,
+    reuse_length=None,
+    inner_activation="relu",
+    use_cls_mask=False,
+    embedding_width=None,
+    **kwargs,
   ):
     super().__init__(**kwargs)
 
@@ -458,11 +457,11 @@ class XLNetBase(tf.keras.layers.Layer):
       embedding_width = hidden_size
 
     self._embedding_layer = layers.OnDeviceEmbedding(
-        vocab_size=self._vocab_size,
-        embedding_width=embedding_width,
-        initializer=tf_utils.clone_initializer(self._initializer),
-        dtype=tf.float32,
-        name="word_embedding"
+      vocab_size=self._vocab_size,
+      embedding_width=embedding_width,
+      initializer=tf_utils.clone_initializer(self._initializer),
+      dtype=tf.float32,
+      name="word_embedding",
     )
     self._dropout = tf.keras.layers.Dropout(rate=self._dropout_rate)
 
@@ -470,44 +469,44 @@ class XLNetBase(tf.keras.layers.Layer):
     self.position_encoding = RelativePositionEncoding(self._hidden_size)
 
     self._transformer_xl = transformer_xl.TransformerXL(
-        vocab_size=vocab_size,
-        num_layers=num_layers,
-        hidden_size=hidden_size,
-        num_attention_heads=num_attention_heads,
-        head_size=head_size,
-        inner_size=inner_size,
-        dropout_rate=dropout_rate,
-        attention_dropout_rate=attention_dropout_rate,
-        initializer=initializer,
-        two_stream=two_stream,
-        tie_attention_biases=tie_attention_biases,
-        memory_length=memory_length,
-        reuse_length=reuse_length,
-        inner_activation=inner_activation,
-        name="transformer_xl"
+      vocab_size=vocab_size,
+      num_layers=num_layers,
+      hidden_size=hidden_size,
+      num_attention_heads=num_attention_heads,
+      head_size=head_size,
+      inner_size=inner_size,
+      dropout_rate=dropout_rate,
+      attention_dropout_rate=attention_dropout_rate,
+      initializer=initializer,
+      two_stream=two_stream,
+      tie_attention_biases=tie_attention_biases,
+      memory_length=memory_length,
+      reuse_length=reuse_length,
+      inner_activation=inner_activation,
+      name="transformer_xl",
     )
 
   def get_config(self):
     config = {
-        "vocab_size": self._vocab_size,
-        "num_layers": self._num_layers,
-        "hidden_size": self._hidden_size,
-        "num_attention_heads": self._num_attention_heads,
-        "head_size": self._head_size,
-        "inner_size": self._inner_size,
-        "dropout_rate": self._dropout_rate,
-        "attention_dropout_rate": self._attention_dropout_rate,
-        "attention_type": self._attention_type,
-        "bi_data": self._bi_data,
-        "initializer": self._initializer,
-        "two_stream": self._two_stream,
-        "tie_attention_biases": self._tie_attention_biases,
-        "memory_length": self._memory_length,
-        "clamp_length": self._clamp_length,
-        "reuse_length": self._reuse_length,
-        "inner_activation": self._inner_activation,
-        "use_cls_mask": self._use_cls_mask,
-        "embedding_width": self._embedding_width,
+      "vocab_size": self._vocab_size,
+      "num_layers": self._num_layers,
+      "hidden_size": self._hidden_size,
+      "num_attention_heads": self._num_attention_heads,
+      "head_size": self._head_size,
+      "inner_size": self._inner_size,
+      "dropout_rate": self._dropout_rate,
+      "attention_dropout_rate": self._attention_dropout_rate,
+      "attention_type": self._attention_type,
+      "bi_data": self._bi_data,
+      "initializer": self._initializer,
+      "two_stream": self._two_stream,
+      "tie_attention_biases": self._tie_attention_biases,
+      "memory_length": self._memory_length,
+      "clamp_length": self._clamp_length,
+      "reuse_length": self._reuse_length,
+      "inner_activation": self._inner_activation,
+      "use_cls_mask": self._use_cls_mask,
+      "embedding_width": self._embedding_width,
     }
     base_config = super().get_config()
     return dict(list(base_config.items()) + list(config.items()))
@@ -517,26 +516,26 @@ class XLNetBase(tf.keras.layers.Layer):
     return self._embedding_layer.embeddings
 
   def __call__(
-      self,
-      input_ids,
-      segment_ids=None,
-      input_mask=None,
-      state=None,
-      permutation_mask=None,
-      target_mapping=None,
-      masked_tokens=None,
-      **kwargs
+    self,
+    input_ids,
+    segment_ids=None,
+    input_mask=None,
+    state=None,
+    permutation_mask=None,
+    target_mapping=None,
+    masked_tokens=None,
+    **kwargs,
   ):
     # Uses dict to feed inputs into call() in order to keep state as a python
     # list.
     inputs = {
-        "input_ids": input_ids,
-        "segment_ids": segment_ids,
-        "input_mask": input_mask,
-        "state": state,
-        "permutation_mask": permutation_mask,
-        "target_mapping": target_mapping,
-        "masked_tokens": masked_tokens
+      "input_ids": input_ids,
+      "segment_ids": segment_ids,
+      "input_mask": input_mask,
+      "state": state,
+      "permutation_mask": permutation_mask,
+      "target_mapping": target_mapping,
+      "masked_tokens": masked_tokens,
     }
     return super().__call__(inputs, **kwargs)
 
@@ -560,15 +559,13 @@ class XLNetBase(tf.keras.layers.Layer):
 
     if self._two_stream and masked_tokens is None:
       raise ValueError(
-          "`masked_tokens` must be provided in order to "
-          "initialize the query stream in "
-          "`TwoStreamRelativeAttention`."
+        "`masked_tokens` must be provided in order to initialize the query stream in `TwoStreamRelativeAttention`."
       )
     if masked_tokens is not None and not self._two_stream:
       logging.warning(
-          "`masked_tokens` is provided but `two_stream` is not "
-          "enabled. Please enable `two_stream` to enable two "
-          "stream attention."
+        "`masked_tokens` is provided but `two_stream` is not "
+        "enabled. Please enable `two_stream` to enable two "
+        "stream attention."
       )
 
     if input_mask is not None:
@@ -578,24 +575,24 @@ class XLNetBase(tf.keras.layers.Layer):
     else:
       dtype = tf.int32
     query_attention_mask, content_attention_mask = _compute_attention_mask(
-        input_mask=input_mask,
-        permutation_mask=permutation_mask,
-        attention_type=self._attention_type,
-        seq_length=seq_length,
-        memory_length=memory_length,
-        batch_size=batch_size,
-        dtype=dtype
+      input_mask=input_mask,
+      permutation_mask=permutation_mask,
+      attention_type=self._attention_type,
+      seq_length=seq_length,
+      memory_length=memory_length,
+      batch_size=batch_size,
+      dtype=dtype,
     )
     relative_position_encoding = _compute_positional_encoding(
-        attention_type=self._attention_type,
-        position_encoding_layer=self.position_encoding,
-        hidden_size=self._hidden_size,
-        batch_size=batch_size,
-        total_length=total_length,
-        seq_length=seq_length,
-        clamp_length=self._clamp_length,
-        bi_data=self._bi_data,
-        dtype=tf.float32
+      attention_type=self._attention_type,
+      position_encoding_layer=self.position_encoding,
+      hidden_size=self._hidden_size,
+      batch_size=batch_size,
+      total_length=total_length,
+      seq_length=seq_length,
+      clamp_length=self._clamp_length,
+      bi_data=self._bi_data,
+      dtype=tf.float32,
     )
     relative_position_encoding = self.embedding_dropout(relative_position_encoding)
 
@@ -605,15 +602,15 @@ class XLNetBase(tf.keras.layers.Layer):
     else:
       if self._segment_embedding is None:
         self._segment_embedding = self.add_weight(
-            "seg_embed",
-            shape=[self._num_layers, 2, self._num_attention_heads, self._head_size],
-            dtype=tf.float32,
-            initializer=tf_utils.clone_initializer(self._initializer)
+          "seg_embed",
+          shape=[self._num_layers, 2, self._num_attention_heads, self._head_size],
+          dtype=tf.float32,
+          initializer=tf_utils.clone_initializer(self._initializer),
         )
 
       segment_embedding = self._segment_embedding
       segment_matrix = _compute_segment_matrix(
-          segment_ids=segment_ids, memory_length=memory_length, batch_size=batch_size, use_cls_mask=self._use_cls_mask
+        segment_ids=segment_ids, memory_length=memory_length, batch_size=batch_size, use_cls_mask=self._use_cls_mask
       )
 
     word_embeddings = self._embedding_layer(input_ids)
@@ -624,7 +621,7 @@ class XLNetBase(tf.keras.layers.Layer):
         self._mask_embedding = self.add_weight("mask_emb/mask_emb", shape=[1, 1, self._hidden_size], dtype=tf.float32)
       if target_mapping is None:
         masked_tokens = masked_tokens[:, :, None]
-        masked_token_embedding = (masked_tokens * self._mask_embedding + (1 - masked_tokens) * word_embeddings)
+        masked_token_embedding = masked_tokens * self._mask_embedding + (1 - masked_tokens) * word_embeddings
       else:
         masked_token_embedding = tf.tile(self._mask_embedding, [batch_size, tf.shape(target_mapping)[1], 1])
       query_stream = self._dropout(masked_token_embedding)
@@ -632,13 +629,13 @@ class XLNetBase(tf.keras.layers.Layer):
       query_stream = None
 
     return self._transformer_xl(
-        content_stream=content_stream,
-        query_stream=query_stream,
-        target_mapping=target_mapping,
-        state=state,
-        relative_position_encoding=relative_position_encoding,
-        segment_matrix=segment_matrix,
-        segment_embedding=segment_embedding,
-        content_attention_mask=content_attention_mask,
-        query_attention_mask=query_attention_mask
+      content_stream=content_stream,
+      query_stream=query_stream,
+      target_mapping=target_mapping,
+      state=state,
+      relative_position_encoding=relative_position_encoding,
+      segment_matrix=segment_matrix,
+      segment_embedding=segment_embedding,
+      content_attention_mask=content_attention_mask,
+      query_attention_mask=query_attention_mask,
     )

@@ -12,8 +12,6 @@ from absl import app, flags
 
 from .squad import Squad
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 SQUAD_VERSION = "1.1"
@@ -25,20 +23,20 @@ def runner(argv=None):
   if len(argv) <= 1:
     dir_path = os.path.dirname(os.path.realpath(__file__))
     argv = [
-        sys.argv[0],
-        "--batch_size=1",
-        "-epochs=1",
-        f"--train_data={SQUAD_DIR}/squad_v{SQUAD_VERSION}_train.tf_record",
-        f"--input_meta_data_path={dir_path}/v{SQUAD_VERSION}/squad_v{SQUAD_VERSION}_meta_data",
-        # "--label=clicked",
+      sys.argv[0],
+      "--batch_size=1",
+      "-epochs=1",
+      f"--train_data={SQUAD_DIR}/squad_v{SQUAD_VERSION}_train.tf_record",
+      f"--input_meta_data_path={dir_path}/v{SQUAD_VERSION}/squad_v{SQUAD_VERSION}_meta_data",
+      # "--label=clicked",
     ]
   if argv:
     FLAGS(argv, known_only=True)
 
-  with tf.io.gfile.GFile(FLAGS.input_meta_data_path, 'rb') as reader:
-    input_meta_data = json.loads(reader.read().decode('utf-8'))
+  with tf.io.gfile.GFile(FLAGS.input_meta_data_path, "rb") as reader:
+    input_meta_data = json.loads(reader.read().decode("utf-8"))
 
-  data_pipe = Squad(max_seq_length=input_meta_data['max_seq_length'], dataset_type="squad")
+  data_pipe = Squad(max_seq_length=input_meta_data["max_seq_length"], dataset_type="squad")
   # create data pipline of train & test dataset
   train_dataset = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
   num_examples = 0

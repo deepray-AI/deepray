@@ -12,16 +12,13 @@ from absl import app, flags, logging
 from deepray.datasets.criteo.criteo import Criteo
 
 flags_core.define_base(
-    model_dir=False,
-    clean=True,
-    epochs=True,
-    epochs_between_evals=False,
-    export_dir=False,
-    stop_threshold=False,
+  model_dir=False,
+  clean=True,
+  epochs=True,
+  epochs_between_evals=False,
+  export_dir=False,
+  stop_threshold=False,
 )
-
-FLAGS = flags.FLAGS
-logging.set_verbosity(logging.INFO)
 
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
@@ -30,14 +27,14 @@ def runner(argv=None):
   dir_path = os.path.dirname(os.path.realpath(__file__))
   if len(argv) <= 1:
     argv = [
-        sys.argv[0],
-        "--batch_size=16",
-        "-epochs=1",
-        # '--train_data=hdfs://10.11.11.241:8020/test/offline_feature_model_topic_parquet/ymd=2021111[0-6]/*.parquet',
-        "--train_data=/Users/admin/Downloads/train.csv",
-        f"--feature_map={dir_path}/feature_map.csv",
-        "--prefetch_buffer=64",
-        "--label=clicked",
+      sys.argv[0],
+      "--batch_size=16",
+      "-epochs=1",
+      # '--train_data=hdfs://10.11.11.241:8020/test/offline_feature_model_topic_parquet/ymd=2021111[0-6]/*.parquet',
+      "--train_data=/Users/admin/Downloads/train.csv",
+      f"--feature_map={dir_path}/feature_map.csv",
+      "--prefetch_buffer=64",
+      "--label=clicked",
     ]
   if argv:
     FLAGS(argv, known_only=True)

@@ -73,8 +73,8 @@ def test_keras_model(dtype):
   expected_result = tf.constant(1.5041667222976685, dtype=dtype)
   model = tf.keras.Sequential()
   model.compile(
-      optimizer="adam",
-      loss=GIoULoss(reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE),
+    optimizer="adam",
+    loss=GIoULoss(reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE),
   )
   loss = model.evaluate(boxes1, boxes2, batch_size=2, steps=1)
   test_utils.assert_allclose_according_to_type(loss, expected_result)

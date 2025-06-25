@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
@@ -25,7 +26,6 @@ from deepray.layers import attention
 from deepray.layers import dense_einsum
 
 
-# @tf.keras.utils.register_keras_serializable(package="Text")
 class TransformerScaffold(tf.keras.layers.Layer):
   """Transformer scaffold layer.
 
@@ -54,22 +54,22 @@ class TransformerScaffold(tf.keras.layers.Layer):
   """
 
   def __init__(
-      self,
-      num_attention_heads,
-      intermediate_size,
-      intermediate_activation,
-      attention_cls=attention.Attention,
-      attention_cfg=None,
-      dropout_rate=0.0,
-      attention_dropout_rate=0.0,
-      kernel_initializer="glorot_uniform",
-      bias_initializer="zeros",
-      kernel_regularizer=None,
-      bias_regularizer=None,
-      activity_regularizer=None,
-      kernel_constraint=None,
-      bias_constraint=None,
-      **kwargs
+    self,
+    num_attention_heads,
+    intermediate_size,
+    intermediate_activation,
+    attention_cls=attention.Attention,
+    attention_cfg=None,
+    dropout_rate=0.0,
+    attention_dropout_rate=0.0,
+    kernel_initializer="glorot_uniform",
+    bias_initializer="zeros",
+    kernel_regularizer=None,
+    bias_regularizer=None,
+    activity_regularizer=None,
+    kernel_constraint=None,
+    bias_constraint=None,
+    **kwargs,
   ):
     super(TransformerScaffold, self).__init__(**kwargs)
 
@@ -91,8 +91,7 @@ class TransformerScaffold(tf.keras.layers.Layer):
     input_tensor = input_shape[0] if len(input_shape) == 2 else input_shape
     input_tensor_shape = tf.TensorShape(input_tensor)
     if len(input_tensor_shape) != 3:
-      raise ValueError("TransformerScaffold expects a three-dimensional input of "
-                       "shape [batch, sequence, width].")
+      raise ValueError("TransformerScaffold expects a three-dimensional input of shape [batch, sequence, width].")
     batch_size, sequence_length, hidden_size = input_tensor_shape
 
     if len(input_shape) == 2:
@@ -100,15 +99,14 @@ class TransformerScaffold(tf.keras.layers.Layer):
       expected_mask_tensor_shape = tf.TensorShape([batch_size, sequence_length, sequence_length])
       if not expected_mask_tensor_shape.is_compatible_with(mask_tensor_shape):
         raise ValueError(
-            "When passing a mask tensor to TransformerLayer, the "
-            "mask tensor must be of shape [batch, "
-            "sequence_length, sequence_length] (here %s). Got a "
-            "mask tensor of shape %s." % (expected_mask_tensor_shape, mask_tensor_shape)
+          "When passing a mask tensor to TransformerLayer, the "
+          "mask tensor must be of shape [batch, "
+          "sequence_length, sequence_length] (here %s). Got a "
+          "mask tensor of shape %s." % (expected_mask_tensor_shape, mask_tensor_shape)
         )
     if hidden_size % self._num_heads != 0:
       raise ValueError(
-          "The input size (%d) is not a multiple of the number of attention "
-          "heads (%d)" % (hidden_size, self._num_heads)
+        "The input size (%d) is not a multiple of the number of attention heads (%d)" % (hidden_size, self._num_heads)
       )
     self._attention_head_size = int(hidden_size // self._num_heads)
 
@@ -117,84 +115,84 @@ class TransformerScaffold(tf.keras.layers.Layer):
     else:
       if self._attention_cfg is None:
         attention_cfg = {
-            "num_heads": self._num_heads,
-            "head_size": self._attention_head_size,
-            "dropout_rate": self._attention_dropout_rate,
-            "kernel_initializer": self._kernel_initializer,
-            "bias_initializer": self._bias_initializer,
-            "kernel_regularizer": self._kernel_regularizer,
-            "bias_regularizer": self._bias_regularizer,
-            "activity_regularizer": self._activity_regularizer,
-            "kernel_constraint": self._kernel_constraint,
-            "bias_constraint": self._bias_constraint,
-            "name": "self_attention"
+          "num_heads": self._num_heads,
+          "head_size": self._attention_head_size,
+          "dropout_rate": self._attention_dropout_rate,
+          "kernel_initializer": self._kernel_initializer,
+          "bias_initializer": self._bias_initializer,
+          "kernel_regularizer": self._kernel_regularizer,
+          "bias_regularizer": self._bias_regularizer,
+          "activity_regularizer": self._activity_regularizer,
+          "kernel_constraint": self._kernel_constraint,
+          "bias_constraint": self._bias_constraint,
+          "name": "self_attention",
         }
       else:
         attention_cfg = self._attention_cfg
       self._attention_layer = self._attention_cls(**attention_cfg)
 
     self._attention_output_dense = dense_einsum.DenseEinsum(
-        output_shape=hidden_size,
-        num_summed_dimensions=2,
-        kernel_initializer=self._kernel_initializer,
-        bias_initializer=self._bias_initializer,
-        kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer,
-        activity_regularizer=self._activity_regularizer,
-        kernel_constraint=self._kernel_constraint,
-        bias_constraint=self._bias_constraint,
-        name="self_attention_output"
+      output_shape=hidden_size,
+      num_summed_dimensions=2,
+      kernel_initializer=self._kernel_initializer,
+      bias_initializer=self._bias_initializer,
+      kernel_regularizer=self._kernel_regularizer,
+      bias_regularizer=self._bias_regularizer,
+      activity_regularizer=self._activity_regularizer,
+      kernel_constraint=self._kernel_constraint,
+      bias_constraint=self._bias_constraint,
+      name="self_attention_output",
     )
     self._attention_dropout = tf.keras.layers.Dropout(rate=self._dropout_rate)
-    self._attention_layer_norm = (
-        tf.keras.layers.LayerNormalization(name="self_attention_layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32)
+    self._attention_layer_norm = tf.keras.layers.LayerNormalization(
+      name="self_attention_layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
     )
     self._intermediate_dense = dense_einsum.DenseEinsum(
-        output_shape=self._intermediate_size,
-        activation=self._intermediate_activation,
-        kernel_initializer=self._kernel_initializer,
-        bias_initializer=self._bias_initializer,
-        kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer,
-        activity_regularizer=self._activity_regularizer,
-        kernel_constraint=self._kernel_constraint,
-        bias_constraint=self._bias_constraint,
-        dtype=tf.float32,  # This layer is always float32 for numeric stability.
-        name="intermediate"
+      output_shape=self._intermediate_size,
+      activation=self._intermediate_activation,
+      kernel_initializer=self._kernel_initializer,
+      bias_initializer=self._bias_initializer,
+      kernel_regularizer=self._kernel_regularizer,
+      bias_regularizer=self._bias_regularizer,
+      activity_regularizer=self._activity_regularizer,
+      kernel_constraint=self._kernel_constraint,
+      bias_constraint=self._bias_constraint,
+      dtype=tf.float32,  # This layer is always float32 for numeric stability.
+      name="intermediate",
     )
     self._output_dense = dense_einsum.DenseEinsum(
-        output_shape=hidden_size,
-        kernel_initializer=self._kernel_initializer,
-        bias_initializer=self._bias_initializer,
-        kernel_regularizer=self._kernel_regularizer,
-        bias_regularizer=self._bias_regularizer,
-        activity_regularizer=self._activity_regularizer,
-        kernel_constraint=self._kernel_constraint,
-        bias_constraint=self._bias_constraint,
-        name="output"
+      output_shape=hidden_size,
+      kernel_initializer=self._kernel_initializer,
+      bias_initializer=self._bias_initializer,
+      kernel_regularizer=self._kernel_regularizer,
+      bias_regularizer=self._bias_regularizer,
+      activity_regularizer=self._activity_regularizer,
+      kernel_constraint=self._kernel_constraint,
+      bias_constraint=self._bias_constraint,
+      name="output",
     )
     self._output_dropout = tf.keras.layers.Dropout(rate=self._dropout_rate)
     self._output_layer_norm = tf.keras.layers.LayerNormalization(
-        name="output_layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
+      name="output_layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
     )
 
     super(TransformerScaffold, self).build(input_shape)
 
   def get_config(self):
     config = {
-        "attention_cls": self._attention_layer,
-        "num_attention_heads": self._num_heads,
-        "intermediate_size": self._intermediate_size,
-        "intermediate_activation": self._intermediate_activation,
-        "dropout_rate": self._dropout_rate,
-        "attention_dropout_rate": self._attention_dropout_rate,
-        "kernel_initializer": tf.keras.initializers.serialize(self._kernel_initializer),
-        "bias_initializer": tf.keras.initializers.serialize(self._bias_initializer),
-        "kernel_regularizer": tf.keras.regularizers.serialize(self._kernel_regularizer),
-        "bias_regularizer": tf.keras.regularizers.serialize(self._bias_regularizer),
-        "activity_regularizer": tf.keras.regularizers.serialize(self._activity_regularizer),
-        "kernel_constraint": tf.keras.constraints.serialize(self._kernel_constraint),
-        "bias_constraint": tf.keras.constraints.serialize(self._bias_constraint)
+      "attention_cls": self._attention_layer,
+      "num_attention_heads": self._num_heads,
+      "intermediate_size": self._intermediate_size,
+      "intermediate_activation": self._intermediate_activation,
+      "dropout_rate": self._dropout_rate,
+      "attention_dropout_rate": self._attention_dropout_rate,
+      "kernel_initializer": tf.keras.initializers.serialize(self._kernel_initializer),
+      "bias_initializer": tf.keras.initializers.serialize(self._bias_initializer),
+      "kernel_regularizer": tf.keras.regularizers.serialize(self._kernel_regularizer),
+      "bias_regularizer": tf.keras.regularizers.serialize(self._bias_regularizer),
+      "activity_regularizer": tf.keras.regularizers.serialize(self._activity_regularizer),
+      "kernel_constraint": tf.keras.constraints.serialize(self._kernel_constraint),
+      "bias_constraint": tf.keras.constraints.serialize(self._bias_constraint),
     }
     base_config = super(TransformerScaffold, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))

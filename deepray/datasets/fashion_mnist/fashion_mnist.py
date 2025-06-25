@@ -17,22 +17,21 @@
 import gzip
 import os
 import sys
+
 import numpy as np
 import tensorflow as tf
 from absl import flags
-from keras.utils.data_utils import get_file
+from keras.src.utils.data_utils import get_file
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 
-FLAGS = flags.FLAGS
-FLAGS([
-    sys.argv[0],
-    "--num_train_examples=60000",
+flags.FLAGS([
+  sys.argv[0],
+  "--num_train_examples=60000",
 ])
 
 
-class FashionMNIST(DataPipeLine):
-
+class FashionMNIST(DataPipeline):
   def __init__(self):
     """Loads the Fashion-MNIST dataset.
 
@@ -90,10 +89,10 @@ class FashionMNIST(DataPipeLine):
     dirname = os.path.join("datasets", "fashion-mnist")
     base = "https://storage.googleapis.com/tensorflow/tf-keras-datasets/"
     files = [
-        "train-labels-idx1-ubyte.gz",
-        "train-images-idx3-ubyte.gz",
-        "t10k-labels-idx1-ubyte.gz",
-        "t10k-images-idx3-ubyte.gz",
+      "train-labels-idx1-ubyte.gz",
+      "train-images-idx3-ubyte.gz",
+      "t10k-labels-idx1-ubyte.gz",
+      "t10k-images-idx3-ubyte.gz",
     ]
 
     self.paths = []
@@ -104,16 +103,8 @@ class FashionMNIST(DataPipeLine):
     pass
 
   def build_dataset(
-      self,
-      input_file_pattern,
-      batch_size,
-      is_training=True,
-      context: tf.distribute.InputContext = None,
-      use_horovod=False,
-      *args,
-      **kwargs
+    self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
-
     if is_training:
       with gzip.open(self.paths[0], "rb") as lbpath:
         y = np.frombuffer(lbpath.read(), np.uint8, offset=8)
@@ -127,8 +118,9 @@ class FashionMNIST(DataPipeLine):
       with gzip.open(self.paths[3], "rb") as imgpath:
         x = np.frombuffer(imgpath.read(), np.uint8, offset=16).reshape(len(y), 28, 28)
 
-    dataset = tf.data.Dataset.from_tensor_slices(
-        (tf.cast(x[..., tf.newaxis] / 255.0, tf.float32), tf.cast(y, tf.int64))
-    )
-    dataset = dataset.repeat(FLAGS.epochs).shuffle(10000).batch(batch_size)
+    dataset = tf.data.Dataset.from_tensor_slices((
+      tf.cast(x[..., tf.newaxis] / 255.0, tf.float32),
+      tf.cast(y, tf.int64),
+    ))
+    dataset = dataset.repeat(flags.FLAGS.epochs).shuffle(10000).batch(batch_size)
     return dataset

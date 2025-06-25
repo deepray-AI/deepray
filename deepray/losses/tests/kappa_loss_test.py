@@ -29,7 +29,7 @@ def weighted_kappa_loss_np(y_true, y_pred, weightage="quadratic", eps=1e-6):
   if weightage == "linear":
     weight = np.abs(label_mat - label_mat_)
   else:
-    weight = (label_mat - label_mat_)**2
+    weight = (label_mat - label_mat_) ** 2
   numerator = (y_pred * weight).sum()
   label_dist = y_true.sum(axis=0, keepdims=True)
   pred_dist = y_pred.sum(axis=0, keepdims=True)
@@ -38,7 +38,7 @@ def weighted_kappa_loss_np(y_true, y_pred, weightage="quadratic", eps=1e-6):
   row_mat = np.tile(row_label_vec, (num_classes, 1))
   col_mat = np.tile(col_label_vec, (1, num_classes))
   if weightage == "quadratic":
-    weight_ = (col_mat - row_mat)**2
+    weight_ = (col_mat - row_mat) ** 2
   else:
     weight_ = np.abs(col_mat - row_mat)
   weighted_pred_dist = np.matmul(weight_, pred_dist.T)
@@ -91,11 +91,9 @@ def test_serialization():
 
 
 def test_save_model(tmpdir):
-  model = tf.keras.models.Sequential(
-      [
-          tf.keras.layers.Input((256, 256, 3)),
-          tf.keras.layers.Dense(6, activation="softmax"),
-      ]
-  )
+  model = tf.keras.models.Sequential([
+    tf.keras.layers.Input((256, 256, 3)),
+    tf.keras.layers.Dense(6, activation="softmax"),
+  ])
   model.compile(optimizer="adam", loss=WeightedKappaLoss(num_classes=6))
   model.save(str(tmpdir / "test.h5"))

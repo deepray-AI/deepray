@@ -21,7 +21,7 @@ import tensorflow as tf
 
 
 def _id_key(name):
-  _, id_num = name.rsplit('-', maxsplit=1)
+  _, id_num = name.rsplit("-", maxsplit=1)
   return int(id_num)
 
 
@@ -30,7 +30,6 @@ def _id_sorted_file_base_names(dir_path):
 
 
 class TestModel(tf.Module):
-
   def __init__(self):
     self.value = tf.Variable(0)
 
@@ -40,10 +39,9 @@ class TestModel(tf.Module):
 
 
 class ExportSavedModelTest(tf.test.TestCase):
-
   def test_export_file_manager_default_ids(self):
     directory = self.create_tempdir()
-    base_name = os.path.join(directory.full_path, 'basename')
+    base_name = os.path.join(directory.full_path, "basename")
     manager = export_saved_model.ExportFileManager(base_name, max_to_keep=3)
     self.assertLen(tf.io.gfile.listdir(directory.full_path), 0)
     directory.create_file(manager.next_name())
@@ -58,16 +56,16 @@ class ExportSavedModelTest(tf.test.TestCase):
     directory.create_file(manager.next_name())
     self.assertLen(tf.io.gfile.listdir(directory.full_path), 4)
     self.assertEqual(
-        _id_sorted_file_base_names(directory.full_path), ['basename-0', 'basename-1', 'basename-2', 'basename-3']
+      _id_sorted_file_base_names(directory.full_path), ["basename-0", "basename-1", "basename-2", "basename-3"]
     )
     manager.clean_up()  # Should delete file with lowest ID.
-    self.assertEqual(_id_sorted_file_base_names(directory.full_path), ['basename-1', 'basename-2', 'basename-3'])
+    self.assertEqual(_id_sorted_file_base_names(directory.full_path), ["basename-1", "basename-2", "basename-3"])
     manager = export_saved_model.ExportFileManager(base_name, max_to_keep=3)
-    self.assertEqual(os.path.basename(manager.next_name()), 'basename-4')
+    self.assertEqual(os.path.basename(manager.next_name()), "basename-4")
 
   def test_export_file_manager_custom_ids(self):
     directory = self.create_tempdir()
-    base_name = os.path.join(directory.full_path, 'basename')
+    base_name = os.path.join(directory.full_path, "basename")
 
     id_num = 0
 
@@ -80,57 +78,57 @@ class ExportSavedModelTest(tf.test.TestCase):
     directory.create_file(manager.next_name())
     self.assertLen(tf.io.gfile.listdir(directory.full_path), 1)
     manager.clean_up()  # Shouldn't do anything...
-    self.assertEqual(_id_sorted_file_base_names(directory.full_path), ['basename-30'])
+    self.assertEqual(_id_sorted_file_base_names(directory.full_path), ["basename-30"])
     id_num = 200
     directory.create_file(manager.next_name())
     self.assertLen(tf.io.gfile.listdir(directory.full_path), 2)
     manager.clean_up()  # Shouldn't do anything...
-    self.assertEqual(_id_sorted_file_base_names(directory.full_path), ['basename-30', 'basename-200'])
+    self.assertEqual(_id_sorted_file_base_names(directory.full_path), ["basename-30", "basename-200"])
     id_num = 1000
     directory.create_file(manager.next_name())
     self.assertLen(tf.io.gfile.listdir(directory.full_path), 3)
-    self.assertEqual(_id_sorted_file_base_names(directory.full_path), ['basename-30', 'basename-200', 'basename-1000'])
+    self.assertEqual(_id_sorted_file_base_names(directory.full_path), ["basename-30", "basename-200", "basename-1000"])
     manager.clean_up()  # Should delete file with lowest ID.
     self.assertLen(tf.io.gfile.listdir(directory.full_path), 2)
-    self.assertEqual(_id_sorted_file_base_names(directory.full_path), ['basename-200', 'basename-1000'])
+    self.assertEqual(_id_sorted_file_base_names(directory.full_path), ["basename-200", "basename-1000"])
 
   def test_export_file_manager_managed_files(self):
     directory = self.create_tempdir()
-    directory.create_file('basename-5')
-    directory.create_file('basename-10')
-    directory.create_file('basename-50')
-    directory.create_file('basename-1000')
-    directory.create_file('basename-9')
-    directory.create_file('basename-10-suffix')
-    base_name = os.path.join(directory.full_path, 'basename')
+    directory.create_file("basename-5")
+    directory.create_file("basename-10")
+    directory.create_file("basename-50")
+    directory.create_file("basename-1000")
+    directory.create_file("basename-9")
+    directory.create_file("basename-10-suffix")
+    base_name = os.path.join(directory.full_path, "basename")
     manager = export_saved_model.ExportFileManager(base_name, max_to_keep=3)
     self.assertLen(manager.managed_files, 5)
-    self.assertEqual(manager.next_name(), f'{base_name}-1001')
+    self.assertEqual(manager.next_name(), f"{base_name}-1001")
     manager.clean_up()
-    self.assertEqual(manager.managed_files, [f'{base_name}-10', f'{base_name}-50', f'{base_name}-1000'])
+    self.assertEqual(manager.managed_files, [f"{base_name}-10", f"{base_name}-50", f"{base_name}-1000"])
 
   def test_export_file_manager_managed_files_double_slash(self):
-    directory = self.create_tempdir('foo//bar')
-    directory.create_file('basename-5')
-    directory.create_file('basename-10')
-    directory.create_file('basename-50')
-    directory.create_file('basename-1000')
-    directory.create_file('basename-9')
-    directory.create_file('basename-10-suffix')
-    base_name = os.path.join(directory.full_path, 'basename')
+    directory = self.create_tempdir("foo//bar")
+    directory.create_file("basename-5")
+    directory.create_file("basename-10")
+    directory.create_file("basename-50")
+    directory.create_file("basename-1000")
+    directory.create_file("basename-9")
+    directory.create_file("basename-10-suffix")
+    base_name = os.path.join(directory.full_path, "basename")
     expected_base_name = os.path.normpath(base_name)
     self.assertNotEqual(base_name, expected_base_name)
     manager = export_saved_model.ExportFileManager(base_name, max_to_keep=3)
     self.assertLen(manager.managed_files, 5)
-    self.assertEqual(manager.next_name(), f'{expected_base_name}-1001')
+    self.assertEqual(manager.next_name(), f"{expected_base_name}-1001")
     manager.clean_up()
     self.assertEqual(
-        manager.managed_files, [f'{expected_base_name}-10', f'{expected_base_name}-50', f'{expected_base_name}-1000']
+      manager.managed_files, [f"{expected_base_name}-10", f"{expected_base_name}-50", f"{expected_base_name}-1000"]
     )
 
   def test_export_saved_model(self):
     directory = self.create_tempdir()
-    base_name = os.path.join(directory.full_path, 'basename')
+    base_name = os.path.join(directory.full_path, "basename")
     file_manager = export_saved_model.ExportFileManager(base_name, max_to_keep=2)
     model = TestModel()
     export_action = export_saved_model.ExportSavedModel(model, file_manager=file_manager, signatures=model.__call__)
@@ -158,5 +156,5 @@ class ExportSavedModelTest(tf.test.TestCase):
     self.assertEqual(reloaded_model(), 7)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

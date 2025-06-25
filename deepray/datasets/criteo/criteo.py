@@ -17,17 +17,18 @@
 import sys
 
 from absl import flags
+from tensorflow.python.distribute.distribute_lib import InputContext
 
-from deepray.datasets.datapipeline import DataPipeLine
-
-FLAGS = flags.FLAGS
-FLAGS([
-    sys.argv[0],
-    "--num_train_examples=11932672",
-])
+from deepray.datasets.datapipeline import DataPipeline
 
 
-class Criteo(DataPipeLine):
+class Criteo(DataPipeline):
+  def __init__(self, context: InputContext = None, **kwargs):
+    super().__init__(context, **kwargs)
+    flags.FLAGS([
+      sys.argv[0],
+      "--num_train_examples=11932672",
+    ])
 
-  def build_dataset(self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, *args, **kwargs):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, *args, **kwargs):
     pass

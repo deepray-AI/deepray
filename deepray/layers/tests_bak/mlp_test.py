@@ -20,13 +20,9 @@ from deepray.layers.mlp import MLP
 
 
 class MLPTest(tf.test.TestCase):
-
   def test_mlp_instantiate(self):
     mlp1 = MLP(
-        name='test_dense0',
-        hidden_units=[1, 3, 4, 5],
-        activations=None,
-        initializers=tf.keras.initializers.GlorotNormal()
+      name="test_dense0", hidden_units=[1, 3, 4, 5], activations=None, initializers=tf.keras.initializers.GlorotNormal()
     )
     print(mlp1)
 
@@ -47,11 +43,11 @@ class MLPTest(tf.test.TestCase):
 
   def test_mlp_call(self):
     layer = MLP(
-        name='test_dense0',
-        hidden_units=[100, 50, 10, 1],
-        enable_batch_normalization=True,
-        activations=['relu', tf.keras.activations.tanh, tf.keras.activations.relu, None],
-        initializers=tf.keras.initializers.GlorotNormal(),
+      name="test_dense0",
+      hidden_units=[100, 50, 10, 1],
+      enable_batch_normalization=True,
+      activations=["relu", tf.keras.activations.tanh, tf.keras.activations.relu, None],
+      initializers=tf.keras.initializers.GlorotNormal(),
     )
     data = tf.keras.backend.variable(np.ones((100, 100)))
     sum_out = tf.reduce_sum(layer(data))
@@ -60,5 +56,5 @@ class MLPTest(tf.test.TestCase):
       print(sess.run(sum_out))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

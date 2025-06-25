@@ -13,6 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
 
@@ -46,10 +47,9 @@ REGISTER_OP("Deepray>UniqueV2")
     .SetShapeFn([](InferenceContext* c) {
       c->set_output(0, c->Vector(InferenceContext::kUnknownDim));
       c->set_output(1, c->input(0));
-      return Status::OK();
+      return TFOkStatus;
     });
 
-// --------------------------------------------------------------------------
 REGISTER_OP("Deepray>UniqueWithCounts")
     .Input("x: T")
     .Output("y: T")
@@ -62,7 +62,7 @@ REGISTER_OP("Deepray>UniqueWithCounts")
       c->set_output(0, uniq);
       c->set_output(1, c->input(0));
       c->set_output(2, uniq);
-      return Status::OK();
+      return TFOkStatus;
     });
 
 REGISTER_OP("Deepray>UniqueWithCountsV2")
@@ -79,7 +79,25 @@ REGISTER_OP("Deepray>UniqueWithCountsV2")
       c->set_output(0, uniq);
       c->set_output(1, c->input(0));
       c->set_output(2, uniq);
-      return Status::OK();
+      return TFOkStatus;
+    });
+
+REGISTER_OP("Deepray>UniqueWithExtraCounts")
+    .Input("x: T")
+    .Input("extra_indices: N * T")
+    .Input("extra_counts: N * out_idx")
+    .Output("y: T")
+    .Output("idx: out_idx")
+    .Output("count: out_idx")
+    .Attr("T: type")
+    .Attr("N: int >= 0")
+    .Attr("out_idx: {int32, int64} = DT_INT32")
+    .SetShapeFn([](InferenceContext* c) {
+      auto uniq = c->Vector(InferenceContext::kUnknownDim);
+      c->set_output(0, uniq);
+      c->set_output(1, c->input(0));
+      c->set_output(2, uniq);
+      return TFOkStatus;
     });
 
 }  // namespace tensorflow

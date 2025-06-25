@@ -47,7 +47,7 @@ echo "Container nvidia build = " $NVIDIA_BUILD_ID
 
 PREC=""
 if [ "$precision" = "fp16" ] ; then
-   PREC="--dtype=fp16"
+   PREC="--use_fp16"
 elif [ "$precision" = "fp32" ] || [ "$precision" = "tf32" ] ; then
    PREC=""
 else
@@ -90,12 +90,12 @@ $mpi python /workspace/bert_tf2/run_pretraining.py \
     --input_files=$INPUT_FILES \
     --init_checkpoint=$PHASE1_CKPT \
     --model_dir=$RESULTS_DIR_PHASE2 \
-    --config_file=$BERT_CONFIG \
+    --bert_config_file=$BERT_CONFIG \
     --train_batch_size=$train_batch_size_phase2 \
     --max_seq_length=$seq_len \
     --max_predictions_per_seq=$max_pred_per_seq \
-    --num_steps_per_epoch=$train_steps_phase2 --epochs=1 \
-    --steps_per_summary=$save_checkpoints_steps \
+    --num_steps_per_epoch=$train_steps_phase2 --num_train_epochs=1 \
+    --steps_per_loop=$save_checkpoints_steps \
     --save_checkpoint_steps=$save_checkpoints_steps \
     --warmup_steps=$warmup_steps_phase2 \
     --num_accumulation_steps=$num_accumulation_steps_phase2 \

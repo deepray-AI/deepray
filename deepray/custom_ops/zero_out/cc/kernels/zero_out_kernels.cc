@@ -15,6 +15,11 @@ limitations under the License.
 
 #include "tensorflow/core/framework/op_kernel.h"
 
+#define PRINT_MACRO_HELPER(x) #x
+#define PRINT_MACRO(x) #x "=" PRINT_MACRO_HELPER(x)
+
+#pragma message(PRINT_MACRO(_GLIBCXX_USE_CXX11_ABI))
+
 using namespace tensorflow;
 
 class ZeroOutOp : public OpKernel {
@@ -24,6 +29,10 @@ class ZeroOutOp : public OpKernel {
   void Compute(OpKernelContext* context) override {
     // Grab the input tensor
     const Tensor& input_tensor = context->input(0);
+
+    OP_REQUIRES(context, TensorShapeUtils::IsVector(input_tensor.shape()),
+                errors::InvalidArgument("ZeroOut expects a 1-D vector."));
+
     auto input = input_tensor.flat<int32>();
 
     // Create an output tensor

@@ -6,12 +6,10 @@ import deepray as dp
 from absl import app, flags
 from tensorflow import keras
 
-from deepray.core.base_trainer import Trainer
+from deepray.core.trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets.cifar import CIFAR100
 from .model import BaseModel
-
-FLAGS = flags.FLAGS
 
 learning_rate = 1e-3
 batch_size = 128
@@ -26,30 +24,32 @@ def main(_):
   data_pipe = CIFAR100()
   with distribution_utils.get_strategy_scope(_strategy):
     model = BaseModel(
-        input_shape=(32, 32, 3),
-        patch_size=(2, 2),  # 2-by-2 sized patches
-        dropout_rate=0.03,  # Dropout rate
-        num_heads=8,  # Attention heads
-        embed_dim=64,  # Embedding dimension
-        num_mlp=256,  # MLP layer size
-        qkv_bias=True,  # Convert embedded patches to query, key, and values with a learnable additive value
-        window_size=2,  # Size of attention window
-        shift_size=1,  # Size of shifting window
-        image_dimension=32,  # Initial image size
+      input_shape=(32, 32, 3),
+      patch_size=(2, 2),  # 2-by-2 sized patches
+      dropout_rate=0.03,  # Dropout rate
+      num_heads=8,  # Attention heads
+      embed_dim=64,  # Embedding dimension
+      num_mlp=256,  # MLP layer size
+      qkv_bias=True,  # Convert embedded patches to query, key, and values with a learnable additive value
+      window_size=2,  # Size of attention window
+      shift_size=1,  # Size of shifting window
+      image_dimension=32,  # Initial image size
     )(num_classes=100)
 
   trainer = Trainer(
-      model=model,
-      loss=keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing),
-      optimizer=dp.optimizers.AdamW(learning_rate=learning_rate, weight_decay=weight_decay),
-      metrics=[
-          keras.metrics.CategoricalAccuracy(name="accuracy"),
-          keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
-      ],
+    model=model,
+    loss=keras.losses.CategoricalCrossentropy(label_smoothing=label_smoothing),
+    optimizer=dp.optimizers.AdamW(learning_rate=learning_rate, weight_decay=weight_decay),
+    metrics=[
+      keras.metrics.CategoricalAccuracy(name="accuracy"),
+      keras.metrics.TopKCategoricalAccuracy(5, name="top-5-accuracy"),
+    ],
   )
 
   train_input_fn = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
-  trainer.fit(train_input=train_input_fn,)
+  trainer.fit(
+    train_input=train_input_fn,
+  )
 
   # trainer.export_tfra()
   """

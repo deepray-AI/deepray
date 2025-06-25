@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for the customized Swish activation."""
+
 import numpy as np
 import tensorflow as tf
 
@@ -19,23 +20,22 @@ from deepray import activations
 
 
 class CustomizedSwishTest(tf.test.TestCase):
-
   def _hard_swish_np(self, x):
     x = np.float32(x)
     return x * np.clip(x + 3, 0, 6) / 6
 
   def test_simple_swish(self):
-    features = [[.25, 0, -.25], [-1, -2, 3]]
+    features = [[0.25, 0, -0.25], [-1, -2, 3]]
     customized_swish_data = activations.simple_swish(features)
     swish_data = tf.nn.swish(features)
     self.assertAllClose(customized_swish_data, swish_data)
 
   def test_hard_swish(self):
-    features = [[.25, 0, -.25], [-1, -2, 3]]
+    features = [[0.25, 0, -0.25], [-1, -2, 3]]
     customized_swish_data = activations.hard_swish(features)
     swish_data = self._hard_swish_np(features)
     self.assertAllClose(customized_swish_data, swish_data)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

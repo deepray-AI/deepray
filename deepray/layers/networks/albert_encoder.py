@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ALBERT (https://arxiv.org/abs/1810.04805) text encoder network."""
+
 # pylint: disable=g-classes-have-attributes
 import collections
 import tensorflow as tf
@@ -20,7 +21,7 @@ from deepray.layers import tf_utils
 from deepray import layers
 
 
-@tf.keras.utils.register_keras_serializable(package='Text')
+@tf.keras.utils.register_keras_serializable(package="Text")
 class AlbertEncoder(tf.keras.Model):
   """ALBERT (https://arxiv.org/abs/1810.04805) text encoder network.
 
@@ -62,82 +63,79 @@ class AlbertEncoder(tf.keras.Model):
   """
 
   def __init__(
-      self,
-      vocab_size,
-      embedding_width=128,
-      hidden_size=768,
-      num_layers=12,
-      num_attention_heads=12,
-      max_sequence_length=512,
-      type_vocab_size=16,
-      intermediate_size=3072,
-      activation=tf.keras.activations.gelu,
-      dropout_rate=0.1,
-      attention_dropout_rate=0.1,
-      initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02),
-      dict_outputs=False,
-      **kwargs
+    self,
+    vocab_size,
+    embedding_width=128,
+    hidden_size=768,
+    num_layers=12,
+    num_attention_heads=12,
+    max_sequence_length=512,
+    type_vocab_size=16,
+    intermediate_size=3072,
+    activation=tf.keras.activations.gelu,
+    dropout_rate=0.1,
+    attention_dropout_rate=0.1,
+    initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02),
+    dict_outputs=False,
+    **kwargs,
   ):
     activation = tf.keras.activations.get(activation)
     initializer = tf.keras.initializers.get(initializer)
 
-    word_ids = tf.keras.layers.Input(shape=(None,), dtype=tf.int32, name='input_word_ids')
-    mask = tf.keras.layers.Input(shape=(None,), dtype=tf.int32, name='input_mask')
-    type_ids = tf.keras.layers.Input(shape=(None,), dtype=tf.int32, name='input_type_ids')
+    word_ids = tf.keras.layers.Input(shape=(None,), dtype=tf.int32, name="input_word_ids")
+    mask = tf.keras.layers.Input(shape=(None,), dtype=tf.int32, name="input_mask")
+    type_ids = tf.keras.layers.Input(shape=(None,), dtype=tf.int32, name="input_type_ids")
 
     if embedding_width is None:
       embedding_width = hidden_size
     embedding_layer = layers.OnDeviceEmbedding(
-        vocab_size=vocab_size,
-        embedding_width=embedding_width,
-        initializer=tf_utils.clone_initializer(initializer),
-        name='word_embeddings'
+      vocab_size=vocab_size,
+      embedding_width=embedding_width,
+      initializer=tf_utils.clone_initializer(initializer),
+      name="word_embeddings",
     )
     word_embeddings = embedding_layer(word_ids)
 
     # Always uses dynamic slicing for simplicity.
     position_embedding_layer = layers.PositionEmbedding(
-        initializer=tf_utils.clone_initializer(initializer), max_length=max_sequence_length, name='position_embedding'
+      initializer=tf_utils.clone_initializer(initializer), max_length=max_sequence_length, name="position_embedding"
     )
     position_embeddings = position_embedding_layer(word_embeddings)
 
-    type_embeddings = (
-        layers.OnDeviceEmbedding(
-            vocab_size=type_vocab_size,
-            embedding_width=embedding_width,
-            initializer=tf_utils.clone_initializer(initializer),
-            use_one_hot=True,
-            name='type_embeddings'
-        )(type_ids)
-    )
+    type_embeddings = layers.OnDeviceEmbedding(
+      vocab_size=type_vocab_size,
+      embedding_width=embedding_width,
+      initializer=tf_utils.clone_initializer(initializer),
+      use_one_hot=True,
+      name="type_embeddings",
+    )(type_ids)
 
     embeddings = tf.keras.layers.Add()([word_embeddings, position_embeddings, type_embeddings])
-    embeddings = (
-        tf.keras.layers.LayerNormalization(name='embeddings/layer_norm', axis=-1, epsilon=1e-12,
-                                           dtype=tf.float32)(embeddings)
-    )
-    embeddings = (tf.keras.layers.Dropout(rate=dropout_rate)(embeddings))
+    embeddings = tf.keras.layers.LayerNormalization(
+      name="embeddings/layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
+    )(embeddings)
+    embeddings = tf.keras.layers.Dropout(rate=dropout_rate)(embeddings)
     # We project the 'embedding' output to 'hidden_size' if it is not already
     # 'hidden_size'.
     if embedding_width != hidden_size:
       embeddings = tf.keras.layers.EinsumDense(
-          '...x,xy->...y',
-          output_shape=hidden_size,
-          bias_axes='y',
-          kernel_initializer=tf_utils.clone_initializer(initializer),
-          name='embedding_projection'
+        "...x,xy->...y",
+        output_shape=hidden_size,
+        bias_axes="y",
+        kernel_initializer=tf_utils.clone_initializer(initializer),
+        name="embedding_projection",
       )(embeddings)
 
     data = embeddings
     attention_mask = layers.SelfAttentionMask()(data, mask)
     shared_layer = layers.TransformerEncoderBlock(
-        num_attention_heads=num_attention_heads,
-        inner_dim=intermediate_size,
-        inner_activation=activation,
-        output_dropout=dropout_rate,
-        attention_dropout=attention_dropout_rate,
-        kernel_initializer=tf_utils.clone_initializer(initializer),
-        name='transformer'
+      num_attention_heads=num_attention_heads,
+      inner_dim=intermediate_size,
+      inner_activation=activation,
+      output_dropout=dropout_rate,
+      attention_dropout=attention_dropout_rate,
+      kernel_initializer=tf_utils.clone_initializer(initializer),
+      name="transformer",
     )
     encoder_outputs = []
     for _ in range(num_layers):
@@ -149,16 +147,16 @@ class AlbertEncoder(tf.keras.Model):
     # layer with Python code, because that is fundamentally less portable.
     first_token_tensor = data[:, 0, :]
     cls_output = tf.keras.layers.Dense(
-        units=hidden_size,
-        activation='tanh',
-        kernel_initializer=tf_utils.clone_initializer(initializer),
-        name='pooler_transform'
+      units=hidden_size,
+      activation="tanh",
+      kernel_initializer=tf_utils.clone_initializer(initializer),
+      name="pooler_transform",
     )(first_token_tensor)
     if dict_outputs:
       outputs = dict(
-          sequence_output=data,
-          encoder_outputs=encoder_outputs,
-          pooled_output=cls_output,
+        sequence_output=data,
+        encoder_outputs=encoder_outputs,
+        pooled_output=cls_output,
       )
     else:
       outputs = [data, cls_output]
@@ -172,18 +170,18 @@ class AlbertEncoder(tf.keras.Model):
     # below this line.
     super().__init__(inputs=[word_ids, mask, type_ids], outputs=outputs, **kwargs)
     config_dict = {
-        'vocab_size': vocab_size,
-        'embedding_width': embedding_width,
-        'hidden_size': hidden_size,
-        'num_layers': num_layers,
-        'num_attention_heads': num_attention_heads,
-        'max_sequence_length': max_sequence_length,
-        'type_vocab_size': type_vocab_size,
-        'intermediate_size': intermediate_size,
-        'activation': tf.keras.activations.serialize(activation),
-        'dropout_rate': dropout_rate,
-        'attention_dropout_rate': attention_dropout_rate,
-        'initializer': tf.keras.initializers.serialize(initializer),
+      "vocab_size": vocab_size,
+      "embedding_width": embedding_width,
+      "hidden_size": hidden_size,
+      "num_layers": num_layers,
+      "num_attention_heads": num_attention_heads,
+      "max_sequence_length": max_sequence_length,
+      "type_vocab_size": type_vocab_size,
+      "intermediate_size": intermediate_size,
+      "activation": tf.keras.activations.serialize(activation),
+      "dropout_rate": dropout_rate,
+      "attention_dropout_rate": attention_dropout_rate,
+      "initializer": tf.keras.initializers.serialize(initializer),
     }
 
     # We are storing the config dict as a namedtuple here to ensure checkpoint
@@ -191,7 +189,7 @@ class AlbertEncoder(tf.keras.Model):
     # the config dict attribute. TF does not track immutable attrs which
     # do not contain Trackables, so by creating a config namedtuple instead of
     # a dict we avoid tracking it.
-    config_cls = collections.namedtuple('Config', config_dict.keys())
+    config_cls = collections.namedtuple("Config", config_dict.keys())
     self._config = config_cls(**config_dict)
     self._embedding_layer = embedding_layer
     self._position_embedding_layer = position_embedding_layer

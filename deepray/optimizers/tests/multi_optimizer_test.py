@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for CompositeOptimizer."""
+
 import os.path
 import tempfile
 
@@ -24,7 +25,6 @@ from deepray.optimizers.multi_optimizer import MultiOptimizer
 
 
 class CompositeOptimizerTest(tf.test.TestCase, parameterized.TestCase):
-
   @parameterized.parameters(("sgd", "adam"), ("rmsprop", "sgd"), ("adam", "adagrad"), ("adagrad", "rmsprop"))
   def test_composite_optimizer(self, optimizer1_type, optimizer2_type):
     values1 = [1.0, 2.0, 3.0]
@@ -44,20 +44,21 @@ class CompositeOptimizerTest(tf.test.TestCase, parameterized.TestCase):
     grads3 = tf.constant(grad3_values)
 
     optimizer_dict = {
-        "sgd": tf.keras.optimizers.legacy.SGD,
-        "adam": tf.keras.optimizers.legacy.Adam,
-        "rmsprop": tf.keras.optimizers.legacy.RMSprop,
-        "adagrad": tf.keras.optimizers.legacy.Adagrad,
+      "sgd": tf.keras.optimizers.legacy.SGD,
+      "adam": tf.keras.optimizers.legacy.Adam,
+      "rmsprop": tf.keras.optimizers.legacy.RMSprop,
+      "adagrad": tf.keras.optimizers.legacy.Adagrad,
     }
 
     comp_optimizer1 = optimizer_dict[optimizer1_type]()
     comp_optimizer2 = optimizer_dict[optimizer2_type]()
 
     composite_optimizer = MultiOptimizer(
-        [
-            (comp_optimizer1, "var1"),
-            (comp_optimizer2, "var2,var3"),
-        ], default_optimizer=comp_optimizer1
+      [
+        (comp_optimizer1, "var1"),
+        (comp_optimizer2, "var2,var3"),
+      ],
+      default_optimizer=comp_optimizer1,
     )
 
     self.assertSequenceEqual(composite_optimizer.optimizers, [comp_optimizer1, comp_optimizer2])
@@ -67,7 +68,8 @@ class CompositeOptimizerTest(tf.test.TestCase, parameterized.TestCase):
 
     grads_and_vars_1 = [(tf.constant(grad1_values), tf.Variable(values1))]
     grads_and_vars_2 = [
-        (tf.constant(grad2_values), tf.Variable(values2)), (tf.constant(grad3_values), tf.Variable(values3))
+      (tf.constant(grad2_values), tf.Variable(values2)),
+      (tf.constant(grad3_values), tf.Variable(values3)),
     ]
     grads_and_vars = list(zip([grads1, grads2, grads3], [var1, var2, var3]))
 

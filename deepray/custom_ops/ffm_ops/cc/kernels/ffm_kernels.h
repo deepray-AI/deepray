@@ -25,7 +25,7 @@ namespace monolith_tf {
 
 template <typename Device>
 struct FFMImpl {
-  static void Compute(OpKernelContext *ctx, const std::string &int_type,
+  static void Compute(OpKernelContext* ctx, const std::string& int_type,
                       TTypes<float>::ConstMatrix left_matrix, int left_feat_num,
                       TTypes<float>::ConstMatrix right_matrix,
                       int right_feat_num, int batch_size, int dim_size,
@@ -34,7 +34,7 @@ struct FFMImpl {
 
 template <typename Device>
 struct FFMGradImpl {
-  static void Compute(OpKernelContext *ctx, const std::string &int_type,
+  static void Compute(OpKernelContext* ctx, const std::string& int_type,
                       TTypes<float>::ConstMatrix grad_matrix, int grad_feat_num,
                       TTypes<float>::ConstMatrix left_matrix, int left_feat_num,
                       TTypes<float>::ConstMatrix right_matrix,
@@ -46,13 +46,13 @@ struct FFMGradImpl {
 template <typename Device>
 class FFMOp : public OpKernel {
  public:
-  explicit FFMOp(OpKernelConstruction *ctx) : OpKernel(ctx) {
+  explicit FFMOp(OpKernelConstruction* ctx) : OpKernel(ctx) {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("dim_size", &dim_size_));
     OP_REQUIRES_OK(ctx, ctx->GetAttr("int_type", &int_type_));
   }
 
-  void Compute(OpKernelContext *ctx) override {
-    const Tensor *left_tensor;
+  void Compute(OpKernelContext* ctx) override {
+    const Tensor* left_tensor;
     OP_REQUIRES_OK(ctx, ctx->input("left", &left_tensor));
     OP_REQUIRES(
         ctx, left_tensor->dims() == 2,
@@ -61,7 +61,7 @@ class FFMOp : public OpKernel {
     int64 left_feat_num = left_tensor->dim_size(1) / dim_size_;
     auto left_matrix = left_tensor->matrix<float>();
 
-    const Tensor *right_tensor;
+    const Tensor* right_tensor;
     OP_REQUIRES_OK(ctx, ctx->input("right", &right_tensor));
     OP_REQUIRES(
         ctx, left_tensor->dims() == 2,
@@ -72,7 +72,7 @@ class FFMOp : public OpKernel {
     int64 right_feat_num = right_tensor->dim_size(1) / dim_size_;
     auto right_matrix = right_tensor->matrix<float>();
 
-    Tensor *output_tensor = nullptr;
+    Tensor* output_tensor = nullptr;
     int out_last_dim = 0;
     if (int_type_ == "dot") {
       out_last_dim = left_feat_num * right_feat_num;
@@ -96,13 +96,13 @@ class FFMOp : public OpKernel {
 template <typename Device>
 class FFMGradOp : public OpKernel {
  public:
-  explicit FFMGradOp(OpKernelConstruction *ctx) : OpKernel(ctx) {
+  explicit FFMGradOp(OpKernelConstruction* ctx) : OpKernel(ctx) {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("dim_size", &dim_size_));
     OP_REQUIRES_OK(ctx, ctx->GetAttr("int_type", &int_type_));
   }
 
-  void Compute(OpKernelContext *ctx) override {
-    const Tensor *grad_tensor;
+  void Compute(OpKernelContext* ctx) override {
+    const Tensor* grad_tensor;
     OP_REQUIRES_OK(ctx, ctx->input("grad", &grad_tensor));
     OP_REQUIRES(ctx, grad_tensor->dims() == 2,
                 errors::InvalidArgument("the grad tensor of ffm is not 2D"));
@@ -116,7 +116,7 @@ class FFMGradOp : public OpKernel {
 
     auto grad_matrix = grad_tensor->matrix<float>();
 
-    const Tensor *left_tensor;
+    const Tensor* left_tensor;
     OP_REQUIRES_OK(ctx, ctx->input("left", &left_tensor));
     OP_REQUIRES(
         ctx, left_tensor->dims() == 2,
@@ -124,7 +124,7 @@ class FFMGradOp : public OpKernel {
     int64 left_feat_num = left_tensor->dim_size(1) / dim_size_;
     auto left_matrix = left_tensor->matrix<float>();
 
-    const Tensor *right_tensor;
+    const Tensor* right_tensor;
     OP_REQUIRES_OK(ctx, ctx->input("right", &right_tensor));
     OP_REQUIRES(
         ctx, left_tensor->dims() == 2,
@@ -135,12 +135,12 @@ class FFMGradOp : public OpKernel {
     OP_REQUIRES(ctx, grad_feat_num == left_feat_num * right_feat_num,
                 errors::InvalidArgument("the in/out shape not match"));
 
-    Tensor *left_grad_tensor = nullptr;
+    Tensor* left_grad_tensor = nullptr;
     OP_REQUIRES_OK(
         ctx, ctx->allocate_output(0, left_tensor->shape(), &left_grad_tensor));
     auto left_grad_matrix = left_grad_tensor->matrix<float>();
 
-    Tensor *right_grad_tensor = nullptr;
+    Tensor* right_grad_tensor = nullptr;
     OP_REQUIRES_OK(ctx, ctx->allocate_output(1, right_tensor->shape(),
                                              &right_grad_tensor));
     auto right_grad_matrix = right_grad_tensor->matrix<float>();

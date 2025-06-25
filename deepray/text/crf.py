@@ -28,47 +28,47 @@ from typing import Optional, Tuple
 def crf_filtered_inputs(inputs: TensorLike, tag_bitmap: TensorLike) -> tf.Tensor:
   """Constrains the inputs to filter out certain tags at each time step.
 
-    tag_bitmap limits the allowed tags at each input time step.
-    This is useful when an observed output at a given time step needs to be
-    constrained to a selected set of tags.
+  tag_bitmap limits the allowed tags at each input time step.
+  This is useful when an observed output at a given time step needs to be
+  constrained to a selected set of tags.
 
-    Args:
-      inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials
-          to use as input to the CRF layer.
-      tag_bitmap: A [batch_size, max_seq_len, num_tags] boolean tensor
-          representing all active tags at each index for which to calculate the
-          unnormalized score.
-    Returns:
-      filtered_inputs: A [batch_size] vector of unnormalized sequence scores.
-    """
+  Args:
+    inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials
+        to use as input to the CRF layer.
+    tag_bitmap: A [batch_size, max_seq_len, num_tags] boolean tensor
+        representing all active tags at each index for which to calculate the
+        unnormalized score.
+  Returns:
+    filtered_inputs: A [batch_size] vector of unnormalized sequence scores.
+  """
 
   # set scores of filtered out inputs to be -inf.
   filtered_inputs = tf.where(
-      tag_bitmap,
-      inputs,
-      tf.fill(tf.shape(inputs), tf.cast(float("-inf"), inputs.dtype)),
+    tag_bitmap,
+    inputs,
+    tf.fill(tf.shape(inputs), tf.cast(float("-inf"), inputs.dtype)),
   )
   return filtered_inputs
 
 
 def crf_sequence_score(
-    inputs: TensorLike,
-    tag_indices: TensorLike,
-    sequence_lengths: TensorLike,
-    transition_params: TensorLike,
+  inputs: TensorLike,
+  tag_indices: TensorLike,
+  sequence_lengths: TensorLike,
+  transition_params: TensorLike,
 ) -> tf.Tensor:
   """Computes the unnormalized score for a tag sequence.
 
-    Args:
-      inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials
-          to use as input to the CRF layer.
-      tag_indices: A [batch_size, max_seq_len] matrix of tag indices for which
-          we compute the unnormalized score.
-      sequence_lengths: A [batch_size] vector of true sequence lengths.
-      transition_params: A [num_tags, num_tags] transition matrix.
-    Returns:
-      sequence_scores: A [batch_size] vector of unnormalized sequence scores.
-    """
+  Args:
+    inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials
+        to use as input to the CRF layer.
+    tag_indices: A [batch_size, max_seq_len] matrix of tag indices for which
+        we compute the unnormalized score.
+    sequence_lengths: A [batch_size] vector of true sequence lengths.
+    transition_params: A [num_tags, num_tags] transition matrix.
+  Returns:
+    sequence_scores: A [batch_size] vector of unnormalized sequence scores.
+  """
   tag_indices = tf.cast(tag_indices, dtype=tf.int32)
   sequence_lengths = tf.cast(sequence_lengths, dtype=tf.int32)
 
@@ -86,9 +86,9 @@ def crf_sequence_score(
     sequence_scores = tf.gather_nd(inputs, indices)
 
     sequence_scores = tf.where(
-        tf.less_equal(sequence_lengths, 0),
-        tf.zeros_like(sequence_scores),
-        sequence_scores,
+      tf.less_equal(sequence_lengths, 0),
+      tf.zeros_like(sequence_scores),
+      sequence_scores,
     )
     return sequence_scores
 
@@ -103,33 +103,33 @@ def crf_sequence_score(
 
 
 def crf_multitag_sequence_score(
-    inputs: TensorLike,
-    tag_bitmap: TensorLike,
-    sequence_lengths: TensorLike,
-    transition_params: TensorLike,
+  inputs: TensorLike,
+  tag_bitmap: TensorLike,
+  sequence_lengths: TensorLike,
+  transition_params: TensorLike,
 ) -> tf.Tensor:
   """Computes the unnormalized score of all tag sequences matching
-    tag_bitmap.
+  tag_bitmap.
 
-    tag_bitmap enables more than one tag to be considered correct at each time
-    step. This is useful when an observed output at a given time step is
-    consistent with more than one tag, and thus the log likelihood of that
-    observation must take into account all possible consistent tags.
+  tag_bitmap enables more than one tag to be considered correct at each time
+  step. This is useful when an observed output at a given time step is
+  consistent with more than one tag, and thus the log likelihood of that
+  observation must take into account all possible consistent tags.
 
-    Using one-hot vectors in tag_bitmap gives results identical to
-    crf_sequence_score.
+  Using one-hot vectors in tag_bitmap gives results identical to
+  crf_sequence_score.
 
-    Args:
-      inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials
-          to use as input to the CRF layer.
-      tag_bitmap: A [batch_size, max_seq_len, num_tags] boolean tensor
-          representing all active tags at each index for which to calculate the
-          unnormalized score.
-      sequence_lengths: A [batch_size] vector of true sequence lengths.
-      transition_params: A [num_tags, num_tags] transition matrix.
-    Returns:
-      sequence_scores: A [batch_size] vector of unnormalized sequence scores.
-    """
+  Args:
+    inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials
+        to use as input to the CRF layer.
+    tag_bitmap: A [batch_size, max_seq_len, num_tags] boolean tensor
+        representing all active tags at each index for which to calculate the
+        unnormalized score.
+    sequence_lengths: A [batch_size] vector of true sequence lengths.
+    transition_params: A [num_tags, num_tags] transition matrix.
+  Returns:
+    sequence_scores: A [batch_size] vector of unnormalized sequence scores.
+  """
   tag_bitmap = tf.cast(tag_bitmap, dtype=tf.bool)
   sequence_lengths = tf.cast(sequence_lengths, dtype=tf.int32)
   filtered_inputs = crf_filtered_inputs(inputs, tag_bitmap)
@@ -143,9 +143,9 @@ def crf_multitag_sequence_score(
     # Compute the logsumexp of all scores of sequences
     # matching the given tags.
     return crf_log_norm(
-        inputs=filtered_inputs,
-        sequence_lengths=sequence_lengths,
-        transition_params=transition_params,
+      inputs=filtered_inputs,
+      sequence_lengths=sequence_lengths,
+      transition_params=transition_params,
     )
 
   return tf.cond(tf.equal(tf.shape(inputs)[1], 1), _single_seq_fn, _multi_seq_fn)
@@ -154,14 +154,14 @@ def crf_multitag_sequence_score(
 def crf_log_norm(inputs: TensorLike, sequence_lengths: TensorLike, transition_params: TensorLike) -> tf.Tensor:
   """Computes the normalization for a CRF.
 
-    Args:
-      inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials
-          to use as input to the CRF layer.
-      sequence_lengths: A [batch_size] vector of true sequence lengths.
-      transition_params: A [num_tags, num_tags] transition matrix.
-    Returns:
-      log_norm: A [batch_size] vector of normalizers for a CRF.
-    """
+  Args:
+    inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials
+        to use as input to the CRF layer.
+    sequence_lengths: A [batch_size] vector of true sequence lengths.
+    transition_params: A [num_tags, num_tags] transition matrix.
+  Returns:
+    log_norm: A [batch_size] vector of normalizers for a CRF.
+  """
   sequence_lengths = tf.cast(sequence_lengths, dtype=tf.int32)
   # Split up the first and rest of the inputs in preparation for the forward
   # algorithm.
@@ -192,27 +192,27 @@ def crf_log_norm(inputs: TensorLike, sequence_lengths: TensorLike, transition_pa
 
 
 def crf_log_likelihood(
-    inputs: TensorLike,
-    tag_indices: TensorLike,
-    sequence_lengths: TensorLike,
-    transition_params: Optional[TensorLike] = None,
+  inputs: TensorLike,
+  tag_indices: TensorLike,
+  sequence_lengths: TensorLike,
+  transition_params: Optional[TensorLike] = None,
 ) -> Tuple[tf.Tensor, tf.Tensor]:
   """Computes the log-likelihood of tag sequences in a CRF.
 
-    Args:
-      inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials
-          to use as input to the CRF layer.
-      tag_indices: A [batch_size, max_seq_len] matrix of tag indices for which
-          we compute the log-likelihood.
-      sequence_lengths: A [batch_size] vector of true sequence lengths.
-      transition_params: A [num_tags, num_tags] transition matrix,
-          if available.
-    Returns:
-      log_likelihood: A [batch_size] `Tensor` containing the log-likelihood of
-        each example, given the sequence of tag indices.
-      transition_params: A [num_tags, num_tags] transition matrix. This is
-          either provided by the caller or created in this function.
-    """
+  Args:
+    inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials
+        to use as input to the CRF layer.
+    tag_indices: A [batch_size, max_seq_len] matrix of tag indices for which
+        we compute the log-likelihood.
+    sequence_lengths: A [batch_size] vector of true sequence lengths.
+    transition_params: A [num_tags, num_tags] transition matrix,
+        if available.
+  Returns:
+    log_likelihood: A [batch_size] `Tensor` containing the log-likelihood of
+      each example, given the sequence of tag indices.
+    transition_params: A [num_tags, num_tags] transition matrix. This is
+        either provided by the caller or created in this function.
+  """
   inputs = tf.convert_to_tensor(inputs)
 
   num_tags = inputs.shape[2]
@@ -237,13 +237,13 @@ def crf_log_likelihood(
 def crf_unary_score(tag_indices: TensorLike, sequence_lengths: TensorLike, inputs: TensorLike) -> tf.Tensor:
   """Computes the unary scores of tag sequences.
 
-    Args:
-      tag_indices: A [batch_size, max_seq_len] matrix of tag indices.
-      sequence_lengths: A [batch_size] vector of true sequence lengths.
-      inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials.
-    Returns:
-      unary_scores: A [batch_size] vector of unary scores.
-    """
+  Args:
+    tag_indices: A [batch_size, max_seq_len] matrix of tag indices.
+    sequence_lengths: A [batch_size] vector of true sequence lengths.
+    inputs: A [batch_size, max_seq_len, num_tags] tensor of unary potentials.
+  Returns:
+    unary_scores: A [batch_size] vector of unary scores.
+  """
   tag_indices = tf.cast(tag_indices, dtype=tf.int32)
   sequence_lengths = tf.cast(sequence_lengths, dtype=tf.int32)
 
@@ -271,13 +271,13 @@ def crf_unary_score(tag_indices: TensorLike, sequence_lengths: TensorLike, input
 def crf_binary_score(tag_indices: TensorLike, sequence_lengths: TensorLike, transition_params: TensorLike) -> tf.Tensor:
   """Computes the binary scores of tag sequences.
 
-    Args:
-      tag_indices: A [batch_size, max_seq_len] matrix of tag indices.
-      sequence_lengths: A [batch_size] vector of true sequence lengths.
-      transition_params: A [num_tags, num_tags] matrix of binary potentials.
-    Returns:
-      binary_scores: A [batch_size] vector of binary scores.
-    """
+  Args:
+    tag_indices: A [batch_size, max_seq_len] matrix of tag indices.
+    sequence_lengths: A [batch_size] vector of true sequence lengths.
+    transition_params: A [num_tags, num_tags] matrix of binary potentials.
+  Returns:
+    binary_scores: A [batch_size] vector of binary scores.
+  """
   tag_indices = tf.cast(tag_indices, dtype=tf.int32)
   sequence_lengths = tf.cast(sequence_lengths, dtype=tf.int32)
 
@@ -303,28 +303,28 @@ def crf_binary_score(tag_indices: TensorLike, sequence_lengths: TensorLike, tran
 
 
 def crf_forward(
-    inputs: TensorLike,
-    state: TensorLike,
-    transition_params: TensorLike,
-    sequence_lengths: TensorLike,
+  inputs: TensorLike,
+  state: TensorLike,
+  transition_params: TensorLike,
+  sequence_lengths: TensorLike,
 ) -> tf.Tensor:
   """Computes the alpha values in a linear-chain CRF.
 
-    See http://www.cs.columbia.edu/~mcollins/fb.pdf for reference.
+  See http://www.cs.columbia.edu/~mcollins/fb.pdf for reference.
 
-    Args:
-      inputs: A [batch_size, num_tags] matrix of unary potentials.
-      state: A [batch_size, num_tags] matrix containing the previous alpha
-         values.
-      transition_params: A [num_tags, num_tags] matrix of binary potentials.
-          This matrix is expanded into a [1, num_tags, num_tags] in preparation
-          for the broadcast summation occurring within the cell.
-      sequence_lengths: A [batch_size] vector of true sequence lengths.
+  Args:
+    inputs: A [batch_size, num_tags] matrix of unary potentials.
+    state: A [batch_size, num_tags] matrix containing the previous alpha
+       values.
+    transition_params: A [num_tags, num_tags] matrix of binary potentials.
+        This matrix is expanded into a [1, num_tags, num_tags] in preparation
+        for the broadcast summation occurring within the cell.
+    sequence_lengths: A [batch_size] vector of true sequence lengths.
 
-    Returns:
-      new_alphas: A [batch_size, num_tags] matrix containing the
-          new alpha values.
-    """
+  Returns:
+    new_alphas: A [batch_size, num_tags] matrix containing the
+        new alpha values.
+  """
   sequence_lengths = tf.cast(sequence_lengths, dtype=tf.int32)
 
   last_index = tf.maximum(tf.constant(0, dtype=sequence_lengths.dtype), sequence_lengths - 1)
@@ -348,17 +348,17 @@ def crf_forward(
 def viterbi_decode(score: TensorLike, transition_params: TensorLike) -> tf.Tensor:
   """Decode the highest scoring sequence of tags outside of TensorFlow.
 
-    This should only be used at test time.
+  This should only be used at test time.
 
-    Args:
-      score: A [seq_len, num_tags] matrix of unary potentials.
-      transition_params: A [num_tags, num_tags] matrix of binary potentials.
+  Args:
+    score: A [seq_len, num_tags] matrix of unary potentials.
+    transition_params: A [num_tags, num_tags] matrix of binary potentials.
 
-    Returns:
-      viterbi: A [seq_len] list of integers containing the highest scoring tag
-          indices.
-      viterbi_score: A float containing the score for the Viterbi sequence.
-    """
+  Returns:
+    viterbi: A [seq_len] list of integers containing the highest scoring tag
+        indices.
+    viterbi_score: A float containing the score for the Viterbi sequence.
+  """
   trellis = np.zeros_like(score)
   backpointers = np.zeros_like(score, dtype=np.int32)
   trellis[0] = score[0]
@@ -384,12 +384,12 @@ class CrfDecodeForwardRnnCell(tf.keras.layers.AbstractRNNCell):
   def __init__(self, transition_params: TensorLike, **kwargs):
     """Initialize the CrfDecodeForwardRnnCell.
 
-        Args:
-          transition_params: A [num_tags, num_tags] matrix of binary
-            potentials. This matrix is expanded into a
-            [1, num_tags, num_tags] in preparation for the broadcast
-            summation occurring within the cell.
-        """
+    Args:
+      transition_params: A [num_tags, num_tags] matrix of binary
+        potentials. This matrix is expanded into a
+        [1, num_tags, num_tags] in preparation for the broadcast
+        summation occurring within the cell.
+    """
     super().__init__(**kwargs)
     self._transition_params = tf.expand_dims(transition_params, 0)
     self._num_tags = transition_params.shape[0]
@@ -408,15 +408,15 @@ class CrfDecodeForwardRnnCell(tf.keras.layers.AbstractRNNCell):
   def call(self, inputs, state):
     """Build the CrfDecodeForwardRnnCell.
 
-        Args:
-          inputs: A [batch_size, num_tags] matrix of unary potentials.
-          state: A [batch_size, num_tags] matrix containing the previous step's
-                score values.
+    Args:
+      inputs: A [batch_size, num_tags] matrix of unary potentials.
+      state: A [batch_size, num_tags] matrix containing the previous step's
+            score values.
 
-        Returns:
-          backpointers: A [batch_size, num_tags] matrix of backpointers.
-          new_state: A [batch_size, num_tags] matrix of new score values.
-        """
+    Returns:
+      backpointers: A [batch_size, num_tags] matrix of backpointers.
+      new_state: A [batch_size, num_tags] matrix of new score values.
+    """
     state = tf.expand_dims(state[0], 2)
     transition_scores = state + tf.cast(self._transition_params, self._compute_dtype)
     new_state = inputs + tf.reduce_max(transition_scores, [1])
@@ -436,33 +436,33 @@ class CrfDecodeForwardRnnCell(tf.keras.layers.AbstractRNNCell):
 
 
 def crf_decode_forward(
-    inputs: TensorLike,
-    state: TensorLike,
-    transition_params: TensorLike,
-    sequence_lengths: TensorLike,
+  inputs: TensorLike,
+  state: TensorLike,
+  transition_params: TensorLike,
+  sequence_lengths: TensorLike,
 ) -> tf.Tensor:
   """Computes forward decoding in a linear-chain CRF.
 
-    Args:
-      inputs: A [batch_size, num_tags] matrix of unary potentials.
-      state: A [batch_size, num_tags] matrix containing the previous step's
-            score values.
-      transition_params: A [num_tags, num_tags] matrix of binary potentials.
-      sequence_lengths: A [batch_size] vector of true sequence lengths.
+  Args:
+    inputs: A [batch_size, num_tags] matrix of unary potentials.
+    state: A [batch_size, num_tags] matrix containing the previous step's
+          score values.
+    transition_params: A [num_tags, num_tags] matrix of binary potentials.
+    sequence_lengths: A [batch_size] vector of true sequence lengths.
 
-    Returns:
-      backpointers: A [batch_size, num_tags] matrix of backpointers.
-      new_state: A [batch_size, num_tags] matrix of new score values.
-    """
+  Returns:
+    backpointers: A [batch_size, num_tags] matrix of backpointers.
+    new_state: A [batch_size, num_tags] matrix of new score values.
+  """
   sequence_lengths = tf.cast(sequence_lengths, dtype=tf.int32)
   mask = tf.sequence_mask(sequence_lengths, tf.shape(inputs)[1])
   crf_fwd_cell = CrfDecodeForwardRnnCell(transition_params, dtype=inputs.dtype)
   crf_fwd_layer = tf.keras.layers.RNN(
-      crf_fwd_cell,
-      return_sequences=True,
-      return_state=True,
-      dtype=inputs.dtype,
-      zero_output_for_mask=True,  # See: https://github.com/tensorflow/deepray/issues/2639
+    crf_fwd_cell,
+    return_sequences=True,
+    return_state=True,
+    dtype=inputs.dtype,
+    zero_output_for_mask=True,  # See: https://github.com/tensorflow/deepray/issues/2639
   )
   return crf_fwd_layer(inputs, state, mask=mask)
 
@@ -470,15 +470,15 @@ def crf_decode_forward(
 def crf_decode_backward(inputs: TensorLike, state: TensorLike) -> tf.Tensor:
   """Computes backward decoding in a linear-chain CRF.
 
-    Args:
-      inputs: A [batch_size, num_tags] matrix of
-            backpointer of next step (in time order).
-      state: A [batch_size, 1] matrix of tag index of next step.
+  Args:
+    inputs: A [batch_size, num_tags] matrix of
+          backpointer of next step (in time order).
+    state: A [batch_size, 1] matrix of tag index of next step.
 
-    Returns:
-      new_tags: A [batch_size, num_tags]
-        tensor containing the new tag indices.
-    """
+  Returns:
+    new_tags: A [batch_size, num_tags]
+      tensor containing the new tag indices.
+  """
   inputs = tf.transpose(inputs, [1, 0, 2])
 
   def _scan_fn(state, inputs):
@@ -493,21 +493,21 @@ def crf_decode_backward(inputs: TensorLike, state: TensorLike) -> tf.Tensor:
 def crf_decode(potentials: TensorLike, transition_params: TensorLike, sequence_length: TensorLike) -> tf.Tensor:
   """Decode the highest scoring sequence of tags.
 
-    Args:
-      potentials: A [batch_size, max_seq_len, num_tags] tensor of
-                unary potentials.
-      transition_params: A [num_tags, num_tags] matrix of
-                binary potentials.
-      sequence_length: A [batch_size] vector of true sequence lengths.
+  Args:
+    potentials: A [batch_size, max_seq_len, num_tags] tensor of
+              unary potentials.
+    transition_params: A [num_tags, num_tags] matrix of
+              binary potentials.
+    sequence_length: A [batch_size] vector of true sequence lengths.
 
-    Returns:
-      decode_tags: A [batch_size, max_seq_len] matrix, with dtype `tf.int32`.
-                  Contains the highest scoring tag indices.
-      best_score: A [batch_size] vector, containing the score of `decode_tags`.
-    """
+  Returns:
+    decode_tags: A [batch_size, max_seq_len] matrix, with dtype `tf.int32`.
+                Contains the highest scoring tag indices.
+    best_score: A [batch_size] vector, containing the score of `decode_tags`.
+  """
   if tf.__version__[:3] == "2.4":
     warnings.warn(
-        "CRF Decoding does not work with KerasTensors in TF2.4. The bug has since been fixed in tensorflow/tensorflow##45534"
+      "CRF Decoding does not work with KerasTensors in TF2.4. The bug has since been fixed in tensorflow/tensorflow##45534"
     )
 
   sequence_length = tf.cast(sequence_length, dtype=tf.int32)
@@ -554,29 +554,29 @@ def crf_decode(potentials: TensorLike, transition_params: TensorLike, sequence_l
 
 
 def crf_constrained_decode(
-    potentials: TensorLike,
-    tag_bitmap: TensorLike,
-    transition_params: TensorLike,
-    sequence_length: TensorLike,
+  potentials: TensorLike,
+  tag_bitmap: TensorLike,
+  transition_params: TensorLike,
+  sequence_length: TensorLike,
 ) -> tf.Tensor:
   """Decode the highest scoring sequence of tags under constraints.
 
-    This is a function for tensor.
+  This is a function for tensor.
 
-    Args:
-      potentials: A [batch_size, max_seq_len, num_tags] tensor of
-                unary potentials.
-      tag_bitmap: A [batch_size, max_seq_len, num_tags] boolean tensor
-          representing all active tags at each index for which to calculate the
-          unnormalized score.
-      transition_params: A [num_tags, num_tags] matrix of
-                binary potentials.
-      sequence_length: A [batch_size] vector of true sequence lengths.
-    Returns:
-      decode_tags: A [batch_size, max_seq_len] matrix, with dtype `tf.int32`.
-                  Contains the highest scoring tag indices.
-      best_score: A [batch_size] vector, containing the score of `decode_tags`.
-    """
+  Args:
+    potentials: A [batch_size, max_seq_len, num_tags] tensor of
+              unary potentials.
+    tag_bitmap: A [batch_size, max_seq_len, num_tags] boolean tensor
+        representing all active tags at each index for which to calculate the
+        unnormalized score.
+    transition_params: A [num_tags, num_tags] matrix of
+              binary potentials.
+    sequence_length: A [batch_size] vector of true sequence lengths.
+  Returns:
+    decode_tags: A [batch_size, max_seq_len] matrix, with dtype `tf.int32`.
+                Contains the highest scoring tag indices.
+    best_score: A [batch_size] vector, containing the score of `decode_tags`.
+  """
 
   filtered_potentials = crf_filtered_inputs(potentials, tag_bitmap)
   return crf_decode(filtered_potentials, transition_params, sequence_length)

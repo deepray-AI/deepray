@@ -25,8 +25,8 @@ from tensorflow.python.util import nest
 
 def csv_str_to_int_list(s):
   """
-    Example: '200,80' -> [200, 80]
-    """
+  Example: '200,80' -> [200, 80]
+  """
   return list(map(int, s.split(",")))
 
 
@@ -55,8 +55,7 @@ def past_stop_threshold(stop_threshold, eval_metric):
   if not isinstance(stop_threshold, numbers.Number):
     raise ValueError("Threshold for checking stop conditions must be a number.")
   if not isinstance(eval_metric, numbers.Number):
-    raise ValueError("Eval metric being checked against stop conditions "
-                     "must be a number.")
+    raise ValueError("Eval metric being checked against stop conditions must be a number.")
 
   if eval_metric >= stop_threshold:
     logging.info("Stop threshold of {} was passed with metric value {}.".format(stop_threshold, eval_metric))
@@ -66,7 +65,7 @@ def past_stop_threshold(stop_threshold, eval_metric):
 
 
 def generate_synthetic_data(
-    input_shape, input_value=0, input_dtype=None, label_shape=None, label_value=0, label_dtype=None
+  input_shape, input_value=0, input_dtype=None, label_shape=None, label_value=0, label_dtype=None
 ):
   """Create a repeating dataset with constant values.
 
@@ -95,6 +94,5 @@ def generate_synthetic_data(
 
 def apply_clean(flags_obj):
   if flags_obj.clean and tf.io.gfile.exists(flags_obj.model_dir):
-    logging.info("--clean flag set. Removing existing model dir:"
-                 " {}".format(flags_obj.model_dir))
+    logging.info("--clean flag set. Removing existing model dir: {}".format(flags_obj.model_dir))
     tf.io.gfile.rmtree(flags_obj.model_dir)

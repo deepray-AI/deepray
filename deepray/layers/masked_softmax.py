@@ -16,13 +16,13 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
 # from __future__ import google_type_annotations
 from __future__ import print_function
 
 import tensorflow as tf
 
 
-@tf.keras.utils.register_keras_serializable(package='Text')
 class MaskedSoftmax(tf.keras.layers.Layer):
   """Performs a softmax with optional masking on a tensor.
 
@@ -56,6 +56,6 @@ class MaskedSoftmax(tf.keras.layers.Layer):
     return tf.nn.softmax(scores)
 
   def get_config(self):
-    config = {'mask_expansion_axes': self._mask_expansion_axes}
+    config = {"mask_expansion_axes": self._mask_expansion_axes}
     base_config = super(MaskedSoftmax, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))

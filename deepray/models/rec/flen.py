@@ -29,15 +29,12 @@ from deepray.layers.embedding import Embedding
 from deepray.utils.data.feature_map import FeatureMap
 from deepray.layers.field_wise_bi_interaction import FieldWiseBiInteraction
 
-FLAGS = flags.FLAGS
-
 __all__ = [
-    'FLEN',
+  "FLEN",
 ]
 
 
 class FLEN(Model):
-
   def __init__(self, field_info, embedding_dim=16):
     if not field_info or not isinstance(field_info, dict):
       raise ValueError("Must specify field_info")
@@ -49,28 +46,28 @@ class FLEN(Model):
     self.embedding_layers = {}
     self.field_info = field_info
 
-    for name, ftype, dtype, voc_size, length in self.feature_map[(self.feature_map['ftype'] == "Categorical")][[
-        "name", "ftype", "dtype", "voc_size", "length"
-    ]].values:
+    for name, ftype, dtype, voc_size, length in self.feature_map[(self.feature_map["ftype"] == "Categorical")][
+      ["name", "ftype", "dtype", "voc_size", "length"]
+    ].values:
       self.embedding_layers[name] = Embedding(
-          embedding_dim=embedding_dim, vocabulary_size=voc_size + 1, name='embedding_' + name
+        embedding_dim=embedding_dim, vocabulary_size=voc_size + 1, name="embedding_" + name
       )
 
     # 2. mlp part
-    self.deep_fc_64 = dp.layers.FullyConnect(units=64, activation='relu')
+    self.deep_fc_64 = dp.layers.FullyConnect(units=64, activation="relu")
     self.deep_bn_64 = BatchNormalization(momentum=0.9)
     self.deep_dropout_64 = Dropout(rate=0.2)
-    self.deep_fc_32 = dp.layers.FullyConnect(units=32, activation='relu')
+    self.deep_fc_32 = dp.layers.FullyConnect(units=32, activation="relu")
     self.deep_bn_32 = BatchNormalization(momentum=0.9)
     self.deep_dropout_32 = Dropout(rate=0.2)
 
     # 3. field-weighted embedding
     self.fwbi = FieldWiseBiInteraction(num_fields=len(field_info.keys()), embedding_size=embedding_dim)
-    self.fwbi_fc_32 = dp.layers.FullyConnect(units=32, activation='relu')
+    self.fwbi_fc_32 = dp.layers.FullyConnect(units=32, activation="relu")
     self.fwbi_bn = BatchNormalization(momentum=0.9)
     self.fwbi_drop = Dropout(rate=0.2)
 
-    self.logits = dp.layers.FullyConnect(units=1, activation='sigmoid')
+    self.logits = dp.layers.FullyConnect(units=1, activation="sigmoid")
 
   def call(self, inputs, training=False):
     embedding = {}
@@ -90,9 +87,8 @@ class FLEN(Model):
 
     # 3. field-weighted embedding
     field_embedding = [
-        tf.reduce_mean(tf.stack([embedding[name]
-                                 for name in names], axis=-1), axis=-1)
-        for field, names in self.field_info.items()
+      tf.reduce_mean(tf.stack([embedding[name] for name in names], axis=-1), axis=-1)
+      for field, names in self.field_info.items()
     ]
     fwbi_ebm = tf.concat(field_embedding, axis=-1)
 

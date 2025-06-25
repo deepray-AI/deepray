@@ -8,11 +8,11 @@ import typeguard
 
 @typeguard.typechecked
 def check_metric_serialization(
-    metric: Metric,
-    y_true: Union[tuple, np.ndarray],
-    y_pred: Union[tuple, np.ndarray],
-    sample_weight: Union[tuple, np.ndarray, None] = None,
-    strict: bool = True,
+  metric: Metric,
+  y_true: Union[tuple, np.ndarray],
+  y_pred: Union[tuple, np.ndarray],
+  sample_weight: Union[tuple, np.ndarray, None] = None,
+  strict: bool = True,
 ):
   config = metric.get_config()
   class_ = metric.__class__
@@ -45,8 +45,7 @@ def check_metric_serialization(
     np.testing.assert_allclose(metric_result, metric_copy_result)
   except AssertionError as e:
     raise ValueError(
-        "The original and the copy of the metric give different results after "
-        "the same `.update_states()` call."
+      "The original and the copy of the metric give different results after the same `.update_states()` call."
     ) from e
 
 
@@ -58,26 +57,26 @@ def check_config(config, class_, strict):
       continue
     elif parameter_name == "args" and strict:
       raise KeyError(
-          "Please do not use args in the class constructor of {}, "
-          "as it hides the real signature "
-          "and degrades the user experience. "
-          "If you have no alternative to *args, "
-          "use `strict=False` in check_metric_serialization.".format(class_.__name__)
+        "Please do not use args in the class constructor of {}, "
+        "as it hides the real signature "
+        "and degrades the user experience. "
+        "If you have no alternative to *args, "
+        "use `strict=False` in check_metric_serialization.".format(class_.__name__)
       )
     elif parameter_name == "kwargs" and strict:
       raise KeyError(
-          "Please do not use kwargs in the class constructor of {}, "
-          "as it hides the real signature "
-          "and degrades the user experience. "
-          "If you have no alternative to **kwargs, "
-          "use `strict=False` in check_metric_serialization.".format(class_.__name__)
+        "Please do not use kwargs in the class constructor of {}, "
+        "as it hides the real signature "
+        "and degrades the user experience. "
+        "If you have no alternative to **kwargs, "
+        "use `strict=False` in check_metric_serialization.".format(class_.__name__)
       )
     if parameter_name not in config:
       raise KeyError(
-          "The constructor parameter {} is not present in the config dict "
-          "obtained with `.get_config()` of {}. All parameters should be set to "
-          "ensure a perfect copy of the keras object can be obtained when "
-          "serialized.".format(parameter_name, class_.__name__)
+        "The constructor parameter {} is not present in the config dict "
+        "obtained with `.get_config()` of {}. All parameters should be set to "
+        "ensure a perfect copy of the keras object can be obtained when "
+        "serialized.".format(parameter_name, class_.__name__)
       )
 
 

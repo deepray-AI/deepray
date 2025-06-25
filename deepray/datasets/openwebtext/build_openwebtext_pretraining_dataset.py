@@ -37,15 +37,15 @@ def write_examples(job_id, args):
 
   log("Creating example writer")
   example_writer = build_pretraining_dataset.ExampleWriter(
-      job_id=job_id,
-      # vocab_file=os.path.join(args.data_dir, "vocab.txt"),
-      vocab_file="vocab.txt",
-      output_dir=os.path.join(args.data_dir, "pretrain_tfrecords"),
-      max_seq_length=args.max_seq_length,
-      num_jobs=args.num_processes,
-      blanks_separate_docs=False,
-      do_lower_case=args.do_lower_case,
-      strip_accents=args.strip_accents,
+    job_id=job_id,
+    # vocab_file=os.path.join(args.data_dir, "vocab.txt"),
+    vocab_file="vocab.txt",
+    output_dir=os.path.join(args.data_dir, "pretrain_tfrecords"),
+    max_seq_length=args.max_seq_length,
+    num_jobs=args.num_processes,
+    blanks_separate_docs=False,
+    do_lower_case=args.do_lower_case,
+    strip_accents=args.strip_accents,
   )
   log("Writing tf examples")
   fnames = sorted(tf.io.gfile.listdir(owt_dir))
@@ -56,11 +56,14 @@ def write_examples(job_id, args):
     if file_no > 0 and file_no % 10 == 0:
       elapsed = time.time() - start_time
       log(
-          "processed {:}/{:} files ({:.1f}%), ELAPSED: {:}s, ETA: {:}s, "
-          "{:} examples written".format(
-              file_no, len(fnames), 100.0 * file_no / len(fnames), int(elapsed),
-              int((len(fnames) - file_no) / (file_no / elapsed)), example_writer.n_written
-          )
+        "processed {:}/{:} files ({:.1f}%), ELAPSED: {:}s, ETA: {:}s, {:} examples written".format(
+          file_no,
+          len(fnames),
+          100.0 * file_no / len(fnames),
+          int(elapsed),
+          int((len(fnames) - file_no) / (file_no / elapsed)),
+          example_writer.n_written,
+        )
       )
     utils.rmkdir(job_tmp_dir)
     with tarfile.open(os.path.join(owt_dir, fname)) as f:
@@ -78,18 +81,18 @@ def main():
   parser.add_argument("--data-dir", required=True, help="Location of data (vocab file, corpus, etc).")
   parser.add_argument("--max-seq-length", default=128, type=int, help="Number of tokens per example.")
   parser.add_argument(
-      "--num-processes", default=multiprocessing.cpu_count(), type=int, help="Parallelize across multiple processes."
+    "--num-processes", default=multiprocessing.cpu_count(), type=int, help="Parallelize across multiple processes."
   )
 
   # toggle lower-case
-  parser.add_argument("--do-lower-case", dest='do_lower_case', action='store_true', help="Lower case input text.")
+  parser.add_argument("--do-lower-case", dest="do_lower_case", action="store_true", help="Lower case input text.")
   parser.add_argument(
-      "--no-lower-case", dest='do_lower_case', action='store_false', help="Don't lower case input text."
+    "--no-lower-case", dest="do_lower_case", action="store_false", help="Don't lower case input text."
   )
 
   # toggle strip-accents
-  parser.add_argument("--do-strip-accents", dest='strip_accents', action='store_true', help="Strip accents (default).")
-  parser.add_argument("--no-strip-accents", dest='strip_accents', action='store_false', help="Don't strip accents.")
+  parser.add_argument("--do-strip-accents", dest="strip_accents", action="store_true", help="Strip accents (default).")
+  parser.add_argument("--no-strip-accents", dest="strip_accents", action="store_false", help="Don't strip accents.")
 
   # set defaults for toggles
   parser.set_defaults(do_lower_case=True)

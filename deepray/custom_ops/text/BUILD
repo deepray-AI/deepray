@@ -1,10 +1,10 @@
-load("//deepray:deepray.bzl", "custom_op_library")
+load("//build_deps/pip_tf:defs.bzl", "tf_custom_op_library")
 
 licenses(["notice"])  # Apache 2.0
 
 package(default_visibility = ["//visibility:public"])
 
-custom_op_library(
+tf_custom_op_library(
     name = "_skip_gram_ops.so",
     srcs = [
         "cc/kernels/skip_gram_kernels.cc",
@@ -12,7 +12,7 @@ custom_op_library(
     ],
 )
 
-custom_op_library(
+tf_custom_op_library(
     name = "_parse_time_op.so",
     srcs = select({
         "//deepray:windows": [],

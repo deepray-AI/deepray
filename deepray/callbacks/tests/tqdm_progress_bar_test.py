@@ -31,8 +31,7 @@ def test_tqdm_progress_bar(capsys):
 
 def test_tqdm_progress_bar_overall_bar_format(capsys):
   x, y, model = get_data_and_model()
-  overall_bar_format = ("{l_bar}{bar} {n_fmt}/{total_fmt} ETA: dodo"
-                        "{remaining}s,  {rate_fmt}{postfix}")
+  overall_bar_format = "{l_bar}{bar} {n_fmt}/{total_fmt} ETA: dodo{remaining}s,  {rate_fmt}{postfix}"
   pb = dp.callbacks.TQDMProgressBar(overall_bar_format=overall_bar_format, show_epoch_progress=False)
   capsys.readouterr()  # flush the buffer
   model.fit(x, y, epochs=1, verbose=0, callbacks=[pb])
@@ -77,8 +76,8 @@ def test_tqdm_progress_bar_show(capsys, show_epoch_progress, show_overall_progre
   x, y, model = get_data_and_model()
 
   pb = dp.callbacks.TQDMProgressBar(
-      show_epoch_progress=show_epoch_progress,
-      show_overall_progress=show_overall_progress,
+    show_epoch_progress=show_epoch_progress,
+    show_overall_progress=show_overall_progress,
   )
   capsys.readouterr()  # flush the buffer
   model.fit(x, y, batch_size=4, epochs=2, verbose=0, callbacks=[pb])

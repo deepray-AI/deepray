@@ -73,6 +73,10 @@ class ConfigError(Exception):
   pass
 
 
+def _is_aarch64():
+  return platform.machine() == "aarch64"
+
+
 def _is_linux():
   return platform.system() == "Linux"
 
@@ -88,20 +92,20 @@ def _is_macos():
 def _matches_version(actual_version, required_version):
   """Checks whether some version meets the requirements.
 
-      All elements of the required_version need to be present in the
-      actual_version.
+  All elements of the required_version need to be present in the
+  actual_version.
 
-          required_version  actual_version  result
-          -----------------------------------------
-          1                 1.1             True
-          1.2               1               False
-          1.2               1.3             False
-                            1               True
+      required_version  actual_version  result
+      -----------------------------------------
+      1                 1.1             True
+      1.2               1               False
+      1.2               1.3             False
+                        1               True
 
-      Args:
-        required_version: The version specified by the user.
-        actual_version: The version detected from the CUDA installation.
-      Returns: Whether the actual version matches the required one.
+  Args:
+    required_version: The version specified by the user.
+    actual_version: The version detected from the CUDA installation.
+  Returns: Whether the actual version matches the required one.
   """
   if actual_version is None:
     return False
@@ -147,7 +151,7 @@ def _get_ld_config_paths():
       match = False
     if match:
       result.add(os.path.dirname(match.group(1)))
-  return sorted(list(result))
+  return sorted(result)
 
 
 def _get_default_cuda_paths(cuda_version):
@@ -164,28 +168,28 @@ def _get_default_cuda_paths(cuda_version):
 def _header_paths():
   """Returns hard-coded set of relative paths to look for header files."""
   return [
-      "",
-      "include",
-      "include/cuda",
-      "include/*-linux-gnu",
-      "extras/CUPTI/include",
-      "include/cuda/CUPTI",
-      "local/cuda/extras/CUPTI/include",
-      "targets/x86_64-linux/include",
+    "",
+    "include",
+    "include/cuda",
+    "include/*-linux-gnu",
+    "extras/CUPTI/include",
+    "include/cuda/CUPTI",
+    "local/cuda/extras/CUPTI/include",
+    "targets/x86_64-linux/include",
   ]
 
 
 def _library_paths():
   """Returns hard-coded set of relative paths to look for library files."""
   return [
-      "",
-      "lib64",
-      "lib",
-      "lib/*-linux-gnu",
-      "lib/x64",
-      "extras/CUPTI/*",
-      "local/cuda/lib64",
-      "local/cuda/extras/CUPTI/lib64",
+    "",
+    "lib64",
+    "lib",
+    "lib/*-linux-gnu",
+    "lib/x64",
+    "extras/CUPTI/*",
+    "local/cuda/lib64",
+    "local/cuda/extras/CUPTI/lib64",
   ]
 
 
@@ -193,7 +197,7 @@ def _not_found_error(base_paths, relative_paths, filepattern):
   base_paths = "".join(["\n        '%s'" % path for path in sorted(base_paths)])
   relative_paths = "".join(["\n        '%s'" % path for path in relative_paths])
   return ConfigError(
-      "Could not find any %s in any subdirectory:%s\nof:%s\n" % (filepattern, relative_paths, base_paths)
+    "Could not find any %s in any subdirectory:%s\nof:%s\n" % (filepattern, relative_paths, base_paths)
   )
 
 
@@ -226,7 +230,7 @@ def _find_versioned_file(base_paths, relative_paths, filepatterns, required_vers
         if _matches_version(actual_version, required_version):
           return file, actual_version
   raise _not_found_error(
-      base_paths, relative_paths, ", ".join(filepatterns) + " matching version '%s'" % required_version
+    base_paths, relative_paths, ", ".join(filepatterns) + " matching version '%s'" % required_version
   )
 
 
@@ -236,7 +240,6 @@ def _find_header(base_paths, header_name, required_version, get_version):
 
 
 def _find_cuda_config(base_paths, required_version):
-
   def get_header_version(path):
     version = int(_get_header_version(path, "CUDA_VERSION"))
     if not version:
@@ -258,20 +261,26 @@ def _find_cuda_config(base_paths, required_version):
 
   nvcc_name = "nvcc.exe" if _is_windows() else "nvcc"
   nvcc_path, nvcc_version = _find_versioned_file(
-      base_paths, [
-          "",
-          "bin",
-          "local/cuda/bin",
-      ], nvcc_name, cuda_version, get_nvcc_version
+    base_paths,
+    [
+      "",
+      "bin",
+      "local/cuda/bin",
+    ],
+    nvcc_name,
+    cuda_version,
+    get_nvcc_version,
   )
 
   nvvm_path = _find_file(
-      base_paths, [
-          "nvvm/libdevice",
-          "share/cuda",
-          "lib/nvidia-cuda-toolkit/libdevice",
-          "local/cuda/nvvm/libdevice",
-      ], "libdevice*.10.bc"
+    base_paths,
+    [
+      "nvvm/libdevice",
+      "share/cuda",
+      "lib/nvidia-cuda-toolkit/libdevice",
+      "local/cuda/nvvm/libdevice",
+    ],
+    "libdevice*.10.bc",
   )
 
   cupti_header_path = _find_file(base_paths, _header_paths(), "cupti.h")
@@ -284,32 +293,31 @@ def _find_cuda_config(base_paths, required_version):
   # XLA requires the toolkit path to find ptxas and libdevice.
   # TODO(csigg): pass in both directories instead.
   cuda_toolkit_paths = (
-      os.path.normpath(os.path.join(cuda_binary_dir, "..")),
-      os.path.normpath(os.path.join(nvvm_library_dir, "../..")),
+    os.path.normpath(os.path.join(cuda_binary_dir, "..")),
+    os.path.normpath(os.path.join(nvvm_library_dir, "../..")),
   )
   if cuda_toolkit_paths[0] != cuda_toolkit_paths[1]:
     raise ConfigError("Inconsistent CUDA toolkit path: %s vs %s" % cuda_toolkit_paths)
 
   return {
-      "cuda_version": cuda_version,
-      "cuda_include_dir": os.path.dirname(cuda_header_path),
-      "cuda_library_dir": os.path.dirname(cuda_library_path),
-      "cuda_binary_dir": cuda_binary_dir,
-      "nvvm_library_dir": nvvm_library_dir,
-      "cupti_include_dir": os.path.dirname(cupti_header_path),
-      "cupti_library_dir": os.path.dirname(cupti_library_path),
-      "cuda_toolkit_path": cuda_toolkit_paths[0],
-      "nvml_header_dir": os.path.dirname(nvml_header_dir),
+    "cuda_version": cuda_version,
+    "cuda_include_dir": os.path.dirname(cuda_header_path),
+    "cuda_library_dir": os.path.dirname(cuda_library_path),
+    "cuda_binary_dir": cuda_binary_dir,
+    "nvvm_library_dir": nvvm_library_dir,
+    "cupti_include_dir": os.path.dirname(cupti_header_path),
+    "cupti_library_dir": os.path.dirname(cupti_library_path),
+    "cuda_toolkit_path": cuda_toolkit_paths[0],
+    "nvml_header_dir": os.path.dirname(nvml_header_dir),
   }
 
 
 def _find_cublas_config(base_paths, required_version, cuda_version):
-
   if _at_least_version(cuda_version, "10.1"):
 
     def get_header_version(path):
       version = (
-          _get_header_version(path, name) for name in ("CUBLAS_VER_MAJOR", "CUBLAS_VER_MINOR", "CUBLAS_VER_PATCH")
+        _get_header_version(path, name) for name in ("CUBLAS_VER_MAJOR", "CUBLAS_VER_MINOR", "CUBLAS_VER_PATCH")
       )
       return ".".join(version)
 
@@ -327,20 +335,18 @@ def _find_cublas_config(base_paths, required_version, cuda_version):
   library_path = _find_library(base_paths, "cublas", cublas_version)
 
   return {
-      "cublas_version": header_version,
-      "cublas_include_dir": os.path.dirname(header_path),
-      "cublas_library_dir": os.path.dirname(library_path),
+    "cublas_version": header_version,
+    "cublas_include_dir": os.path.dirname(header_path),
+    "cublas_library_dir": os.path.dirname(library_path),
   }
 
 
 def _find_cusolver_config(base_paths, required_version, cuda_version):
-
-  if _at_least_version(cuda_version, "11.0"):
+  if _at_least_version(cuda_version, "11.0") or (_is_aarch64 and _at_least_version(cuda_version, "10.2")):
 
     def get_header_version(path):
       version = (
-          _get_header_version(path, name)
-          for name in ("CUSOLVER_VER_MAJOR", "CUSOLVER_VER_MINOR", "CUSOLVER_VER_PATCH")
+        _get_header_version(path, name) for name in ("CUSOLVER_VER_MAJOR", "CUSOLVER_VER_MINOR", "CUSOLVER_VER_PATCH")
       )
       return ".".join(version)
 
@@ -355,19 +361,18 @@ def _find_cusolver_config(base_paths, required_version, cuda_version):
   library_path = _find_library(base_paths, "cusolver", cusolver_version)
 
   return {
-      "cusolver_version": header_version,
-      "cusolver_include_dir": os.path.dirname(header_path),
-      "cusolver_library_dir": os.path.dirname(library_path),
+    "cusolver_version": header_version,
+    "cusolver_include_dir": os.path.dirname(header_path),
+    "cusolver_library_dir": os.path.dirname(library_path),
   }
 
 
 def _find_curand_config(base_paths, required_version, cuda_version):
-
-  if _at_least_version(cuda_version, "11.0"):
+  if _at_least_version(cuda_version, "11.0") or (_is_aarch64 and _at_least_version(cuda_version, "10.2")):
 
     def get_header_version(path):
       version = (
-          _get_header_version(path, name) for name in ("CURAND_VER_MAJOR", "CURAND_VER_MINOR", "CURAND_VER_PATCH")
+        _get_header_version(path, name) for name in ("CURAND_VER_MAJOR", "CURAND_VER_MINOR", "CURAND_VER_PATCH")
       )
       return ".".join(version)
 
@@ -382,15 +387,14 @@ def _find_curand_config(base_paths, required_version, cuda_version):
   library_path = _find_library(base_paths, "curand", curand_version)
 
   return {
-      "curand_version": header_version,
-      "curand_include_dir": os.path.dirname(header_path),
-      "curand_library_dir": os.path.dirname(library_path),
+    "curand_version": header_version,
+    "curand_include_dir": os.path.dirname(header_path),
+    "curand_library_dir": os.path.dirname(library_path),
   }
 
 
 def _find_cufft_config(base_paths, required_version, cuda_version):
-
-  if _at_least_version(cuda_version, "11.0"):
+  if _at_least_version(cuda_version, "11.0") or (_is_aarch64 and _at_least_version(cuda_version, "10.2")):
 
     def get_header_version(path):
       version = (_get_header_version(path, name) for name in ("CUFFT_VER_MAJOR", "CUFFT_VER_MINOR", "CUFFT_VER_PATCH"))
@@ -407,40 +411,37 @@ def _find_cufft_config(base_paths, required_version, cuda_version):
   library_path = _find_library(base_paths, "cufft", cufft_version)
 
   return {
-      "cufft_version": header_version,
-      "cufft_include_dir": os.path.dirname(header_path),
-      "cufft_library_dir": os.path.dirname(library_path),
+    "cufft_version": header_version,
+    "cufft_include_dir": os.path.dirname(header_path),
+    "cufft_library_dir": os.path.dirname(library_path),
   }
 
 
 def _find_cudnn_config(base_paths, required_version):
-
   def get_header_version(path):
     version = [_get_header_version(path, name) for name in ("CUDNN_MAJOR", "CUDNN_MINOR", "CUDNN_PATCHLEVEL")]
     return ".".join(version) if version[0] else None
 
   header_path, header_version = _find_header(
-      base_paths, ("cudnn.h", "cudnn_version.h"), required_version, get_header_version
+    base_paths, ("cudnn.h", "cudnn_version.h"), required_version, get_header_version
   )
-  cudnn_version = header_version  #.split(".")[0]
+  cudnn_version = header_version.split(".")[0]
 
   library_path = _find_library(base_paths, "cudnn", cudnn_version)
 
   return {
-      "cudnn_version": cudnn_version,
-      "cudnn_include_dir": os.path.dirname(header_path),
-      "cudnn_library_dir": os.path.dirname(library_path),
+    "cudnn_version": cudnn_version,
+    "cudnn_include_dir": os.path.dirname(header_path),
+    "cudnn_library_dir": os.path.dirname(library_path),
   }
 
 
 def _find_cusparse_config(base_paths, required_version, cuda_version):
-
-  if _at_least_version(cuda_version, "11.0"):
+  if _at_least_version(cuda_version, "11.0") or (_is_aarch64 and _at_least_version(cuda_version, "10.2")):
 
     def get_header_version(path):
       version = (
-          _get_header_version(path, name)
-          for name in ("CUSPARSE_VER_MAJOR", "CUSPARSE_VER_MINOR", "CUSPARSE_VER_PATCH")
+        _get_header_version(path, name) for name in ("CUSPARSE_VER_MAJOR", "CUSPARSE_VER_MINOR", "CUSPARSE_VER_PATCH")
       )
       return ".".join(version)
 
@@ -455,14 +456,13 @@ def _find_cusparse_config(base_paths, required_version, cuda_version):
   library_path = _find_library(base_paths, "cusparse", cusparse_version)
 
   return {
-      "cusparse_version": header_version,
-      "cusparse_include_dir": os.path.dirname(header_path),
-      "cusparse_library_dir": os.path.dirname(library_path),
+    "cusparse_version": header_version,
+    "cusparse_include_dir": os.path.dirname(header_path),
+    "cusparse_library_dir": os.path.dirname(library_path),
   }
 
 
 def _find_nccl_config(base_paths, required_version):
-
   def get_header_version(path):
     version = (_get_header_version(path, name) for name in ("NCCL_MAJOR", "NCCL_MINOR", "NCCL_PATCH"))
     return ".".join(version)
@@ -473,17 +473,16 @@ def _find_nccl_config(base_paths, required_version):
   library_path = _find_library(base_paths, "nccl", nccl_version)
 
   return {
-      "nccl_version": nccl_version,
-      "nccl_include_dir": os.path.dirname(header_path),
-      "nccl_library_dir": os.path.dirname(library_path),
+    "nccl_version": nccl_version,
+    "nccl_include_dir": os.path.dirname(header_path),
+    "nccl_library_dir": os.path.dirname(library_path),
   }
 
 
 def _find_tensorrt_config(base_paths, required_version):
-
   def get_header_version(path):
     version = (
-        _get_header_version(path, name) for name in ("NV_TENSORRT_MAJOR", "NV_TENSORRT_MINOR", "NV_TENSORRT_PATCH")
+      _get_header_version(path, name) for name in ("NV_TENSORRT_MAJOR", "NV_TENSORRT_MINOR", "NV_TENSORRT_PATCH")
     )
     # `version` is a generator object, so we convert it to a list before using
     # it (muitiple times below).
@@ -498,9 +497,9 @@ def _find_tensorrt_config(base_paths, required_version):
   library_path = _find_library(base_paths, "nvinfer", tensorrt_version)
 
   return {
-      "tensorrt_version": header_version,
-      "tensorrt_include_dir": os.path.dirname(header_path),
-      "tensorrt_library_dir": os.path.dirname(library_path),
+    "tensorrt_version": header_version,
+    "tensorrt_include_dir": os.path.dirname(header_path),
+    "tensorrt_library_dir": os.path.dirname(library_path),
   }
 
 
@@ -606,7 +605,7 @@ def main():
     for key, value in sorted(find_cuda_config().items()):
       print("%s: %s" % (key, value))
   except ConfigError as e:
-    sys.stderr.write(str(e) + '\n')
+    sys.stderr.write(str(e) + "\n")
     sys.exit(1)
 
 

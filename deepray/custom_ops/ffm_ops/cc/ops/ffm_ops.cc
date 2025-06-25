@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
 
@@ -23,7 +24,7 @@ REGISTER_OP("FFM")
     .Output("output: float")
     .Attr("dim_size: int")
     .Attr("int_type: string")
-    .SetShapeFn([](shape_inference::InferenceContext *ctx) {
+    .SetShapeFn([](shape_inference::InferenceContext* ctx) {
       int dim_size;
       TF_RETURN_IF_ERROR(ctx->GetAttr("dim_size", &dim_size));
       auto batch_size = ctx->Dim(ctx->input(0), 0);
@@ -43,7 +44,7 @@ REGISTER_OP("FFM")
       }
 
       ctx->set_output(0, ctx->Matrix(batch_size, out_dims));
-      return Status::OK();
+      return TFOkStatus;
     });
 
 REGISTER_OP("FFMGrad")
@@ -54,10 +55,10 @@ REGISTER_OP("FFMGrad")
     .Output("right_grad: float")
     .Attr("dim_size: int")
     .Attr("int_type: string")
-    .SetShapeFn([](shape_inference::InferenceContext *ctx) {
+    .SetShapeFn([](shape_inference::InferenceContext* ctx) {
       ctx->set_output(0, ctx->input(1));
       ctx->set_output(1, ctx->input(2));
-      return Status::OK();
+      return TFOkStatus;
     });
 
 }  // namespace tensorflow

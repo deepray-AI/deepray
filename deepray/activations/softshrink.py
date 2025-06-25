@@ -48,9 +48,9 @@ def softshrink(x: TensorLike, lower: Number = -0.5, upper: Number = 0.5) -> tf.T
     """
   if lower > upper:
     raise ValueError(
-        "The value of lower is {} and should"
-        " not be higher than the value "
-        "variable upper, which is {} .".format(lower, upper)
+      "The value of lower is {} and should not be higher than the value variable upper, which is {} .".format(
+        lower, upper
+      )
     )
   x = tf.convert_to_tensor(x)
   values_below_lower = tf.where(x < lower, x - lower, 0)

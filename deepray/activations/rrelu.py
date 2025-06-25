@@ -20,12 +20,12 @@ from typing import Optional
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
 def rrelu(
-    x: TensorLike,
-    lower: Number = 0.125,
-    upper: Number = 0.3333333333333333,
-    training: Optional[bool] = None,
-    seed: Optional[int] = None,
-    rng: Optional[tf.random.Generator] = None,
+  x: TensorLike,
+  lower: Number = 0.125,
+  upper: Number = 0.3333333333333333,
+  training: Optional[bool] = None,
+  seed: Optional[int] = None,
+  rng: Optional[tf.random.Generator] = None,
 ) -> tf.Tensor:
   r"""Randomized leaky rectified liner unit function.
 

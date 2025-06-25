@@ -32,10 +32,10 @@ def stochastic_depth_test(seed, training):
     expected_output = np.asarray([[0.3, 0.3, 0.65]]).astype(np.float32)
 
   test_utils.layer_test(
-      StochasticDepth,
-      kwargs={"survival_probability": survival_probability},
-      input_data=[shortcut, residual],
-      expected_output=expected_output,
+    StochasticDepth,
+    kwargs={"survival_probability": survival_probability},
+    input_data=[shortcut, residual],
+    expected_output=expected_output,
   )
 
 

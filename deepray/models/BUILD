@@ -9,6 +9,7 @@ py_library(
         "**/*.py",
     ]),
     deps = [
+        "//deepray/layers",
         "//deepray/testing",
         "//deepray/utils",
     ],

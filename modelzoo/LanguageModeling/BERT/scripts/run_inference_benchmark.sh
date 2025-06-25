@@ -46,7 +46,7 @@ echo "Results directory set as " $RESULTS_DIR
 use_fp16=""
 if [ "$precision" = "fp16" ] ; then
         echo "fp16 activated!"
-        use_fp16="--dtype=fp16"
+        use_fp16="--use_fp16"
 fi
 
 if [ "$use_xla" = "true" ] ; then
@@ -78,7 +78,7 @@ python run_squad.py \
 --mode=predict \
 --input_meta_data_path=${SQUAD_DIR}/squad_${SQUAD_VERSION}_meta_data \
 --vocab_file=$BERT_DIR/vocab.txt \
---config_file=$BERT_DIR/bert_config.json \
+--bert_config_file=$BERT_DIR/bert_config.json \
 --init_checkpoint=$init_checkpoint \
 --predict_file=$SQUAD_DIR/dev-v${squad_version}.json \
 --predict_batch_size=$batch_size \

@@ -3,11 +3,10 @@ set -e
 
 yes "" | bash ./configure || true
 
-# bazel build build_pip_pkg \
-#     --action_env=HTTP_PROXY=http://127.0.0.1:7890 \
-#     --action_env=HTTPS_PROXY=http://127.0.0.1:7890
-
-bazel build build_pip_pkg
+# --compilation_mode dbg \
+bazel build build_pip_pkg \
+    --copt=-O3 --copt=-march=native \
+    -s
 
 rm -rf artifacts/
 

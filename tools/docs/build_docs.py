@@ -35,7 +35,6 @@ from tensorflow_docs.api_generator import public_api
 PROJECT_SHORT_NAME = "dp"
 PROJECT_FULL_NAME = "Deepray"
 
-FLAGS = flags.FLAGS
 
 flags.DEFINE_string("git_branch", default=None, help="The name of the corresponding branch on github.")
 
@@ -62,20 +61,20 @@ def main(argv):
     code_url_prefix = CODE_PREFIX_TEMPLATE.format(git_branch="master")
 
   doc_generator = generate_lib.DocGenerator(
-      root_title=PROJECT_FULL_NAME,
-      py_modules=[(PROJECT_SHORT_NAME, dp)],
-      code_url_prefix=code_url_prefix,
-      private_map={
-          "dp": ["__version__", "utils", "version"],
-          "dp.options": ["warn_fallback"],
-      },
-      # These callbacks usually clean up a lot of aliases caused by internal imports.
-      callbacks=[
-          public_api.local_definitions_filter,
-          public_api.explicit_package_contents_filter,
-      ],
-      search_hints=FLAGS.search_hints,
-      site_path=FLAGS.site_path,
+    root_title=PROJECT_FULL_NAME,
+    py_modules=[(PROJECT_SHORT_NAME, dp)],
+    code_url_prefix=code_url_prefix,
+    private_map={
+      "dp": ["__version__", "utils", "version"],
+      "dp.options": ["warn_fallback"],
+    },
+    # These callbacks usually clean up a lot of aliases caused by internal imports.
+    callbacks=[
+      public_api.local_definitions_filter,
+      public_api.explicit_package_contents_filter,
+    ],
+    search_hints=FLAGS.search_hints,
+    site_path=FLAGS.site_path,
   )
 
   doc_generator.build(FLAGS.output_dir)

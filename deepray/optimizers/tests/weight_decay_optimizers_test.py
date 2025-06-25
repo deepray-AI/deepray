@@ -26,33 +26,33 @@ WEIGHT_DECAY = 0.01
 
 
 def do_test(
-    dtype,
-    optimizer,
-    update_fn,
-    do_sparse=False,
-    do_decay_var_list=False,
-    **optimizer_kwargs,
+  dtype,
+  optimizer,
+  update_fn,
+  do_sparse=False,
+  do_decay_var_list=False,
+  **optimizer_kwargs,
 ):
   """The major test function.
 
-    Args:
-        optimizer: The tensorflow optimizer class to be tested.
-        update_fn: The numpy update function of the optimizer, the function
-            signature must be
-            update_fn(var: np.array,
-                        grad_t: np.array,
-                        slot_vars: dict,
-                        **kwargs) -> (updated_var, updated_slot_vars)
-            Note that slot_vars will be initialized to an empty dictionary
-            for each variable, initial values should be handled in the
-            update_fn.
-        do_sparse: If True, test sparse update. Defaults to False, i.e.,
-            dense update.
-        do_decay_var_list: If True, test by passing a list of vars to ensure hashing is handled correctly
-        **optimizer_kwargs:The parameters to pass to the construcor of the
-            optimizer. Either a constant or a callable. This also passed to
-            the optimizer_params in the update_fn.
-    """
+  Args:
+      optimizer: The tensorflow optimizer class to be tested.
+      update_fn: The numpy update function of the optimizer, the function
+          signature must be
+          update_fn(var: np.array,
+                      grad_t: np.array,
+                      slot_vars: dict,
+                      **kwargs) -> (updated_var, updated_slot_vars)
+          Note that slot_vars will be initialized to an empty dictionary
+          for each variable, initial values should be handled in the
+          update_fn.
+      do_sparse: If True, test sparse update. Defaults to False, i.e.,
+          dense update.
+      do_decay_var_list: If True, test by passing a list of vars to ensure hashing is handled correctly
+      **optimizer_kwargs:The parameters to pass to the construcor of the
+          optimizer. Either a constant or a callable. This also passed to
+          the optimizer_params in the update_fn.
+  """
   # TODO: Fix #347 issue
   if do_sparse and test_utils.is_gpu_available():
     pytest.skip("Wait #347 to be fixed")
@@ -94,15 +94,15 @@ def do_test(
 def do_test_sparse_repeated_indices(dtype, optimizer, **optimizer_kwargs):
   """Test for repeated indices in sparse updates.
 
-    This test verifies that an update with repeated indices is the same as
-    an update with two times the gradient.
+  This test verifies that an update with repeated indices is the same as
+  an update with two times the gradient.
 
-    Args:
-        optimizer: The tensorflow optimizer class to be tested.
-        **optimizer_kwargs: The parameters to pass to the construcor of the
-            optimizer. Either a constant or a callable. This also passed to
-            the optimizer_params in the update_fn.
-    """
+  Args:
+      optimizer: The tensorflow optimizer class to be tested.
+      **optimizer_kwargs: The parameters to pass to the construcor of the
+          optimizer. Either a constant or a callable. This also passed to
+          the optimizer_params in the update_fn.
+  """
   # TODO: Fix #347 issue
   if test_utils.is_gpu_available():
     pytest.skip("Wait #347 to be fixed")
@@ -110,14 +110,14 @@ def do_test_sparse_repeated_indices(dtype, optimizer, **optimizer_kwargs):
   repeated_index_update_var = tf.Variable([[1.0], [2.0]], dtype=dtype)
   aggregated_update_var = tf.Variable([[1.0], [2.0]], dtype=dtype)
   grad_repeated_index = tf.IndexedSlices(
-      tf.constant([0.1, 0.1], shape=[2, 1], dtype=dtype),
-      tf.constant([1, 1]),
-      tf.constant([2, 1]),
+    tf.constant([0.1, 0.1], shape=[2, 1], dtype=dtype),
+    tf.constant([1, 1]),
+    tf.constant([2, 1]),
   )
   grad_aggregated = tf.IndexedSlices(
-      tf.constant([0.2], shape=[1, 1], dtype=dtype),
-      tf.constant([1]),
-      tf.constant([2, 1]),
+    tf.constant([0.2], shape=[1, 1], dtype=dtype),
+    tf.constant([1]),
+    tf.constant([2, 1]),
   )
   opt_repeated = optimizer(**optimizer_kwargs)
   _ = opt_repeated.apply_gradients([(grad_repeated_index, repeated_index_update_var)])
@@ -133,7 +133,7 @@ def do_test_sparse_repeated_indices(dtype, optimizer, **optimizer_kwargs):
 def adamw_update_numpy(param, grad_t, slot_vars, learning_rate, beta_1, beta_2, epsilon, weight_decay):
   """Numpy update function for AdamW."""
   lr, beta1, beta2, eps, wd = (
-      v() if callable(v) else v for v in (learning_rate, beta_1, beta_2, epsilon, weight_decay)
+    v() if callable(v) else v for v in (learning_rate, beta_1, beta_2, epsilon, weight_decay)
   )
   t = slot_vars.get("t", 0) + 1
   lr_t = lr * np.sqrt(1 - beta2**t) / (1 - beta1**t)
@@ -156,71 +156,71 @@ def sgdw_update_numpy(param, grad_t, slot_vars, learning_rate, momentum, weight_
 @pytest.mark.parametrize("dtype", [(tf.half, 0), (tf.float32, 1), (tf.float64, 2)])
 def test_sparse_adamw(dtype):
   do_test(
-      dtype,
-      weight_decay_optimizers.AdamW,
-      adamw_update_numpy,
-      do_sparse=True,
-      learning_rate=0.001,
-      beta_1=0.9,
-      beta_2=0.999,
-      epsilon=1e-8,
-      weight_decay=WEIGHT_DECAY,
+    dtype,
+    weight_decay_optimizers.AdamW,
+    adamw_update_numpy,
+    do_sparse=True,
+    learning_rate=0.001,
+    beta_1=0.9,
+    beta_2=0.999,
+    epsilon=1e-8,
+    weight_decay=WEIGHT_DECAY,
   )
 
 
 @pytest.mark.parametrize("dtype", [tf.half, tf.float32, tf.float64])
 def test_sparse_repeated_indices_adamw(dtype):
   do_test_sparse_repeated_indices(
-      dtype,
-      weight_decay_optimizers.AdamW,
-      learning_rate=0.001,
-      beta_1=0.9,
-      beta_2=0.999,
-      epsilon=1e-8,
-      weight_decay=WEIGHT_DECAY,
+    dtype,
+    weight_decay_optimizers.AdamW,
+    learning_rate=0.001,
+    beta_1=0.9,
+    beta_2=0.999,
+    epsilon=1e-8,
+    weight_decay=WEIGHT_DECAY,
   )
 
 
 @pytest.mark.parametrize("dtype", [(tf.half, 0), (tf.float32, 1), (tf.float64, 2)])
 def test_basic_adamw(dtype):
   do_test(
-      dtype,
-      weight_decay_optimizers.AdamW,
-      adamw_update_numpy,
-      learning_rate=0.001,
-      beta_1=0.9,
-      beta_2=0.999,
-      epsilon=1e-8,
-      weight_decay=WEIGHT_DECAY,
+    dtype,
+    weight_decay_optimizers.AdamW,
+    adamw_update_numpy,
+    learning_rate=0.001,
+    beta_1=0.9,
+    beta_2=0.999,
+    epsilon=1e-8,
+    weight_decay=WEIGHT_DECAY,
   )
 
 
 @pytest.mark.parametrize("dtype", [(tf.half, 0), (tf.float32, 1), (tf.float64, 2)])
 def test_basic_callable_params_adamw(dtype):
   do_test(
-      dtype,
-      weight_decay_optimizers.AdamW,
-      adamw_update_numpy,
-      learning_rate=lambda: 0.001,
-      beta_1=lambda: 0.9,
-      beta_2=lambda: 0.999,
-      epsilon=1e-8,
-      weight_decay=lambda: WEIGHT_DECAY,
+    dtype,
+    weight_decay_optimizers.AdamW,
+    adamw_update_numpy,
+    learning_rate=lambda: 0.001,
+    beta_1=lambda: 0.9,
+    beta_2=lambda: 0.999,
+    epsilon=1e-8,
+    weight_decay=lambda: WEIGHT_DECAY,
   )
 
 
 @pytest.mark.parametrize("dtype", [(tf.half, 0), (tf.float32, 1), (tf.float64, 2)])
 def test_basic_decay_var_list_adamw(dtype):
   do_test(
-      dtype,
-      weight_decay_optimizers.AdamW,
-      adamw_update_numpy,
-      do_decay_var_list=True,
-      learning_rate=0.001,
-      beta_1=0.9,
-      beta_2=0.999,
-      epsilon=1e-8,
-      weight_decay=WEIGHT_DECAY,
+    dtype,
+    weight_decay_optimizers.AdamW,
+    adamw_update_numpy,
+    do_decay_var_list=True,
+    learning_rate=0.001,
+    beta_1=0.9,
+    beta_2=0.999,
+    epsilon=1e-8,
+    weight_decay=WEIGHT_DECAY,
   )
 
 
@@ -239,16 +239,16 @@ def test_exclude_weight_decay_adamw():
 @pytest.mark.parametrize("dtype", [(tf.half, 0), (tf.float32, 1), (tf.float64, 2)])
 def test_var_list_with_exclude_list_adamw(dtype):
   do_test(
-      dtype,
-      weight_decay_optimizers.AdamW,
-      adamw_update_numpy,
-      do_decay_var_list=True,
-      learning_rate=0.001,
-      beta_1=0.9,
-      beta_2=0.999,
-      epsilon=1e-8,
-      weight_decay=WEIGHT_DECAY,
-      exclude_from_weight_decay=["var0_*", "var1_*"],
+    dtype,
+    weight_decay_optimizers.AdamW,
+    adamw_update_numpy,
+    do_decay_var_list=True,
+    learning_rate=0.001,
+    beta_1=0.9,
+    beta_2=0.999,
+    epsilon=1e-8,
+    weight_decay=WEIGHT_DECAY,
+    exclude_from_weight_decay=["var0_*", "var1_*"],
   )
 
 
@@ -287,48 +287,48 @@ def test_weight_decay_with_piecewise_constant_decay_schedule():
 @pytest.mark.parametrize("dtype", [(tf.half, 0), (tf.float32, 1), (tf.float64, 2)])
 def test_sparse_sgdw(dtype):
   do_test(
-      dtype,
-      weight_decay_optimizers.SGDW,
-      sgdw_update_numpy,
-      do_sparse=True,
-      learning_rate=0.001,
-      momentum=0.9,
-      weight_decay=WEIGHT_DECAY,
+    dtype,
+    weight_decay_optimizers.SGDW,
+    sgdw_update_numpy,
+    do_sparse=True,
+    learning_rate=0.001,
+    momentum=0.9,
+    weight_decay=WEIGHT_DECAY,
   )
 
 
 @pytest.mark.parametrize("dtype", [tf.half, tf.float32, tf.float64])
 def test_sparse_repeated_indices_sgdw(dtype):
   do_test_sparse_repeated_indices(
-      dtype,
-      weight_decay_optimizers.SGDW,
-      learning_rate=0.001,
-      momentum=0.9,
-      weight_decay=WEIGHT_DECAY,
+    dtype,
+    weight_decay_optimizers.SGDW,
+    learning_rate=0.001,
+    momentum=0.9,
+    weight_decay=WEIGHT_DECAY,
   )
 
 
 @pytest.mark.parametrize("dtype", [(tf.half, 0), (tf.float32, 1), (tf.float64, 2)])
 def test_basic_sgdw(dtype):
   do_test(
-      dtype,
-      weight_decay_optimizers.SGDW,
-      sgdw_update_numpy,
-      learning_rate=0.001,
-      momentum=0.9,
-      weight_decay=WEIGHT_DECAY,
+    dtype,
+    weight_decay_optimizers.SGDW,
+    sgdw_update_numpy,
+    learning_rate=0.001,
+    momentum=0.9,
+    weight_decay=WEIGHT_DECAY,
   )
 
 
 @pytest.mark.parametrize("dtype", [(tf.half, 0), (tf.float32, 1), (tf.float64, 2)])
 def test_basic_callable_params_sgdw(dtype):
   do_test(
-      dtype,
-      weight_decay_optimizers.SGDW,
-      sgdw_update_numpy,
-      learning_rate=lambda: 0.001,
-      momentum=lambda: 0.9,
-      weight_decay=lambda: WEIGHT_DECAY,
+    dtype,
+    weight_decay_optimizers.SGDW,
+    sgdw_update_numpy,
+    learning_rate=lambda: 0.001,
+    momentum=lambda: 0.9,
+    weight_decay=lambda: WEIGHT_DECAY,
   )
 
 
@@ -336,13 +336,13 @@ def test_basic_callable_params_sgdw(dtype):
 @pytest.mark.parametrize("dtype", [(tf.half, 0), (tf.float32, 1), (tf.float64, 2)])
 def test_basic_decay_var_list_sgdw(dtype):
   do_test(
-      dtype,
-      weight_decay_optimizers.SGDW,
-      sgdw_update_numpy,
-      do_decay_var_list=True,
-      learning_rate=0.001,
-      momentum=0.9,
-      weight_decay=WEIGHT_DECAY,
+    dtype,
+    weight_decay_optimizers.SGDW,
+    sgdw_update_numpy,
+    do_decay_var_list=True,
+    learning_rate=0.001,
+    momentum=0.9,
+    weight_decay=WEIGHT_DECAY,
   )
 
 
@@ -362,48 +362,48 @@ def test_exclude_weight_decay_sgdw():
 @pytest.mark.parametrize("dtype", [(tf.half, 0), (tf.float32, 1), (tf.float64, 2)])
 def test_var_list_with_exclude_list_sgdw(dtype):
   do_test(
-      dtype,
-      weight_decay_optimizers.SGDW,
-      sgdw_update_numpy,
-      do_decay_var_list=True,
-      learning_rate=0.001,
-      momentum=0.9,
-      weight_decay=WEIGHT_DECAY,
-      exclude_from_weight_decay=["var0_*", "var1_*"],
+    dtype,
+    weight_decay_optimizers.SGDW,
+    sgdw_update_numpy,
+    do_decay_var_list=True,
+    learning_rate=0.001,
+    momentum=0.9,
+    weight_decay=WEIGHT_DECAY,
+    exclude_from_weight_decay=["var0_*", "var1_*"],
   )
 
 
-if importlib.util.find_spec("tensorflow.keras.optimizers.legacy") is not None:
+if importlib.util.find_spec("tf_keras.optimizers.legacy") is not None:
   optimizer_class = tf.keras.optimizers.legacy.SGD
 else:
   optimizer_class = tf.keras.optimizers.SGD
 
 
 @pytest.mark.parametrize(
-    "optimizer",
-    [
-        weight_decay_optimizers.SGDW,
-        weight_decay_optimizers.extend_with_decoupled_weight_decay(optimizer_class),
-    ],
+  "optimizer",
+  [
+    weight_decay_optimizers.SGDW,
+    weight_decay_optimizers.extend_with_decoupled_weight_decay(optimizer_class),
+  ],
 )
 @pytest.mark.parametrize("dtype", [(tf.half, 0), (tf.float32, 1), (tf.float64, 2)])
 def test_optimizer_basic(dtype, optimizer):
   do_test(
-      dtype,
-      optimizer,
-      sgdw_update_numpy,
-      learning_rate=0.001,
-      momentum=0.9,
-      weight_decay=WEIGHT_DECAY,
+    dtype,
+    optimizer,
+    sgdw_update_numpy,
+    learning_rate=0.001,
+    momentum=0.9,
+    weight_decay=WEIGHT_DECAY,
   )
 
 
 @pytest.mark.parametrize(
-    "optimizer",
-    [
-        weight_decay_optimizers.SGDW,
-        weight_decay_optimizers.extend_with_decoupled_weight_decay(optimizer_class),
-    ],
+  "optimizer",
+  [
+    weight_decay_optimizers.SGDW,
+    weight_decay_optimizers.extend_with_decoupled_weight_decay(optimizer_class),
+  ],
 )
 @pytest.mark.parametrize("dtype", [tf.half, tf.float32, tf.float64])
 def test_optimizer_sparse(dtype, optimizer):

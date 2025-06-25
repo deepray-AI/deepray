@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
-#include "deepray/custom_ops/parquet_dataset/cc/kernels/parquet_batch_reader.h"
+#include "parquet_batch_reader.h"
 
 #include <memory>
 #include <numeric>
@@ -20,7 +20,7 @@ limitations under the License.
 #include <vector>
 
 #include "absl/strings/match.h"
-#include "deepray/custom_ops/parquet_dataset/cc/kernels/arrow_util.h"
+#include "arrow_util.h"
 
 namespace tensorflow {
 namespace data {
@@ -44,7 +44,7 @@ class ParquetBatchReader::Impl {
 
   Status Open() {
     if (TF_PREDICT_TRUE(batch_reader_)) {
-      return Status::OK();
+      return OkStatus();
     }
     if (TF_PREDICT_FALSE(partition_index_ >= partition_count_)) {
       return errors::InvalidArgument("Partition index ", partition_index_,
@@ -101,7 +101,7 @@ class ParquetBatchReader::Impl {
 
     TF_RETURN_IF_ARROW_ERROR(reader_->GetRecordBatchReader(
         row_group_indices_, column_indices_, &batch_reader_));
-    return Status::OK();
+    return OkStatus();
   }
 
   Status Read(std::vector<Tensor>* output_tensors) {
@@ -123,7 +123,7 @@ class ParquetBatchReader::Impl {
           field_dtypes_[i], field_ragged_ranks_[i], arrays[i], output_tensors));
     }
 
-    return Status::OK();
+    return OkStatus();
   }
 
  private:

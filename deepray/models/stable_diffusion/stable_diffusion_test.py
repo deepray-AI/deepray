@@ -19,7 +19,6 @@ from . import StableDiffusion
 
 
 class StableDiffusionTest(tf.test.TestCase):
-
   def DISABLED_test_end_to_end_golden_value(self):
     prompt = "a caterpillar smoking a hookah while sitting on a mushroom"
     stablediff = StableDiffusion(128, 128)
@@ -36,9 +35,9 @@ class StableDiffusionTest(tf.test.TestCase):
 
     outputs = stablediff.image_encoder.predict(tf.ones((1, 128, 128, 3)))
     self.assertAllClose(
-        outputs[0][1:4][0][0],
-        [2.451568, 1.607522, -0.546311, -1.194388],
-        atol=1e-4,
+      outputs[0][1:4][0][0],
+      [2.451568, 1.607522, -0.546311, -1.194388],
+      atol=1e-4,
     )
 
   def DISABLED_test_mixed_precision(self):
@@ -50,13 +49,13 @@ class StableDiffusionTest(tf.test.TestCase):
     stablediff = StableDiffusion(128, 128)
 
     with self.assertRaisesRegex(
-        ValueError,
-        r"`diffusion_noise` and `seed` should not both be passed",
+      ValueError,
+      r"`diffusion_noise` and `seed` should not both be passed",
     ):
       _ = stablediff.generate_image(
-          stablediff.encode_text("thou shall not render"),
-          diffusion_noise=tf.random.normal((1, 16, 16, 4)),
-          seed=1337,
+        stablediff.encode_text("thou shall not render"),
+        diffusion_noise=tf.random.normal((1, 16, 16, 4)),
+        seed=1337,
       )
 
 

@@ -23,48 +23,47 @@ from official.nlp.modeling.networks import sparse_mixer
 
 
 class SparseMixerTest(parameterized.TestCase, tf.test.TestCase):
-
   def tearDown(self):
     super().tearDown()
     tf.keras.mixed_precision.set_global_policy("float32")
 
   @parameterized.named_parameters(
-      dict(
-          testcase_name="sparse_mixer",
-          mixing_mechanism=layers.MixingMechanism.LINEAR,
-          moe_layers=(1,),
-          attention_layers=(2,)
-      ),
-      dict(testcase_name="fnet", mixing_mechanism=layers.MixingMechanism.FOURIER, moe_layers=(), attention_layers=()),
-      dict(
-          testcase_name="sparse_hnet",
-          mixing_mechanism=layers.MixingMechanism.HARTLEY,
-          moe_layers=(0, 1, 2),
-          attention_layers=(1, 2)
-      ),
-      dict(
-          testcase_name="sparse_bert",
-          mixing_mechanism=layers.MixingMechanism.LINEAR,
-          moe_layers=(0, 1, 2),  # All layers use MoE
-          attention_layers=(0, 1, 2)
-      ),  # All layers use attention
+    dict(
+      testcase_name="sparse_mixer",
+      mixing_mechanism=layers.MixingMechanism.LINEAR,
+      moe_layers=(1,),
+      attention_layers=(2,),
+    ),
+    dict(testcase_name="fnet", mixing_mechanism=layers.MixingMechanism.FOURIER, moe_layers=(), attention_layers=()),
+    dict(
+      testcase_name="sparse_hnet",
+      mixing_mechanism=layers.MixingMechanism.HARTLEY,
+      moe_layers=(0, 1, 2),
+      attention_layers=(1, 2),
+    ),
+    dict(
+      testcase_name="sparse_bert",
+      mixing_mechanism=layers.MixingMechanism.LINEAR,
+      moe_layers=(0, 1, 2),  # All layers use MoE
+      attention_layers=(0, 1, 2),
+    ),  # All layers use attention
   )
   def test_network(
-      self, mixing_mechanism: layers.MixingMechanism, attention_layers: Sequence[int], moe_layers: Sequence[int]
+    self, mixing_mechanism: layers.MixingMechanism, attention_layers: Sequence[int], moe_layers: Sequence[int]
   ):
     num_layers = 3
     hidden_size = 16
     sequence_length = 32
     test_network = sparse_mixer.SparseMixer(
-        vocab_size=100,
-        hidden_size=hidden_size,
-        num_attention_heads=2,
-        max_sequence_length=sequence_length,
-        num_layers=num_layers,
-        moe_layers=moe_layers,
-        num_experts=8,
-        mixing_mechanism=mixing_mechanism,
-        attention_layers=attention_layers
+      vocab_size=100,
+      hidden_size=hidden_size,
+      num_attention_heads=2,
+      max_sequence_length=sequence_length,
+      num_layers=num_layers,
+      moe_layers=moe_layers,
+      num_experts=8,
+      mixing_mechanism=mixing_mechanism,
+      attention_layers=attention_layers,
     )
 
     batch_size = 4
@@ -93,14 +92,14 @@ class SparseMixerTest(parameterized.TestCase, tf.test.TestCase):
     hidden_size = 32
     sequence_length = 8
     test_network = sparse_mixer.SparseMixer(
-        vocab_size=100,
-        hidden_size=hidden_size,
-        num_attention_heads=2,
-        max_sequence_length=sequence_length,
-        num_layers=3,
-        moe_layers=(1,),
-        num_experts=4,
-        attention_layers=(2,)
+      vocab_size=100,
+      hidden_size=hidden_size,
+      num_attention_heads=2,
+      max_sequence_length=sequence_length,
+      num_layers=3,
+      moe_layers=(1,),
+      num_experts=4,
+      attention_layers=(2,),
     )
 
     batch_size = 2

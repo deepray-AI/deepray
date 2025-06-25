@@ -17,6 +17,7 @@
 For collecting local environment metrics like CPU and memory, certain python
 packages need be installed. See README for details.
 """
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -30,12 +31,11 @@ import os
 import threading
 import uuid
 
-from six.moves import _thread as thread
-from absl import flags
 import tensorflow as tf
-from tensorflow.python.client import device_lib
-
+from absl import flags
+from absl import logging
 from official.utils.logs import cloud_lib
+from six.moves import _thread as thread
 
 METRIC_LOG_FILE_NAME = "metric.log"
 BENCHMARK_RUN_LOG_FILE_NAME = "benchmark_run.log"
@@ -44,8 +44,6 @@ GCP_TEST_ENV = "GCP"
 RUN_STATUS_SUCCESS = "success"
 RUN_STATUS_FAILURE = "failure"
 RUN_STATUS_RUNNING = "running"
-
-FLAGS = flags.FLAGS
 
 # Don't use it directly. Use get_benchmark_logger to access a logger.
 _benchmark_logger = None
@@ -58,22 +56,23 @@ def config_benchmark_logger(flag_obj=None):
   try:
     global _benchmark_logger
     if not flag_obj:
-      flag_obj = FLAGS
+      flag_obj = flags.FLAGS
 
-    if (not hasattr(flag_obj, "benchmark_logger_type") or flag_obj.benchmark_logger_type == "BaseBenchmarkLogger"):
+    if not hasattr(flag_obj, "benchmark_logger_type") or flag_obj.benchmark_logger_type == "BaseBenchmarkLogger":
       _benchmark_logger = BaseBenchmarkLogger()
     elif flag_obj.benchmark_logger_type == "BenchmarkFileLogger":
       _benchmark_logger = BenchmarkFileLogger(flag_obj.benchmark_log_dir)
     elif flag_obj.benchmark_logger_type == "BenchmarkBigQueryLogger":
       from official.benchmark import benchmark_uploader as bu  # pylint: disable=g-import-not-at-top
+
       bq_uploader = bu.BigQueryUploader(gcp_project=flag_obj.gcp_project)
       _benchmark_logger = BenchmarkBigQueryLogger(
-          bigquery_uploader=bq_uploader,
-          bigquery_data_set=flag_obj.bigquery_data_set,
-          bigquery_run_table=flag_obj.bigquery_run_table,
-          bigquery_run_status_table=flag_obj.bigquery_run_status_table,
-          bigquery_metric_table=flag_obj.bigquery_metric_table,
-          run_id=str(uuid.uuid4())
+        bigquery_uploader=bq_uploader,
+        bigquery_data_set=flag_obj.bigquery_data_set,
+        bigquery_run_table=flag_obj.bigquery_run_table,
+        bigquery_run_status_table=flag_obj.bigquery_run_status_table,
+        bigquery_metric_table=flag_obj.bigquery_metric_table,
+        run_id=str(uuid.uuid4()),
       )
     else:
       raise ValueError("Unrecognized benchmark_logger_type: %s" % flag_obj.benchmark_logger_type)
@@ -212,8 +211,13 @@ class BenchmarkBigQueryLogger(BaseBenchmarkLogger):
   """Class to log the benchmark information to BigQuery data store."""
 
   def __init__(
-      self, bigquery_uploader, bigquery_data_set, bigquery_run_table, bigquery_run_status_table, bigquery_metric_table,
-      run_id
+    self,
+    bigquery_uploader,
+    bigquery_data_set,
+    bigquery_run_table,
+    bigquery_run_status_table,
+    bigquery_metric_table,
+    run_id,
   ):
     super(BenchmarkBigQueryLogger, self).__init__()
     self._bigquery_uploader = bigquery_uploader
@@ -241,8 +245,8 @@ class BenchmarkBigQueryLogger(BaseBenchmarkLogger):
       # thread might have potential performance impact for model that run on
       # CPU.
       thread.start_new_thread(
-          self._bigquery_uploader.upload_benchmark_metric_json,
-          (self._bigquery_data_set, self._bigquery_metric_table, self._run_id, [metric])
+        self._bigquery_uploader.upload_benchmark_metric_json,
+        (self._bigquery_data_set, self._bigquery_metric_table, self._run_id, [metric]),
       )
 
   def log_run_info(self, model_name, dataset_name, run_params, test_id=None):
@@ -263,30 +267,28 @@ class BenchmarkBigQueryLogger(BaseBenchmarkLogger):
     # and impact the benchmark and performance measurement. Starting a new
     # thread might have potential performance impact for model that run on CPU.
     thread.start_new_thread(
-        self._bigquery_uploader.upload_benchmark_run_json,
-        (self._bigquery_data_set, self._bigquery_run_table, self._run_id, run_info)
+      self._bigquery_uploader.upload_benchmark_run_json,
+      (self._bigquery_data_set, self._bigquery_run_table, self._run_id, run_info),
     )
     thread.start_new_thread(
-        self._bigquery_uploader.insert_run_status,
-        (self._bigquery_data_set, self._bigquery_run_status_table, self._run_id, RUN_STATUS_RUNNING)
+      self._bigquery_uploader.insert_run_status,
+      (self._bigquery_data_set, self._bigquery_run_status_table, self._run_id, RUN_STATUS_RUNNING),
     )
 
   def on_finish(self, status):
     self._bigquery_uploader.update_run_status(
-        self._bigquery_data_set, self._bigquery_run_status_table, self._run_id, status
+      self._bigquery_data_set, self._bigquery_run_status_table, self._run_id, status
     )
 
 
 def _gather_run_info(model_name, dataset_name, run_params, test_id):
   """Collect the benchmark run information for the local environment."""
   run_info = {
-      "model_name": model_name,
-      "dataset": {
-          "name": dataset_name
-      },
-      "machine_config": {},
-      "test_id": test_id,
-      "run_date": datetime.datetime.utcnow().strftime(_DATE_TIME_FORMAT_PATTERN)
+    "model_name": model_name,
+    "dataset": {"name": dataset_name},
+    "machine_config": {},
+    "test_id": test_id,
+    "run_date": datetime.datetime.utcnow().strftime(_DATE_TIME_FORMAT_PATTERN),
   }
   _collect_tensorflow_info(run_info)
   _collect_tensorflow_environment_variables(run_info)
@@ -305,12 +307,12 @@ def _process_metric_to_json(name, value, unit=None, global_step=None, extras=Non
 
   extras = _convert_to_json_dict(extras)
   return {
-      "name": name,
-      "value": float(value),
-      "unit": unit,
-      "global_step": global_step,
-      "timestamp": datetime.datetime.utcnow().strftime(_DATE_TIME_FORMAT_PATTERN),
-      "extras": extras
+    "name": name,
+    "value": float(value),
+    "unit": unit,
+    "global_step": global_step,
+    "timestamp": datetime.datetime.utcnow().strftime(_DATE_TIME_FORMAT_PATTERN),
+    "extras": extras,
   }
 
 
@@ -323,22 +325,10 @@ def _collect_run_params(run_info, run_params):
 
   def process_param(name, value):
     type_check = {
-        str: {
-            "name": name,
-            "string_value": value
-        },
-        int: {
-            "name": name,
-            "long_value": value
-        },
-        bool: {
-            "name": name,
-            "bool_value": str(value)
-        },
-        float: {
-            "name": name,
-            "float_value": value
-        },
+      str: {"name": name, "string_value": value},
+      int: {"name": name, "long_value": value},
+      bool: {"name": name, "bool_value": str(value)},
+      float: {"name": name, "float_value": value},
     }
     return type_check.get(type(value), {"name": name, "string_value": str(value)})
 
@@ -348,10 +338,7 @@ def _collect_run_params(run_info, run_params):
 
 def _collect_tensorflow_environment_variables(run_info):
   run_info["tensorflow_environment_variables"] = [
-      {
-          "name": k,
-          "value": v
-      } for k, v in sorted(os.environ.items()) if k.startswith("TF_")
+    {"name": k, "value": v} for k, v in sorted(os.environ.items()) if k.startswith("TF_")
   ]
 
 
@@ -382,6 +369,7 @@ def _collect_memory_info(run_info):
     # Note: psutil is not installed in the TensorFlow OSS tree.
     # It is installable via pip.
     import psutil  # pylint: disable=g-import-not-at-top
+
     vmem = psutil.virtual_memory()
     run_info["machine_config"]["memory_total"] = vmem.total
     run_info["machine_config"]["memory_available"] = vmem.available

@@ -15,7 +15,7 @@ limitations under the License.
 
 #if GOOGLE_CUDA || TENSORFLOW_USE_ROCM
 
-#include "deepray/custom_ops/multiplex_2/multiplex_2_kernel.h"
+#include "multiplex_2_kernel.h"
 
 // Please use the appropriate namespace for your project
 namespace tensorflow {

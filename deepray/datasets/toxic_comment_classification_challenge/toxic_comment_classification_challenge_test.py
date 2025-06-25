@@ -9,20 +9,18 @@ from absl import app, flags
 
 from .toxic_comment_classification_challenge import ToxicCommentClassificationChallenge
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
 def runner(argv=None):
   if len(argv) <= 1:
     argv = [
-        sys.argv[0],
-        "--batch_size=1",
-        "-epochs=1",
-        # "--train_data=cifar100",
-        # f"--feature_map={dir_path}/feature_map.csv",
-        # "--label=clicked",
+      sys.argv[0],
+      "--batch_size=1",
+      "-epochs=1",
+      # "--train_data=cifar100",
+      # f"--feature_map={dir_path}/feature_map.csv",
+      # "--label=clicked",
     ]
   if argv:
     FLAGS(argv, known_only=True)

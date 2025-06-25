@@ -1,12 +1,12 @@
 """OSS versions of Bazel macros that can't be migrated to TSL."""
 
+load("@local_config_cuda//cuda:build_defs.bzl", "if_cuda")
+load("@local_config_rocm//rocm:build_defs.bzl", "if_rocm")
 load(
     "//deepray/tsl:tsl.bzl",
     "clean_dep",
     "if_libtpu",
 )
-load("@local_config_cuda//cuda:build_defs.bzl", "if_cuda")
-load("@local_config_rocm//rocm:build_defs.bzl", "if_rocm")
 load(
     "//third_party/mkl:build_defs.bzl",
     "if_mkl_ml",

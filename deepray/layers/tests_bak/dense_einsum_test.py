@@ -29,7 +29,6 @@ from deepray.layers import dense_einsum
 # guarantees forward compatibility of this code for the V2 switchover.
 @keras_parameterized.run_all_keras_modes
 class DenseEinsumLayer(keras_parameterized.TestCase):
-
   def test_3D_einsum_with_two_bound_dimensions(self):
     test_layer = dense_einsum.DenseEinsum(output_shape=(64,), num_summed_dimensions=2)
     # Create a 4-dimensional input (the first dimension is implicit).
@@ -101,9 +100,7 @@ class DenseEinsumLayer(keras_parameterized.TestCase):
 
   def test_with_explicit_initializer(self):
     test_layer = dense_einsum.DenseEinsum(
-        output_shape=(64,),
-        num_summed_dimensions=2,
-        kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02)
+      output_shape=(64,), num_summed_dimensions=2, kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.02)
     )
     # Create a 4-dimensional input (the first dimension is implicit).
     input_tensor = tf.keras.Input(shape=(None, 40, 80))

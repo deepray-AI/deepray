@@ -54,10 +54,10 @@ def test_run():
   np.testing.assert_allclose(var0.read_value(), [0.75, 1.75])
   np.testing.assert_allclose(var1.read_value(), [2.975, 3.975])
 
-  var0.assign_add([1.0, 1.0]),
-  var1.assign_add([2.0, 2.0]),
-  ema_var0.assign_add([3.0, 3.0]),
-  ema_var1.assign_add([4.0, 4.0]),
+  (var0.assign_add([1.0, 1.0]),)
+  (var1.assign_add([2.0, 2.0]),)
+  (ema_var0.assign_add([3.0, 3.0]),)
+  (ema_var1.assign_add([4.0, 4.0]),)
 
   np.testing.assert_allclose(var0.read_value(), [1.75, 2.75])
   np.testing.assert_allclose(var1.read_value(), [4.975, 5.975])
@@ -88,13 +88,13 @@ def test_num_updates_invalid():
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def test_model_weights_update():
   grad = tf.Variable([[0.1]])
-  model = tf.keras.Sequential(
-      [tf.keras.layers.Dense(
-          1,
-          kernel_initializer=tf.keras.initializers.Constant([[1.0]]),
-          use_bias=False,
-      )]
-  )
+  model = tf.keras.Sequential([
+    tf.keras.layers.Dense(
+      1,
+      kernel_initializer=tf.keras.initializers.Constant([[1.0]]),
+      use_bias=False,
+    )
+  ])
   model.build(input_shape=[1, 1])
 
   if hasattr(tf.keras.optimizers, "legacy"):
@@ -110,13 +110,13 @@ def test_model_weights_update():
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def test_model_dynamic_lr():
   grad = tf.Variable([[0.1]])
-  model = tf.keras.Sequential(
-      [tf.keras.layers.Dense(
-          1,
-          kernel_initializer=tf.keras.initializers.Constant([[1.0]]),
-          use_bias=False,
-      )]
-  )
+  model = tf.keras.Sequential([
+    tf.keras.layers.Dense(
+      1,
+      kernel_initializer=tf.keras.initializers.Constant([[1.0]]),
+      use_bias=False,
+    )
+  ])
   model.build(input_shape=[1, 1])
   if hasattr(tf.keras.optimizers, "legacy"):
     opt = MovingAverage(tf.keras.optimizers.legacy.SGD(lr=1e-3), average_decay=0.5)
@@ -139,11 +139,11 @@ def test_config():
   else:
     sgd_opt = tf.keras.optimizers.SGD(lr=2.0, nesterov=True, momentum=0.3, decay=0.1)
   opt = MovingAverage(
-      sgd_opt,
-      average_decay=0.5,
-      num_updates=None,
-      start_step=5,
-      dynamic_decay=True,
+    sgd_opt,
+    average_decay=0.5,
+    num_updates=None,
+    start_step=5,
+    dynamic_decay=True,
   )
   config = opt.get_config()
 
@@ -194,11 +194,11 @@ def test_serialization():
   else:
     sgd_opt = tf.keras.optimizers.SGD(lr=2.0, nesterov=True, momentum=0.3, decay=0.1)
   optimizer = MovingAverage(
-      sgd_opt,
-      average_decay=0.5,
-      num_updates=None,
-      start_step=5,
-      dynamic_decay=True,
+    sgd_opt,
+    average_decay=0.5,
+    num_updates=None,
+    start_step=5,
+    dynamic_decay=True,
   )
   config = tf.keras.optimizers.serialize(optimizer)
   new_optimizer = tf.keras.optimizers.deserialize(config)
@@ -239,15 +239,15 @@ def test_dynamic_decay():
 
   if hasattr(tf.keras.optimizers, "legacy"):
     opt = MovingAverage(
-        tf.keras.optimizers.legacy.SGD(lr=2.0),
-        average_decay=0.5,
-        dynamic_decay=True,
+      tf.keras.optimizers.legacy.SGD(lr=2.0),
+      average_decay=0.5,
+      dynamic_decay=True,
     )
   else:
     opt = MovingAverage(
-        tf.keras.optimizers.SGD(lr=2.0),
-        average_decay=0.5,
-        dynamic_decay=True,
+      tf.keras.optimizers.SGD(lr=2.0),
+      average_decay=0.5,
+      dynamic_decay=True,
     )
 
   opt.apply_gradients(grads_and_vars)
@@ -260,8 +260,8 @@ def test_dynamic_decay():
 
 
 @pytest.mark.skipif(
-    Version(tf.__version__) >= Version("2.13"),
-    reason="TF2.13 breakage: https://github.com/tensorflow/addons/pull/2835#issuecomment-1629772331",
+  Version(tf.__version__) >= Version("2.13"),
+  reason="TF2.13 breakage: https://github.com/tensorflow/addons/pull/2835#issuecomment-1629772331",
 )
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.with_device([tf.distribute.MirroredStrategy])
@@ -299,8 +299,8 @@ def test_swap_weight_no_shadow_copy(device):
 
 
 @pytest.mark.skipif(
-    Version(tf.__version__) >= Version("2.13"),
-    reason="TF2.13 breakage: https://github.com/tensorflow/addons/pull/2835#issuecomment-1629772331",
+  Version(tf.__version__) >= Version("2.13"),
+  reason="TF2.13 breakage: https://github.com/tensorflow/addons/pull/2835#issuecomment-1629772331",
 )
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 @pytest.mark.with_device([tf.distribute.MirroredStrategy])
@@ -359,21 +359,19 @@ def test_no_average_slot():
   # They are returned when using model.variables
   # but it's unable to assign average slot to them.
   vectorize_layer = tf.keras.layers.experimental.preprocessing.TextVectorization(
-      max_tokens=max_features,
-      output_mode="int",
-      output_sequence_length=max_len,
+    max_tokens=max_features,
+    output_mode="int",
+    output_sequence_length=max_len,
   )
 
   vectorize_layer.adapt(["foo", "bar", "baz"])
 
-  model = tf.keras.models.Sequential(
-      [
-          tf.keras.Input(shape=(1,), dtype=tf.string),
-          vectorize_layer,
-          tf.keras.layers.Embedding(max_features + 1, embedding_dims),
-          tf.keras.layers.Dense(1),
-      ]
-  )
+  model = tf.keras.models.Sequential([
+    tf.keras.Input(shape=(1,), dtype=tf.string),
+    vectorize_layer,
+    tf.keras.layers.Embedding(max_features + 1, embedding_dims),
+    tf.keras.layers.Dense(1),
+  ])
 
   optimizer = MovingAverage("sgd")
 

@@ -24,25 +24,22 @@ import shutil
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
-
-FLAGS = flags.FLAGS
+from deepray.datasets.datapipeline import DataPipeline
 
 AUTOTUNE = tf.data.AUTOTUNE
 
 
-class IMDB(DataPipeLine):
-
-  def __init__(self, url='https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz', **kwargs):
+class IMDB(DataPipeline):
+  def __init__(self, url="https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz", **kwargs):
     super().__init__(**kwargs)
-    dataset = tf.keras.utils.get_file('aclImdb_v1.tar.gz', url, untar=True, cache_dir='.', cache_subdir='')
+    dataset = tf.keras.utils.get_file("aclImdb_v1.tar.gz", url, untar=True, cache_dir=".", cache_subdir="")
 
-    dataset_dir = os.path.join(os.path.dirname(dataset), 'aclImdb')
+    dataset_dir = os.path.join(os.path.dirname(dataset), "aclImdb")
 
-    train_dir = os.path.join(dataset_dir, 'train')
+    train_dir = os.path.join(dataset_dir, "train")
 
     # remove unused folders to make it easier to load the data
-    remove_dir = os.path.join(train_dir, 'unsup')
+    remove_dir = os.path.join(train_dir, "unsup")
     shutil.rmtree(remove_dir)
 
   def parser(self, record):
@@ -57,17 +54,14 @@ class IMDB(DataPipeLine):
     y = tokenized_sentences[:, 1:]
     return x, y
 
-  def build_dataset(
-      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
-  ):
-
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, epochs=1, shuffle=True, *args, **kwargs):
     if is_training:
       raw_ds = tf.keras.utils.text_dataset_from_directory(
-          'aclImdb/train', batch_size=batch_size, seed=FLAGS.random_seed
+        "aclImdb/train", batch_size=batch_size, seed=FLAGS.random_seed
       )
 
     else:
-      raw_ds = tf.keras.utils.text_dataset_from_directory('aclImdb/test', batch_size=batch_size)
+      raw_ds = tf.keras.utils.text_dataset_from_directory("aclImdb/test", batch_size=batch_size)
 
     raw_ds = raw_ds.cache().prefetch(buffer_size=AUTOTUNE)
 

@@ -15,7 +15,7 @@ limitations under the License.
 #ifndef TENSORFLOW_CORE_KERNELS_DATA_PARQUET_DATASET_OPS_H_
 #define TENSORFLOW_CORE_KERNELS_DATA_PARQUET_DATASET_OPS_H_
 
-#include "deepray/custom_ops/parquet_dataset/cc/kernels/parquet_batch_reader.h"
+#include "parquet_batch_reader.h"
 #include "tensorflow/core/framework/dataset.h"
 
 namespace tensorflow {

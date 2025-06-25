@@ -54,11 +54,11 @@ def test_noisy_dense_with_policy():
 @pytest.mark.usefixtures("maybe_run_functions_eagerly")
 def test_noisy_dense_regularization():
   layer = NoisyDense(
-      3,
-      kernel_regularizer=keras.regularizers.l1(0.01),
-      bias_regularizer="l1",
-      activity_regularizer="l2",
-      name="noisy_dense_reg",
+    3,
+    kernel_regularizer=keras.regularizers.l1(0.01),
+    bias_regularizer="l1",
+    activity_regularizer="l2",
+    name="noisy_dense_reg",
   )
   layer(keras.backend.variable(np.ones((2, 4))))
   np.testing.assert_array_equal(5, len(layer.losses))
@@ -69,10 +69,10 @@ def test_noisy_dense_constraints():
   k_constraint = keras.constraints.max_norm(0.01)
   b_constraint = keras.constraints.max_norm(0.01)
   layer = NoisyDense(
-      3,
-      kernel_constraint=k_constraint,
-      bias_constraint=b_constraint,
-      name="noisy_dense_constriants",
+    3,
+    kernel_constraint=k_constraint,
+    bias_constraint=b_constraint,
+    name="noisy_dense_constriants",
   )
   layer(keras.backend.variable(np.ones((2, 4))))
   np.testing.assert_array_equal(layer.mu_kernel.constraint, k_constraint)
@@ -93,16 +93,16 @@ def test_noisy_dense_reset_noise():
   new_eps_kernel = layer.eps_kernel
   new_eps_bias = layer.eps_bias
   np.testing.assert_raises(
-      AssertionError,
-      np.testing.assert_array_equal,
-      initial_eps_kernel,
-      new_eps_kernel,
+    AssertionError,
+    np.testing.assert_array_equal,
+    initial_eps_kernel,
+    new_eps_kernel,
   )
   np.testing.assert_raises(
-      AssertionError,
-      np.testing.assert_array_equal,
-      initial_eps_bias,
-      new_eps_bias,
+    AssertionError,
+    np.testing.assert_array_equal,
+    initial_eps_bias,
+    new_eps_bias,
   )
 
 
@@ -118,16 +118,16 @@ def test_noisy_dense_reset_noise_independent():
   new_eps_kernel = layer.eps_kernel
   new_eps_bias = layer.eps_bias
   np.testing.assert_raises(
-      AssertionError,
-      np.testing.assert_array_equal,
-      initial_eps_kernel,
-      new_eps_kernel,
+    AssertionError,
+    np.testing.assert_array_equal,
+    initial_eps_kernel,
+    new_eps_kernel,
   )
   np.testing.assert_raises(
-      AssertionError,
-      np.testing.assert_array_equal,
-      initial_eps_bias,
-      new_eps_bias,
+    AssertionError,
+    np.testing.assert_array_equal,
+    initial_eps_bias,
+    new_eps_bias,
   )
 
 
@@ -145,16 +145,16 @@ def test_noisy_dense_remove_noise():
   kernel_zeros = tf.zeros(initial_eps_kernel.shape, dtype=initial_eps_kernel.dtype)
   bias_zeros = tf.zeros(initial_eps_bias.shape, dtype=initial_eps_kernel.dtype)
   np.testing.assert_raises(
-      AssertionError,
-      np.testing.assert_array_equal,
-      initial_eps_kernel,
-      new_eps_kernel,
+    AssertionError,
+    np.testing.assert_array_equal,
+    initial_eps_kernel,
+    new_eps_kernel,
   )
   np.testing.assert_raises(
-      AssertionError,
-      np.testing.assert_array_equal,
-      initial_eps_bias,
-      new_eps_bias,
+    AssertionError,
+    np.testing.assert_array_equal,
+    initial_eps_bias,
+    new_eps_bias,
   )
   np.testing.assert_array_equal(kernel_zeros, new_eps_kernel)
   np.testing.assert_array_equal(bias_zeros, new_eps_bias)

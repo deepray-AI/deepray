@@ -16,12 +16,12 @@
 
 # Required TensorFlow version [min, max)
 INCLUSIVE_MIN_TF_VERSION = "2.9.1"
-EXCLUSIVE_MAX_TF_VERSION = "2.13.0"
+EXCLUSIVE_MAX_TF_VERSION = "2.18.0"
 
 # We follow Semantic Versioning (https://semver.org/)
 _MAJOR_VERSION = "0"
 _MINOR_VERSION = "21"
-_PATCH_VERSION = "9"
+_PATCH_VERSION = "86"
 
 # When building releases, we can update this value on the release branch to
 # reflect the current release candidate ('rc0', 'rc1') or, finally, the official

@@ -13,8 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
+
+using namespace tensorflow;  // NOLINT(build/namespaces)
 
 // Use a namespace when registering by prepending the
 // package's name to the op’s name and separate with a '>'.
@@ -28,7 +31,7 @@ using ::tensorflow::shape_inference::InferenceContext;
 
 ::tensorflow::Status ScalarOutput(InferenceContext* c) {
   c->set_output(0, c->Scalar());
-  return ::tensorflow::Status::OK();
+  return TFOkStatus;
 }
 
 REGISTER_OP("Examples>AsyncSleep")

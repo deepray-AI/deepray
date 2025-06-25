@@ -15,31 +15,13 @@
 # limitations under the License.
 # ==============================================================================
 
-echo "Container nvidia build = " $NVIDIA_BUILD_ID
-
-keras_use_ctl=${1:-"true"}
-num_gpu=${2:-"1"}
-batch_size=${3:-"128"}
-learning_rate=${4:-"5e-6"}
-precision=${5:-"fp32"}
-use_xla=${6:-"true"}
-epochs=${7:-"1"}
-model=${8:-"demo"}
-
-if [ $num_gpu -gt 1 ]; then
-    mpi_command="mpirun -np $num_gpu \
-    --allow-run-as-root -bind-to none -map-by slot \
-    -x NCCL_DEBUG=INFO \
-    -x LD_LIBRARY_PATH \
-    -x PATH -mca pml ob1 -mca btl ^openib"
-    use_hvd="--use_horovod"
-else
-    mpi_command=""
-    use_hvd=""
-fi
+batch_size=${1:-"128"}
+learning_rate=${2:-"5e-6"}
+precision=${3:-"fp32"}
+use_xla=${4:-"False"}
+epochs=${5:-"1"}
 
 if [ "$precision" = "fp16" ]; then
-    echo "fp16 activated!"
     use_fp16="--dtype=fp16"
 else
     use_fp16=""
@@ -47,13 +29,12 @@ fi
 
 if [ "$use_xla" = "true" ]; then
     use_xla_tag="--enable_xla"
-    echo "XLA activated"
 else
     use_xla_tag=""
 fi
 
-export GBS=$(expr $batch_size \* $num_gpu)
-printf -v TAG "tf_training_mnist_%s_%s_gbs%d" "$model" "$precision" $GBS
+export GBS=$(expr $batch_size)
+printf -v TAG "tf_training_mnist_gbs%d" $GBS
 DATESTAMP=$(date +'%y%m%d%H%M%S')
 
 #Edit to save logs & checkpoints in a different directory
@@ -64,16 +45,15 @@ printf "Saving checkpoints to %s\n" "$RESULTS_DIR"
 printf "Logs written to %s\n" "$LOGFILE"
 
 set -x
-$mpi_command python train.py \
-    --train_data=mnist \
-    --keras_use_ctl=$keras_use_ctl \
-    --num_gpus=$num_gpu \
+CUDA_VISIBLE_DEVICES=0 python train.py \
+    --run_eagerly=False \
     --batch_size=$batch_size \
     --learning_rate=$learning_rate \
-    --steps_per_summary=1 \
-    --stop_steps=20 \
+    --steps_per_execution=10 \
+    --stop_steps=-1 \
     --epochs=$epochs \
     --model_dir=${RESULTS_DIR} \
-    $use_hvd $use_fp16 $use_xla_tag |& tee $LOGFILE
+    $use_fp16 $use_xla_tag
+# |& tee $LOGFILE
 
 set +x

@@ -22,18 +22,18 @@ from deepray.utils.types import TensorLike
 def pairwise_distance(feature: TensorLike, squared: bool = False):
   """Computes the pairwise distance matrix with numerical stability.
 
-    output[i, j] = || feature[i, :] - feature[j, :] ||_2
+  output[i, j] = || feature[i, :] - feature[j, :] ||_2
 
-    Args:
-      feature: 2-D Tensor of size `[number of data, feature dimension]`.
-      squared: Boolean, whether or not to square the pairwise distances.
+  Args:
+    feature: 2-D Tensor of size `[number of data, feature dimension]`.
+    squared: Boolean, whether or not to square the pairwise distances.
 
-    Returns:
-      pairwise_distances: 2-D Tensor of size `[number of data, number of data]`.
-    """
+  Returns:
+    pairwise_distances: 2-D Tensor of size `[number of data, number of data]`.
+  """
   pairwise_distances_squared = tf.math.add(
-      tf.math.reduce_sum(tf.math.square(feature), axis=[1], keepdims=True),
-      tf.math.reduce_sum(tf.math.square(tf.transpose(feature)), axis=[0], keepdims=True),
+    tf.math.reduce_sum(tf.math.square(feature), axis=[1], keepdims=True),
+    tf.math.reduce_sum(tf.math.square(tf.transpose(feature)), axis=[0], keepdims=True),
   ) - 2.0 * tf.matmul(feature, tf.transpose(feature))
 
   # Deal with numerical inaccuracies. Set small negatives to zero.
@@ -49,8 +49,8 @@ def pairwise_distance(feature: TensorLike, squared: bool = False):
 
   # Undo conditionally adding 1e-16.
   pairwise_distances = tf.math.multiply(
-      pairwise_distances,
-      tf.cast(tf.math.logical_not(error_mask), dtype=tf.dtypes.float32),
+    pairwise_distances,
+    tf.cast(tf.math.logical_not(error_mask), dtype=tf.dtypes.float32),
   )
 
   num_data = tf.shape(feature)[0]
@@ -64,14 +64,14 @@ def pairwise_distance(feature: TensorLike, squared: bool = False):
 def angular_distance(feature: TensorLike):
   """Computes the angular distance matrix.
 
-    output[i, j] = 1 - cosine_similarity(feature[i, :], feature[j, :])
+  output[i, j] = 1 - cosine_similarity(feature[i, :], feature[j, :])
 
-    Args:
-      feature: 2-D Tensor of size `[number of data, feature dimension]`.
+  Args:
+    feature: 2-D Tensor of size `[number of data, feature dimension]`.
 
-    Returns:
-      angular_distances: 2-D Tensor of size `[number of data, number of data]`.
-    """
+  Returns:
+    angular_distances: 2-D Tensor of size `[number of data, number of data]`.
+  """
   # normalize input
   feature = tf.math.l2_normalize(feature, axis=1)
 

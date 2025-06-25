@@ -28,10 +28,10 @@ from deepray.custom_ops.multiplex_4 import model_using_multiplex
 
 def main(argv):
   del argv  # not used
-  path = 'model_using_multiplex'
+  path = "model_using_multiplex"
   result = model_using_multiplex.load_and_use(path)
-  print('Result:', result)
+  print("Result:", result)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   app.run(main)

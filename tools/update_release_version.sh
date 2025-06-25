@@ -38,7 +38,6 @@ sed -ri "s/(tf-version: \[)'.+'/\1$tf_version/g" \
 	.github/workflows/release.yml
 sed -ri "s/(tensorflow(-cpu)*(~|=)=)[0-9]+[a-zA-Z0-9_.-]+/\1$1/g" \
 	CONTRIBUTING.md \
-	tools/install_deps/tensorflow-cpu.txt \
 	tools/install_deps/tensorflow.txt
 sed -ri "s/(TF_VERSION=)\S+/\1$last_version/g" \
 	tools/docker/cpu_tests.Dockerfile \

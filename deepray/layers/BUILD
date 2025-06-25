@@ -13,8 +13,9 @@ py_library(
         "//deepray/activations",
         "//deepray/layers/rnn",
         "//deepray/testing",
-        "//deepray/text",
+        # "//deepray/text",
         "//deepray/utils",
+        "@pypi_pandas//:pkg",
     ],
 )
 

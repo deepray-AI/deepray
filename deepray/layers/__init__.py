@@ -15,12 +15,12 @@
 """Additional layers that conform to Keras API."""
 
 from deepray.layers.adaptive_pooling import (
-    AdaptiveAveragePooling1D,
-    AdaptiveMaxPooling1D,
-    AdaptiveAveragePooling2D,
-    AdaptiveMaxPooling2D,
-    AdaptiveAveragePooling3D,
-    AdaptiveMaxPooling3D,
+  AdaptiveAveragePooling1D,
+  AdaptiveMaxPooling1D,
+  AdaptiveAveragePooling2D,
+  AdaptiveMaxPooling2D,
+  AdaptiveAveragePooling3D,
+  AdaptiveMaxPooling3D,
 )
 
 from deepray.layers.embedding import Embedding
@@ -38,10 +38,9 @@ from deepray.layers.spectral_normalization import SpectralNormalization
 from deepray.layers.spatial_pyramid_pooling import SpatialPyramidPooling2D
 from deepray.layers.tlu import TLU
 from deepray.layers.wrappers import WeightNormalization
-from deepray.layers.esn import ESN
 from deepray.layers.stochastic_depth import StochasticDepth
 from deepray.layers.noisy_dense import NoisyDense
-from deepray.layers.crf import CRF
+# from deepray.layers.crf import CRF
 
 from deepray.layers.on_device_embedding import OnDeviceEmbedding
 from deepray.layers.position_embedding import PositionEmbedding

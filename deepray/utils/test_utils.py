@@ -14,21 +14,21 @@
 # ==============================================================================
 """Utilities for testing Deepray."""
 
+import inspect
 import os
 import random
-import inspect
 
 import numpy as np
 import pytest
 import tensorflow as tf
-
 from packaging.version import Version
+
 from deepray import options
 from deepray.utils import resource_loader
 
-if Version(tf.__version__).release >= Version("2.13").release:
-  # New versions of Keras require importing from `keras.src` when
-  # importing internal symbols.
+if Version(tf.__version__) > Version("2.16.0"):
+  from tf_keras.src.testing_infra.test_utils import layer_test  # noqa: F401
+elif Version(tf.__version__).release >= Version("2.13").release:
   from keras.src.testing_infra.test_utils import layer_test  # noqa: F401
 elif Version(tf.__version__) >= Version("2.9"):
   from keras.testing_infra.test_utils import layer_test  # noqa: F401
@@ -137,22 +137,22 @@ def set_seeds():
 
 def pytest_addoption(parser):
   parser.addoption(
-      "--skip-custom-ops",
-      action="store_true",
-      help="When a custom op is being loaded in a test, skip this test.",
+    "--skip-custom-ops",
+    action="store_true",
+    help="When a custom op is being loaded in a test, skip this test.",
   )
 
 
 def gpus_for_testing():
   """For the moment it's very simple, but it might change in the future,
-    with multiple physical gpus for example. So it's better if this function
-    is called rather than hardcoding the gpu devices in the tests.
-    """
+  with multiple physical gpus for example. So it's better if this function
+  is called rather than hardcoding the gpu devices in the tests.
+  """
   if not is_gpu_available():
     raise SystemError(
-        "You are trying to get some gpus for testing but no gpu is available on "
-        "your system. \nDid you forget to use `@pytest.mark.needs_gpu` on your test"
-        " so that it's skipped automatically when no gpu is available?"
+      "You are trying to get some gpus for testing but no gpu is available on "
+      "your system. \nDid you forget to use `@pytest.mark.needs_gpu` on your test"
+      " so that it's skipped automatically when no gpu is available?"
     )
   return ["gpu:0", "gpu:1"]
 
@@ -226,15 +226,15 @@ def pytest_collection_modifyitems(items):
 def assert_not_allclose(a, b, **kwargs):
   """Assert that two numpy arrays, do not have near values.
 
-    Args:
-      a: the first value to compare.
-      b: the second value to compare.
-      **kwargs: additional keyword arguments to be passed to the underlying
-        `np.testing.assert_allclose` call.
+  Args:
+    a: the first value to compare.
+    b: the second value to compare.
+    **kwargs: additional keyword arguments to be passed to the underlying
+      `np.testing.assert_allclose` call.
 
-    Raises:
-      AssertionError: If `a` and `b` are unexpectedly close at all elements.
-    """
+  Raises:
+    AssertionError: If `a` and `b` are unexpectedly close at all elements.
+  """
   try:
     np.testing.assert_allclose(a, b, **kwargs)
   except AssertionError:
@@ -243,25 +243,25 @@ def assert_not_allclose(a, b, **kwargs):
 
 
 def assert_allclose_according_to_type(
-    a,
-    b,
-    rtol=1e-6,
-    atol=1e-6,
-    float_rtol=1e-6,
-    float_atol=1e-6,
-    half_rtol=1e-3,
-    half_atol=1e-3,
-    bfloat16_rtol=1e-2,
-    bfloat16_atol=1e-2,
+  a,
+  b,
+  rtol=1e-6,
+  atol=1e-6,
+  float_rtol=1e-6,
+  float_atol=1e-6,
+  half_rtol=1e-3,
+  half_atol=1e-3,
+  bfloat16_rtol=1e-2,
+  bfloat16_atol=1e-2,
 ):
   """
-    Similar to tf.test.TestCase.assertAllCloseAccordingToType()
-    but this doesn't need a subclassing to run.
-    """
+  Similar to tf.test.TestCase.assertAllCloseAccordingToType()
+  but this doesn't need a subclassing to run.
+  """
   a = np.array(a)
   b = np.array(b)
   # types with lower tol are put later to overwrite previous ones.
-  if (a.dtype == np.float32 or b.dtype == np.float32 or a.dtype == np.complex64 or b.dtype == np.complex64):
+  if a.dtype == np.float32 or b.dtype == np.float32 or a.dtype == np.complex64 or b.dtype == np.complex64:
     rtol = max(rtol, float_rtol)
     atol = max(atol, float_atol)
   if a.dtype == np.float16 or b.dtype == np.float16:
@@ -276,19 +276,19 @@ def assert_allclose_according_to_type(
 
 def discover_classes(module, parent, class_exceptions):
   """
-    Args:
-        module: a module in which to search for classes that inherit from the parent class
-        parent: the parent class that identifies classes in the module that should be tested
-        class_exceptions: a list of specific classes that should be excluded when discovering classes in a module
+  Args:
+      module: a module in which to search for classes that inherit from the parent class
+      parent: the parent class that identifies classes in the module that should be tested
+      class_exceptions: a list of specific classes that should be excluded when discovering classes in a module
 
-    Returns:
-        a list of classes for testing using pytest for parameterized tests
-    """
+  Returns:
+      a list of classes for testing using pytest for parameterized tests
+  """
 
   classes = [
-      class_info[1]
-      for class_info in inspect.getmembers(module, inspect.isclass)
-      if issubclass(class_info[1], parent) and not class_info[0] in class_exceptions
+    class_info[1]
+    for class_info in inspect.getmembers(module, inspect.isclass)
+    if issubclass(class_info[1], parent) and not class_info[0] in class_exceptions
   ]
 
   return classes

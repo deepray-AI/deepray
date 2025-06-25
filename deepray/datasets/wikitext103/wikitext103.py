@@ -5,7 +5,6 @@ from ..tfrecord_pipeline import TFRecordPipeline
 
 
 class Wikitext103(TFRecordPipeline, ABC):
-
   def __init__(self, bin_sizes, tgt_len, **kwargs):
     super().__init__(**kwargs)
     self.bin_sizes = bin_sizes
@@ -22,15 +21,15 @@ class Wikitext103(TFRecordPipeline, ABC):
 
         # tf.float32
         perm = tf.sparse_to_dense(
-            sparse_indices=tup, output_shape=[self.tgt_len, self.bin_sizes[b]], sparse_values=1.0, default_value=0.0
+          sparse_indices=tup, output_shape=[self.tgt_len, self.bin_sizes[b]], sparse_values=1.0, default_value=0.0
         )
 
         example["{}_perm_{}".format(prefix, b)] = perm
 
     # whether allow the last batch with a potentially shorter length
     record_spec = {
-        "inputs": tf.io.VarLenFeature(tf.int64),
-        "labels": tf.io.VarLenFeature(tf.int64),
+      "inputs": tf.io.VarLenFeature(tf.int64),
+      "labels": tf.io.VarLenFeature(tf.int64),
     }
 
     # retrieve serialized example

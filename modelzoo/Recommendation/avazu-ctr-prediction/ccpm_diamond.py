@@ -8,11 +8,8 @@ from tensorflow.keras.layers import Layer
 from deepray.layers.embedding import DiamondEmbedding
 from deepray.utils.data.feature_map import FeatureMap
 
-FLAGS = flags.FLAGS
-
 
 class KMaxPooling(Layer):
-
   def __init__(self, k, dim):
     super(KMaxPooling, self).__init__()
     self.k = k
@@ -25,13 +22,12 @@ class KMaxPooling(Layer):
 
 
 class CCPM(keras.Model):
-  """
-  """
+  """ """
 
   def __init__(self, conv_kernel_width=(6, 5, 3), conv_filters=(4, 4, 4), embed_reg=1e-6, *args, **kwargs):
     super(CCPM, self).__init__()
     self.feature_map = FeatureMap(feature_map=FLAGS.feature_map, black_list=FLAGS.black_list).feature_map
-    self.sparse_feat_len = self.feature_map[(self.feature_map['ftype'] == "Categorical")].shape[0]
+    self.sparse_feat_len = self.feature_map[(self.feature_map["ftype"] == "Categorical")].shape[0]
     self.conv_len = len(conv_filters)  # 卷积层数
 
     # KMaxPooling
@@ -46,7 +42,7 @@ class CCPM(keras.Model):
 
     self.padding_list = [ZeroPadding2D(padding=(0, conv_kernel_width[i] - 1)) for i in range(self.conv_len)]
     self.conv_list = [
-        Conv2D(filters=conv_filters[i], kernel_size=(1, conv_kernel_width[i])) for i in range(self.conv_len)
+      Conv2D(filters=conv_filters[i], kernel_size=(1, conv_kernel_width[i])) for i in range(self.conv_len)
     ]
 
     self.flatten = Flatten()
@@ -54,9 +50,29 @@ class CCPM(keras.Model):
 
   def build(self, input_shape):
     fold_columns = [
-        "hour", "id", "C1", "banner_pos", "site_id", "site_domain", "site_category", "app_id", "app_domain",
-        "app_category", "device_id", "device_ip", "device_model", "device_type", "device_conn_type", "C14", "C15",
-        "C16", "C17", "C18", "C19", "C20", "C21"
+      "hour",
+      "id",
+      "C1",
+      "banner_pos",
+      "site_id",
+      "site_domain",
+      "site_category",
+      "app_id",
+      "app_domain",
+      "app_category",
+      "device_id",
+      "device_ip",
+      "device_model",
+      "device_type",
+      "device_conn_type",
+      "C14",
+      "C15",
+      "C16",
+      "C17",
+      "C18",
+      "C19",
+      "C20",
+      "C21",
     ]
     self.embedding_group = DiamondEmbedding(self.feature_map, fold_columns)
 
