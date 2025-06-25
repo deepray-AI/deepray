@@ -17,7 +17,7 @@ import warnings
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import backend as K
+from tf_keras import backend as K
 from tensorflow.keras.metrics import Metric
 from tensorflow.python.ops import weights_broadcast_ops
 

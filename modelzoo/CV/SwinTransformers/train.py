@@ -6,12 +6,10 @@ import deepray as dp
 from absl import app, flags
 from tensorflow import keras
 
-from deepray.core.base_trainer import Trainer
+from deepray.core.trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets.cifar import CIFAR100
 from .model import BaseModel
-
-FLAGS = flags.FLAGS
 
 learning_rate = 1e-3
 batch_size = 128

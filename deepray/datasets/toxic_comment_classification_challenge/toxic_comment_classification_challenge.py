@@ -9,18 +9,17 @@ from absl import flags
 from sklearn.model_selection import train_test_split
 from texthero import preprocessing
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 
 os.environ['CURL_CA_BUNDLE'] = ''
 
-FLAGS = flags.FLAGS
 FLAGS([
     sys.argv[0],
     "--num_train_examples=111699",
 ])
 
 
-class ToxicCommentClassificationChallenge(DataPipeLine):
+class ToxicCommentClassificationChallenge(DataPipeline):
 
   def __init__(self, path="/workspaces/dataset/jigsaw-toxic-comment-classification-challenge", **kwargs):
     super().__init__(**kwargs)
@@ -72,7 +71,7 @@ class ToxicCommentClassificationChallenge(DataPipeLine):
     self.train_bert = hero.clean(train['comment_text'], clean_text_bert_pipeline)
     self.test_bert = hero.clean(test['comment_text'], clean_text_bert_pipeline)
 
-  def build_dataset(self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, *args, **kwargs):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, *args, **kwargs):
     if is_training:
       ds = tf.data.Dataset.from_tensor_slices((self.train_bert, self.y_train))
     else:

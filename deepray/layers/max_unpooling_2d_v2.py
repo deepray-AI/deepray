@@ -19,7 +19,7 @@ import tensorflow as tf
 from typeguard import typechecked
 from typing import Iterable
 
-from deepray.utils.keras_utils import normalize_tuple
+from deepray.layers.max_unpooling_2d import normalize_tuple
 
 
 def _max_unpooling_2d_v2(updates, mask, output_size):

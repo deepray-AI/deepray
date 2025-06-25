@@ -21,14 +21,12 @@ from __future__ import print_function
 import tensorflow as tf
 from absl import app, flags
 
-from deepray.core.base_trainer import Trainer
+from deepray.core.trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets.amazon_books_2014 import AmazonBooks2014
 from deepray.models.rec.din_model import DINModel
 from .feature_spec import FeatureSpec
 from defaults import define_din_flags
-
-FLAGS = flags.FLAGS
 
 
 def main(_):

@@ -2,7 +2,7 @@ import os
 
 import horovod.tensorflow as hvd
 import tensorflow as tf
-from tensorflow.keras import backend as K
+from tf_keras import backend as K
 from tensorflow.keras.layers import (Layer, Input, Concatenate, Dense, Flatten, Lambda)
 from tensorflow_recommenders_addons import dynamic_embedding as de
 

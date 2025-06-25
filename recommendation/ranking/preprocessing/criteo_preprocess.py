@@ -285,6 +285,5 @@ def transform_data(data_path, output_path):
 
 
 if __name__ == "__main__":
-  logging.set_verbosity(logging.INFO)
 
   transform_data(data_path=args.input_path, output_path=args.output_path)

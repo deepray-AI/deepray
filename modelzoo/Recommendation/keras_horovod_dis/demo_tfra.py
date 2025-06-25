@@ -23,19 +23,18 @@ import sys
 import tensorflow as tf
 from absl import app, flags
 
-from deepray.core.base_trainer import Trainer
+from deepray.core.trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets.movielens import Movielens100kRating
 from deepray.models.rec.tfra_demo import build_keras_model
 
-FLAGS = flags.FLAGS
 FLAGS(
     [
         sys.argv[0],
         "--train_data=movielens/100k-ratings",
         # "--distribution_strategy=off",
         # "--run_eagerly=true",
-        "--steps_per_summary=20",
+        "--steps_per_execution=20",
         "--use_dynamic_embedding=True",
         # "--batch_size=1024",
     ]

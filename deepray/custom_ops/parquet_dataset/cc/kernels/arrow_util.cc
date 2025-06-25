@@ -14,9 +14,6 @@ limitations under the License.
 ==============================================================================*/
 #include "arrow_util.h"
 
-#include <arrow/array.h>
-#include <arrow/util/thread_pool.h>
-#include <tensorflow/core/framework/allocation_description.pb.h>
 #include <unistd.h>
 
 #include <cstdlib>
@@ -26,7 +23,10 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#include "arrow/array.h"
+#include "arrow/util/thread_pool.h"
 #include "eigen.h"
+#include "tensorflow/core/framework/allocation_description.pb.h"
 
 namespace tensorflow {
 namespace data {
@@ -252,7 +252,7 @@ class RaggedTensorBuilder : public ::arrow::ArrayVisitor {
 #define CASE_ARROW_ENUM_SET_DTYPE(PTR, ENUM)                       \
   case ENUM: {                                                     \
     *PTR = DataTypeToEnum<ArrowEnumToDataType<ENUM>::Type>::value; \
-    return Status::OK();                                           \
+    return OkStatus();                                             \
   }
 
 Status MakeDataTypeAndRaggedRankFromArrowDataType(
@@ -280,7 +280,7 @@ Status MakeDataTypeAndRaggedRankFromArrowDataType(
       return errors::Unimplemented("Arrow data type ", arrow_dtype->ToString(),
                                    " not supported.");
   }
-  return Status::OK();
+  return OkStatus();
 }
 
 Status MakeTensorsFromArrowArray(
@@ -297,7 +297,7 @@ Status MakeTensorsFromArrowArray(
 
   RaggedTensorBuilder builder(dtype, ragged_rank);
   TF_RETURN_IF_ARROW_ERROR(builder.Build(arrow_array, output_tensors));
-  return Status::OK();
+  return OkStatus();
 }
 
 int UpdateArrowCpuThreadPoolCapacityFromEnv() {
@@ -315,7 +315,7 @@ int GetArrowFileBufferSizeFromEnv() {
     const std::string& filename) {
 #if DEEPREC_ARROW_HDFS
   if (filename.rfind("hdfs://", 0) == 0) {
-    ::arrow::internal::Uri uri;
+    ::arrow::util::Uri uri;
     ARROW_RETURN_NOT_OK(uri.Parse(filename));
     ARROW_ASSIGN_OR_RAISE(auto options, ::arrow::fs::HdfsOptions::FromUri(uri));
     std::shared_ptr<::arrow::io::HadoopFileSystem> fs;

@@ -20,22 +20,21 @@ import multiprocessing
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 
-FLAGS = flags.FLAGS
 FLAGS([
     sys.argv[0],
     "--num_train_examples=60000",
 ])
 
 
-class Openwebtext(DataPipeLine):
+class Openwebtext(DataPipeline):
 
   def __init__(self, max_seq_length, **kwargs):
     super().__init__(**kwargs)
     self._max_seq_length = max_seq_length
 
-  def build_dataset(self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, *args, **kwargs):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, *args, **kwargs):
     """The actual input function."""
     input_files = tf.io.gfile.glob(input_file_pattern)
 

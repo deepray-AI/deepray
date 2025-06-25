@@ -256,7 +256,7 @@ class DecoupledWeightDecayExtension:
     return var.ref() in self._decay_var_list
 
 
-if importlib.util.find_spec("tensorflow.keras.optimizers.legacy") is not None:
+if importlib.util.find_spec("tf_keras.optimizers.legacy") is not None:
   keras_legacy_optimizer = Union[tf.keras.optimizers.legacy.Optimizer, tf.keras.optimizers.Optimizer]
 else:
   keras_legacy_optimizer = tf.keras.optimizers.Optimizer

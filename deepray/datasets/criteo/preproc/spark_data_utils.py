@@ -33,7 +33,7 @@ CAT_COLS = list(range(14, 40))
 
 
 def get_column_counts_with_frequency_limit(df, frequency_limit=None):
-  cols = ['_c%d' % i for i in CAT_COLS]
+  cols = ['f_c%d' % i for i in CAT_COLS]
   df = (
       df.select(posexplode(array(*cols))
                ).withColumnRenamed('pos', 'column_id').withColumnRenamed('col',
@@ -182,7 +182,7 @@ def apply_models(df, models, broadcast_model=False, skew_broadcast_pct=1.0):
   # not make a difference.
   models = sorted(models, key=itemgetter(3), reverse=True)
   for i, model, original_rows, would_broadcast in models:
-    col_name = '_c%d' % i
+    col_name = 'f_c%d' % i
     if not (would_broadcast or broadcast_model):
       # The data is highly skewed so we need to offset that
       cutoff = int(original_rows * skew_broadcast_pct / 100.0)
@@ -193,11 +193,11 @@ def apply_models(df, models, broadcast_model=False, skew_broadcast_pct=1.0):
       model = (model.drop('model_count').withColumnRenamed('data', col_name))
       model = broadcast(model) if broadcast_model else model
       df = (df.join(model, col_name, how='left').drop(col_name).withColumnRenamed('id', col_name))
-  return df.fillna(0, ['_c%d' % i for i in CAT_COLS])
+  return df.fillna(0, ['f_c%d' % i for i in CAT_COLS])
 
 
 def transform_log(df, transform_log=False):
-  cols = ['_c%d' % i for i in INT_COLS]
+  cols = ['f_c%d' % i for i in INT_COLS]
   if transform_log:
     for col_name in cols:
       df = df.withColumn(col_name, log(df[col_name] + 3))
@@ -226,9 +226,9 @@ def delete_data_source(spark, path):
 
 
 def load_raw(spark, folder, day_range):
-  label_fields = [StructField('_c%d' % LABEL_COL, IntegerType())]
-  int_fields = [StructField('_c%d' % i, IntegerType()) for i in INT_COLS]
-  str_fields = [StructField('_c%d' % i, StringType()) for i in CAT_COLS]
+  label_fields = [StructField('f_c%d' % LABEL_COL, IntegerType())]
+  int_fields = [StructField('f_c%d' % i, IntegerType()) for i in INT_COLS]
+  str_fields = [StructField('f_c%d' % i, StringType()) for i in CAT_COLS]
 
   schema = StructType(label_fields + int_fields + str_fields)
   paths = [os.path.join(folder, 'day_%d' % i) for i in day_range]
@@ -423,7 +423,7 @@ def _main():
       models = list(load_column_models(spark, args.model_folder, bool(args.model_size_file)))
       if args.model_size_file:
         save_model_size(
-            OrderedDict(('_c%d' % i, agg.size) for i, _, agg, _ in models), args.model_size_file, args.write_mode
+            OrderedDict(('f_c%d' % i, agg.size) for i, _, agg, _ in models), args.model_size_file, args.write_mode
         )
       models = [(i, df, agg.sum, flag) for i, df, agg, flag in models]
 

@@ -45,8 +45,6 @@ RUN_STATUS_SUCCESS = "success"
 RUN_STATUS_FAILURE = "failure"
 RUN_STATUS_RUNNING = "running"
 
-FLAGS = flags.FLAGS
-
 # Don't use it directly. Use get_benchmark_logger to access a logger.
 _benchmark_logger = None
 _logger_lock = threading.Lock()

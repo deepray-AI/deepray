@@ -11,8 +11,6 @@ from absl import app, flags
 from deepray.datasets.ali_display_ad_click.ali_display_ad_click import Ali_display_ad_click
 from deepray.utils.benchmark import PerformanceCalculator
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 

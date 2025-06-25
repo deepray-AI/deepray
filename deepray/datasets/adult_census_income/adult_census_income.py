@@ -4,12 +4,10 @@ import sys
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
-
-FLAGS = flags.FLAGS
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 if os.path.exists(os.path.join(dir_path, 'feature_map.csv')):
@@ -19,7 +17,7 @@ if os.path.exists(os.path.join(dir_path, 'feature_map.csv')):
   ])
 
 
-class Adult_census_income(DataPipeLine):
+class Adult_census_income(DataPipeline):
 
   def __init__(self, data_path='/workspaces/dataset/census/adult.csv'):
     super().__init__()
@@ -48,9 +46,7 @@ class Adult_census_income(DataPipeLine):
         f"--num_train_examples={self.train_df.shape[0]}",
     ])
 
-  def build_dataset(
-      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
-  ):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, epochs=1, shuffle=True, *args, **kwargs):
     if is_training:
       target = self.train_df.pop('income')
       dataset = tf.data.Dataset.from_tensor_slices((dict(self.train_df), target))

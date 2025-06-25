@@ -16,6 +16,7 @@ cmake(
     cache_entries = {
         "BUILD_TESTING": "OFF",
     },
+    copts = ["-Wno-unused-result"],
     lib_source = ":all_srcs",
     out_lib_dir = select({
         "@platforms//os:linux": "lib",

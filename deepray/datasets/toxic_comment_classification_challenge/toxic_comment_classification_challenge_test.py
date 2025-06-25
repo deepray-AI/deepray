@@ -9,8 +9,6 @@ from absl import app, flags
 
 from .toxic_comment_classification_challenge import ToxicCommentClassificationChallenge
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 

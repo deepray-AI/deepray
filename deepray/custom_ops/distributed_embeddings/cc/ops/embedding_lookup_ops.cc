@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/common_shape_fns.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
@@ -30,7 +31,7 @@ REGISTER_OP("ReadVariableNoCopy")
       TF_RETURN_IF_ERROR(
           shape_inference::ValidateVariableResourceHandle(c, &shape_and_type));
       c->set_output(0, shape_and_type[0].shape);
-      return Status::OK();
+      return TFOkStatus;
     });
 
 REGISTER_OP("RowToSplit")
@@ -40,7 +41,7 @@ REGISTER_OP("RowToSplit")
     .Output("row_split: Tindices")
     .SetShapeFn([](shape_inference::InferenceContext* c) {
       // TODO
-      return Status::OK();
+      return TFOkStatus;
     });
 
 REGISTER_OP("EmbeddingLookupVariableHotness")
@@ -66,7 +67,7 @@ REGISTER_OP("EmbeddingLookupVariableHotness")
         outdim_0 -= 1;
       }
       c->set_output(0, c->Matrix(outdim_0, c->Dim(params_shape, 1)));
-      return Status::OK();
+      return TFOkStatus;
     });
 
 REGISTER_OP("EmbeddingLookupVariableHotnessGrad")
@@ -86,7 +87,7 @@ REGISTER_OP("EmbeddingLookupVariableHotnessGrad")
                     c->Vector(shape_inference::InferenceContext::kUnknownDim));
       c->set_output(1, c->Matrix(shape_inference::InferenceContext::kUnknownDim,
                                  c->Dim(grad_shape, 1)));
-      return Status::OK();
+      return TFOkStatus;
     });
 
 REGISTER_OP("IntegerLookup")
@@ -99,7 +100,7 @@ REGISTER_OP("IntegerLookup")
     .Output("values: T")
     .SetShapeFn([](shape_inference::InferenceContext* c) {
       c->set_output(0, c->input(2));
-      return Status::OK();
+      return TFOkStatus;
     });
 
 }  // namespace tensorflow

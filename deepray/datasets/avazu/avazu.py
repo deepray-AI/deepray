@@ -23,9 +23,7 @@ import sys
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.parquet_pipeline.ali_parquet_dataset import ParquetPipeLine
-
-FLAGS = flags.FLAGS
+from deepray.datasets.parquet_pipeline.ali_parquet_dataset import ParquetPipeline
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 FLAGS([
@@ -41,7 +39,7 @@ if os.path.exists(os.path.join(dir_path, 'feature_map.csv')):
 DEFAULT_VALUE = {"int64": 0, "float32": 0.0, "bytes": ""}
 
 
-class Avazu(ParquetPipeLine):
+class Avazu(ParquetPipeline):
 
   def parse(self, record):
     for name in self.feature_map[(self.feature_map['length'] == 1)]["name"].values:

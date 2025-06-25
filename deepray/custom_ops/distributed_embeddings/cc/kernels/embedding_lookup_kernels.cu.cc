@@ -21,8 +21,9 @@
 
 #include <cooperative_groups.h>
 
-#include "cub/cub.cuh"
-#include "cuco/static_map.cuh"
+#include <cub/cub.cuh>
+#include <cuco/static_map.cuh>
+
 #include "embedding_lookup.h"
 #include "tensorflow/core/lib/core/bits.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"

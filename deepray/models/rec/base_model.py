@@ -18,8 +18,6 @@ from deepray.layers.seq import Pooling
 from deepray.utils.data.feature_map import FeatureMap
 from deepray.utils.data.input_meta import InputMeta
 
-FLAGS = flags.FLAGS
-
 # if FLAGS.use_dynamic_embedding:
 from tensorflow_recommenders_addons import dynamic_embedding as de
 

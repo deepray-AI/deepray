@@ -1,5 +1,4 @@
-load("//deepray:deepray.bzl", "custom_op_library")
-load("//deepray:tensorflow.bzl", "pybind_extension")
+load("//deepray:deepray.bzl", "custom_op_library", "pybind_extension")
 
 licenses(["notice"])  # Apache 2.0
 
@@ -32,10 +31,9 @@ cc_library(
         "DEEPREC_ARROW_ZEROCOPY",
     ],
     deps = [
-        "@com_github_apache_arrow//:arrow",
-        "@eigen3",
         "@local_config_tf//:libtensorflow_framework",
         "@local_config_tf//:tf_header_lib",
+        "@org_apache_arrow//:arrow",
     ],
 )
 
@@ -49,9 +47,9 @@ cc_library(
     ],
     deps = [
         ":arrow_util",
-        "@com_github_apache_arrow//:arrow",
         "@local_config_tf//:libtensorflow_framework",
         "@local_config_tf//:tf_header_lib",
+        "@org_apache_arrow//:arrow",
     ],
 )
 
@@ -60,7 +58,9 @@ pybind_extension(
     srcs = [
         "cc/kernels/parquet_pybind.cc",
     ],
-    copts = ["-fexceptions"],
+    copts = [
+        "-fexceptions",
+    ],
     features = ["-use_header_modules"],
     module_name = "_parquet_pybind",
     deps = [
@@ -122,6 +122,8 @@ py_binary(
     name = "read_parquet_deepray",
     srcs = ["read_parquet_deepray.py"],
     deps = [
-        "//deepray/custom_ops/parquet_dataset",
+        ":parquet_dataset",
+        "@pypi_fastparquet//:pkg",
+        "@pypi_pandas//:pkg",
     ],
 )

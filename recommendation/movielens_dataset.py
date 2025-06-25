@@ -42,12 +42,12 @@ import sys
 
 from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
-
-FLAGS = flags.FLAGS
+from deepray.datasets.datapipeline import DataPipeline
 
 
-class Movielens(DataPipeLine):
+
+
+class Movielens(DataPipeline):
 
   def __init__(
       self,
@@ -167,7 +167,7 @@ class Movielens(DataPipeLine):
     self._epochs_requested += 1
 
   def build_dataset(
-      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
+      self, input_file_pattern, batch_size, is_training=True, epochs=1, shuffle=True, *args, **kwargs
   ):
     """Construct the dataset to be used for training and eval.
 

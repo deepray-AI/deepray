@@ -303,5 +303,5 @@ def main(_):
 
 if __name__ == "__main__":
   # define_data_download_flags()
-  FLAGS = flags.FLAGS
+  
   app.run(main)

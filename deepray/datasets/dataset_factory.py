@@ -1,8 +1,6 @@
 from absl import logging, flags
 
 flags.DEFINE_string("data_source", "parquet_dataset", "parquet or tfrecord")
-
-FLAGS = flags.FLAGS
 """
 Build model
 """
@@ -19,10 +17,10 @@ def load_dataset():
     module_instance = ArsenalDatasetV3()
 
   elif module_class_name == "parquet_dataset":
-    from deepray.datasets.parquet_pipeline.ali_parquet_dataset import ParquetPipeLine
+    from deepray.datasets.parquet_pipeline.ali_parquet_dataset import ParquetPipeline
 
     logging.info("Load parquet dataset")
-    module_instance = ParquetPipeLine()
+    module_instance = ParquetPipeline()
   """
     abs_mod_dir_path = os.path.dirname(os.path.realpath(__file__))
     logging.info(f"abs_mod_dir_path: {abs_mod_dir_path}")

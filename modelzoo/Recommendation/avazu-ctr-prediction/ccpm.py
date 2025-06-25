@@ -12,8 +12,6 @@ from deepray.layers.bucketize import Hash
 from deepray.layers.embedding import DynamicEmbedding
 from deepray.utils.data.feature_map import FeatureMap
 
-FLAGS = flags.FLAGS
-
 
 class KMaxPooling(Layer):
 

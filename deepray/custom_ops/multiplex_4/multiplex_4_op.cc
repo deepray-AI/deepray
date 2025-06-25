@@ -15,6 +15,7 @@ limitations under the License.
 
 #include <cstdint>
 
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
 
@@ -42,7 +43,7 @@ Status MultiplexShapeFunction(InferenceContext* c) {
     TF_RETURN_IF_ERROR(c->Merge(c->input(i), c->input(last), &unused));
   }
   c->set_output(0, c->input(last));
-  return Status::OK();
+  return TFOkStatus;
 }
 
 REGISTER_OP("Examples>MultiplexDense")

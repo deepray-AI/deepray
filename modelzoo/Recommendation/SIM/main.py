@@ -21,21 +21,20 @@ from __future__ import print_function
 import sys
 from absl import app, flags
 import tensorflow as tf
-from deepray.core.base_trainer import Trainer
+from deepray.core.trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets.movielens import Movielens100kRating
 from deepray.models.rec.sim_model import SIMModel
 from deepray.models.rec.din_model import DINModel
 from deepray.models.rec.dien_model import DIENModel
 
-FLAGS = flags.FLAGS
 FLAGS(
     [
         sys.argv[0],
         "--train_data=movielens/100k-ratings",
         # "--distribution_strategy=off",
         # "--run_eagerly=true",
-        "--steps_per_summary=20",
+        "--steps_per_execution=20",
         "--use_dynamic_embedding=True",
         # "--batch_size=1024",
     ]

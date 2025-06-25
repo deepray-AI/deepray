@@ -17,7 +17,7 @@
 import numpy as np
 
 import tensorflow as tf
-from tensorflow.keras import backend as K
+import tf_keras as keras
 
 from deepray.utils.types import AcceptableDTypes, FloatTensorLike
 from typeguard import typechecked
@@ -125,7 +125,7 @@ class MatthewsCorrelationCoefficient(tf.keras.metrics.Metric):
     """Resets all of the metric state variables."""
 
     for v in self.variables:
-      K.set_value(
+      keras.set_value(
           v,
           np.zeros((self.num_classes, self.num_classes), v.dtype.as_numpy_dtype),
       )

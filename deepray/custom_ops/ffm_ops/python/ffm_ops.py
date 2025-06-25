@@ -16,7 +16,7 @@ import tensorflow as tf
 
 from deepray.utils.resource_loader import LazySO
 
-gen_ffm_ops = LazySO("custom_ops/feature_cross/_ffm_ops.so")
+gen_ffm_ops = LazySO("custom_ops/ffm_ops/_ffm_ops.so")
 
 
 def ffm(left: tf.Tensor, right: tf.Tensor, dim_size: int, int_type: str = 'multiply') -> tf.Tensor:

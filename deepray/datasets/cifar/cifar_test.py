@@ -9,8 +9,6 @@ from absl import app, flags
 
 from .cifar import CIFAR100, CIFAR10
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 

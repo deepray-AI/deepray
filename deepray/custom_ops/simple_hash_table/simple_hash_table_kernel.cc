@@ -17,17 +17,10 @@ limitations under the License.
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/strings/str_cat.h"
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/lib/gtl/map_util.h"
 #include "tensorflow/core/platform/strcat.h"
-
-/* After TensorFlow version 2.10.0, "Status::OK()" upgraded to "OkStatus()".
-This code is for compatibility.*/
-#if TF_VERSION_INTEGER >= 2100
-#define TFOkStatus ::tensorflow::OkStatus()
-#else
-#define TFOkStatus ::tensorflow::Status::OK()
-#endif
 
 // Please use the appropriate namespace for your project
 namespace tensorflow {
@@ -100,6 +93,8 @@ class SimpleHashTableResource : public ::tensorflow::ResourceBase {
   Status Import(const Tensor& keys, const Tensor& values) {
     const auto key_values = keys.flat<K>();
     const auto value_values = values.flat<V>();
+    LOG(INFO) << "key_values = " << key_values;
+    LOG(INFO) << "value_values = " << value_values;
 
     mutex_lock l(mu_);
     table_.clear();

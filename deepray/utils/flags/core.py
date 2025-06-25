@@ -159,7 +159,7 @@ def parse_flags(flags_obj):
       "epsilon": flags_obj.epsilon,
       "match_mlperf": flags_obj.ml_perf,
       # "epochs_between_evals": flags_obj.epochs_between_evals,
-      "keras_use_ctl": flags_obj.keras_use_ctl,
+      "use_custom_training_loop": flags_obj.use_custom_training_loop,
       "hr_threshold": flags_obj.hr_threshold,
       "stream_files": flags_obj.tpu is not None,
       "train_dataset_path": flags_obj.train_dataset_path,

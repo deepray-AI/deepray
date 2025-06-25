@@ -11,8 +11,6 @@ from absl import app, flags
 from deepray.datasets.tfrecord_pipeline import TFRecordPipeline
 from deepray.utils.benchmark import PerformanceCalculator
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 

@@ -13,8 +13,6 @@ from deepray.utils.benchmark import PerformanceCalculator
 
 from .wikicorpus_en import Wikicorpus_en
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 

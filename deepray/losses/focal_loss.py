@@ -15,15 +15,14 @@
 """Implements Focal loss."""
 
 import tensorflow as tf
-import tensorflow.keras.backend as K
+import tf_keras as keras
 from typeguard import typechecked
 
-from deepray.utils.keras_utils import LossFunctionWrapper
 from deepray.utils.types import FloatTensorLike, TensorLike
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class SigmoidFocalCrossEntropy(LossFunctionWrapper):
+class SigmoidFocalCrossEntropy(keras.losses.LossFunctionWrapper):
   """Implements the focal loss function.
 
     Focal loss was first introduced in the RetinaNet paper
@@ -118,7 +117,7 @@ def sigmoid_focal_crossentropy(
   y_true = tf.cast(y_true, dtype=y_pred.dtype)
 
   # Get the cross_entropy for each entry
-  ce = K.binary_crossentropy(y_true, y_pred, from_logits=from_logits)
+  ce = keras.binary_crossentropy(y_true, y_pred, from_logits=from_logits)
 
   # If logits are provided then convert the predictions into probabilities
   if from_logits:

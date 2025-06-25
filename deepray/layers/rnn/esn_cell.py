@@ -15,7 +15,11 @@
 """Implements ESN Cell."""
 
 import tensorflow as tf
-import tensorflow.keras as keras
+from packaging.version import parse
+if parse(tf.__version__) > parse("2.16.0"):
+  from tf_keras.src.layers.rnn.abstract_rnn_cell import AbstractRNNCell
+else:
+  from tensorflow.keras.layers.AbstractRNNCell import AbstractRNNCell
 from typeguard import typechecked
 
 from deepray.utils.types import (
@@ -25,7 +29,7 @@ from deepray.utils.types import (
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class ESNCell(keras.layers.AbstractRNNCell):
+class ESNCell(AbstractRNNCell):
   """Echo State recurrent Network (ESN) cell.
     This implements the recurrent cell from the paper:
         H. Jaeger

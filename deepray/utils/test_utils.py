@@ -14,21 +14,21 @@
 # ==============================================================================
 """Utilities for testing Deepray."""
 
+import inspect
 import os
 import random
-import inspect
 
 import numpy as np
 import pytest
 import tensorflow as tf
-
 from packaging.version import Version
+
 from deepray import options
 from deepray.utils import resource_loader
 
-if Version(tf.__version__).release >= Version("2.13").release:
-  # New versions of Keras require importing from `keras.src` when
-  # importing internal symbols.
+if Version(tf.__version__) > Version("2.16.0"):
+  from tf_keras.src.testing_infra.test_utils import layer_test  # noqa: F401
+elif Version(tf.__version__).release >= Version("2.13").release:
   from keras.src.testing_infra.test_utils import layer_test  # noqa: F401
 elif Version(tf.__version__) >= Version("2.9"):
   from keras.testing_infra.test_utils import layer_test  # noqa: F401

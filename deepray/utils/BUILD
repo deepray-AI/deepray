@@ -12,6 +12,10 @@ py_library(
         "//deepray:conftest.py",
         "//deepray:options.py",
     ],
+    deps = [
+        "@pypi_tf_keras//:pkg",
+        "@pypi_tqdm//:pkg",
+    ],
 )
 
 py_test(

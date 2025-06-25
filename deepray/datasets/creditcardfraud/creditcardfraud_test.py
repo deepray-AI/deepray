@@ -9,8 +9,6 @@ from absl import app, flags
 
 from .creditcardfraud import CreditCardFraud
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 

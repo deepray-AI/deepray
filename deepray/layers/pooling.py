@@ -1,9 +1,7 @@
 import tensorflow as tf
 
-from keras.engine.base_layer import Layer
 
-
-class Pooling(Layer):
+class Pooling(tf.keras.layers.Layer):
   """
     input shape: (batch_size, seq_len, emb_dim)
     output shape: (batch_size, 1, emb_dim)

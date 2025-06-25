@@ -1,4 +1,4 @@
-# Copyright (c) 2020 NVIDIA CORPORATION. All rights reserved.
+# Copyright (c) 2022 NVIDIA CORPORATION. All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,10 +11,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import horovod.tensorflow.keras as hvd
-from absl import logging, flags
+# We don't want the whole process to quit because of the import failure when
+# we don't use horovod to do communication.
+try:
+  import horovod.tensorflow as hvd
+except ImportError:
+  pass
+from absl import flags
 
-FLAGS = flags.FLAGS
+from deepray.utils import logging_util
+
+logger = logging_util.get_logger()
 
 
 def get_rank():
@@ -32,4 +39,26 @@ def get_world_size():
 
 
 def is_main_process():
-  return not FLAGS.use_horovod or get_rank() == 0
+  return not flags.FLAGS.use_horovod or get_rank() == 0
+
+
+def main_info(info):
+  if is_main_process():
+    logger.info(info)
+
+
+def main_warning(info):
+  if is_main_process():
+    logger.warning(info)
+
+
+def id_in_rank():
+  return 0
+
+
+def num_gpu_per_rank():
+  return 1
+
+
+def global_gpu_id():
+  return get_rank()

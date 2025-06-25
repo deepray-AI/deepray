@@ -39,7 +39,7 @@ fi
 
 PREC=""
 if [ "$precision" = "fp16" ] ; then
-   PREC="--dtype=fp16"
+   PREC="--use_fp16"
 elif [ "$precision" = "fp32" ] || [ "$precision" = "tf32" ] ; then
    PREC=""
 else
@@ -69,11 +69,11 @@ EVAL_FILES="$DATA_DIR/test"
 CMD="python3 run_pretraining.py"
 CMD+=" --input_files=$INPUT_FILES"
 CMD+=" --model_dir=$RESULTS_DIR"
-CMD+=" --config_file=$BERT_CONFIG"
+CMD+=" --bert_config_file=$BERT_CONFIG"
 CMD+=" --train_batch_size=$train_batch_size"
 CMD+=" --max_seq_length=$seq_len"
 CMD+=" --max_predictions_per_seq=$max_pred_per_seq"
-CMD+=" --num_steps_per_epoch=$train_steps --epochs=1"
+CMD+=" --num_steps_per_epoch=$train_steps --num_train_epochs=1"
 CMD+=" --warmup_steps=$warmup_steps"
 CMD+=" --num_accumulation_steps=$num_accumulation_steps"
 CMD+=" --learning_rate=$learning_rate"

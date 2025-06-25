@@ -14,13 +14,14 @@
 # ==============================================================================
 """Implements lifted_struct_loss."""
 
-import tensorflow as tf
-from deepray.losses import metric_learning
-
-from deepray.utils.keras_utils import LossFunctionWrapper
-from deepray.utils.types import FloatTensorLike, TensorLike
-from typeguard import typechecked
 from typing import Optional
+
+import tensorflow as tf
+from tensorflow.python.keras import losses
+from typeguard import typechecked
+
+from deepray.losses import metric_learning
+from deepray.utils.types import FloatTensorLike, TensorLike
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
@@ -106,7 +107,7 @@ def lifted_struct_loss(labels: TensorLike, embeddings: TensorLike, margin: Float
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class LiftedStructLoss(LossFunctionWrapper):
+class LiftedStructLoss(losses.LossFunctionWrapper):
   """Computes the lifted structured loss.
 
     The loss encourages the positive distances (between a pair of embeddings

@@ -2,7 +2,7 @@
 ARG PY_VERSION
 ARG TF_VERSION
 # FROM tensorflow/build:2.9-python$PY_VERSION as base_install
-FROM hailinfufu/deepray-base:23.11-py$PY_VERSION-tf$TF_VERSION-cu11.6.2-ubuntu20.04 as base_install
+FROM hailinfufu/deepray-base:24.01-py$PY_VERSION-tf$TF_VERSION-cu11.6.2-ubuntu20.04 as base_install
 
 ENV TF_NEED_CUDA="1"
 

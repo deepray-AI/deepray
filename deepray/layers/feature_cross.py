@@ -351,8 +351,8 @@ class CDot(Layer):
         kernel_regularizer=self.regularizer,
         name="compress_tower"
     )
-    self._trainable_weights.extend(self.compress_tower.trainable_weights)
-    self._non_trainable_weights.extend(self.compress_tower.non_trainable_weights)
+    self.trainable_weights.extend(self.compress_tower.trainable_weights)
+    self.non_trainable_weights.extend(self.compress_tower.non_trainable_weights)
     return super(CDot, self).build(input_shape)
 
   def call(self, inputs, **kwargs):
@@ -516,7 +516,6 @@ class DCN(Layer):
       allow_kernel_norm: bool = False,
       use_dropout=False,
       keep_prob=0.95,
-      mode: str = tf.estimator.ModeKeys.TRAIN,
       **kwargs
   ):
     super(DCN, self).__init__(**kwargs)
@@ -529,7 +528,6 @@ class DCN(Layer):
     self.allow_kernel_norm = allow_kernel_norm
     self.use_dropout = use_dropout
     self.keep_prob = keep_prob
-    self.mode = mode
 
   def build(self, input_shape):
     dims = check_dim(input_shape[-1])
@@ -621,7 +619,7 @@ class DCN(Layer):
 
     return super(DCN, self).build(input_shape)
 
-  def call(self, inputs, **kwargs):
+  def call(self, inputs, training=None, **kwargs):
     x0 = inputs
     xl = x0
 
@@ -660,7 +658,7 @@ class DCN(Layer):
         moe_out = tf.matmul(output_of_experts, gating_score_of_experts)
         xl = tf.squeeze(moe_out, -1) + xl
 
-      if self.use_dropout and self.mode == tf.estimator.ModeKeys.TRAIN:
+      if self.use_dropout and training:
         xl = tf.nn.dropout(xl, rate=1 - self.keep_prob)
 
     return xl
@@ -683,15 +681,15 @@ class DCN(Layer):
           for v in var:
             K.track_variable(v)
             if trainable:
-              self._trainable_weights.append(v)
+              self.trainable_weights.append(v)
             else:
-              self._non_trainable_weights.append(v)
+              self.non_trainable_weights.append(v)
         else:
           K.track_variable(var)
           if trainable:
-            self._trainable_weights.append(var)
+            self.trainable_weights.append(var)
           else:
-            self._non_trainable_weights.append(var)
+            self.non_trainable_weights.append(var)
 
         with tf.compat.v1.variable_scope('', reuse=tf.compat.v1.AUTO_REUSE):
           trainable_var_norm = tf.compat.v1.get_variable(
@@ -703,15 +701,15 @@ class DCN(Layer):
           for v in trainable_var_norm:
             K.track_variable(v)
             if trainable:
-              self._trainable_weights.append(v)
+              self.trainable_weights.append(v)
             else:
-              self._non_trainable_weights.append(v)
+              self.non_trainable_weights.append(v)
         else:
           K.track_variable(trainable_var_norm)
           if trainable:
-            self._trainable_weights.append(trainable_var_norm)
+            self.trainable_weights.append(trainable_var_norm)
           else:
-            self._non_trainable_weights.append(trainable_var_norm)
+            self.non_trainable_weights.append(trainable_var_norm)
         var = tf.multiply(normalized, trainable_var_norm, name='mul_var_norm')
     else:
       var = self.add_weight(
@@ -731,7 +729,6 @@ class DCN(Layer):
         'allow_kernel_norm': self.allow_kernel_norm,
         'use_dropout': self.use_dropout,
         'keep_prob': self.keep_prob,
-        'mode': self.mode
     }
 
     base_config = super(DCN, self).get_config()
@@ -819,8 +816,8 @@ class CIN(Layer):
             )
         )
 
-      self._trainable_weights.extend(self._conv1d[-1].trainable_weights)
-      self._non_trainable_weights.extend(self._conv1d[-1].non_trainable_weights)
+      self.trainable_weights.extend(self._conv1d[-1].trainable_weights)
+      self.non_trainable_weights.extend(self._conv1d[-1].non_trainable_weights)
     return super(CIN, self).build(input_shape)
 
   def call(self, inputs, **kwargs):

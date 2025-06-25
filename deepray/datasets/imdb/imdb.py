@@ -24,14 +24,12 @@ import shutil
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
-
-FLAGS = flags.FLAGS
+from deepray.datasets.datapipeline import DataPipeline
 
 AUTOTUNE = tf.data.AUTOTUNE
 
 
-class IMDB(DataPipeLine):
+class IMDB(DataPipeline):
 
   def __init__(self, url='https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz', **kwargs):
     super().__init__(**kwargs)
@@ -57,9 +55,7 @@ class IMDB(DataPipeLine):
     y = tokenized_sentences[:, 1:]
     return x, y
 
-  def build_dataset(
-      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
-  ):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, epochs=1, shuffle=True, *args, **kwargs):
 
     if is_training:
       raw_ds = tf.keras.utils.text_dataset_from_directory(

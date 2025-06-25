@@ -18,7 +18,7 @@ import tensorflow as tf
 
 from official.common import flags as tfm_flags
 
-FLAGS = flags.FLAGS
+
 
 
 def define_flags() -> None:

@@ -90,8 +90,6 @@ setup(
     install_requires=Path("requirements.txt").read_text().splitlines(),
     extras_require={
         "tensorflow": ["tensorflow>={},<{}".format(inclusive_min_tf_version, exclusive_max_tf_version)],
-        "tensorflow-gpu": ["tensorflow-gpu>={},<{}".format(inclusive_min_tf_version, exclusive_max_tf_version)],
-        "tensorflow-cpu": ["tensorflow-cpu>={},<{}".format(inclusive_min_tf_version, exclusive_max_tf_version)],
     },
     include_package_data=True,
     zip_safe=False,
@@ -103,7 +101,6 @@ setup(
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: Apache Software License",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",

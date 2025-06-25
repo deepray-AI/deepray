@@ -1,15 +1,12 @@
 import multiprocessing
 
 import tensorflow as tf
-from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 from deepray.utils.horovod_utils import get_rank, get_world_size
 
-FLAGS = flags.FLAGS
 
-
-class TFRecordPipeline(DataPipeLine):
+class TFRecordPipeline(DataPipeline):
   """
   Build a pipeline fetching, shuffling, and preprocessing the tfrecord files.
   """
@@ -41,9 +38,7 @@ class TFRecordPipeline(DataPipeLine):
       label_map[label] = tensor.pop(label)
     return tensor, label_map
 
-  def build_dataset(
-      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
-  ):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, epochs=1, shuffle=True, *args, **kwargs):
     input_files = tf.io.gfile.glob(input_file_pattern)
 
     # When `input_file` is a path to a single file or a list

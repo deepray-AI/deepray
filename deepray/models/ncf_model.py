@@ -87,7 +87,7 @@ class NCFModel(tf.keras.Model):
 
     # Custom training loop calculates loss and metric as a part of
     # training/evaluation step function.
-    if not self._params["keras_use_ctl"]:
+    if not self._params["use_custom_training_loop"]:
       softmax_logits = MetricLayer(self._params["match_mlperf"])([softmax_logits, dup_mask_input])
       # TODO(b/134744680): Use model.add_loss() instead once the API is well
       # supported.

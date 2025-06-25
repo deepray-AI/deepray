@@ -15,15 +15,15 @@
 """Implements F scores."""
 
 import tensorflow as tf
-from tensorflow.keras import backend as K
+import tf_keras as keras
 from typeguard import typechecked
 
 from deepray.utils.types import AcceptableDTypes, FloatTensorLike
 from typing import Optional
 
 
-@tf.keras.utils.register_keras_serializable(package="Deepray")
-class FBetaScore(tf.keras.metrics.Metric):
+@keras.utils.register_keras_serializable(package="Deepray")
+class FBetaScore(keras.metrics.Metric):
   r"""Computes F-Beta score.
 
     It is the weighted harmonic mean of precision
@@ -191,7 +191,7 @@ class FBetaScore(tf.keras.metrics.Metric):
 
   def reset_state(self):
     reset_value = tf.zeros(self.init_shape, dtype=self.dtype)
-    K.batch_set_value([(v, reset_value) for v in self.variables])
+    keras.batch_set_value([(v, reset_value) for v in self.variables])
 
   def reset_states(self):
     # Backwards compatibility alias of `reset_state`. New classes should

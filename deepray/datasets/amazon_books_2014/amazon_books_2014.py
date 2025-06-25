@@ -19,12 +19,6 @@ from absl import flags
 
 from deepray.datasets.tfrecord_pipeline import TFRecordPipeline
 
-FLAGS = flags.FLAGS
-FLAGS([
-    sys.argv[0],
-    "--num_train_examples=11932672",
-])
-
 LABEL = ["label"]
 NEGATIVE_HISTORY = ["item_feat_0_neg", "item_feat_1_neg"]
 POSITIVE_HISTORY = ["item_feat_0_pos", "item_feat_1_pos"]
@@ -37,6 +31,10 @@ class AmazonBooks2014(TFRecordPipeline):
   def __init__(self, max_seq_length, **kwargs):
     super().__init__(**kwargs)
     self._max_seq_length = max_seq_length
+    FLAGS([
+        sys.argv[0],
+        "--num_train_examples=11932672",
+    ])
 
   def parser(self, record):
     tf_feature_spec = {

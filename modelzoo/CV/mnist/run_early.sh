@@ -26,14 +26,6 @@ use_xla=${6:-"true"}
 epochs=${7:-"10"}
 model=${8:-"demo"}
 
-if [ $num_gpu -gt 1 ]; then
-    hvd_command="horovodrun -np $num_gpu "
-    use_hvd="--use_horovod"
-else
-    hvd_command=""
-    use_hvd="--distribution_strategy=off"
-fi
-
 if [ "$precision" = "fp16" ]; then
     echo "fp16 activated!"
     use_fp16="--dtype=fp16"
@@ -60,15 +52,14 @@ printf "Saving checkpoints to %s\n" "$RESULTS_DIR"
 printf "Logs written to %s\n" "$LOGFILE"
 
 set -x
-$hvd_command python train_earlystop.py \
+python train_earlystop.py \
     --train_data=mnist \
     --keras_use_ctl=$keras_use_ctl \
     --num_gpus=$num_gpu \
     --batch_size=$batch_size \
     --learning_rate=$learning_rate \
-    --steps_per_summary=20 \
+    --steps_per_execution=20 \
     --epochs=$epochs \
     --model_dir=${RESULTS_DIR} \
-    $use_hvd $use_fp16 $use_xla_tag |& tee $LOGFILE
-
+    $use_fp16 $use_xla_tag |& tee $LOGFILE
 set +x

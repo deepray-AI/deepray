@@ -37,7 +37,7 @@ from deepray.datasets.movielens import constants
 # pylint: enable=g-bad-import-order
 
 # URL to download dataset
-_DATA_URL = "http://minio1.arsenal.kanzhun-inc.com/datasets/movielens/"
+_DATA_URL = "https://files.grouplens.org/datasets/movielens/"
 
 GENRES = [
     'Action', 'Adventure', 'Animation', "Children", 'Comedy', 'Crime', 'Documentary', 'Drama', 'Fantasy', 'Film-Noir',
@@ -276,5 +276,5 @@ def main(_):
 
 
 if __name__ == "__main__":
-  FLAGS = flags.FLAGS
+
   app.run(main)

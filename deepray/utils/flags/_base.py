@@ -26,7 +26,7 @@ def define_base(
     num_train_examples=False,
     learning_rate=False,
     optimizer_type=False,
-    keras_use_ctl=False,
+    use_custom_training_loop=False,
     model_dir=False,
     clean=False,
     num_accumulation_steps=False,
@@ -36,9 +36,7 @@ def define_base(
     num_gpus=False,
     init_checkpoint=False,
     hooks=False,
-    dllog_path=False,
     export_dir=False,
-    save_checkpoint_steps=False,
     run_eagerly=False
 ):
   """Register base flags.
@@ -74,13 +72,13 @@ def define_base(
   if learning_rate:
     flags.DEFINE_float('learning_rate', 5e-5, 'The initial learning rate for Adam.')
     key_flags.append("learning_rate")
-  if keras_use_ctl:
+  if use_custom_training_loop:
     flags.DEFINE_bool(
-        name="keras_use_ctl",
+        name="use_custom_training_loop",
         default=True,
         help=flags_core.help_wrap("If True, we use a custom training loop for keras.")
     )
-    key_flags.append("keras_use_ctl")
+    key_flags.append("use_custom_training_loop")
   if optimizer_type:
     flags.DEFINE_string("optimizer_type", "adam", "Optimizer used for training - LAMB or ADAM")
     key_flags.append("optimizer_type")
@@ -93,16 +91,6 @@ def define_base(
     key_flags.append("init_checkpoint")
     flags.DEFINE_list("init_weights", '', "Initial weights for the main model.")
     key_flags.append("init_weights")
-
-  if save_checkpoint_steps:
-    flags.DEFINE_integer(
-        'save_checkpoint_steps', sys.maxsize,
-        'save checkpoint for every n steps. Default value will not save checkpoint during training.'
-    )
-    key_flags.append("save_checkpoint_steps")
-  if dllog_path:
-    flags.DEFINE_string('dllog_path', 'deepray_dllogger.json', 'filename where dllogger writes to')
-    key_flags.append("dllog_path")
 
   if model_dir:
     flags.DEFINE_string(

@@ -29,7 +29,7 @@ from official.recommendation.ranking import common
 from official.recommendation.ranking.task import RankingTask
 from official.utils.misc import keras_utils
 
-FLAGS = flags.FLAGS
+
 
 
 class RankingTrainer(base_trainer.Trainer):
@@ -185,6 +185,5 @@ def main(_) -> None:
 
 
 if __name__ == '__main__':
-  logging.set_verbosity(logging.INFO)
   common.define_flags()
   app.run(main)

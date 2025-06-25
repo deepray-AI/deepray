@@ -43,9 +43,9 @@ from nvtabular.ops import Normalize, Categorify, LogOp, FillMissing, Clip, get_e
     LambdaOp
 from cudf.io.parquet import ParquetWriter
 
-CRITEO_CONTINUOUS_COLUMNS = [f'_c{x}' for x in range(1, 14)]
-CRITEO_CATEGORICAL_COLUMNS = [f'_c{x}' for x in range(14, 40)]
-CRITEO_CLICK_COLUMNS = ['_c0']
+CRITEO_CONTINUOUS_COLUMNS = [f'f_c{x}' for x in range(1, 14)]
+CRITEO_CATEGORICAL_COLUMNS = [f'f_c{x}' for x in range(14, 40)]
+CRITEO_CLICK_COLUMNS = ['f_c0']
 COLUMNS = CRITEO_CONTINUOUS_COLUMNS + CRITEO_CATEGORICAL_COLUMNS + CRITEO_CLICK_COLUMNS
 CRITEO_TRAIN_DAYS = list(range(0, 23))
 

@@ -22,18 +22,17 @@ from keras import backend
 import numpy as np
 import tensorflow as tf
 from absl import flags
-from keras.utils.data_utils import get_file
+from keras.src.utils.data_utils import get_file
 from tensorflow import keras
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 
-FLAGS = flags.FLAGS
-FLAGS([
+flags.FLAGS([
     sys.argv[0],
     "--num_train_examples=60000",
 ])
 
 
-class CIFAR(DataPipeLine):
+class CIFAR(DataPipeline):
 
   def load_batch(self, fpath, label_key="labels"):
     """Internal utility for parsing CIFAR data.
@@ -123,7 +122,7 @@ class CIFAR10(CIFAR):
         ),
     )
 
-  def build_dataset(self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, *args, **kwargs):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, *args, **kwargs):
     if is_training:
       num_train_samples = 50000
 
@@ -150,7 +149,7 @@ class CIFAR10(CIFAR):
     y = keras.utils.to_categorical(y, num_classes)
 
     dataset = tf.data.Dataset.from_tensor_slices((x / 255.0, y))
-    dataset = dataset.repeat(FLAGS.epochs).shuffle(10000).batch(batch_size)
+    dataset = dataset.repeat(flags.FLAGS.epochs).shuffle(10000).batch(batch_size)
     return dataset
 
 
@@ -202,7 +201,7 @@ class CIFAR100(CIFAR):
                        f"Received: label_mode={label_mode}.")
 
     dirname = "cifar-100-python"
-    origin = "http://minio1.arsenal.kanzhun-inc.com/datasets/cifar100/cifar-100-python.tar.gz"  #"https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
+    origin = "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
     self.path = get_file(
         dirname,
         origin=origin,
@@ -213,7 +212,7 @@ class CIFAR100(CIFAR):
     )
     self.label_mode = label_mode
 
-  def build_dataset(self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, *args, **kwargs):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, *args, **kwargs):
     if is_training:
       fpath = os.path.join(self.path, "train")
 
@@ -230,5 +229,5 @@ class CIFAR100(CIFAR):
     y = keras.utils.to_categorical(y, num_classes)
 
     dataset = tf.data.Dataset.from_tensor_slices((x / 255.0, y))
-    dataset = dataset.repeat(FLAGS.epochs).shuffle(10000).batch(batch_size)
+    dataset = dataset.repeat(flags.FLAGS.epochs).shuffle(10000).batch(batch_size)
     return dataset

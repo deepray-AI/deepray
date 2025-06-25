@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "deepray/custom_ops/multiplex_2/multiplex_2_kernel.h"
+#include "multiplex_2_kernel.h"
 
 // Please use the appropriate namespace for your project
 namespace tensorflow {

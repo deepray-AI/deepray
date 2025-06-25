@@ -9,8 +9,6 @@ from absl import app, flags
 
 from .fashion_mnist import FashionMNIST
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 

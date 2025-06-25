@@ -25,8 +25,8 @@ from typing import Sequence
 import sys
 
 sys.path.append('/workspace/dlrm')
-from dlrm.data.defaults import get_categorical_feature_type
-from dlrm.data.feature_spec import FeatureSpec
+from data.defaults import get_categorical_feature_type
+from data.feature_spec import FeatureSpec
 
 
 def split_binary_file(
@@ -71,7 +71,7 @@ def split_binary_file(
       numerical_f.write(numerical_features.astype(np.float16).tobytes())
 
       label = batch_data[:, 0]
-      label_f.write(label.astype(np.bool).tobytes())
+      label_f.write(label.astype(bool).tobytes())
 
       cat_offset = num_numerical_features + 1
       for cat_idx, cat_feature_type in enumerate(cat_feature_types):

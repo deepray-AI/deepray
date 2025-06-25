@@ -57,7 +57,7 @@ def define_device(tpu=False, redis=False):
 
   if tpu:
     flags.DEFINE_string(
-        name="tpu",
+        name="tpu_address",
         default=None,
         help=help_wrap(
             "The Cloud TPU to use for training. This should be either the name "
@@ -66,7 +66,7 @@ def define_device(tpu=False, redis=False):
             "CPU of the local instance instead. (Good for debugging.)"
         )
     )
-    key_flags.append("tpu")
+    key_flags.append("tpu_address")
 
     flags.DEFINE_string(
         name="tpu_zone",

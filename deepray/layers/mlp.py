@@ -2,8 +2,7 @@ from copy import deepcopy
 from typing import List
 
 import tensorflow as tf
-from tensorflow.keras.layers import BatchNormalization as BatchNorm
-from tensorflow.python.keras import regularizers
+import tf_keras as keras
 
 
 def extend_as_list(x, n):
@@ -66,8 +65,8 @@ class MLP(tf.keras.layers.Layer):
     self.hidden_units = hidden_units
     self.prefix = name
     self.use_bias = use_bias
-    self.kernel_regularizer = regularizers.get(kernel_regularizer)
-    self.bias_regularizer = regularizers.get(bias_regularizer)
+    self.kernel_regularizer = keras.regularizers.get(kernel_regularizer)
+    self.bias_regularizer = keras.regularizers.get(bias_regularizer)
     self.enable_batch_normalization = enable_batch_normalization
     self.batch_normalization_momentum = batch_normalization_momentum
     self.batch_normalization_renorm = batch_normalization_renorm
@@ -95,15 +94,15 @@ class MLP(tf.keras.layers.Layer):
 
   def build(self, input_shape):
     if self.enable_batch_normalization:
-      bn = BatchNorm(
+      bn = keras.layers.BatchNormalization(
           momentum=self.batch_normalization_momentum,
           renorm=self.batch_normalization_renorm,
           renorm_clipping=self.batch_normalization_renorm_clipping,
           renorm_momentum=self.batch_normalization_renorm_momentum,
           name=f"BatchNorm/in"
       )
-      self._trainable_weights.extend(bn.trainable_weights)
-      self._non_trainable_weights.extend(bn.non_trainable_weights)
+      self.trainable_weights.extend(bn.trainable_weights)
+      self.non_trainable_weights.extend(bn.non_trainable_weights)
       self.add_loss(bn.losses)
       self._stacked_layers.append(bn)
 
@@ -119,21 +118,21 @@ class MLP(tf.keras.layers.Layer):
           kernel_regularizer=self.kernel_regularizer,
           bias_regularizer=self.bias_regularizer
       )
-      self._trainable_weights.extend(dense.trainable_weights)
-      self._non_trainable_weights.extend(dense.non_trainable_weights)
+      self.trainable_weights.extend(dense.trainable_weights)
+      self.non_trainable_weights.extend(dense.non_trainable_weights)
       self.add_loss(dense.losses)
       self._stacked_layers.append(dense)
 
       if not is_final_layer and self.enable_batch_normalization:
-        bn = BatchNorm(
+        bn = keras.layers.BatchNormalization(
             momentum=self.batch_normalization_momentum,
             renorm=self.batch_normalization_renorm,
             renorm_clipping=self.batch_normalization_renorm_clipping,
             renorm_momentum=self.batch_normalization_renorm_momentum,
             name=f"BatchNorm/out"
         )
-        self._trainable_weights.extend(bn.trainable_weights)
-        self._non_trainable_weights.extend(bn.non_trainable_weights)
+        self.trainable_weights.extend(bn.trainable_weights)
+        self.non_trainable_weights.extend(bn.non_trainable_weights)
         self.add_loss(bn.losses)
         self._stacked_layers.append(bn)
 
@@ -158,8 +157,8 @@ class MLP(tf.keras.layers.Layer):
         "enable_batch_normalization": self.enable_batch_normalization,
         "batch_normalization_momentum": self.batch_normalization_momentum,
         "use_bias": self.use_bias,
-        'kernel_regularizer': regularizers.serialize(self.kernel_regularizer),
-        'bias_regularizer': regularizers.serialize(self.bias_regularizer),
+        'kernel_regularizer': keras.regularizers.serialize(self.kernel_regularizer),
+        'bias_regularizer': keras.regularizers.serialize(self.bias_regularizer),
         'batch_normalization_renorm': self.batch_normalization_renorm,
         'batch_normalization_renorm_clipping': self.batch_normalization_renorm_clipping,
         'batch_normalization_renorm_momentum': self.batch_normalization_renorm_momentum

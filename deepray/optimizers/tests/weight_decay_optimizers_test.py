@@ -373,7 +373,7 @@ def test_var_list_with_exclude_list_sgdw(dtype):
   )
 
 
-if importlib.util.find_spec("tensorflow.keras.optimizers.legacy") is not None:
+if importlib.util.find_spec("tf_keras.optimizers.legacy") is not None:
   optimizer_class = tf.keras.optimizers.legacy.SGD
 else:
   optimizer_class = tf.keras.optimizers.SGD

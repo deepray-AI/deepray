@@ -15,8 +15,9 @@
 """Implements quantiles losses."""
 
 import tensorflow as tf
+from tensorflow.python.keras import losses
 from typeguard import typechecked
-from deepray.utils.keras_utils import LossFunctionWrapper
+
 from deepray.utils.types import TensorLike, FloatTensorLike
 
 
@@ -68,7 +69,7 @@ def pinball_loss(y_true: TensorLike, y_pred: TensorLike, tau: FloatTensorLike = 
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class PinballLoss(LossFunctionWrapper):
+class PinballLoss(losses.LossFunctionWrapper):
   """Computes the pinball loss between `y_true` and `y_pred`.
 
     `loss = maximum(tau * (y_true - y_pred), (tau - 1) * (y_true - y_pred))`

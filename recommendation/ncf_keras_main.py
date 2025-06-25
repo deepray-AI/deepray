@@ -38,7 +38,7 @@ from deepray.utils.flags import core as flags_core
 from deepray.utils.misc import keras_utils
 from deepray.utils.misc import model_helpers
 
-FLAGS = flags.FLAGS
+
 
 
 def metric_fn(logits, dup_mask, match_mlperf):
@@ -173,7 +173,7 @@ def _get_keras_model(params):
 
   # Custom training loop calculates loss and metric as a part of
   # training/evaluation step function.
-  if not params["keras_use_ctl"]:
+  if not params["use_custom_training_loop"]:
     softmax_logits = MetricLayer(params["match_mlperf"])([softmax_logits, dup_mask_input])
     # TODO(b/134744680): Use model.add_loss() instead once the API is well
     # supported.
@@ -214,7 +214,7 @@ def run_ncf(_):
   params["distribute_strategy"] = strategy
   params["use_tpu"] = (FLAGS.distribution_strategy == "tpu")
 
-  if params["use_tpu"] and not params["keras_use_ctl"]:
+  if params["use_tpu"] and not params["use_custom_training_loop"]:
     logging.error("Custom training loop must be used when using TPUStrategy.")
     return
 
@@ -273,7 +273,7 @@ def run_ncf(_):
       else:
         optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer, dynamic=False, initial_scale=loss_scale)
 
-    if params["keras_use_ctl"]:
+    if params["use_custom_training_loop"]:
       train_loss, eval_results = run_ncf_custom_training(
           params,
           strategy,

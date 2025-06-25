@@ -193,6 +193,5 @@ def clear_system_caches():
 
 
 if __name__ == "__main__":
-  logging.set_verbosity(logging.INFO)
   with LOGGER(True):
     ncf_print(key=TAGS.RUN_START)

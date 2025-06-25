@@ -16,8 +16,7 @@
 
 import tensorflow as tf
 import numpy as np
-import tensorflow.keras.backend as K
-from tensorflow.keras.metrics import Metric
+import tf_keras as keras
 from deepray.utils.types import AcceptableDTypes, FloatTensorLike
 
 from typeguard import typechecked
@@ -25,7 +24,7 @@ from typing import Optional
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class CohenKappa(Metric):
+class CohenKappa(keras.metrics.Metric):
   """Computes Kappa score between two raters.
 
     The score lies in the range `[-1, 1]`. A score of -1 represents
@@ -256,7 +255,7 @@ class CohenKappa(Metric):
     """Resets all of the metric state variables."""
 
     for v in self.variables:
-      K.set_value(
+      keras.set_value(
           v,
           np.zeros((self.num_classes, self.num_classes), v.dtype.as_numpy_dtype),
       )

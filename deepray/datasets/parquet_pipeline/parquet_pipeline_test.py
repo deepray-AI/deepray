@@ -11,8 +11,6 @@ from absl import app, flags
 from deepray.utils.benchmark import PerformanceCalculator
 from .parquet_pipeline import parquet_pipeline
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 

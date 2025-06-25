@@ -15,16 +15,15 @@
 """Implements GeometricMean."""
 
 import tensorflow as tf
-from tensorflow.keras import backend as K
-from tensorflow.keras.metrics import Metric
-
+import tf_keras as keras
+from tf_keras import backend as K
 from typeguard import typechecked
 from deepray.utils.types import AcceptableDTypes
 from deepray.metrics.utils import sample_weight_shape_match
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class GeometricMean(Metric):
+class GeometricMean(keras.metrics.Metric):
   """Compute Geometric Mean
 
     The geometric mean is a kind of mean. Unlike the arithmetic mean

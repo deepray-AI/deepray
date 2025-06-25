@@ -24,8 +24,6 @@ import tensorflow as tf
 
 import tokenization
 
-FLAGS = flags.FLAGS
-
 flags.DEFINE_string("input_file", None, "Input raw text file (or comma-separated list of files).")
 
 flags.DEFINE_string("output_file", None, "Output TF example file (or comma-separated list of files).")

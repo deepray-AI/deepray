@@ -11,8 +11,6 @@ from absl import app, flags
 from deepray.utils.benchmark import PerformanceCalculator
 from .amazon_books_2014 import AmazonBooks2014
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
@@ -31,14 +29,14 @@ def runner(argv=None):
   if argv:
     FLAGS(argv, known_only=True)
 
-  data_pipe = AmazonBooks2014(FLAGS.max_seq_length)
+  prebatch_size = 5
+  data_pipe = AmazonBooks2014(prebatch_size=prebatch_size, FLAGS.max_seq_length)
   # create data pipline of train & test dataset
 
   # since each tfrecord file must include all of the features, it is enough to read first chunk for each split.
   # train_files = [dataset_dir / file for file in feature_spec.source_spec[TRAIN_MAPPING][0][FILES_SELECTOR]]
 
-  prebatch_size = 5
-  train_dataset = data_pipe(FLAGS.train_data, batch_size=FLAGS.batch_size, prebatch_size=prebatch_size)
+  train_dataset = data_pipe(FLAGS.train_data, batch_size=FLAGS.batch_size)
 
   _performance_calculator = PerformanceCalculator(0, 1000)
 

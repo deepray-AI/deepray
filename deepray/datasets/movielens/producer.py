@@ -6,21 +6,11 @@ import sys
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 from deepray.datasets.movielens import constants as rconst
 
-FLAGS = flags.FLAGS
-FLAGS(
-    [
-        sys.argv[0],
-        "--num_train_examples=5049000",
-        #  "--=6138000"
-        "--feature_map={}".format(os.path.join(os.path.dirname(__file__), "movielens.csv")),
-    ]
-)
 
-
-class Produce(DataPipeLine):
+class Produce(DataPipeline):
 
   def __init__(self, params, producer):
     self._producer = producer

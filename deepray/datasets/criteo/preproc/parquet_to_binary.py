@@ -23,10 +23,10 @@ import subprocess
 
 
 def process_file(f, dst):
-  label = '_c0'
-  dense_columns = [f'_c{i}' for i in range(1, 14)]
-  categorical_columns = [f'_c{i}' for i in range(14, 40)]
-  all_columns_sorted = [f'_c{i}' for i in range(0, 40)]
+  label = 'f_c0'
+  dense_columns = [f'f_c{i}' for i in range(1, 14)]
+  categorical_columns = [f'f_c{i}' for i in range(14, 40)]
+  all_columns_sorted = [f'f_c{i}' for i in range(0, 40)]
   data = pd.read_parquet(f)
   data = data[all_columns_sorted]
 

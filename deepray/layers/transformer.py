@@ -25,7 +25,6 @@ from deepray.layers import attention
 from deepray.layers import dense_einsum
 
 
-# @tf.keras.utils.register_keras_serializable(package="Text")
 class Transformer(tf.keras.layers.Layer):
   """Transformer layer.
 
@@ -129,7 +128,9 @@ class Transformer(tf.keras.layers.Layer):
     )
     self._attention_dropout = tf.keras.layers.Dropout(rate=self._dropout_rate)
     self._attention_layer_norm = (
-        tf.keras.layers.LayerNormalization(name="self_attention_layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32)
+        tf.keras.layers.LayerNormalization(
+            name=f"{self.name}/self_attention_layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
+        )
     )
     self._intermediate_dense = dense_einsum.DenseEinsum(
         output_shape=self._intermediate_size,
@@ -157,7 +158,7 @@ class Transformer(tf.keras.layers.Layer):
     )
     self._output_dropout = tf.keras.layers.Dropout(rate=self._dropout_rate)
     self._output_layer_norm = tf.keras.layers.LayerNormalization(
-        name="output_layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
+        name=f"{self.name}/output_layer_norm", axis=-1, epsilon=1e-12, dtype=tf.float32
     )
 
     super(Transformer, self).build(input_shape)
@@ -196,12 +197,12 @@ class Transformer(tf.keras.layers.Layer):
     attention_output = self._attention_dropout(attention_output)
     # Use float32 in keras layer norm and the gelu activation in the
     # intermediate dense layer for numeric stability
-    if self.dtype == tf.float16:
+    if self.dtype == tf.float16 or self.dtype == tf.bfloat16:
       input_tensor = tf.cast(input_tensor, tf.float32)
       attention_output = tf.cast(attention_output, tf.float32)
     attention_output = self._attention_layer_norm(input_tensor + attention_output)
     intermediate_output = self._intermediate_dense(attention_output)
-    if self.dtype == tf.float16:
+    if self.dtype == tf.float16 or self.dtype == tf.bfloat16:
       # Casts to float32 so that activation is done in float32.
       intermediate_output = tf.cast(intermediate_output, tf.float32)
       intermediate_output = self._intermediate_activation_layer(intermediate_output)
@@ -211,10 +212,10 @@ class Transformer(tf.keras.layers.Layer):
     layer_output = self._output_dense(intermediate_output)
     layer_output = self._output_dropout(layer_output)
     # Use float32 in keras layer norm for numeric stability
-    if self.dtype == tf.float16:
+    if self.dtype == tf.float16 or self.dtype == tf.bfloat16:
       layer_output = tf.cast(layer_output, tf.float32)
     layer_output = self._output_layer_norm(layer_output + attention_output)
-    if self.dtype == tf.float16:
+    if self.dtype == tf.float16 or self.dtype == tf.bfloat16:
       layer_output = tf.cast(layer_output, tf.float16)
 
     return layer_output

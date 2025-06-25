@@ -38,7 +38,6 @@ from deepray.optimizers.novograd import NovoGrad
 from deepray.optimizers.proximal_adagrad import ProximalAdagrad
 from deepray.optimizers.rectified_adam import RectifiedAdam
 from deepray.optimizers.stochastic_weight_averaging import SWA
-from deepray.optimizers.weight_decay_optimizers import AdamW
 from deepray.optimizers.adabelief import AdaBelief
 from deepray.optimizers.weight_decay_optimizers import SGDW
 from deepray.optimizers.weight_decay_optimizers import (
@@ -50,3 +49,7 @@ from deepray.optimizers.weight_decay_optimizers import (
 from deepray.optimizers.yogi import Yogi
 from deepray.optimizers.cocob import COCOB
 from deepray.optimizers.adam import Adam
+from deepray.optimizers.adam_async import AdamAsync
+from deepray.optimizers.gradient_descent import SGD
+from deepray.optimizers.adagrad import Adagrad
+from deepray.optimizers.ftrl import FtrlOptimizer

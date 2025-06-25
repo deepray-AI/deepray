@@ -21,13 +21,11 @@ https://github.com/tensorflow/models/blob/master/official/recommendation/ranking
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 from deepray.utils.horovod_utils import get_world_size, get_rank
 
-FLAGS = flags.FLAGS
 
-
-class CriteoTsvReader(DataPipeLine):
+class CriteoTsvReader(DataPipeline):
   """Input reader callable for pre-processed Criteo data.
 
   Raw Criteo data is assumed to be preprocessed in the following way:
@@ -49,7 +47,6 @@ class CriteoTsvReader(DataPipeLine):
       input_file_pattern,
       batch_size,
       is_training=True,
-      prebatch_size=0,
       epochs=1,
       shuffle=True,
       *args,
@@ -76,7 +73,7 @@ class CriteoTsvReader(DataPipeLine):
 
     indices = tf.data.Dataset.range(get_world_size())
     dataset = indices.interleave(
-        map_func=make_dataset, cycle_length=FLAGS.cycle_length, num_parallel_calls=tf.data.experimental.AUTOTUNE
+        map_func=make_dataset, cycle_length=flags.FLAGS.cycle_length, num_parallel_calls=tf.data.experimental.AUTOTUNE
     )
 
     dataset = dataset.prefetch(tf.data.experimental.AUTOTUNE)
@@ -93,7 +90,7 @@ class CriteoTsvReader(DataPipeLine):
     fields = tf.io.decode_csv(example, record_defaults, field_delim='\t', na_value='-1')
 
     num_labels = 1
-    label = tf.reshape(fields[0], [FLAGS.batch_size, 1])
+    label = tf.reshape(fields[0], [flags.FLAGS.batch_size, 1])
 
     features = {}
     num_dense = len(dense_defaults)

@@ -14,17 +14,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-set -eu
-set -o pipefail
+echo "Container nvidia build = " $NVIDIA_BUILD_ID
 
-bert_model=${1:-"base"}
-num_gpu=${2:-"4"}
+bert_model=${1:-"large"}
+num_gpu=${2:-"8"}
 batch_size=${3:-"8"}
 precision=${4:-"fp16"}
 use_xla=${5:-"true"}
 squad_version=1.1
 
-if [ $num_gpu -gt 1 ]; then
+if [ $num_gpu -gt 1 ] ; then
     mpi_command="mpirun -np $num_gpu \
     --allow-run-as-root -bind-to none -map-by slot \
     -x NCCL_DEBUG=INFO \
@@ -33,51 +32,49 @@ if [ $num_gpu -gt 1 ]; then
     use_hvd="--use_horovod"
 else
     mpi_command=""
-    use_hvd="--distribution_strategy=off"
-    # use_hvd=""
+    use_hvd=""
 fi
 
-if [ "$precision" = "fp16" ]; then
+if [ "$precision" = "fp16" ] ; then
     echo "fp16 activated!"
-    use_fp16="--dtype=fp16"
+    use_fp16="--use_fp16"
 else
     use_fp16=""
 fi
 
-if [ "$use_xla" = "true" ]; then
+if [ "$use_xla" = "true" ] ; then
     use_xla_tag="--enable_xla"
     echo "XLA activated"
 else
     use_xla_tag=""
 fi
 
-if [ "$bert_model" = "large" ]; then
-    export BERT_BASE_DIR=/workspaces/dataset/download/google_pretrained_weights/uncased_L-24_H-1024_A-16
+if [ "$bert_model" = "large" ] ; then
+    export BERT_BASE_DIR=/workspaces/datasets/google_pretrained_weights/uncased_L-24_H-1024_A-16
 else
-    export BERT_BASE_DIR=/workspaces/dataset/download/google_pretrained_weights/uncased_L-12_H-768_A-12
+    export BERT_BASE_DIR=/workspaces/datasets/google_pretrained_weights/uncased_L-12_H-768_A-12
 fi
 
 export SQUAD_VERSION=v$squad_version
-export SQUAD_DIR=/workspaces/dataset/download/squad/$SQUAD_VERSION
+export SQUAD_DIR=/workspaces/datasets/squad/$SQUAD_VERSION
 printf -v TAG "squad_train_benchmark_%s_%s_gpu%d_bs%d" "$bert_model" "$precision" $num_gpu $batch_size
-DATESTAMP=$(date +'%y%m%d%H%M%S')
+DATESTAMP=`date +'%y%m%d%H%M%S'`
 LOGFILE=/results/$TAG.log
 export MODEL_DIR=/tmp/bert_train_benchmark_${DATESTAMP}
 printf "Logs written to %s\n" "$LOGFILE"
 mkdir -p /results
 
 $mpi_command python run_squad.py \
-    --mode=train \
-    --model_name=bert \
-    --num_accumulation_steps=5 \
-    --optimizer_type=adam \
-    --input_meta_data_path=${SQUAD_DIR}/squad_${SQUAD_VERSION}_meta_data \
-    --train_data=${SQUAD_DIR}/squad_${SQUAD_VERSION}_train.tf_record \
-    --vocab_file=${BERT_BASE_DIR}/vocab.txt \
-    --config_file=$BERT_BASE_DIR/bert_config.json \
-    --init_checkpoint=",$BERT_BASE_DIR/bert_model.ckpt" \
-    --batch_size=$batch_size \
-    --model_dir=${MODEL_DIR} \
-    --run_eagerly=false \
-    --benchmark \
-    $use_hvd $use_fp16 $use_xla_tag |& tee $LOGFILE
+  --mode=train \
+  --input_meta_data_path=${SQUAD_DIR}/squad_${SQUAD_VERSION}_meta_data \
+  --train_data_path=${SQUAD_DIR}/squad_${SQUAD_VERSION}_train.tf_record \
+  --vocab_file=${BERT_BASE_DIR}/vocab.txt \
+  --bert_config_file=$BERT_BASE_DIR/bert_config.json \
+  --init_checkpoint=$BERT_BASE_DIR/bert_model.ckpt \
+  --train_batch_size=$batch_size \
+  --model_dir=${MODEL_DIR} \
+  --benchmark \
+  $use_hvd $use_fp16 $use_xla_tag 
+#   |& tee $LOGFILE
+
+# rm $MODEL_DIR -r

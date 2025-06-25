@@ -3,13 +3,11 @@ import tensorflow_hub as hub
 from absl import app
 from absl import flags
 
-from deepray.core.base_trainer import Trainer
+from deepray.core.trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets.toxic_comment_classification_challenge import ToxicCommentClassificationChallenge
 
 # if FLAGS.use_dynamic_embedding:
-
-FLAGS = flags.FLAGS
 
 # tfhub_handle_encoder = 'https://tfhub.dev/tensorflow/small_bert/bert_en_uncased_L-2_H-512_A-8/1'
 tfhub_handle_encoder = 'https://hub.tensorflow.google.cn/tensorflow/small_bert/bert_en_uncased_L-2_H-512_A-8/1'

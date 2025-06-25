@@ -12,8 +12,6 @@ from absl import app, flags
 
 from .squad import Squad
 
-FLAGS = flags.FLAGS
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 SQUAD_VERSION = "1.1"

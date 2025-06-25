@@ -26,8 +26,6 @@ from absl import flags
 
 from .warmup import WarmUpPolynomial
 
-FLAGS = flags.FLAGS
-
 
 def create_optimizer(init_lr, num_train_steps, num_warmup_steps, optimizer_type="adam"):
   """Creates an optimizer with learning rate schedule."""
@@ -81,9 +79,6 @@ def create_optimizer(init_lr, num_train_steps, num_warmup_steps, optimizer_type=
   # if FLAGS.use_horovod:
   #   import horovod.tensorflow.keras as hvd
   #   optimizer = hvd.DistributedOptimizer(optimizer, backward_passes_per_step=1, average_aggregated_gradients=True)
-  if FLAGS.use_dynamic_embedding:
-    from tensorflow_recommenders_addons import dynamic_embedding as de
-    optimizer = de.DynamicEmbeddingOptimizer(optimizer, synchronous=FLAGS.use_horovod)
   return optimizer
 
 

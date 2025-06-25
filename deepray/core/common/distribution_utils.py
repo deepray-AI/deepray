@@ -24,8 +24,6 @@ from absl import flags
 
 from deepray.utils.horovod_utils import is_main_process
 
-FLAGS = flags.FLAGS
-
 
 def _collective_communication(all_reduce_alg):
   """Return a CollectiveCommunication based on all_reduce_alg.
@@ -97,7 +95,7 @@ def tpu_initialize(tpu_address):
   return cluster_resolver
 
 
-def get_distribution_strategy(distribution_strategy=None, all_reduce_alg=None, num_packs=1, **kwargs):
+def get_distribution_strategy(distribution_strategy="off", all_reduce_alg=None, num_packs=1, **kwargs):
   """Return a Strategy for running the model.
   Args:
     distribution_strategy: a string specifying which distribution strategy to
@@ -126,15 +124,15 @@ def get_distribution_strategy(distribution_strategy=None, all_reduce_alg=None, n
       `distribution_strategy` is `tpu` but `tpu_address` is not specified.
   """
   del kwargs
-  if FLAGS.num_gpus < 0:
+  if flags.FLAGS.num_gpus < 0:
     raise ValueError("`num_gpus` can not be negative.")
 
-  if FLAGS.use_horovod:
+  if flags.FLAGS.use_horovod:
     distribution_strategy = "off"
     if is_main_process():
-      logging.info("Run horovod and turn off distribution strategy.")
+      logging.info("Run horovod and turn off TF distribution strategy.")
   else:
-    distribution_strategy = FLAGS.distribution_strategy
+    distribution_strategy = flags.FLAGS.distribution_strategy
 
   if not isinstance(distribution_strategy, str):
     msg = ("distribution_strategy must be a string but got: %s." % (distribution_strategy,))
@@ -152,7 +150,7 @@ def get_distribution_strategy(distribution_strategy=None, all_reduce_alg=None, n
 
   if distribution_strategy == "tpu":
     # When tpu_address is an empty string, we communicate with local TPUs.
-    cluster_resolver = tpu_initialize(FLAGS.tpu)
+    cluster_resolver = tpu_initialize(flags.FLAGS.tpu_address)
     return tf.distribute.TPUStrategy(cluster_resolver)
 
   if distribution_strategy == "multi_worker_mirrored":
@@ -161,25 +159,25 @@ def get_distribution_strategy(distribution_strategy=None, all_reduce_alg=None, n
     )
 
   if distribution_strategy == "one_device":
-    if FLAGS.num_gpus == 0:
+    if flags.FLAGS.num_gpus == 0:
       return tf.distribute.OneDeviceStrategy("device:CPU:0")
-    if FLAGS.num_gpus > 1:
+    if flags.FLAGS.num_gpus > 1:
       raise ValueError("`OneDeviceStrategy` can not be used for more than "
                        "one device.")
     return tf.distribute.OneDeviceStrategy("device:GPU:0")
 
   if distribution_strategy == "mirrored":
-    if FLAGS.num_gpus == 0:
+    if flags.FLAGS.num_gpus == 0:
       devices = ["device:CPU:0"]
     else:
-      devices = ["device:GPU:%d" % i for i in range(FLAGS.num_gpus)]
+      devices = ["device:GPU:%d" % i for i in range(flags.FLAGS.num_gpus)]
     return tf.distribute.MirroredStrategy(
         devices=devices, cross_device_ops=_mirrored_cross_device_ops(all_reduce_alg, num_packs)
     )
 
   if distribution_strategy == "parameter_server":
     cluster_resolver = tf.distribute.cluster_resolver.TFConfigClusterResolver()
-    return tf.distribute.experimental.ParameterServerStrategy(cluster_resolver)
+    return tf.distribute.ParameterServerStrategy(cluster_resolver)
 
   raise ValueError("Unrecognized Distribution Strategy: %r" % distribution_strategy)
 

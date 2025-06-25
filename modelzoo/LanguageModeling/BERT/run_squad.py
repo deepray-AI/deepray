@@ -25,71 +25,193 @@ import subprocess
 import sys
 import time
 
+import horovod.tensorflow as hvd
 import numpy as np
 import tensorflow as tf
-from absl import app, flags, logging
-from dllogger import Verbosity
-
-from deepray.utils import export
-from deepray.core.base_trainer import Trainer
-from deepray.core.common import distribution_utils
-from deepray.datasets import tokenization
+from absl import app
+from absl import flags
+from absl import logging
+from deepray.core.trainer import Trainer
 from deepray.datasets.squad import Squad
+
+import common_flags
+import gpu_affinity
+import input_pipeline
+import model_saving_utils
+import optimization
 # word-piece tokenizer based squad_lib
+import squad_lib as squad_lib_wp
 # sentence-piece tokenizer based squad_lib
-from deepray.datasets.squad import squad_lib_sp, squad_lib as squad_lib_wp
-from deepray.layers.nlp import bert_models, bert_modeling as modeling
-from deepray.utils.flags import common_flags
-from deepray.utils.horovod_utils import is_main_process
-# from optimization import create_optimizer
+import squad_lib_sp
+import tf_trt
+import tokenization
+from official.nlp import bert_modeling as modeling
+# Import BERT model libraries.
+from official.nlp import bert_models
+from deepray.core.common import distribution_utils
+from deepray.utils import keras_utils
+
+flags.DEFINE_enum(
+    'mode', 'train_and_predict',
+    ['train_and_predict', 'train', 'predict', 'export_only', 'sm_predict', 'trt_predict'],
+    'One of {"train_and_predict", "train", "predict", "export_only", "sm_predict", "trt_predict"}. '
+    '`train_and_predict`: both train and predict to a json file. '
+    '`train`: only trains the model. '
+    'trains the model and evaluates in the meantime. '
+    '`predict`: predict answers from the squad json file. '
+    '`export_only`: will take the latest checkpoint inside '
+    'model_dir and export a `SavedModel`.'
+    '`sm_predict`: will load SavedModel from savedmodel_dir and predict answers'
+    '`trt_predict`: will load SavedModel from savedmodel_dir, convert and predict answers with TF-TRT')
+flags.DEFINE_string('train_data_path', '',
+                    'Training data path with train tfrecords.')
+flags.DEFINE_string(
+    'input_meta_data_path', None,
+    'Path to file that contains meta data about input '
+    'to be used for training and evaluation.')
+flags.DEFINE_string(
+    "eval_script", None,
+    "SQuAD evaluate.py file to compute f1 and exact_match E.g., evaluate-v1.1.py")
+
+# Model training specific flags.
+flags.DEFINE_integer('train_batch_size', 8, 'Total batch size for training.')
+# Predict processing related.
+flags.DEFINE_string('predict_file', None,
+                    'Prediction data path with train tfrecords.')
+flags.DEFINE_string('vocab_file', None,
+                    'The vocabulary file that the BERT model was trained on.')
+flags.DEFINE_bool(
+    'do_lower_case', True,
+    'Whether to lower case the input text. Should be True for uncased '
+    'models and False for cased models.')
+flags.DEFINE_bool(
+    'verbose_logging', False,
+    'If true, all of the warnings related to data processing will be printed. '
+    'A number of warnings are expected for a normal SQuAD evaluation.')
+flags.DEFINE_integer('predict_batch_size', 8,
+                     'Total batch size for prediction.')
+flags.DEFINE_integer(
+    'n_best_size', 20,
+    'The total number of n-best predictions to generate in the '
+    'nbest_predictions.json output file.')
+flags.DEFINE_integer(
+    'max_answer_length', 30,
+    'The maximum length of an answer that can be generated. This is needed '
+    'because the start and end predictions are not conditioned on one another.')
+flags.DEFINE_string(
+    'sp_model_file', None,
+    'The path to the sentence piece model. Used by sentence piece tokenizer '
+    'employed by ALBERT.')
+flags.DEFINE_string(
+    'savedmodel_dir', None,
+    'The path of SavedModel for Savedmodel and TF-TRT prediction.')
+
+common_flags.define_common_bert_flags()
 
 FLAGS = flags.FLAGS
 
 MODEL_CLASSES = {
     'bert': (modeling.BertConfig, squad_lib_wp, tokenization.FullTokenizer),
-    'albert': (modeling.AlbertConfig, squad_lib_sp, tokenization.FullSentencePieceTokenizer),
+    'albert': (modeling.AlbertConfig, squad_lib_sp,
+               tokenization.FullSentencePieceTokenizer),
 }
 
-DTYPE_MAP = {
-    "fp16": tf.float16,
-    "bf16": tf.bfloat16,
-    "fp32": tf.float32,
-}
+
+def squad_loss_fn(start_positions,
+                  end_positions,
+                  start_logits,
+                  end_logits,
+                  loss_factor=1.0):
+  """Returns sparse categorical crossentropy for start/end logits."""
+  start_loss = tf.keras.backend.sparse_categorical_crossentropy(
+      start_positions, start_logits, from_logits=True)
+  end_loss = tf.keras.backend.sparse_categorical_crossentropy(
+      end_positions, end_logits, from_logits=True)
+
+  total_loss = (tf.reduce_mean(start_loss) + tf.reduce_mean(end_loss)) / 2
+  total_loss *= loss_factor
+  return total_loss
+
+
+def get_loss_fn(loss_factor=1.0):
+  """Gets a loss function for squad task."""
+
+  def _loss_fn(labels, model_outputs):
+    start_positions = labels['start_positions']
+    end_positions = labels['end_positions']
+    start_logits, end_logits = model_outputs
+    return squad_loss_fn(
+        start_positions,
+        end_positions,
+        start_logits,
+        end_logits,
+        loss_factor=loss_factor)
+
+  return _loss_fn
 
 
 def get_raw_results(predictions):
   """Converts multi-replica predictions to RawResult."""
-  squad_lib = MODEL_CLASSES[FLAGS.model_name][1]
-  for unique_ids, start_logits, end_logits in zip(
-      predictions['unique_ids'], predictions['start_positions'], predictions['end_positions']
-  ):
-    for values in zip(unique_ids.numpy(), start_logits.numpy(), end_logits.numpy()):
-      yield squad_lib.RawResult(unique_id=values[0], start_logits=values[1].tolist(), end_logits=values[2].tolist())
+  squad_lib = MODEL_CLASSES[FLAGS.model_type][1]
+  for unique_ids, start_logits, end_logits in zip(predictions['unique_ids'],
+                                                  predictions['start_logits'],
+                                                  predictions['end_logits']):
+    for values in zip(unique_ids.numpy(), start_logits.numpy(),
+                      end_logits.numpy()):
+      yield squad_lib.RawResult(
+          unique_id=values[0],
+          start_logits=values[1].tolist(),
+          end_logits=values[2].tolist())
 
+def get_dataset_fn(input_file_pattern, max_seq_length, global_batch_size,
+                   is_training, use_horovod):
+  """Gets a closure to create a dataset.."""
 
-def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path, num_steps):
+  def _dataset_fn(ctx=None):
+    """Returns tf.data.Dataset for distributed BERT pretraining."""
+    batch_size = ctx.get_per_replica_batch_size(
+        global_batch_size) if ctx else global_batch_size
+    dataset = input_pipeline.create_squad_dataset(
+        input_file_pattern,
+        max_seq_length,
+        batch_size,
+        is_training=is_training,
+        input_pipeline_context=ctx,
+        use_horovod=use_horovod)
+    return dataset
+
+  return _dataset_fn
+
+def predict_squad_customized(strategy, input_meta_data, bert_config,
+                             predict_tfrecord_path, num_steps):
   """Make predictions using a Bert-based squad model."""
-  data_pipe = Squad(max_seq_length=input_meta_data['max_seq_length'], dataset_type="squad")
-  predict_dataset = data_pipe(predict_tfrecord_path, FLAGS.predict_batch_size, is_training=False)
-
-  strategy = distribution_utils.get_distribution_strategy()
-  predict_iterator = distribution_utils.make_distributed_iterator(strategy, predict_dataset)
+  predict_dataset_fn = get_dataset_fn(
+      predict_tfrecord_path,
+      input_meta_data['max_seq_length'],
+      FLAGS.predict_batch_size,
+      is_training=False,
+      use_horovod=False)
+  if strategy:
+    predict_iterator = iter(
+      strategy.experimental_distribute_datasets_from_function(
+          predict_dataset_fn))
+  else:
+    predict_iterator = iter(predict_dataset_fn())
 
   if FLAGS.mode == 'trt_predict':
-    squad_model = export.TFTRTModel(FLAGS.savedmodel_dir, "amp" if common_flags.use_float16() else "fp32")
+    squad_model = tf_trt.TFTRTModel(FLAGS.savedmodel_dir, "amp" if FLAGS.use_fp16 else "fp32")
 
   elif FLAGS.mode == 'sm_predict':
-    squad_model = export.SavedModel(FLAGS.savedmodel_dir, "amp" if common_flags.use_float16() else "fp32")
+    squad_model = tf_trt.SavedModel(FLAGS.savedmodel_dir, "amp" if FLAGS.use_fp16 else "fp32")
 
   else:
     with distribution_utils.get_strategy_scope(strategy):
       squad_model, _ = bert_models.squad_model(
-          bert_config, input_meta_data['max_seq_length'], float_type=DTYPE_MAP[FLAGS.dtype]
-      )
+          bert_config, input_meta_data['max_seq_length'], float_type=tf.float16 if FLAGS.use_fp16 else tf.float32)
 
     if FLAGS.init_checkpoint:
       checkpoint = tf.train.Checkpoint(model=squad_model)
-      checkpoint.restore(FLAGS.init_checkpoint).expect_partial()
+      checkpoint.restore(FLAGS.init_checkpoint[0]).expect_partial()
 
     checkpoint_path = tf.train.latest_checkpoint(FLAGS.model_dir)
     logging.info('Restoring checkpoints from %s', checkpoint_path)
@@ -107,16 +229,18 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
       if FLAGS.benchmark:
         t0 = tf.timestamp()
         unique_ids = t0
-      logits_dict = squad_model(x, training=False)
-      logits_dict['unique_ids'] = unique_ids
-      logits_dict.update(unique_ids=unique_ids)
-      return logits_dict
+      start_logits, end_logits = squad_model(x, training=False)
+      return dict(
+          unique_ids=unique_ids,
+          start_logits=start_logits,
+          end_logits=end_logits)
 
     def tuple_fun(x):
-      return x,
+      return (x,)
 
     if strategy:
-      outputs = strategy.run(_replicated_step, args=(next(iterator),))
+      outputs = strategy.experimental_run_v2(
+          _replicated_step, args=(next(iterator),))
       map_func = strategy.experimental_local_results
     else:
       outputs = _replicated_step(next(iterator),)
@@ -133,7 +257,7 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
     if FLAGS.benchmark:
       # transfer tensor to CPU for synchronization
       t0 = predictions['unique_ids'][0]
-      start_logits = predictions['start_positions'][0]
+      start_logits = predictions['start_logits'][0]
       start_logits.numpy()
       elapsed_secs = time.time() - t0.numpy()
       # Removing first 4 (arbitrary) number of startup iterations from perf evaluations
@@ -152,10 +276,9 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
   logging.info("Summary Inference Statistics")
   logging.info("Batch size = %d", FLAGS.predict_batch_size)
   logging.info("Sequence Length = %d", input_meta_data['max_seq_length'])
-  logging.info("Precision = %s", FLAGS.dtype)
-  logging.info(
-      "Total Inference Time = %0.2f for Sentences = %d", eval_time_elapsed, num_steps * FLAGS.predict_batch_size
-  )
+  logging.info("Precision = %s", "fp16" if FLAGS.use_fp16 else "fp32")
+  logging.info("Total Inference Time = %0.2f for Sentences = %d", eval_time_elapsed,
+    num_steps * FLAGS.predict_batch_size)
 
   if FLAGS.benchmark:
     eval_time_wo_overhead = sum(time_list)
@@ -170,10 +293,8 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
     cf_100 = max(time_list[:int(len(time_list) * 1)])
     ss_sentences_per_second = num_sentences * 1.0 / eval_time_wo_overhead
 
-    logging.info(
-        "Total Inference Time W/O Overhead = %0.2f for Sequences = %d", eval_time_wo_overhead,
-        (num_steps - 4) * FLAGS.predict_batch_size
-    )
+    logging.info("Total Inference Time W/O Overhead = %0.2f for Sequences = %d", eval_time_wo_overhead,
+      (num_steps - 4) * FLAGS.predict_batch_size)
     logging.info("Latency Confidence Level 50 (ms) = %0.2f", cf_50 * 1000)
     logging.info("Latency Confidence Level 90 (ms) = %0.2f", cf_90 * 1000)
     logging.info("Latency Confidence Level 95 (ms) = %0.2f", cf_95 * 1000)
@@ -182,50 +303,61 @@ def predict_squad_customized(input_meta_data, bert_config, predict_tfrecord_path
     logging.info("Latency Average (ms) = %0.2f", avg * 1000)
     logging.info("Throughput Average (sequences/sec) = %0.2f", ss_sentences_per_second)
 
-    dllogging = input_meta_data['dllogging']
-    dllogging.logger.log(step=(), data={"throughput_val": ss_sentences_per_second}, verbosity=Verbosity.DEFAULT)
 
   logging.info("-----------------------------")
 
   return all_results
 
 
-def train_squad(input_meta_data,):
+def train_squad(strategy,
+                input_meta_data,
+                custom_callbacks=None,
+                run_eagerly=False):
   """Run bert squad training."""
+  if strategy:
+    logging.info('Training using customized training loop with distribution'
+                 ' strategy.')
+  # Enables XLA in Session Config. Should not be set for TPU.
+  keras_utils.set_config_v2(FLAGS.enable_xla)
 
-  bert_config = MODEL_CLASSES[FLAGS.model_name][0].from_json_file(FLAGS.config_file)
+  use_float16 = common_flags.use_float16()
+  if use_float16:
+    tf.keras.mixed_precision.experimental.set_policy('mixed_float16')
+
+  bert_config = MODEL_CLASSES[FLAGS.model_type][0].from_json_file(FLAGS.bert_config_file)
+  num_train_examples = input_meta_data['train_data_size']
   max_seq_length = input_meta_data['max_seq_length']
+  global_batch_size = FLAGS.train_batch_size * FLAGS.num_accumulation_steps
+  if FLAGS.use_horovod:
+    global_batch_size *= hvd.size()
+  steps_per_epoch = int(num_train_examples / global_batch_size)
+  warmup_steps = int(flags.FLAGS.epochs * num_train_examples * 0.1 / global_batch_size)
 
-  # The original BERT model does not scale the loss by
-  # 1/num_replicas_in_sync. It could be an accident. So, in order to use
-  # the same hyper parameter, we do the same thing here by keeping each
-  # replica loss as it is.
-  strategy = distribution_utils.get_distribution_strategy()
-
-  with distribution_utils.get_strategy_scope(strategy):
-    """Get Squad model and optimizer."""
-    squad_model, core_model = bert_models.squad_model(
-        bert_config, max_seq_length, float_type=DTYPE_MAP[FLAGS.dtype], hub_module_url=FLAGS.hub_module_url
-    )
-
-  data_pipe = Squad(
-      max_seq_length=max_seq_length,
-      dataset_type="squad",
-  )
+  data_pipe = Squad(max_seq_length=max_seq_length, dataset_type="squad")
   train_input = data_pipe(
-      FLAGS.train_data,
-      FLAGS.batch_size,
+      flags.FLAGS.batch_size,
+      flags.FLAGS.train_data_path,
       is_training=True,
   )
 
+  
+  squad_model, core_model = bert_models.squad_model(
+        bert_config,
+        max_seq_length,
+        float_type=tf.float16 if FLAGS.use_fp16 else tf.float32,
+        hub_module_url=FLAGS.hub_module_url)
+  
+  learning_rate = FLAGS.learning_rate * hvd.size() if FLAGS.use_horovod else FLAGS.learning_rate
+  optimizer = optimization.create_optimizer(learning_rate, steps_per_epoch * flags.FLAGS.epochs, warmup_steps, FLAGS.optimizer_type)
+  if FLAGS.use_fp16:
+    optimizer = tf.keras.mixed_precision.LossScaleOptimizer(optimizer, dynamic=True)
+  
   trainer = Trainer(
       model={
           "main": squad_model,
           "sub_model": core_model
       },
-      # optimizer= create_optimizer(
-      #   learning_rate, steps_per_epoch * epochs, warmup_steps, FLAGS.optimizer_type),
-      optimizer=tf.keras.optimizers.Adam(learning_rate=FLAGS.learning_rate, amsgrad=False),
+      optimizer=optimizer,
       loss={
           "start_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
           "end_positions": tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
@@ -234,28 +366,35 @@ def train_squad(input_meta_data,):
           "start_positions": 0.5,
           "end_positions": 0.5
       },
+      jit_compile=True
   )
-  trainer.fit(train_input=train_input,)
-  export.export_to_savedmodel(model=trainer.models)
+  trainer.fit(x=train_input, steps_per_epoch=steps_per_epoch)
 
 
-def predict_squad(input_meta_data):
+def predict_squad(strategy, input_meta_data):
   """Makes predictions for a squad dataset."""
-
-  config_cls, squad_lib, tokenizer_cls = MODEL_CLASSES[FLAGS.model_name]
-  bert_config = config_cls.from_json_file(FLAGS.config_file)
+  keras_utils.set_config_v2(FLAGS.enable_xla)
+  config_cls, squad_lib, tokenizer_cls = MODEL_CLASSES[FLAGS.model_type]
+  bert_config = config_cls.from_json_file(FLAGS.bert_config_file)
   if tokenizer_cls == tokenization.FullTokenizer:
-    tokenizer = tokenizer_cls(vocab_file=FLAGS.vocab_file, do_lower_case=FLAGS.do_lower_case)
+    tokenizer = tokenizer_cls(
+        vocab_file=FLAGS.vocab_file, do_lower_case=FLAGS.do_lower_case)
   else:
     assert tokenizer_cls == tokenization.FullSentencePieceTokenizer
     tokenizer = tokenizer_cls(sp_model_file=FLAGS.sp_model_file)
+  doc_stride = input_meta_data['doc_stride']
+  max_query_length = input_meta_data['max_query_length']
   # Whether data should be in Ver 2.0 format.
-  version_2_with_negative = input_meta_data.get('version_2_with_negative', False)
+  version_2_with_negative = input_meta_data.get('version_2_with_negative',
+                                                False)
   eval_examples = squad_lib.read_squad_examples(
-      input_file=FLAGS.predict_file, is_training=False, version_2_with_negative=version_2_with_negative
-  )
+      input_file=FLAGS.predict_file,
+      is_training=False,
+      version_2_with_negative=version_2_with_negative)
 
-  eval_writer = squad_lib.FeatureWriter(filename=os.path.join(FLAGS.model_dir, 'eval.tf_record'), is_training=False)
+  eval_writer = squad_lib.FeatureWriter(
+      filename=os.path.join(FLAGS.model_dir, 'eval.tf_record'),
+      is_training=False)
   eval_features = []
 
   def _append_feature(feature, is_padding):
@@ -271,12 +410,11 @@ def predict_squad(input_meta_data):
       examples=eval_examples,
       tokenizer=tokenizer,
       max_seq_length=input_meta_data['max_seq_length'],
-      doc_stride=input_meta_data['doc_stride'],
-      max_query_length=input_meta_data['max_query_length'],
+      doc_stride=doc_stride,
+      max_query_length=max_query_length,
       is_training=False,
       output_fn=_append_feature,
-      batch_size=FLAGS.predict_batch_size
-  )
+      batch_size=FLAGS.predict_batch_size)
 
   # squad_lib_sp requires one more argument 'do_lower_case'.
   if squad_lib == squad_lib_sp:
@@ -292,7 +430,8 @@ def predict_squad(input_meta_data):
   num_steps = int(dataset_size / FLAGS.predict_batch_size)
   if FLAGS.benchmark and num_steps > 1000:
     num_steps = 1000
-  all_results = predict_squad_customized(input_meta_data, bert_config, eval_writer.filename, num_steps)
+  all_results = predict_squad_customized(strategy, input_meta_data, bert_config,
+                                         eval_writer.filename, num_steps)
 
   if FLAGS.benchmark:
     return
@@ -311,22 +450,18 @@ def predict_squad(input_meta_data):
       output_prediction_file,
       output_nbest_file,
       output_null_log_odds_file,
-      verbose=FLAGS.verbose_logging
-  )
+      verbose=FLAGS.verbose_logging)
 
   if FLAGS.eval_script:
-    eval_out = subprocess.check_output([sys.executable, FLAGS.eval_script, FLAGS.predict_file, output_prediction_file])
+    eval_out = subprocess.check_output([sys.executable, FLAGS.eval_script,
+                                        FLAGS.predict_file, output_prediction_file])
     scores = str(eval_out).strip()
     exact_match = float(scores.split(":")[1].split(",")[0])
     if version_2_with_negative:
       f1 = float(scores.split(":")[2].split(",")[0])
     else:
       f1 = float(scores.split(":")[2].split("}")[0])
-    dllogging = input_meta_data['dllogging']
-    dllogging.logger.log(step=(), data={"f1": f1}, verbosity=Verbosity.DEFAULT)
-    dllogging.logger.log(step=(), data={"exact_match": exact_match}, verbosity=Verbosity.DEFAULT)
     print(str(eval_out))
-
 
 def export_squad(model_export_path, input_meta_data):
   """Exports a trained model as a `SavedModel` for inference.
@@ -340,9 +475,12 @@ def export_squad(model_export_path, input_meta_data):
   """
   if not model_export_path:
     raise ValueError('Export path is not specified: %s' % model_export_path)
-  bert_config = MODEL_CLASSES[FLAGS.model_name][0].from_json_file(FLAGS.config_file)
-  squad_model, _ = bert_models.squad_model(bert_config, input_meta_data['max_seq_length'], float_type=tf.float32)
-  export.export_to_savedmodel(model_export_path + '/savedmodel', model=squad_model, checkpoint_dir=FLAGS.model_dir)
+  bert_config = MODEL_CLASSES[FLAGS.model_type][0].from_json_file(
+      FLAGS.bert_config_file)
+  squad_model, _ = bert_models.squad_model(
+      bert_config, input_meta_data['max_seq_length'], float_type=tf.float32)
+  model_saving_utils.export_bert_model(
+      model_export_path + '/savedmodel', model=squad_model, checkpoint_dir=FLAGS.model_dir)
 
   model_name = FLAGS.triton_model_name
 
@@ -352,27 +490,21 @@ def export_squad(model_export_path, input_meta_data):
 
   if not os.path.exists(version_folder):
     os.makedirs(version_folder)
-  if not os.path.exists(final_model_folder):
+  if (not os.path.exists(final_model_folder)):
     os.rename(model_export_path + '/savedmodel', final_model_folder)
     print("Model saved to dir", final_model_folder)
   else:
-    if FLAGS.triton_model_overwrite:
+    if (FLAGS.triton_model_overwrite):
       shutil.rmtree(final_model_folder)
       os.rename(model_export_path + '/savedmodel', final_model_folder)
       print("WARNING: Existing model was overwritten. Model dir: {}".format(final_model_folder))
     else:
-      print(
-          "ERROR: Could not save Triton model. Folder already exists. Use '--triton_model_overwrite=True' if you would like to overwrite an existing model. Model dir: {}"
-          .format(final_model_folder)
-      )
+      print("ERROR: Could not save Triton model. Folder already exists. Use '--triton_model_overwrite=True' if you would like to overwrite an existing model. Model dir: {}".format(final_model_folder))
       return
 
   config_filename = os.path.join(model_folder, "config.pbtxt")
-  if os.path.exists(config_filename) and not FLAGS.triton_model_overwrite:
-    print(
-        "ERROR: Could not save Triton model config. Config file already exists. Use '--triton_model_overwrite=True' if you would like to overwrite an existing model config. Model config: {}"
-        .format(config_filename)
-    )
+  if (os.path.exists(config_filename) and not FLAGS.triton_model_overwrite):
+    print("ERROR: Could not save Triton model config. Config file already exists. Use '--triton_model_overwrite=True' if you would like to overwrite an existing model config. Model config: {}".format(config_filename))
     return
 
   config_template = r"""
@@ -420,7 +552,7 @@ instance_group [
   batching_str = ""
   max_batch_size = FLAGS.triton_max_batch_size
 
-  if FLAGS.triton_dyn_batching_delay > 0:
+  if (FLAGS.triton_dyn_batching_delay > 0):
     # Use only full and half full batches
     pref_batch_size = [int(max_batch_size / 2.0), max_batch_size]
 
@@ -431,12 +563,12 @@ dynamic_batching {{
 }}""".format(", ".join([str(x) for x in pref_batch_size]), int(FLAGS.triton_dyn_batching_delay * 1000.0))
 
   config_values = {
-      "model_name": model_name,
-      "max_batch_size": max_batch_size,
-      "seq_length": input_meta_data['max_seq_length'],
-      "dynamic_batching": batching_str,
-      "gpu_list": ", ".join([x.name.split(":")[-1] for x in tf.config.list_physical_devices('GPU')]),
-      "engine_count": FLAGS.triton_engine_count
+    "model_name": model_name,
+    "max_batch_size": max_batch_size,
+    "seq_length": input_meta_data['max_seq_length'],
+    "dynamic_batching": batching_str,
+    "gpu_list": ", ".join([x.name.split(":")[-1] for x in tf.config.list_physical_devices('GPU')]),
+    "engine_count": FLAGS.triton_engine_count
   }
 
   with open(model_folder + "/config.pbtxt", "w") as file:
@@ -445,24 +577,48 @@ dynamic_batching {{
 
 
 def main(_):
+  # Users should always run this script under TF 2.x
+  # The container haven't changed version number yet, skip the check.
+  assert tf.version.VERSION.startswith('2.')
+
   with tf.io.gfile.GFile(FLAGS.input_meta_data_path, 'rb') as reader:
     input_meta_data = json.loads(reader.read().decode('utf-8'))
-  #  Get the value of 'train_data_size' from input_meta_data and set FLAGS.num_train_examples
-  FLAGS([sys.argv[0], f"--num_train_examples={input_meta_data['train_data_size']}"])
 
   if FLAGS.mode == 'export_only':
-    export_squad(FLAGS.model_dir, input_meta_data)
+    export_squad(FLAGS.model_export_path, input_meta_data)
     return
+
+  gpus = tf.config.experimental.list_physical_devices('GPU')
+  for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
+
+  strategy = distribution_utils.get_distribution_strategy(
+      distribution_strategy=FLAGS.distribution_strategy,
+      num_gpus=FLAGS.num_gpus,
+      tpu_address=FLAGS.tpu)
+
+  if FLAGS.use_horovod:
+    if strategy:
+      raise ValueError('Should not run horovod with distribution strategy')
+
+    hvd.init()
+    if gpus:
+      tf.config.experimental.set_visible_devices(gpus[hvd.local_rank()], 'GPU')
+      gpu_affinity.set_affinity(hvd.local_rank())
+
+  if FLAGS.use_fp16:
+    policy = tf.keras.mixed_precision.experimental.Policy("mixed_float16")
+    tf.keras.mixed_precision.experimental.set_policy(policy)
 
   os.makedirs(FLAGS.model_dir, exist_ok=True)
 
   if FLAGS.mode in ('train', 'train_and_predict'):
-    train_squad(input_meta_data)
-  if FLAGS.mode in ('predict', 'sm_predict', 'trt_predict', 'train_and_predict') and is_main_process():
-    predict_squad(input_meta_data)
+    train_squad(strategy, input_meta_data)
+  if FLAGS.mode in ('predict', 'sm_predict', 'trt_predict', 'train_and_predict') and (not FLAGS.use_horovod or hvd.rank() == 0):
+    predict_squad(strategy, input_meta_data)
 
 
 if __name__ == '__main__':
-  flags.mark_flag_as_required('config_file')
+  flags.mark_flag_as_required('bert_config_file')
   flags.mark_flag_as_required('model_dir')
   app.run(main)

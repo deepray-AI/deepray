@@ -4,15 +4,13 @@
 # @license : Copyright(C),  <hailin.fu@>
 
 import abc
-import multiprocessing
 import os
 import urllib.request
 from enum import Enum
 
 import pandas as pd
 import tensorflow as tf
-from absl import flags
-from absl import logging
+from absl import flags, logging
 
 import deepray
 from deepray.utils.data.feature_map import FeatureMap
@@ -24,32 +22,28 @@ os.environ["TF_CPP_VMODULE"] = "dataset=1"  # let hybridbackend logs reading fil
 
 ROOT_PATH = os.path.dirname(deepray.__file__)
 
-FLAGS = flags.FLAGS
-flags.DEFINE_integer("parallel_parse", multiprocessing.cpu_count(), "Number of parallel parsing")
-flags.DEFINE_integer("shuffle_buffer", None, "Size of shuffle buffer")
-flags.DEFINE_integer("prefetch_buffer", 16, "Size of prefetch buffer")
-flags.DEFINE_integer("parallel_reads_per_file", None, "Number of parallel reads per file")
-flags.DEFINE_integer("interleave_cycle", 16, "Number of interleaved inputs")
-flags.DEFINE_integer("interleave_block", 2, "Number of interleaved block_length inputs")
-flags.DEFINE_float("neg_sample_rate", 0.0, "")
-flags.DEFINE_string("conf_file", os.getcwd() + "/conf/dp.yaml", "configuration in file.")
-
 IS_TRAINING = Enum('is_training', ('Train', 'Valid', 'Test'))
 
 
-class DataPipeLine(tf.keras.layers.Layer):
+class DataPipeline(object):
 
   def __init__(self, context: tf.distribute.InputContext = None, **kwargs):
-    super().__init__(**kwargs)
-    self.use_horovod = FLAGS.use_horovod
+    # super().__init__(**kwargs)
+    self.built = False
+    self.use_horovod = flags.FLAGS.use_horovod
     self.context = context
-    self.feature_map = FeatureMap(feature_map=FLAGS.feature_map, black_list=FLAGS.black_list).feature_map
-    # self.conf = Foo(FLAGS.conf_file).conf
+    self.feature_map = FeatureMap().feature_map
+    # self.conf = Foo(flags.FLAGS.conf_file).conf
     self.url = None
+    self.prebatch_size = kwargs.get("prebatch_size", None)
 
   @abc.abstractmethod
   def __len__(self):
     pass
+
+  @abc.abstractmethod
+  def build(self):
+    raise NotImplementedError("build: not implemented!")
 
   @classmethod
   def read_list_from_file(cls, filename):
@@ -70,27 +64,18 @@ class DataPipeLine(tf.keras.layers.Layer):
 
   @abc.abstractmethod
   def build_dataset(
-      self,
-      input_file_pattern,
-      batch_size,
-      is_training=True,
-      prebatch_size=0,
-      epochs=1,
-      shuffle=False,
-      *args,
-      **kwargs
+      self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
     """
     must be defined in subclass
     """
     raise NotImplementedError("build_dataset: not implemented!")
 
-  def call(self, input_file_pattern=None, batch_size=None, is_training=True, prebatch_size=0, *args, **kwargs):
+  def __call__(self, batch_size=None, input_file_pattern=None, is_training=True, *args, **kwargs):
     """Gets a closure to create a dataset."""
-
     return self.build_dataset(
-        input_file_pattern=input_file_pattern,
         batch_size=self.context.get_per_replica_batch_size(batch_size) if self.context else batch_size,
+        input_file_pattern=input_file_pattern,
         is_training=is_training,
         epochs=1,
         *args,
@@ -125,3 +110,9 @@ class DataPipeLine(tf.keras.layers.Layer):
       options.experimental_optimization.map_parallelization = True
 
     return options
+
+  def train_test_split(self, arrays, test_size=0.33, shuffle=False):
+    from sklearn.model_selection import train_test_split
+    random_state = flags.FLAGS.random_seed if flags.FLAGS.random_seed else 1024
+    X_train, X_test = train_test_split(arrays, test_size=test_size, shuffle=shuffle, random_state=random_state)
+    return X_train, X_test

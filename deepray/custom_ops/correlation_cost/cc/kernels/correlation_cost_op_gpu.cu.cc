@@ -17,8 +17,9 @@ limitations under the License.
 
 #define EIGEN_USE_GPU
 
+#include <cub/cub.cuh>
+
 #include "correlation_cost_op.h"
-#include "cub/device/device_reduce.cuh"
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"

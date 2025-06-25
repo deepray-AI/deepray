@@ -12,6 +12,7 @@ ROW = 10
 os.environ['CUDA_VISIBLE_DEVICES'] = ''
 _workspace = tempfile.mkdtemp()
 _filename = os.path.join(_workspace, 'test.parquet')
+print(_filename)
 # _df = pd.DataFrame(
 #     np.random.randint(0, 100, size=(200, 4), dtype=np.int64),
 # columns=list('ABCd'))
@@ -34,17 +35,18 @@ batch_size = 5
 ds = parquet_dataset_ops.ParquetDataset(
     _filename,
     batch_size=batch_size,
-    fields=[
-        parquet_dataset_ops.DataFrame.Field('A', tf.int64, ragged_rank=1),
-        parquet_dataset_ops.DataFrame.Field(
-            'B',
-            tf.int64,
-            shape=[3],
-        ),
-        parquet_dataset_ops.DataFrame.Field('C', tf.int32),
-        parquet_dataset_ops.DataFrame.Field('D', tf.int64),
-        parquet_dataset_ops.DataFrame.Field('E', tf.string),
-    ]
+    fields=['A', 'C']
+    # fields=[
+    #     parquet_dataset_ops.DataFrame.Field('A', tf.int64, ragged_rank=1),
+    #     parquet_dataset_ops.DataFrame.Field(
+    #         'B',
+    #         tf.int64,
+    #         shape=[3],
+    #     ),
+    #     parquet_dataset_ops.DataFrame.Field('C', tf.int32),
+    #     parquet_dataset_ops.DataFrame.Field('D', tf.int64),
+    #     parquet_dataset_ops.DataFrame.Field('E', tf.string),
+    # ]
 )
 
 ds = ds.prefetch(4)

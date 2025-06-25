@@ -16,15 +16,17 @@ import os
 import pprint
 import subprocess
 
-from bookscorpus import BookscorpusTextFormatting
+import bookscorpus.BookscorpusTextFormatting
+import pubmed.PubMedTextFormatting
+import wikicorpus.WikicorpusTextFormatting
+
 import Downloader
-from pubmed import PubMedTextFormatting
 import TextSharding
-from wikicorpus import WikicorpusTextFormatting
 
 
 def main(args):
-  working_dir = "/workspaces/dataset/wikicorpus_en"  # os.environ['BERT_PREP_WORKING_DIR']
+  working_dir = os.environ['BERT_PREP_WORKING_DIR']
+
   print('Working Directory:', working_dir)
   print('Action:', args.action)
   print('Dataset Name:', args.dataset)
@@ -37,7 +39,7 @@ def main(args):
                                 + "_random_seed_" + str(args.random_seed) + "_dupe_factor_" + str(args.dupe_factor) \
                                 + "_shard_" + str(args.n_training_shards) + "_test_split_" + str(int(args.fraction_test_set * 100))
   directory_structure = {
-      'download': working_dir + '',  # Downloaded and decompressed
+      'download': working_dir + '/download',  # Downloaded and decompressed
       'extracted': working_dir + '/extracted',  # Extracted from whatever the initial format is (e.g., wikiextractor)
       'formatted': working_dir +
                    '/formatted_one_article_per_line',  # This is the level where all sources should look the same
@@ -71,7 +73,7 @@ def main(args):
 
     if args.dataset == 'bookscorpus':
       books_path = directory_structure['download'] + '/bookscorpus'
-      # books_path = directory_structure['download']
+      #books_path = directory_structure['download']
       output_filename = directory_structure['formatted'] + '/bookscorpus_one_book_per_line.txt'
       books_formatter = BookscorpusTextFormatting.BookscorpusTextFormatting(books_path, output_filename, recursive=True)
       books_formatter.merge()
@@ -92,10 +94,9 @@ def main(args):
       wiki_formatter.merge()
 
     elif args.dataset == 'wikicorpus_zh':
-      assert False, 'wikicorpus_zh not fully supported at this time. The simplified/tradition Chinese data needs to be translated and properly segmented still, and should work once this step is ' \
-                    'added.'
+      assert False, 'wikicorpus_zh not fully supported at this time. The simplified/tradition Chinese data needs to be translated and properly segmented still, and should work once this step is added.'
       if args.skip_wikiextractor == 0:
-        path_to_wikiextractor_in_container = 'WikiExtractor.py'
+        path_to_wikiextractor_in_container = '/workspace/wikiextractor/WikiExtractor.py'
         wikiextractor_command = path_to_wikiextractor_in_container + ' ' + directory_structure[
             'download'] + '/' + args.dataset + '/wikicorpus_zh.xml ' + '-b 100M --processes ' + str(
                 args.n_processes
@@ -176,7 +177,7 @@ def main(args):
     last_process = None
 
     def create_record_worker(filename_prefix, shard_id, output_format='tfrecord', split='training'):
-      bert_preprocessing_command = 'python /workspaces/Deepray2/deepray/datasets/downloader/create_pretraining_data.py'
+      bert_preprocessing_command = 'python /workspace/bert_tf2/create_pretraining_data.py'
       bert_preprocessing_command += ' --input_file=' + directory_structure[
           'sharded'] + '/' + args.dataset + '/' + split + '/' + filename_prefix + '_' + str(shard_id) + '.txt'
       bert_preprocessing_command += ' --output_file=' + directory_structure[

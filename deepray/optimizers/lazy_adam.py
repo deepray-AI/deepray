@@ -23,17 +23,18 @@ original Adam algorithm, and may lead to different empirical results.
 import importlib
 import tensorflow as tf
 from deepray.utils.types import FloatTensorLike
+import tf_keras as keras
 
 from typeguard import typechecked
 from typing import Union, Callable
 
-if importlib.util.find_spec("tensorflow.keras.optimizers.legacy") is not None:
-  adam_optimizer_class = tf.keras.optimizers.legacy.Adam
+if importlib.util.find_spec("tf_keras.optimizers.legacy") is not None:
+  adam_optimizer_class = keras.optimizers.legacy.Adam
 else:
-  adam_optimizer_class = tf.keras.optimizers.Adam
+  adam_optimizer_class = keras.optimizers.Adam
 
 
-@tf.keras.utils.register_keras_serializable(package="Deepray")
+@keras.utils.register_keras_serializable(package="Deepray")
 class LazyAdam(adam_optimizer_class):
   """Variant of the Adam optimizer that handles sparse updates more
     efficiently.
@@ -67,7 +68,7 @@ class LazyAdam(adam_optimizer_class):
 
         Args:
           learning_rate: A `Tensor` or a floating point value. or a schedule
-            that is a `tf.keras.optimizers.schedules.LearningRateSchedule`
+            that is a `keras.optimizers.schedules.LearningRateSchedule`
             The learning rate.
           beta_1: A `float` value or a constant `float` tensor.
             The exponential decay rate for the 1st moment estimates.
@@ -142,3 +143,6 @@ class LazyAdam(adam_optimizer_class):
     }
 
     return resource_scatter_op(**resource_update_kwargs)
+
+  def get_config(self):
+    return super().get_config()

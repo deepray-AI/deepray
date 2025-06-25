@@ -24,7 +24,6 @@ import tensorflow as tf
 from deepray.layers import tf_utils
 
 
-# @tf.keras.utils.register_keras_serializable(package="Text")
 class OnDeviceEmbedding(tf.keras.layers.Layer):
   """Performs an embedding lookup suitable for accelerator devices.
 

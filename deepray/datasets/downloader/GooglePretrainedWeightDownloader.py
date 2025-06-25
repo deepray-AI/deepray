@@ -29,12 +29,12 @@ class GooglePretrainedWeightDownloader:
     self.model_urls = {
         'bert_base_uncased':
             (
-                'http://minio1.arsenal.kanzhun-inc.com/datasets/bert_models/google_pretrained_weights/uncased_L-12_H-768_A-12.tar.gz',
+                'https://storage.googleapis.com/tf_model_garden/nlp/bert/v3/uncased_L-12_H-768_A-12.tar.gz',
                 'uncased_L-12_H-768_A-12.tar.gz'
             ),
         'bert_large_uncased':
             (
-                'http://minio1.arsenal.kanzhun-inc.com/datasets/bert_models/google_pretrained_weights/uncased_L-24_H-1024_A-16.tar.gz',
+                'https://storage.googleapis.com/tf_model_garden/nlp/bert/v3/uncased_L-24_H-1024_A-16.tar.gz',
                 'uncased_L-24_H-1024_A-16.tar.gz'
             ),
         # 'bert_base_cased': ('https://storage.googleapis.com/cloud-tpu-checkpoints/bert/keras_bert/cased_L-12_H-768_A-12.tar.gz', 'cased_L-12_H-768_A-12.tar.gz'),

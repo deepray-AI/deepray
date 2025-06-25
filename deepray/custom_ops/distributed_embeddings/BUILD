@@ -11,16 +11,25 @@ custom_op_library(
         "cc/kernels/embedding_lookup_kernels.cc",
         "cc/ops/embedding_lookup_ops.cc",
     ],
-    cuda_srcs = [
+    gpu_deps = [
+        "@cub_archive//:cub",
+        "@com_github_NVIDIA_cuCollections//:cuCollections",
+        "@local_config_cuda//cuda:cuda_headers",
+        "@local_config_cuda//cuda:cuda_runtime",
+        "@local_config_cuda//cuda:cudart",
+    ],
+    gpu_srcs = [
+        # TODO: Update cuCollections version
+        "cc/kernels/embedding_lookup.h",
         "cc/kernels/embedding_lookup_kernels.cu.cc",
     ],
     deps = [
-        "@cuCollections//:cuco_hash_table",
+        "//deepray/custom_ops/utils:ok_status_util",
     ],
 )
 
 py_library(
-    name = "distributed_embeddings_ops",
+    name = "distributed_embeddings",
     srcs = glob(
         [
             "python/*.py",
@@ -42,6 +51,6 @@ py_test(
     srcs = glob(["python/tests/*"]),
     main = "python/tests/run_all_test.py",
     deps = [
-        ":distributed_embeddings_ops",
+        ":distributed_embeddings",
     ],
 )

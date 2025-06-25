@@ -30,7 +30,7 @@ from deepray.utils.flags import core as flags_core
 
 from deepray.callbacks.custom_early_stopping import CustomEarlyStopping
 from deepray.callbacks.increment_epoch import IncrementEpochCallback
-from deepray.core.base_trainer import Trainer
+from deepray.core.trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets.movielens import Produce
 from deepray.metrics.hit_rate_metric import HitRateMetric
@@ -41,7 +41,6 @@ from deepray.utils.misc import keras_utils
 # pylint: disable=g-bad-import-order
 # pylint: enable=g-bad-import-order
 
-FLAGS = flags.FLAGS
 FLAGS(
     [
         sys.argv[0],
@@ -180,7 +179,7 @@ def parse_flags(flags_obj):
       "epsilon": flags_obj.epsilon,
       "match_mlperf": flags_obj.benchmark,
       "epochs_between_evals": flags_obj.epochs_between_evals,
-      "keras_use_ctl": flags_obj.keras_use_ctl,
+      "use_custom_training_loop": flags_obj.use_custom_training_loop,
       "hr_threshold": flags_obj.hr_threshold,
       "stream_files": flags_obj.tpu is not None,
       "train_dataset_path": flags_obj.train_dataset_path,
@@ -203,7 +202,7 @@ def run_ncf(_):
   params = parse_flags(FLAGS)
   params["use_tpu"] = (FLAGS.distribution_strategy == "tpu")
 
-  if params["use_tpu"] and not params["keras_use_ctl"]:
+  if params["use_tpu"] and not params["use_custom_training_loop"]:
     logging.error("Custom training loop must be used when using TPUStrategy.")
     return
 

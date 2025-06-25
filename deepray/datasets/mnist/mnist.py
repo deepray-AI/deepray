@@ -19,19 +19,13 @@ import sys
 import numpy as np
 import tensorflow as tf
 from absl import flags
-from keras.utils.data_utils import get_file
+from keras.src.utils.data_utils import get_file
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 from deepray.utils.horovod_utils import get_rank, get_world_size
 
-FLAGS = flags.FLAGS
-FLAGS([
-    sys.argv[0],
-    "--num_train_examples=60000",
-])
 
-
-class Mnist(DataPipeLine):
+class Mnist(DataPipeline):
 
   def __init__(self, path="mnist.npz"):
     """Loads the MNIST dataset.
@@ -80,6 +74,12 @@ class Mnist(DataPipeLine):
       https://creativecommons.org/licenses/by-sa/3.0/)
     """
     super().__init__()
+
+    flags.FLAGS([
+        sys.argv[0],
+        "--num_train_examples=60000",
+    ])
+
     origin_folder = ("https://storage.googleapis.com/tensorflow/tf-keras-datasets/")
     self.path = get_file(
         path,
@@ -90,17 +90,15 @@ class Mnist(DataPipeLine):
     )
 
   def build_dataset(
-      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
+      self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
     with np.load(self.path, allow_pickle=True) as f:
       if is_training:
-        x, y = f["x_train"], f["y_train"]
+        image, label = f["x_train"], f["y_train"]
       else:
-        x, y = f["x_test"], f["y_test"]
+        image, label = f["x_test"], f["y_test"]
 
-    dataset = tf.data.Dataset.from_tensor_slices(
-        (tf.cast(x[..., tf.newaxis] / 255.0, tf.float32), tf.cast(y, tf.int64))
-    )
+    dataset = tf.data.Dataset.from_tensor_slices((tf.cast(image[..., tf.newaxis] / 255.0, tf.float32), label))
     if self.use_horovod:
       # For multi-host training, we want each hosts to always process the same
       # subset of files.  Each host only sees a subset of the entire dataset,

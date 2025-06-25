@@ -15,7 +15,11 @@
 """Implements NAS Cell."""
 
 import tensorflow as tf
-import tensorflow.keras as keras
+from packaging.version import parse
+if parse(tf.__version__) > parse("2.16.0"):
+  from tf_keras.src.layers.rnn.abstract_rnn_cell import AbstractRNNCell
+else:
+  from tensorflow.keras.layers.AbstractRNNCell import AbstractRNNCell
 from typeguard import typechecked
 
 from deepray.utils.types import (
@@ -27,7 +31,7 @@ from typing import Optional
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class NASCell(keras.layers.AbstractRNNCell):
+class NASCell(AbstractRNNCell):
   """Neural Architecture Search (NAS) recurrent network cell.
 
     This implements the recurrent cell from the paper:

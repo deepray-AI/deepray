@@ -13,7 +13,7 @@ custom_op_library(
         "multiplex_2_kernel.h",
         "multiplex_2_op.cc",
     ],
-    cuda_srcs = [
+    gpu_srcs = [
         "multiplex_2_kernel.h",
         "multiplex_2_kernel.cu.cc",
     ],
@@ -21,7 +21,13 @@ custom_op_library(
 
 py_library(
     name = "multiplex_2_op",
-    srcs = ["multiplex_2_op.py"],
+    srcs = glob(
+        [
+            "python/*.py",
+            "python/**/*.py",
+            "*.py",
+        ],
+    ),
     data = ["multiplex_2_kernel.so"],
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
@@ -38,5 +44,7 @@ py_test(
     ],
     deps = [
         ":multiplex_2_op",
+        "@pypi_numpy//:pkg",
+        "@pypi_tensorflow//:pkg",
     ],
 )

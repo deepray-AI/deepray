@@ -57,8 +57,6 @@ flags.DEFINE_string(
     'Should have train and validation subdirectories inside it.'
 )
 
-FLAGS = flags.FLAGS
-
 LABELS_FILE = 'synset_labels.txt'
 
 TRAINING_SHARDS = 1024
@@ -384,6 +382,5 @@ def main(_):
 
 
 if __name__ == '__main__':
-  logging.set_verbosity(logging.INFO)
   tf.disable_v2_behavior()
   app.run(main)

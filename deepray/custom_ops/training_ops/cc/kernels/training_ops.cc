@@ -18,6 +18,7 @@ limitations under the License.
 
 #include <algorithm>  // NOLINT
 
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/bounds_check.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
@@ -31,7 +32,6 @@ using GPUDevice = Eigen::GpuDevice;
 using Index = Eigen::Index;
 
 namespace functor {
-
 template <typename T, typename Tindex>
 struct SparseApplyAdam<CPUDevice, T, Tindex> {
   Status operator()(const CPUDevice& d, typename TTypes<T>::Matrix var,
@@ -46,7 +46,7 @@ struct SparseApplyAdam<CPUDevice, T, Tindex> {
                     typename TTypes<Tindex>::ConstVec indices,
                     const int64 inner_dim) {
     const Tindex N = static_cast<Tindex>(indices.dimension(0));
-    if (N == 0) return Status::OK();
+    if (N == 0) return TFOkStatus;
     const Tindex first_dim_size = static_cast<Tindex>(var.dimension(0));
     const T beta1_power_scalar = beta1_power();
     const T beta2_power_scalar = beta2_power();
@@ -120,11 +120,10 @@ struct SparseApplyAdam<CPUDevice, T, Tindex> {
       d.parallelFor(N, cost, DoWork);
     }
 
-    return Status::OK();
+    return TFOkStatus;
   }
 };
-
-}  // namespace functor
+}  // End of namespace functor
 
 template <typename Device, typename T, typename Tindex>
 class SparseApplyAdamOp : public OpKernel {
@@ -133,7 +132,7 @@ class SparseApplyAdamOp : public OpKernel {
     OP_REQUIRES_OK(ctx, ctx->GetAttr("use_locking", &use_exclusive_lock_));
   }
 
-  void Compute(OpKernelContext* ctx) override NO_THREAD_SAFETY_ANALYSIS {
+  void Compute(OpKernelContext* ctx) override TF_NO_THREAD_SAFETY_ANALYSIS {
     const bool sparse = true;
     auto locks = MaybeLockVariableInputMutexesInOrder<Device, T>(
         ctx, use_exclusive_lock_, sparse, {0, 1, 2});
@@ -288,6 +287,189 @@ REGISTER_KERNELS(GPU, float, int64);
 REGISTER_KERNELS(GPU, double, int32);
 REGISTER_KERNELS(GPU, double, int64);
 #endif  // GOOGLE_CUDA || TENSORFLOW_USE_ROCM
+#undef REGISTER_KERNELS
+
+namespace functor {
+template <typename T>
+struct ApplyAdamAsync<CPUDevice, T> {
+  void operator()(const CPUDevice& d, typename TTypes<T>::Flat var,
+                  typename TTypes<T>::Flat m, typename TTypes<T>::Flat v,
+                  typename TTypes<T>::Scalar beta1_power,
+                  typename TTypes<T>::Scalar beta2_power,
+                  typename TTypes<T>::ConstScalar lr,
+                  typename TTypes<T>::ConstScalar beta1,
+                  typename TTypes<T>::ConstScalar beta2,
+                  typename TTypes<T>::ConstScalar epsilon,
+                  typename TTypes<T>::ConstFlat grad, bool use_nesterov) {
+    auto alpha = lr() * Eigen::numext::sqrt(T(1) - beta2_power()) /
+                 (T(1) - beta1_power());
+
+    // beta1 == μ
+    // beta2 == ν
+    // v     == n
+    // var   == θ
+    m.device(d) = m * beta1() + grad * (T(1) - beta1());
+    v.device(d) = v * beta2() + grad.square() * (T(1) - beta2());
+    if (use_nesterov) {
+      var.device(d) -= ((grad * (T(1) - beta1()) + beta1() * m) * alpha) /
+                       (v.sqrt() + epsilon());
+    } else {
+      var.device(d) -= (m * alpha) / (v.sqrt() + epsilon());
+    }
+
+    // update beta1_power && beta2_power
+    beta1_power.device(d) = beta1_power * beta1();
+    beta2_power.device(d) = beta2_power * beta2();
+  }
+};
+}  // namespace functor
+
+template <typename Device, typename T>
+class ApplyAdamAsyncOp : public OpKernel {
+ public:
+  explicit ApplyAdamAsyncOp(OpKernelConstruction* ctx) : OpKernel(ctx) {
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("use_locking", &use_exclusive_lock_));
+    OP_REQUIRES_OK(ctx, ctx->GetAttr("use_nesterov", &use_nesterov_));
+  }
+
+  void Compute(OpKernelContext* ctx) override {
+    const bool sparse = false;
+    auto locks = MaybeLockVariableInputMutexesInOrder<Device, T>(
+        ctx, use_exclusive_lock_, sparse, {0, 1, 2, 3, 4});
+
+    Tensor var;
+    OP_REQUIRES_OK(ctx, GetInputTensorFromVariable<Device, T>(
+                            ctx, 0, use_exclusive_lock_, false, &var));
+    Tensor m;
+    OP_REQUIRES_OK(ctx, GetInputTensorFromVariable<Device, T>(
+                            ctx, 1, use_exclusive_lock_, false, &m));
+    Tensor v;
+    OP_REQUIRES_OK(ctx, GetInputTensorFromVariable<Device, T>(
+                            ctx, 2, use_exclusive_lock_, false, &v));
+    Tensor beta1_power;
+    OP_REQUIRES_OK(ctx, GetInputTensorFromVariable<Device, T>(
+                            ctx, 3, use_exclusive_lock_, false, &beta1_power));
+    Tensor beta2_power;
+    OP_REQUIRES_OK(ctx, GetInputTensorFromVariable<Device, T>(
+                            ctx, 4, use_exclusive_lock_, false, &beta2_power));
+
+    OP_REQUIRES(
+        ctx, var.IsInitialized(),
+        errors::FailedPrecondition(
+            "Attempting to use uninitialized variables: ", requested_input(0)));
+    OP_REQUIRES(
+        ctx, m.IsInitialized(),
+        errors::FailedPrecondition(
+            "Attempting to use uninitialized variables: ", requested_input(1)));
+    OP_REQUIRES(
+        ctx, v.IsInitialized(),
+        errors::FailedPrecondition(
+            "Attempting to use uninitialized variables: ", requested_input(2)));
+    OP_REQUIRES(
+        ctx, beta1_power.IsInitialized(),
+        errors::FailedPrecondition(
+            "Attempting to use uninitialized variables: ", requested_input(3)));
+    OP_REQUIRES(
+        ctx, beta2_power.IsInitialized(),
+        errors::FailedPrecondition(
+            "Attempting to use uninitialized variables: ", requested_input(4)));
+
+    const Tensor& lr = ctx->input(5);
+    const Tensor& beta1 = ctx->input(6);
+    const Tensor& beta2 = ctx->input(7);
+    const Tensor& epsilon = ctx->input(8);
+
+    OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(lr.shape()),
+                errors::InvalidArgument("lr is not a scalar : ",
+                                        lr.shape().DebugString()));
+    OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(beta1.shape()),
+                errors::InvalidArgument("beta1 is not a scalar: ",
+                                        beta1.shape().DebugString()));
+    OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(beta2.shape()),
+                errors::InvalidArgument("beta2 is not a scalar: ",
+                                        beta2.shape().DebugString()));
+    OP_REQUIRES(ctx, TensorShapeUtils::IsScalar(epsilon.shape()),
+                errors::InvalidArgument("epsilon is not a scalar: ",
+                                        epsilon.shape().DebugString()));
+
+    const Tensor& grad = ctx->input(9);
+    OP_REQUIRES(ctx, var.shape().IsSameSize(m.shape()),
+                errors::InvalidArgument("var and m do not have the same shape",
+                                        var.shape().DebugString(), " ",
+                                        m.shape().DebugString()));
+    OP_REQUIRES(ctx, var.shape().IsSameSize(v.shape()),
+                errors::InvalidArgument("var and v do not have the same shape",
+                                        var.shape().DebugString(), " ",
+                                        v.shape().DebugString()));
+    OP_REQUIRES(
+        ctx, var.shape().IsSameSize(grad.shape()),
+        errors::InvalidArgument("var and grad do not have the same shape",
+                                var.shape().DebugString(), " ",
+                                grad.shape().DebugString()));
+
+    const Device& device = ctx->template eigen_device<Device>();
+    functor::ApplyAdamAsync<Device, T>()(
+        device, var.flat<T>(), m.flat<T>(), v.flat<T>(),
+        beta1_power.scalar<T>(), beta2_power.scalar<T>(), lr.scalar<T>(),
+        beta1.scalar<T>(), beta2.scalar<T>(), epsilon.scalar<T>(),
+        grad.flat<T>(), use_nesterov_);
+
+    MaybeForwardRefInputToRefOutput(ctx, 0, 0);
+  }
+
+ private:
+  bool use_exclusive_lock_;
+  bool use_nesterov_;
+};
+
+#define REGISTER_KERNELS(D, T)                                          \
+  REGISTER_KERNEL_BUILDER(                                              \
+      Name("ApplyAdamAsync").Device(DEVICE_##D).TypeConstraint<T>("T"), \
+      ApplyAdamAsyncOp<D##Device, T>);                                  \
+  REGISTER_KERNEL_BUILDER(Name("ResourceApplyAdamAsync")                \
+                              .Device(DEVICE_##D)                       \
+                              .TypeConstraint<T>("T"),                  \
+                          ApplyAdamAsyncOp<D##Device, T>);
+#define REGISTER_CPU_KERNELS(T) REGISTER_KERNELS(CPU, T);
+
+TF_CALL_half(REGISTER_CPU_KERNELS);
+TF_CALL_bfloat16(REGISTER_CPU_KERNELS);
+TF_CALL_float(REGISTER_CPU_KERNELS);
+TF_CALL_double(REGISTER_CPU_KERNELS);
+
+#undef REGISTER_CPU_KERNELS
+
+#if GOOGLE_CUDA || TENSORFLOW_USE_ROCM
+// Forward declarations of the functor specializations for GPU.
+namespace functor {
+#define DECLARE_GPU_SPEC(T)                                   \
+  template <>                                                 \
+  void ApplyAdamAsync<GPUDevice, T>::operator()(              \
+      const GPUDevice& d, typename TTypes<T>::Flat var,       \
+      typename TTypes<T>::Flat m, typename TTypes<T>::Flat v, \
+      typename TTypes<T>::Scalar beta1_power,                 \
+      typename TTypes<T>::Scalar beta2_power,                 \
+      typename TTypes<T>::ConstScalar lr,                     \
+      typename TTypes<T>::ConstScalar beta1,                  \
+      typename TTypes<T>::ConstScalar beta2,                  \
+      typename TTypes<T>::ConstScalar epsilon,                \
+      typename TTypes<T>::ConstFlat grad, bool use_nesterov); \
+  extern template struct ApplyAdamAsync<GPUDevice, T>;
+
+DECLARE_GPU_SPEC(Eigen::half)
+DECLARE_GPU_SPEC(float)
+DECLARE_GPU_SPEC(double)
+#undef DECLARE_GPU_SPEC
+}  // end of namespace functor
+
+#define REGISTER_GPU_KERNELS(T) REGISTER_KERNELS(GPU, T);
+
+TF_CALL_half(REGISTER_GPU_KERNELS);
+TF_CALL_float(REGISTER_GPU_KERNELS);
+TF_CALL_double(REGISTER_GPU_KERNELS);
+
+#undef REGISTER_GPU_KERNELS
+#endif  // end of GOOGLE_CUDA || TENSORFLOW_USE_ROCM
 #undef REGISTER_KERNELS
 
 }  // namespace tensorflow

@@ -22,7 +22,6 @@ from __future__ import print_function
 import tensorflow as tf
 
 
-@tf.keras.utils.register_keras_serializable(package='Text')
 class MaskedSoftmax(tf.keras.layers.Layer):
   """Performs a softmax with optional masking on a tensor.
 

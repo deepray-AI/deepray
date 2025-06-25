@@ -17,14 +17,14 @@
 from typing import Optional
 
 import tensorflow as tf
+from tensorflow.python.keras import losses
 from typeguard import typechecked
 
-from deepray.utils.keras_utils import LossFunctionWrapper
 from deepray.utils.types import TensorLike
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class GIoULoss(LossFunctionWrapper):
+class GIoULoss(losses.LossFunctionWrapper):
   """Implements the GIoU loss function.
 
     GIoU loss was first introduced in the

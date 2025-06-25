@@ -22,6 +22,7 @@ import six
 import tensorflow as tf
 
 from deepray import activations
+from deepray.activations import swish
 
 
 def pack_inputs(inputs):
@@ -92,9 +93,9 @@ def get_activation(identifier):
   if isinstance(identifier, six.string_types):
     name_to_fn = {
         "gelu": tf.keras.activations.gelu,
-        "simple_swish": activations.simple_swish,
-        "hard_swish": activations.hard_swish,
-        "identity": activations.identity,
+        "simple_swish": swish.simple_swish,
+        "hard_swish": swish.hard_swish,
+        "identity": swish.identity,
     }
     identifier = str(identifier).lower()
     if identifier in name_to_fn:

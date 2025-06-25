@@ -17,36 +17,28 @@ limitations under the License.
 #include <functional>
 #include <unordered_map>
 
-#include "absl/container/flat_hash_map.h"
-#include "sparsehash/dense_hash_map"
 #include "task_runner.h"
-#include "tensorflow/core/framework/op_kernel.h"
-#include "tensorflow/core/framework/register_types.h"
-#include "tensorflow/core/framework/tensor.h"
-#include "tensorflow/core/framework/tensor_shape.h"
-#include "tensorflow/core/lib/core/status.h"
-#include "tensorflow/core/lib/hash/hash.h"
 #include "tensorflow/core/util/env_var.h"
 #include "unique_ali_op_util.h"
 
 namespace tensorflow {
 
 namespace {
-const char *kUniqueOpSerialEnv = "DEEPREC_UNIQUE_OP_SERIAL";
-const char *kUniqueOpHashMapEnv = "DEEPREC_UNIQUE_OP_HASH_MAP";
-const char *kUniqueOpUniqRatioHint = "DEEPREC_UNIQUE_OP_UNIQ_RATIO_HINT";
-const char *kUniqueOpPartitionSizeEnv = "DEEPREC_UNIQUE_OP_PARTITION_SIZE";
-const char *kMultiMapString = "MULTIMAP";
-const char *kStlHashMapString = "STL";
-const char *kAbslHashMapString = "ABSL";
-const char *kGoogleHashMapString = "GOOGLE";
+const char* kUniqueOpSerialEnv = "DEEPREC_UNIQUE_OP_SERIAL";
+const char* kUniqueOpHashMapEnv = "DEEPREC_UNIQUE_OP_HASH_MAP";
+const char* kUniqueOpUniqRatioHint = "DEEPREC_UNIQUE_OP_UNIQ_RATIO_HINT";
+const char* kUniqueOpPartitionSizeEnv = "DEEPREC_UNIQUE_OP_PARTITION_SIZE";
+const char* kMultiMapString = "MULTIMAP";
+const char* kStlHashMapString = "STL";
+const char* kAbslHashMapString = "ABSL";
+const char* kGoogleHashMapString = "GOOGLE";
 const int64 kDefaultUniqueRatioHint = 4;
 }  // namespace
 
 template <typename T, typename TIndex>
 class UniqueAliOp : public OpKernel {
  public:
-  explicit UniqueAliOp(OpKernelConstruction *context) : OpKernel(context) {
+  explicit UniqueAliOp(OpKernelConstruction* context) : OpKernel(context) {
     OP_REQUIRES_OK(
         context, ReadInt64FromEnvVar(kUniqueOpPartitionSizeEnv, kPartitionSize,
                                      &partition_size_));
@@ -101,14 +93,14 @@ class UniqueAliOp : public OpKernel {
     }
   }
 
-  void Compute(OpKernelContext *context) override {
+  void Compute(OpKernelContext* context) override {
     VLOG(2) << "Unique V2 executed";
     ComputeInternal(context);
   }
 
  private:
-  void ComputeInternal(OpKernelContext *context) {
-    const Tensor &input = context->input(0);
+  void ComputeInternal(OpKernelContext* context) {
+    const Tensor& input = context->input(0);
     Tensor idx;
     Tensor output;
     Tensor output_counter;
@@ -117,7 +109,7 @@ class UniqueAliOp : public OpKernel {
           context, input, &idx, &output, &output_counter, num_outputs(),
           partition_size_, serial_, unique_ratio_hint_, map_flag_);
     } else {
-      const Tensor &axis_tensor = context->input(1);
+      const Tensor& axis_tensor = context->input(1);
       UniqueWithAxis<T, TIndex>(context, input, axis_tensor, &idx, &output,
                                 &output_counter, num_outputs(), partition_size_,
                                 serial_, unique_ratio_hint_, map_flag_);
@@ -129,10 +121,42 @@ class UniqueAliOp : public OpKernel {
     }
   }
 
+ protected:
   bool serial_ = false;
   int64 partition_size_ = 0;
   int64 unique_ratio_hint_;
   UniqueMaps map_flag_ = GOOGLE;  // "GOOGLE" dense hash map is default
+};
+
+template <typename T, typename TIndex>
+class UniqueWithCountAliOp : public UniqueAliOp<T, TIndex> {
+  using UniqueAliOp<T, TIndex>::serial_;
+  using UniqueAliOp<T, TIndex>::partition_size_;
+  using UniqueAliOp<T, TIndex>::unique_ratio_hint_;
+  using UniqueAliOp<T, TIndex>::map_flag_;
+  using OpKernel::num_outputs;
+
+ public:
+  explicit UniqueWithCountAliOp(OpKernelConstruction* context)
+      : UniqueAliOp<T, TIndex>(context) {
+    OP_REQUIRES_OK(context, context->GetAttr("N", &num_sparse_));
+  }
+
+  void Compute(OpKernelContext* context) override {
+    const Tensor& input = context->input(0);
+    Tensor idx;
+    Tensor output;
+    Tensor output_counter;
+    UniqueWithExtraCounts<T, TIndex>(
+        context, input, &idx, &output, &output_counter, num_outputs(),
+        partition_size_, serial_, unique_ratio_hint_, num_sparse_, map_flag_);
+    context->set_output(0, output);
+    context->set_output(1, idx);
+    context->set_output(2, output_counter);
+  }
+
+ private:
+  int num_sparse_;
 };
 
 #define REGISTER_UNIQUE(type)                                    \
@@ -140,22 +164,22 @@ class UniqueAliOp : public OpKernel {
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int32>("out_idx"), \
-                          UniqueAliOp<type, int32>);             \
+                          UniqueAliOp<type, int32>)              \
   REGISTER_KERNEL_BUILDER(Name("Deepray>Unique")                 \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int64>("out_idx"), \
-                          UniqueAliOp<type, int64>);             \
+                          UniqueAliOp<type, int64>)              \
   REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueV2")               \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int32>("out_idx"), \
-                          UniqueAliOp<type, int32>);             \
+                          UniqueAliOp<type, int32>)              \
   REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueV2")               \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int64>("out_idx"), \
-                          UniqueAliOp<type, int64>);             \
+                          UniqueAliOp<type, int64>)              \
   REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCounts")       \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
@@ -165,7 +189,7 @@ class UniqueAliOp : public OpKernel {
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int64>("out_idx"), \
-                          UniqueAliOp<type, int64>);             \
+                          UniqueAliOp<type, int64>)              \
   REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithCountsV2")     \
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
@@ -175,7 +199,17 @@ class UniqueAliOp : public OpKernel {
                               .Device(DEVICE_CPU)                \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int64>("out_idx"), \
-                          UniqueAliOp<type, int64>)
+                          UniqueAliOp<type, int64>)              \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithExtraCounts")  \
+                              .Device(DEVICE_CPU)                \
+                              .TypeConstraint<type>("T")         \
+                              .TypeConstraint<int32>("out_idx"), \
+                          UniqueWithCountAliOp<type, int32>)     \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithExtraCounts")  \
+                              .Device(DEVICE_CPU)                \
+                              .TypeConstraint<type>("T")         \
+                              .TypeConstraint<int64>("out_idx"), \
+                          UniqueWithCountAliOp<type, int64>)
 TF_CALL_REAL_NUMBER_TYPES(REGISTER_UNIQUE);
 REGISTER_UNIQUE(tstring)
 #undef REGISTER_UNIQUE
@@ -199,7 +233,17 @@ REGISTER_UNIQUE(tstring)
                               .HostMemory("count")               \
                               .TypeConstraint<type>("T")         \
                               .TypeConstraint<int64>("out_idx"), \
-                          UniqueAliOp<type, int64>);
+                          UniqueAliOp<type, int64>)              \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithExtraCounts")  \
+                              .Device(DEVICE_GPU)                \
+                              .TypeConstraint<type>("T")         \
+                              .TypeConstraint<int32>("out_idx"), \
+                          UniqueWithCountAliOp<type, int32>)     \
+  REGISTER_KERNEL_BUILDER(Name("Deepray>UniqueWithExtraCounts")  \
+                              .Device(DEVICE_GPU)                \
+                              .TypeConstraint<type>("T")         \
+                              .TypeConstraint<int64>("out_idx"), \
+                          UniqueWithCountAliOp<type, int64>);
 TF_CALL_REAL_NUMBER_TYPES(REGISTER_UNIQUE);
 REGISTER_UNIQUE(tstring)
 #undef REGISTER_UNIQUE

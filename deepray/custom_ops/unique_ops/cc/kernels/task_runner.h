@@ -18,8 +18,8 @@ limitations under the License.
 
 #include <functional>
 
-#include "tensorflow/core/lib/core/blocking_counter.h"
 #include "tensorflow/core/lib/core/threadpool.h"
+#include "tensorflow/core/platform/blocking_counter.h"
 
 namespace tensorflow {
 

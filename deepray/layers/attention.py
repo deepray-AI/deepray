@@ -23,15 +23,13 @@ import math
 
 import numpy as np
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+import tf_keras as keras
 
 from deepray.layers import dense_einsum
 from deepray.layers import masked_softmax
 
 
-# @tf.keras.utils.register_keras_serializable(package="Text")
-class Attention(tf.keras.layers.Layer):
+class Attention(keras.layers.Layer):
   """Attention layer.
 
   This is an implementation of multi-headed attention based on "Attention
@@ -80,12 +78,12 @@ class Attention(tf.keras.layers.Layer):
     self._num_heads = num_heads
     self._head_size = head_size
     self._dropout_rate = dropout_rate
-    self._kernel_initializer = tf.keras.initializers.get(kernel_initializer)
-    self._bias_initializer = tf.keras.initializers.get(bias_initializer)
-    self._kernel_regularizer = tf.keras.regularizers.get(kernel_regularizer)
-    self._bias_regularizer = tf.keras.regularizers.get(bias_regularizer)
-    self._kernel_constraint = tf.keras.constraints.get(kernel_constraint)
-    self._bias_constraint = tf.keras.constraints.get(bias_constraint)
+    self._kernel_initializer = keras.initializers.get(kernel_initializer)
+    self._bias_initializer = keras.initializers.get(bias_initializer)
+    self._kernel_regularizer = keras.regularizers.get(kernel_regularizer)
+    self._bias_regularizer = keras.regularizers.get(bias_regularizer)
+    self._kernel_constraint = keras.constraints.get(kernel_constraint)
+    self._bias_constraint = keras.constraints.get(bias_constraint)
 
     self._query_dense = dense_einsum.DenseEinsum(
         output_shape=(self._num_heads, self._head_size),
@@ -125,20 +123,20 @@ class Attention(tf.keras.layers.Layer):
 
     self._masked_softmax = masked_softmax.MaskedSoftmax(mask_expansion_axes=[1])
 
-    self._dropout = tf.keras.layers.Dropout(rate=self._dropout_rate)
+    self._dropout = keras.layers.Dropout(rate=self._dropout_rate)
 
   def get_config(self):
     config = {
         "num_heads": self._num_heads,
         "head_size": self._head_size,
         "dropout_rate": self._dropout_rate,
-        "kernel_initializer": tf.keras.initializers.serialize(self._kernel_initializer),
-        "bias_initializer": tf.keras.initializers.serialize(self._bias_initializer),
-        "kernel_regularizer": tf.keras.regularizers.serialize(self._kernel_regularizer),
-        "bias_regularizer": tf.keras.regularizers.serialize(self._bias_regularizer),
-        "activity_regularizer": tf.keras.regularizers.serialize(self._activity_regularizer),
-        "kernel_constraint": tf.keras.constraints.serialize(self._kernel_constraint),
-        "bias_constraint": tf.keras.constraints.serialize(self._bias_constraint)
+        "kernel_initializer": keras.initializers.serialize(self._kernel_initializer),
+        "bias_initializer": keras.initializers.serialize(self._bias_initializer),
+        "kernel_regularizer": keras.regularizers.serialize(self._kernel_regularizer),
+        "bias_regularizer": keras.regularizers.serialize(self._bias_regularizer),
+        "activity_regularizer": keras.regularizers.serialize(self._activity_regularizer),
+        "kernel_constraint": keras.constraints.serialize(self._kernel_constraint),
+        "bias_constraint": keras.constraints.serialize(self._bias_constraint)
     }
     base_config = super(Attention, self).get_config()
     return dict(list(base_config.items()) + list(config.items()))
@@ -190,7 +188,6 @@ class Attention(tf.keras.layers.Layer):
     return tf.einsum("BNFT,BTNH->BFNH", attention_probs, value_tensor)
 
 
-# @tf.keras.utils.register_keras_serializable(package="Text")
 class CachedAttention(Attention):
   """Attention layer with cache used for auto-agressive decoding.
 
@@ -266,7 +263,7 @@ class CachedAttention(Attention):
     return tf.einsum("BNFT,BTNH->BFNH", attention_probs, value_tensor), cache
 
 
-class WindowAttention(tf.keras.layers.Layer):
+class WindowAttention(keras.layers.Layer):
   """
     ## Window based multi-head self-attention
 
@@ -284,9 +281,9 @@ class WindowAttention(tf.keras.layers.Layer):
     self.window_size = window_size
     self.num_heads = num_heads
     self.scale = (dim // num_heads)**-0.5
-    self.qkv = layers.Dense(dim * 3, use_bias=qkv_bias)
-    self.dropout = layers.Dropout(dropout_rate)
-    self.proj = layers.Dense(dim)
+    self.qkv = keras.layers.Dense(dim * 3, use_bias=qkv_bias)
+    self.dropout = keras.layers.Dropout(dropout_rate)
+    self.proj = keras.layers.Dense(dim)
 
   def build(self, input_shape):
     num_window_elements = (2 * self.window_size[0] - 1) * (2 * self.window_size[1] - 1)

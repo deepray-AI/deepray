@@ -18,13 +18,13 @@ from abc import abstractmethod
 
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import backend
-from tensorflow.keras.metrics import Metric
+import tf_keras as keras
+from tf_keras import backend
 from deepray.utils.types import AcceptableDTypes
 from typeguard import typechecked
 
 
-class CorrelationBase(Metric):
+class CorrelationBase(keras.metrics.Metric):
   """Base class for streaming correlation metrics.
 
     Based on https://arxiv.org/abs/1712.01521.

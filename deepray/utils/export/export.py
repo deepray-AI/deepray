@@ -26,15 +26,23 @@ from typing import Optional, Union, Dict, Text, List
 
 import horovod.tensorflow as hvd
 import tensorflow as tf
-from absl import logging, flags
-from keras.engine import data_adapter
+from absl import flags
+from packaging.version import parse
+
+if parse(tf.__version__.replace("-tf", "+tf")) < parse("2.11"):
+  from keras.engine import data_adapter
+elif parse(tf.__version__) > parse("2.16.0"):
+  from tf_keras.src.engine import data_adapter
+else:
+  from keras.src.engine import data_adapter
 from tensorflow.python.compiler.tensorrt import trt_convert as trt
 from tensorflow.python.saved_model import signature_constants
 from tensorflow.python.saved_model import tag_constants
 
+from deepray.utils import logging_util
 from deepray.utils.horovod_utils import is_main_process, get_world_size, get_rank
 
-FLAGS = flags.FLAGS
+logger = logging_util.get_logger()
 
 
 def build_tensor_serving_input_receiver_fn(shape, dtype=tf.float32, batch_size=1):
@@ -64,33 +72,37 @@ def build_tensor_serving_input_receiver_fn(shape, dtype=tf.float32, batch_size=1
 
 
 def export_to_checkpoint(saver: Union[tf.train.Checkpoint, tf.train.CheckpointManager], checkpoint_number=None):
-  # TODO(@hejia): Fix export_to_checkpoint when use TFRA.
-  if FLAGS.use_dynamic_embedding:
-    return
 
   def helper(name, _saver):
     """Saves model to with provided checkpoint prefix."""
-    latest_checkpoint_file = tf.train.latest_checkpoint(os.path.join(FLAGS.model_dir, 'ckpt_' + name))
+    latest_checkpoint_file = tf.train.latest_checkpoint(os.path.join(flags.FLAGS.model_dir, 'ckpt_' + name))
     match = re.search(r"(?<=ckpt-)\d+", latest_checkpoint_file) if latest_checkpoint_file else None
     latest_step_ckpt = int(match.group()) if match else -1
 
     if latest_step_ckpt != checkpoint_number:
       save_path = _saver.save(checkpoint_number)
-      logging.info('Saved checkpoint to {}'.format(save_path))
+      logger.info('Saved checkpoint to {}'.format(save_path))
 
-  if is_main_process():
+  def _save_fn():
     if isinstance(saver, dict):
       for name, _saver in saver.items():
         helper(name, _saver)
     else:
       helper(name="main", _saver=saver)
 
+  if flags.FLAGS.use_horovod and flags.FLAGS.use_dynamic_embedding:
+    _save_fn()
+  else:
+    _save_fn()
+
 
 def export_to_savedmodel(
     model: Union[tf.keras.Model, Dict[Text, tf.keras.Model]],
     savedmodel_dir: Optional[Text] = None,
     checkpoint_dir: Optional[Union[Text, Dict[Text, Text]]] = None,
-    restore_model_using_load_weights: bool = False
+    restore_model_using_load_weights: bool = False,
+    include_optimizer: bool = False,
+    signatures=None
 ) -> Text:
   """Export keras model for serving which does not include the optimizer.
 
@@ -112,7 +124,7 @@ def export_to_savedmodel(
     ValueError when model is not specified.
   """
 
-  if FLAGS.use_dynamic_embedding and FLAGS.use_horovod:
+  if flags.FLAGS.use_dynamic_embedding and flags.FLAGS.use_horovod:
     try:
       rank_array = hvd.allgather_object(get_rank(), name='check_tfra_ranks')
       assert len(set(rank_array)) == get_world_size()
@@ -120,8 +132,11 @@ def export_to_savedmodel(
       raise ValueError(f"Shouldn't place {inspect.stack()[0][3]} only in the main_process when use TFRA and Horovod.")
 
   def helper(name, _model: tf.keras.Model, _checkpoint_dir):
-    _savedmodel_dir = os.path.join(FLAGS.model_dir, 'export') if savedmodel_dir is None else savedmodel_dir
-    _savedmodel_dir = f"{_savedmodel_dir}_{name}"
+    _savedmodel_dir = os.path.join(flags.FLAGS.model_dir, 'export') if savedmodel_dir is None else savedmodel_dir
+    if get_world_size() > 1:
+      _savedmodel_dir = f"{_savedmodel_dir}_{name}_{get_rank()}"
+    else:
+      _savedmodel_dir = f"{_savedmodel_dir}_{name}"
     os.makedirs(_savedmodel_dir, exist_ok=True)
 
     if _checkpoint_dir:
@@ -139,28 +154,59 @@ def export_to_savedmodel(
         # Restores the model from latest checkpoint.
         latest_checkpoint_file = tf.train.latest_checkpoint(_checkpoint_dir)
         assert latest_checkpoint_file
-        logging.info('Checkpoint file %s found and restoring from '
-                     'checkpoint', latest_checkpoint_file)
+        logger.info('Checkpoint file %s found and restoring from '
+                    'checkpoint', latest_checkpoint_file)
         checkpoint.restore(latest_checkpoint_file).assert_existing_objects_matched()
 
-    options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA']) if FLAGS.use_dynamic_embedding else None
+    if flags.FLAGS.use_dynamic_embedding:
+      try:
+        from tensorflow_recommenders_addons import dynamic_embedding as de
+        de.keras.models.de_save_model(
+            _model, _savedmodel_dir, overwrite=True, include_optimizer=include_optimizer, signatures=signatures
+        )
+      except:
+        # Compatible with TFRA version before commit 460b50847d459ebbf91b30ea0f9499fbc7ed9da0
+        def _check_de_var_with_fs_saver(_var):
+          try:
+            from tensorflow_recommenders_addons import dynamic_embedding as de
+            # This function only serves FileSystemSaver.
+            return hasattr(_var, "params") and \
+              hasattr(_var.params, "_created_in_class") and \
+              _var.params._saveable_object_creator is not None and \
+              isinstance(_var.params.kv_creator.saver, de.FileSystemSaver)
+          except:
+            return False
 
-    if is_main_process():
-      tf.saved_model.save(_model, _savedmodel_dir, options=options)
+        de_dir = os.path.join(_savedmodel_dir, "variables", "TFRADynamicEmbedding")
+        options = tf.saved_model.SaveOptions(namespace_whitelist=['TFRA'])
+        if is_main_process():
+          for var in _model.variables:
+            _is_dump = _check_de_var_with_fs_saver(var)
+            if _is_dump:
+              de_var = var.params
+              if hasattr(de_var, 'saveable'):
+                de_var.saveable._saver_config.save_path = de_dir
+          tf.saved_model.save(_model, export_dir=_savedmodel_dir, signatures=signatures, options=options)
+        else:
+          for var in _model.variables:
+            _is_dump = _check_de_var_with_fs_saver(var)
+            if _is_dump:
+              de_var = var.params
+              a2a_emb = de_var._created_in_class
+              # save other rank's embedding weights
+              var.params.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
+              # save opt weights
+              if include_optimizer:
+                de_opt_vars = a2a_emb.optimizer_vars.as_list(
+                ) if hasattr(a2a_emb.optimizer_vars, "as_list") else a2a_emb.optimizer_vars
+                for de_opt_var in de_opt_vars:
+                  de_opt_var.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
     else:
-      de_dir = os.path.join(_savedmodel_dir, "variables", "TFRADynamicEmbedding")
-      for var in _model.variables:
-        if hasattr(var, "params"):
-          # save other rank's embedding weights
-          var.params.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
-          # save opt weights
-          # opt_de_vars = var.params.optimizer_vars.as_list(
-          # ) if hasattr(var.params.optimizer_vars, "as_list") else var.params.optimizer_vars
-          # for opt_de_var in opt_de_vars:
-          #   opt_de_var.save_to_file_system(dirpath=de_dir, proc_size=get_world_size(), proc_rank=get_rank())
+      if is_main_process():
+        tf.saved_model.save(_model, export_dir=_savedmodel_dir, signatures=signatures)
 
     if is_main_process():
-      logging.info(f"save pb model to: {_savedmodel_dir}, without optimizer & traces")
+      logger.info(f"save pb model to: {_savedmodel_dir}, without optimizer & traces")
 
     return _savedmodel_dir
 
@@ -170,7 +216,7 @@ def export_to_savedmodel(
       _dir = helper(name, _model, _checkpoint_dir=checkpoint_dir[name] if checkpoint_dir else None)
       ans.append(_dir)
     prefix_path = longestCommonPrefix(ans)
-    logging.info(f"Export multiple models to {prefix_path}*")
+    logger.info(f"Export multiple models to {prefix_path}*")
     return prefix_path
   else:
     return helper(name="main", _model=model, _checkpoint_dir=checkpoint_dir)
@@ -178,47 +224,52 @@ def export_to_savedmodel(
 
 def optimize_for_inference(
     model: Union[tf.keras.Model, Dict[Text, tf.keras.Model]],
-    dataset: tf.data.Dataset,
     savedmodel_dir: Text,
+    dataset: tf.data.Dataset = None,
+    signatures=None,
 ) -> None:
-  x, y, z = data_adapter.unpack_x_y_sample_weight(next(iter(dataset)))
-  if isinstance(model, dict):
-    for name, _model in model.items():
-      if "main" in name:
-        preds = _model(x)
-        logging.info(preds)
-  else:
-    preds = model(x)
-    logging.info(preds)
+  x = None
+  if dataset:
+    x, y, z = data_adapter.unpack_x_y_sample_weight(next(iter(dataset)))
+    if isinstance(model, dict):
+      for name, _model in model.items():
+        if "main" in name:
+          preds = _model(x)
+          logger.debug(preds)
+    else:
+      preds = model(x)
+      logger.debug(preds)
 
   def helper(_model, path):
     tmp_path = tempfile.mkdtemp(dir='/tmp/')
-    export_to_savedmodel(_model, savedmodel_dir=tmp_path)
+    export_to_savedmodel(_model, savedmodel_dir=tmp_path, signatures=signatures)
     file = os.path.join(path, "saved_model.pb")
     if tf.io.gfile.exists(file):
       tf.io.gfile.remove(file)
-      logging.info(f"Replace optimized saved_modle.pb for {file}")
+      logger.info(f"Replace optimized saved_modle.pb for {file}")
       tf.io.gfile.copy(os.path.join(tmp_path + "_main", "saved_model.pb"), file, overwrite=True)
     else:
       raise FileNotFoundError(f"{file} does not exist.")
 
   if isinstance(model, dict):
     for name, _model in model.items():
-      if "main" in name:
-        preds = _model(x)
-        logging.info(preds)
+      if dataset:
+        if "main" in name:
+          preds = _model(x)
+          logger.info(preds)
       src = savedmodel_dir + name
       helper(_model, src)
   else:
-    preds = model(x)
-    logging.info(preds)
+    if dataset:
+      preds = model(x)
+      logger.info(preds)
     helper(model, savedmodel_dir)
 
 
 class SavedModel:
 
   def __init__(self, model_dir, precision):
-    if FLAGS.use_dynamic_embedding:
+    if flags.FLAGS.use_dynamic_embedding:
       from tensorflow_recommenders_addons import dynamic_embedding as de
       de.enable_inference_mode()
 
@@ -226,7 +277,7 @@ class SavedModel:
     self.graph_func = self.saved_model_loaded.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
     self.precision = tf.float16 if precision == "amp" else tf.float32
 
-    if not FLAGS.run_eagerly:
+    if not flags.FLAGS.run_eagerly:
       self._infer_step = tf.function(self.infer_step)
     else:
       self._infer_step = self.infer_step
@@ -244,7 +295,7 @@ class TFTRTModel:
   def export_model(self, model_dir, prec, tf_trt_model_dir=None):
     loaded_model = tf.saved_model.load(model_dir)
     signature = loaded_model.signatures['serving_default']
-    logging.info(signature)
+    logger.info(signature)
     # input_shape = [1, 384]
     # dummy_input = tf.constant(tf.zeros(input_shape, dtype=tf.int32))
     # x = [
@@ -262,13 +313,13 @@ class TFTRTModel:
     converter.convert()
     tf_trt_model_dir = tf_trt_model_dir or f'/tmp/tf-trt_model_{prec}'
     converter.save(tf_trt_model_dir)
-    logging.info(f"TF-TRT model saved at {tf_trt_model_dir}")
+    logger.info(f"TF-TRT model saved at {tf_trt_model_dir}")
 
   def __init__(self, model_dir, precision):
     temp_tftrt_dir = f"/tmp/tf-trt_model_{precision}"
     self.export_model(model_dir, precision, temp_tftrt_dir)
     saved_model_loaded = tf.saved_model.load(temp_tftrt_dir, tags=[tag_constants.SERVING])
-    logging.info(f"TF-TRT model loaded from {temp_tftrt_dir}")
+    logger.info(f"TF-TRT model loaded from {temp_tftrt_dir}")
     self.graph_func = saved_model_loaded.signatures[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY]
     self.precision = tf.float16 if precision == "amp" else tf.float32
 

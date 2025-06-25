@@ -18,7 +18,7 @@ limitations under the License.
 #include "tensorflow/core/framework/tensor.h"
 #include "tensorflow/core/lib/core/errors.h"
 #include "tensorflow/core/public/version.h"
-#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
+#include "unsupported/Eigen/CXX11/Tensor"
 
 // NOTE: EIGEN_MAX_ALIGN_BYTES is 64 in TF 1.x. See:
 // DeepRec/third_party/eigen.BUILD#L67

@@ -35,7 +35,7 @@ from tensorflow_docs.api_generator import public_api
 PROJECT_SHORT_NAME = "dp"
 PROJECT_FULL_NAME = "Deepray"
 
-FLAGS = flags.FLAGS
+
 
 flags.DEFINE_string("git_branch", default=None, help="The name of the corresponding branch on github.")
 

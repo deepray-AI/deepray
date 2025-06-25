@@ -41,7 +41,7 @@ flags.DEFINE_integer(
 flags.DEFINE_integer("eval_prebatch_size", 99000, "Batch size to be used for prebatching the dataset "
                      "for training.")
 
-FLAGS = flags.FLAGS
+
 
 
 def prepare_raw_data(flag_obj):

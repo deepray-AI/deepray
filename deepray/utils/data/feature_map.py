@@ -3,7 +3,7 @@
 # @Author  : Hailin.Fu
 # @license : Copyright(C),  <hailin.fu@>
 import os
-
+import yaml
 import pandas as pd
 import tensorflow as tf
 from absl import logging, flags
@@ -11,125 +11,78 @@ from absl import logging, flags
 from deepray.design_patterns import SingletonType
 from deepray.utils.horovod_utils import is_main_process
 
-FLAGS = flags.FLAGS
-
 
 class FeatureMap(metaclass=SingletonType):
 
-  def __init__(self, feature_map, black_list=None, white_list=None):
-    # Read YAML file
-    # with open(os.path.join(os.path.dirname(__file__), feature_file), encoding="utf-8") as stream:
-    #   try:
-    #     self.conf = yaml.safe_load(stream)
-    #   except yaml.YAMLError as exc:
-    #     logging.error(exc)
-    self._feature_file = feature_map
-    self._black_list = black_list
-    self._white_list = white_list if white_list else FLAGS.white_list
-    self.feature_map = self.get_summary()
-    if is_main_process() and self.feature_map is not None:
-      logging.info(
-          "\n" +
-          self.feature_map.loc[:,
-                               ~self.feature_map.columns.isin(["bucket_boundaries", "vocabulary_list"])].to_markdown()
+  def __init__(self):
+    if flags.FLAGS.config_file:
+      # Read YAML file
+      with open(flags.FLAGS.config_file, encoding="utf-8") as stream:
+        try:
+          self.yaml_conf = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+          logging.error(exc)
+    if flags.FLAGS.feature_map and tf.io.gfile.exists(flags.FLAGS.feature_map):
+      self.feature_map = self.get_summary(
+          feature_map=flags.FLAGS.feature_map, black_list=flags.FLAGS.black_list, white_list=flags.FLAGS.white_list
       )
-
-  def get_summary(self):
-    if not tf.io.gfile.exists(self._feature_file):
       if is_main_process():
-        logging.info(f"File not exists: {self._feature_file}")
-      return None
-    with tf.io.gfile.GFile(self._feature_file, mode="r") as f:
-      file_name, file_extension = os.path.splitext(self._feature_file)
+        logging.info("Used features map:")
+        print(
+            "\n" +
+            self.feature_map.loc[:,
+                                 ~self.feature_map.columns.isin(["bucket_boundaries", "vocabulary_list"])].to_markdown()
+        )
+    else:
+      logging.info(f"feature_map file not exists: {flags.FLAGS.feature_map}")
+      self.feature_map = None
+
+  def get_summary(self, feature_map, black_list=None, white_list=None):
+    with tf.io.gfile.GFile(feature_map, mode="r") as f:
+      file_name, file_extension = os.path.splitext(feature_map)
+      sep = None
       if file_extension == ".csv":
-        feature_map = pd.read_csv(
-            f,
-            dtype={
-                "code": int,
-                "name": "string",
-                "dtype": "string",
-                "ftype": "string",
-                "dim": "uint32",
-                "length": float,
-                "voc_size": float,
-                "lr": "float32",
-                "optimizer": "string",
-                "storage_type": "string",
-                "composition_size": "string",
-                "ev_filter": "string",
-            },
-        ).fillna(
-            value={
-                "code": -1,
-                "length": 1.0,
-                "voc_size": 0.0,
-                "lr": 0.0,
-                "optimizer": "",
-                "storage_type": "",
-                "composition_size": "",
-                "ev_filter": "",
-            }
-        )
+        sep = ','
       elif file_extension == ".tsv":
-        feature_map = pd.read_csv(
-            f,
-            sep='\t',
-            header=None,
-            usecols=[i for i in range(13)],
-            names=[
-                "code", "name", "length", "dtype", "gpercentile", "gcov", "geva", "bpercentile", "bcov", "beva",
-                "def_valu", "fea_tag", "dim"
-            ],
-            dtype={
-                "code": "string",
-                "name": "string",
-                "length": float,
-                "dtype": "string",
-                # "ftype": "string",
-                "gpercentile": "string",
-                "geva": "string",
-                "bpercentile": "string",
-                "bcov": "string",
-                "beva": "string",
-                "def_valu": "string",
-                "fea_tag": "string"
-            },
-        ).fillna(
-            value={
-                # "code": "",
-                # "name": "",
-                "length": 1.0,
-                # "dtype": "",
-                # "gpercentile": "",
-                # "fea_geva": "",
-                # "fea_bpercentile": "",
-                # "fea_bcov": "",
-                # "fea_beva": "",
-                "def_valu": "",
-                # "fea_tag": ""
-            }
-        )
+        sep = '\t'
       else:
         ValueError(f"Not support format for {f}")
-    if self._black_list:
-      with open(self._black_list) as f:
+      feature_map = pd.read_csv(
+          f,
+          sep=sep,
+          dtype={
+              "code": int,
+              "name": "string",
+              "dtype": "string",
+              "ftype": "string",
+              "dim": "uint32",
+              "length": float,
+              "voc_size": float,
+          },
+      ).fillna(value={
+          "code": -1,
+          "length": 1.0,
+          "voc_size": 0.0,
+      })
+    if black_list:
+      with open(black_list) as f:
         black_feature_list = [feature.strip() for feature in f]
       feature_map = feature_map[~feature_map["name"].isin(black_feature_list)]
 
-    if self._white_list:
+    if white_list:
       white_feature_list = []
-      if os.path.isfile(self._white_list):
-        print(f'{self._white_list} is a file.')
-        with open(self._white_list) as f:
+      if os.path.isfile(white_list):
+        print(f'{white_list} is a file.')
+        with open(white_list) as f:
           white_feature_list += [feature.strip() for feature in f]
-      elif os.path.isdir(self._white_list):
-        print(f'{self._white_list} is a directory.')
-        for used_features in os.listdir(self._white_list):
-          filename = os.path.join(self._white_list, used_features)
+      elif os.path.isdir(white_list):
+        print(f'{white_list} is a directory.')
+        for used_features in os.listdir(white_list):
+          filename = os.path.join(white_list, used_features)
           with open(filename) as f:
             white_feature_list += [feature.strip() for feature in f]
       else:
-        print(f'{self._white_list} is neither a file nor a directory.')
+        print(f'{white_list} is neither a file nor a directory.')
 
       feature_map = feature_map[feature_map["name"].isin(white_feature_list)]
 
@@ -137,7 +90,6 @@ class FeatureMap(metaclass=SingletonType):
     for column in [
         'length',
         'voc_size',
-        # 'composition_size'
     ]:
       if column in feature_map.columns:
         feature_map[column] = feature_map[column].astype(int)

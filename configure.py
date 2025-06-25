@@ -17,12 +17,15 @@
 import argparse
 import errno
 import glob
+import logging
 import os
 import pathlib
 import platform
 import re
+import shutil
 import subprocess
 import sys
+from typing import Optional
 
 import tensorflow as tf
 from packaging.version import Version
@@ -37,9 +40,6 @@ except ImportError:
 _DEFAULT_CUDA_VERSION = '11'
 _DEFAULT_CUDNN_VERSION = '2'
 _DEFAULT_TENSORRT_VERSION = '6'
-_DEFAULT_CUDA_COMPUTE_CAPABILITIES = '7.0,7.5,8.0,8.6'
-
-_SUPPORTED_ANDROID_NDK_VERSIONS = [19, 20, 21, 25]
 
 _DEFAULT_PROMPT_ASK_ATTEMPTS = 10
 
@@ -47,20 +47,6 @@ _DP_BAZELRC_FILENAME = '.dp_configure.bazelrc'
 _DP_WORKSPACE_ROOT = ''
 _DP_BAZELRC = ''
 _DP_CURRENT_BAZEL_VERSION = None
-
-NCCL_LIB_PATHS = ['lib64/', 'lib/powerpc64le-linux-gnu/', 'lib/x86_64-linux-gnu/', '']
-
-# List of files to configure when building Bazel on Apple platforms.
-APPLE_BAZEL_FILES = [
-    'tensorflow/lite/ios/BUILD', 'tensorflow/lite/objc/BUILD', 'tensorflow/lite/swift/BUILD',
-    'tensorflow/lite/tools/benchmark/experimental/ios/BUILD'
-]
-
-# List of files to move when building for iOS.
-IOS_FILES = [
-    'tensorflow/lite/objc/TensorFlowLiteObjC.podspec',
-    'tensorflow/lite/swift/TensorFlowLiteSwift.podspec',
-]
 
 
 class UserInputError(Exception):
@@ -104,48 +90,6 @@ def get_tf_header_dir():
   return tf_header_dir
 
 
-def get_tf_version_integer():
-  """
-  Get Tensorflow version as a 4 digits string.
-
-  For example:
-    1.15.2 get 1152
-    2.4.1 get 2041
-    2.6.3 get 2063
-    2.8.3 get 2083
-
-  The 4-digits-string will be passed to C macro to discriminate different
-  Tensorflow versions.
-
-  We assume that major version has 1 digit, minor version has 2 digits. And
-  patch version has 1 digit.
-  """
-  try:
-    version = tf.__version__
-  except AttributeError:
-    raise ImportError(
-        '\nPlease install a TensorFlow on your compiling machine, '
-        'The compiler needs to know the version of Tensorflow '
-        'and get TF c++ headers according to the installed TensorFlow. '
-        '\nNote: Only TensorFlow 2.8.3, 2.6.3, 2.4.1, 1.15.2 are supported.'
-    )
-  try:
-    major, minor, patch = version.split('.')
-    assert len(major) == 1, "Tensorflow major version must be length of 1. Version: {}".format(version)
-    assert len(minor) <= 2, "Tensorflow minor version must be less or equal to 2. Version: {}".format(version)
-    assert len(patch) == 1, "Tensorflow patch version must be length of 1. Version: {}".format(version)
-  except:
-    raise ValueError('got wrong tf.__version__: {}'.format(version))
-  tf_version_num = str(int(major) * 1000 + int(minor) * 10 + int(patch))
-  if len(tf_version_num) != 4:
-    raise ValueError(
-        'Tensorflow version flag must be length of 4 (major'
-        ' version: 1, minor version: 2, patch_version: 1). But'
-        ' get: {}'.format(tf_version_num)
-    )
-  return int(tf_version_num)
-
-
 def get_cpp_version():
   cpp_version = "c++14"
   if Version(tf.__version__) >= Version("2.10"):
@@ -185,6 +129,48 @@ def get_shared_lib_name():
     return namespec[1][3:]
 
 
+def get_tf_version_integer():
+  """
+  Get Tensorflow version as a 4 digits string.
+
+  For example:
+    1.15.2 get 1152
+    2.4.1 get 2041
+    2.6.3 get 2063
+    2.8.3 get 2083
+
+  The 4-digits-string will be passed to C macro to discriminate different
+  Tensorflow versions. 
+
+  We assume that major version has 1 digit, minor version has 2 digits. And
+  patch version has 1 digit.
+  """
+  try:
+    version = tf.__version__
+  except AttributeError:
+    raise ImportError(
+        '\nPlease install a TensorFlow on your compiling machine, '
+        'The compiler needs to know the version of Tensorflow '
+        'and get TF c++ headers according to the installed TensorFlow. '
+        '\nNote: Only TensorFlow 2.8.3, 2.6.3, 2.4.1, 1.15.2 are supported.'
+    )
+  try:
+    major, minor, patch = version.split('.')
+    assert len(major) == 1, "Tensorflow major version must be length of 1. Version: {}".format(version)
+    assert len(minor) <= 2, "Tensorflow minor version must be less or equal to 2. Version: {}".format(version)
+    assert len(patch) == 1, "Tensorflow patch version must be length of 1. Version: {}".format(version)
+  except:
+    raise ValueError('got wrong tf.__version__: {}'.format(version))
+  tf_version_num = str(int(major) * 1000 + int(minor) * 10 + int(patch))
+  if len(tf_version_num) != 4:
+    raise ValueError(
+        'Tensorflow version flag must be length of 4 (major'
+        ' version: 1, minor version: 2, patch_version: 1). But'
+        ' get: {}'.format(tf_version_num)
+    )
+  return int(tf_version_num)
+
+
 def get_input(question):
   try:
     try:
@@ -220,6 +206,10 @@ def write_to_bazelrc(line):
 
 def write_action_env(var_name, var):
   write_to_bazelrc('build --action_env {}="{}"'.format(var_name, str(var)))
+
+
+def write_repo_env(var_name, var):
+  write_to_bazelrc('build --repo_env {}="{}"'.format(var_name, str(var)))
 
 
 def run_shell(cmd, allow_non_zero=False, stderr=None):
@@ -315,6 +305,8 @@ def setup_python(environ_cp):
   python_major_version = get_python_major_version(python_bin_path)
   if python_major_version == '2':
     write_to_bazelrc('build --host_force_python=PY2')
+  logging.debug(f"Hermetic Python version: {sys.version_info.major}.{sys.version_info.minor}")
+  write_repo_env("HERMETIC_PYTHON_VERSION", f"{sys.version_info.major}.{sys.version_info.minor}")
 
   # Convert python path to Windows style before writing into bazel.rc
   if is_windows() or is_cygwin():
@@ -553,44 +545,6 @@ def set_cc_opt_flags(environ_cp):
     write_to_bazelrc('build:opt --host_copt=%s' % opt)
 
 
-def set_tf_cuda_clang(environ_cp):
-  """set TF_CUDA_CLANG action_env.
-
-  Args:
-    environ_cp: copy of the os.environ.
-  """
-  question = 'Do you want to use clang as CUDA compiler?'
-  yes_reply = 'Clang will be used as CUDA compiler.'
-  no_reply = 'nvcc will be used as CUDA compiler.'
-  set_action_env_var(
-      environ_cp,
-      'TF_CUDA_CLANG',
-      None,
-      False,
-      question=question,
-      yes_reply=yes_reply,
-      no_reply=no_reply,
-      bazel_config_name='cuda_clang',
-  )
-
-
-def set_tf_download_clang(environ_cp):
-  """Set TF_DOWNLOAD_CLANG action_env."""
-  question = 'Do you wish to download a fresh release of clang? (Experimental)'
-  yes_reply = 'Clang will be downloaded and used to compile tensorflow.'
-  no_reply = 'Clang will not be downloaded.'
-  set_action_env_var(
-      environ_cp,
-      'TF_DOWNLOAD_CLANG',
-      None,
-      False,
-      question=question,
-      yes_reply=yes_reply,
-      no_reply=no_reply,
-      bazel_config_name='download_clang'
-  )
-
-
 def get_from_env_or_user_or_default(environ_cp, var_name, ask_for_var, var_default):
   """Get var_name either from env, or user or default.
 
@@ -683,28 +637,12 @@ def prompt_loop_or_load_from_env(
   return val
 
 
-def set_clang_cuda_compiler_path(environ_cp):
-  """Set CLANG_CUDA_COMPILER_PATH."""
-  default_clang_path = '/usr/lib/llvm-17/bin/clang'
-  if not os.path.exists(default_clang_path):
-    default_clang_path = '/usr/lib/llvm-16/bin/clang'
-    if not os.path.exists(default_clang_path):
-      default_clang_path = which('clang') or ''
-
-  clang_cuda_compiler_path = prompt_loop_or_load_from_env(
-      environ_cp,
-      var_name='CLANG_CUDA_COMPILER_PATH',
-      var_default=default_clang_path,
-      ask_for_var='Please specify clang path that to be used as host compiler.',
-      check_success=os.path.exists,
-      resolve_symlinks=True,
-      error_msg='Invalid clang path. %s cannot be found.',
-  )
-
-  # Set CLANG_CUDA_COMPILER_PATH
-  environ_cp['CLANG_CUDA_COMPILER_PATH'] = clang_cuda_compiler_path
-  write_action_env('CLANG_CUDA_COMPILER_PATH', clang_cuda_compiler_path)
-  return clang_cuda_compiler_path
+def choose_compiler(environ_cp):
+  question = 'Do you want to use Clang as the compiler?'
+  yes_reply = 'Clang will be used to compile Deepray.'
+  no_reply = 'GCC will be used to compile Deepray.'
+  var = int(get_var(environ_cp, 'TF_NEED_CLANG', None, False, question, yes_reply, no_reply))
+  return var
 
 
 def set_gcc_host_compiler_path(environ_cp):
@@ -726,16 +664,20 @@ def set_gcc_host_compiler_path(environ_cp):
       resolve_symlinks=True,
       error_msg='Invalid gcc path. %s cannot be found.',
   )
+  write_repo_env("CC", gcc_host_compiler_path)
+  write_repo_env("BAZEL_COMPILER", gcc_host_compiler_path)
+  return gcc_host_compiler_path
 
-  write_action_env('GCC_HOST_COMPILER_PATH', gcc_host_compiler_path)
 
-
-def choose_compiler(environ_cp):
-  question = 'Do you want to use Clang to build Deepray?'
-  yes_reply = 'Clang will be used to compile Deepray.'
-  no_reply = 'GCC will be used to compile Deepray.'
-  var = int(get_var(environ_cp, 'TF_NEED_CLANG', None, False, question, yes_reply, no_reply))
-  return var
+def get_gcc_major_version(gcc_path: str):
+  gcc_version_proc = subprocess.run(
+      [gcc_path, "-dumpversion"],
+      check=True,
+      capture_output=True,
+      text=True,
+  )
+  major_version = int(gcc_version_proc.stdout)
+  return major_version
 
 
 def set_clang_compiler_path(environ_cp):
@@ -751,10 +693,13 @@ def set_clang_compiler_path(environ_cp):
   Returns:
     string value for clang_compiler_path.
   """
-  # Default path if clang-16 is installed by using apt-get install
-  default_clang_path = '/usr/lib/llvm-17/bin/clang'
+  # Default path if clang-18 is installed by using apt-get install
+  # remove 16 logic upon release of 19
+  default_clang_path = '/usr/lib/llvm-18/bin/clang'
   if not os.path.exists(default_clang_path):
-    default_clang_path = '/usr/lib/llvm-16/bin/clang'
+    default_clang_path = '/usr/lib/llvm-17/bin/clang'
+    if not os.path.exists(default_clang_path):
+      default_clang_path = '/usr/lib/llvm-16/bin/clang'
     if not os.path.exists(default_clang_path):
       default_clang_path = which('clang') or ''
 
@@ -772,9 +717,8 @@ def set_clang_compiler_path(environ_cp):
       ),
   )
 
-  write_action_env('CLANG_COMPILER_PATH', clang_compiler_path)
-  write_to_bazelrc('build --repo_env=CC=%s' % clang_compiler_path)
-  write_to_bazelrc('build --repo_env=BAZEL_COMPILER=%s' % clang_compiler_path)
+  write_repo_env('CC', clang_compiler_path)
+  write_repo_env('BAZEL_COMPILER', clang_compiler_path)
 
   return clang_compiler_path
 
@@ -812,8 +756,16 @@ def retrieve_clang_version(clang_executable):
 # offset of in the current version of ubp. See
 # https://github.com/protocolbuffers/upb/blob/9effcbcb27f0a665f9f345030188c0b291e32482/upb/upb.c#L183.
 def disable_clang_offsetof_extension(clang_version):
-  if int(clang_version.split('.')[0]) in (16, 17):
+  clang_major_version = int(clang_version.split('.')[0])
+  if clang_major_version in (16, 17):
     write_to_bazelrc('build --copt=-Wno-gnu-offsetof-extensions')
+  if clang_major_version >= 16:
+    # Enable clang settings that are needed for the build to work with newer
+    # versions of Clang.
+    write_to_bazelrc("build --config=clang")
+  if clang_major_version < 19:
+    # Prevent XNNPACK from using `-mavxvnniint8` (only available in clang 16+/gcc 13+).
+    write_to_bazelrc("build --define=xnn_enable_avxvnniint8=false")
 
 
 def set_tf_cuda_paths(environ_cp):
@@ -885,37 +837,76 @@ def set_tf_nccl_version(environ_cp):
   environ_cp['TF_NCCL_VERSION'] = tf_nccl_version
 
 
-def get_native_cuda_compute_capabilities(environ_cp):
-  """Get native cuda compute capabilities.
+def _find_executable(executable: str) -> Optional[str]:
+  logging.info("Trying to find path to %s...", executable)
+  # Resolving the symlink is necessary for finding system headers.
+  if unresolved_path := shutil.which(executable):
+    return str(pathlib.Path(unresolved_path).resolve())
+  return None
+
+
+def _find_executable_or_die(executable_name: str, executable_path: Optional[str] = None) -> str:
+  """Finds executable and resolves symlinks or raises RuntimeError.
+
+  Resolving symlinks is sometimes necessary for finding system headers.
 
   Args:
-    environ_cp: copy of the os.environ.
+    executable_name: The name of the executable that we want to find.
+    executable_path: If not None, the path to the executable.
 
   Returns:
-    string of native cuda compute capabilities, separated by comma.
+    The path to the executable we are looking for, after symlinks are resolved.
+  Raises:
+    RuntimeError: if path to the executable cannot be found.
   """
-  device_query_bin = os.path.join(environ_cp.get('CUDA_TOOLKIT_PATH'), 'extras/demo_suite/deviceQuery')
-  if os.path.isfile(device_query_bin) and os.access(device_query_bin, os.X_OK):
-    try:
-      output = run_shell(device_query_bin).split('\n')
-      pattern = re.compile('[0-9]*\\.[0-9]*')
-      output = [pattern.search(x) for x in output if 'Capability' in x]
-      output = ','.join(x.group() for x in output if x is not None)
-    except subprocess.CalledProcessError:
-      output = ''
-  else:
-    output = ''
-  return output
+  if executable_path:
+    return str(pathlib.Path(executable_path).resolve(strict=True))
+  resolved_path_to_exe = _find_executable(executable_name)
+  if resolved_path_to_exe is None:
+    raise RuntimeError(
+        f"Could not find executable `{executable_name}`! "
+        "Please change your $PATH or pass the path directly like"
+        f"`--{executable_name}_path=path/to/executable."
+    )
+  logging.info("Found path to %s at %s", executable_name, resolved_path_to_exe)
+
+  return resolved_path_to_exe
 
 
-def set_tf_cuda_compute_capabilities(environ_cp):
-  """Set TF_CUDA_COMPUTE_CAPABILITIES."""
+def _get_cuda_compute_capabilities_or_die() -> list[str]:
+  """Finds compute capabilities via nvidia-smi or rasies exception.
+
+  Returns:
+    list of unique, sorted strings representing compute capabilities:
+  Raises:
+    RuntimeError: if path to nvidia-smi couldn't be found.
+    subprocess.CalledProcessError: if nvidia-smi process failed.
+  """
+  try:
+    nvidia_smi = _find_executable_or_die("nvidia-smi")
+    nvidia_smi_proc = subprocess.run(
+        [nvidia_smi, "--query-gpu=compute_cap", "--format=csv,noheader"],
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+    # Command above returns a newline separated list of compute capabilities
+    # with possible repeats. So we should unique them and sort the final result.
+    capabilities = sorted(set(nvidia_smi_proc.stdout.strip().split("\n")))
+    logging.info("Found CUDA compute capabilities: %s", capabilities)
+    return ','.join(capabilities)
+  except (RuntimeError, subprocess.CalledProcessError) as e:
+    logging.info(
+        "Could not find nvidia-smi, or nvidia-smi command failed. Please pass"
+        " capabilities directly using --cuda_compute_capabilities."
+    )
+    raise e
+
+
+def set_hermetic_cuda_compute_capabilities(environ_cp):
+  """Set HERMETIC_CUDA_COMPUTE_CAPABILITIES."""
   while True:
-    native_cuda_compute_capabilities = get_native_cuda_compute_capabilities(environ_cp)
-    if not native_cuda_compute_capabilities:
-      default_cuda_compute_capabilities = _DEFAULT_CUDA_COMPUTE_CAPABILITIES
-    else:
-      default_cuda_compute_capabilities = native_cuda_compute_capabilities
+    default_cuda_compute_capabilities = _get_cuda_compute_capabilities_or_die()
 
     ask_cuda_compute_capabilities = (
         'Please specify a list of comma-separated CUDA compute capabilities '
@@ -925,18 +916,21 @@ def set_tf_cuda_compute_capabilities(environ_cp):
         ' binary GPU code, or as "sm_xy" to only include the binary '
         'code.\nPlease note that each additional compute capability '
         'significantly increases your build time and binary size, and that '
-        'TensorFlow only supports compute capabilities >= 3.5 [Default is: '
+        'Deepray only supports compute capabilities >= 3.5 [Default is: '
         '%s]: ' % default_cuda_compute_capabilities
     )
-    tf_cuda_compute_capabilities = get_from_env_or_user_or_default(
-        environ_cp, 'TF_CUDA_COMPUTE_CAPABILITIES', ask_cuda_compute_capabilities, default_cuda_compute_capabilities
+    hermetic_cuda_compute_capabilities = get_from_env_or_user_or_default(
+        environ_cp,
+        'HERMETIC_CUDA_COMPUTE_CAPABILITIES',
+        ask_cuda_compute_capabilities,
+        default_cuda_compute_capabilities,
     )
     # Check whether all capabilities from the input is valid
     all_valid = True
     # Remove all whitespace characters before splitting the string
     # that users may insert by accident, as this will result in error
-    tf_cuda_compute_capabilities = ''.join(tf_cuda_compute_capabilities.split())
-    for compute_capability in tf_cuda_compute_capabilities.split(','):
+    hermetic_cuda_compute_capabilities = ''.join(hermetic_cuda_compute_capabilities.split())
+    for compute_capability in hermetic_cuda_compute_capabilities.split(','):
       m = re.match('[0-9]+.[0-9]+', compute_capability)
       if not m:
         # We now support sm_35,sm_50,sm_60,compute_70.
@@ -977,20 +971,26 @@ def set_tf_cuda_compute_capabilities(environ_cp):
       break
 
     # Reset and Retry
-    environ_cp['TF_CUDA_COMPUTE_CAPABILITIES'] = ''
+    environ_cp['HERMETIC_CUDA_COMPUTE_CAPABILITIES'] = ''
 
-  # Set TF_CUDA_COMPUTE_CAPABILITIES
-  environ_cp['TF_CUDA_COMPUTE_CAPABILITIES'] = tf_cuda_compute_capabilities
-  write_action_env('TF_CUDA_COMPUTE_CAPABILITIES', tf_cuda_compute_capabilities)
+  # Set HERMETIC_CUDA_COMPUTE_CAPABILITIES
+  environ_cp['HERMETIC_CUDA_COMPUTE_CAPABILITIES'] = (hermetic_cuda_compute_capabilities)
+  write_to_bazelrc(
+      'build:{} --repo_env {}="{}"'.format(
+          'cuda', 'HERMETIC_CUDA_COMPUTE_CAPABILITIES', str(hermetic_cuda_compute_capabilities)
+      )
+  )
 
 
 def set_other_cuda_vars(environ_cp):
   """Set other CUDA related variables."""
   # If CUDA is enabled, always use GPU during build and test.
-  if environ_cp.get('TF_CUDA_CLANG') == '1':
+  if environ_cp.get('TF_NEED_CLANG') == '1':
     write_to_bazelrc('build --config=cuda_clang')
+    write_action_env('CLANG_CUDA_COMPILER_PATH', environ_cp.get('CLANG_COMPILER_PATH'))
   else:
     write_to_bazelrc('build --config=cuda')
+    write_to_bazelrc('build --config=cuda_nvcc')
 
 
 def system_specific_test_config(environ_cp):
@@ -1192,55 +1192,24 @@ def main():
   # This should be replaced with a call to tf.sysconfig if it's added
   write_action_env("TF_CPLUSPLUS_VER", get_cpp_version())
 
+  tf_version_integer = get_tf_version_integer()
   # This is used to trace the difference between Tensorflow versions.
-  write_action_env("TF_VERSION_INTEGER", get_tf_version_integer())
+  write_action_env("TF_VERSION_INTEGER", tf_version_integer)
+  write_to_bazelrc('')
 
-  if is_windows():
-    environ_cp['TF_NEED_OPENCL'] = '0'
-    environ_cp['TF_CUDA_CLANG'] = '0'
-    # TODO(ibiryukov): Investigate using clang as a cpu or cuda compiler on
-    # Windows.
-    environ_cp['TF_DOWNLOAD_CLANG'] = '0'
-    environ_cp['TF_NEED_MPI'] = '0'
-
-  if is_macos():
-    environ_cp['TF_NEED_TENSORRT'] = '0'
-
-  if is_ppc64le():
-    # Enable MMA Dynamic Dispatch support if 'gcc' and if linker >= 2.35
-    gcc_env = get_gcc_compiler(environ_cp)
-    if gcc_env is not None:
-
-      # Use gold linker if 'gcc' and if 'ppc64le'
-      write_to_bazelrc('build --linkopt="-fuse-ld=gold"')
-
-      # Get the linker version
-      ld_version = run_shell([gcc_env, '-Wl,-version']).split()
-
-      ld_version_int = convert_version_to_int(ld_version[3])
-      if ld_version_int is None:
-        ld_version_int = convert_version_to_int(ld_version[4])
-
-      # Enable if 'ld' version >= 2.35
-      if ld_version_int >= 2035000:
-        write_to_bazelrc('build --copt="-DEIGEN_ALTIVEC_ENABLE_MMA_DYNAMIC_DISPATCH=1"')
-
-  with_xla_support = environ_cp.get('TF_ENABLE_XLA', None)
-  if with_xla_support is not None:
-    write_to_bazelrc('build --define=with_xla_support=%s' % ('true' if int(with_xla_support) else 'false'))
-
-  # set_action_env_var(environ_cp, 'TF_NEED_ROCM', 'ROCm', False, bazel_config_name='rocm')
-  if (
-      environ_cp.get('TF_NEED_ROCM') == '1' and 'LD_LIBRARY_PATH' in environ_cp and
-      environ_cp.get('LD_LIBRARY_PATH') != '1'
-  ):
-    write_action_env('LD_LIBRARY_PATH', environ_cp.get('LD_LIBRARY_PATH'))
-
-  if (environ_cp.get('TF_NEED_ROCM') == '1' and environ_cp.get('ROCM_PATH')):
-    write_action_env('ROCM_PATH', environ_cp.get('ROCM_PATH'))
-
-  if (environ_cp.get('TF_NEED_ROCM') == '1' and environ_cp.get('HIP_PLATFORM')):
-    write_action_env('HIP_PLATFORM', environ_cp.get('HIP_PLATFORM'))
+  # Ask whether we should use clang for the CPU build.
+  if is_linux():
+    environ_cp['TF_NEED_CLANG'] = str(choose_compiler(environ_cp))
+    if environ_cp.get('TF_NEED_CLANG') == '1':
+      clang_compiler_path = set_clang_compiler_path(environ_cp)
+      clang_version = retrieve_clang_version(clang_compiler_path)
+      disable_clang_offsetof_extension(clang_version)
+    else:
+      gcc_path = set_gcc_host_compiler_path(environ_cp)
+      gcc_major_version = get_gcc_major_version(gcc_path)
+      if gcc_major_version < 13:
+        # Prevent XNNPACK from using `-mavxvnniint8` (only available in clang 16+/gcc 13+).
+        write_to_bazelrc('build --define=xnn_enable_avxvnniint8=false')
 
   if is_windows():
     print(
@@ -1300,30 +1269,14 @@ def main():
           'times in a row. Assuming to be a scripting mistake.' % _DEFAULT_PROMPT_ASK_ATTEMPTS
       )
 
-    set_tf_cuda_compute_capabilities(environ_cp)
+    set_hermetic_cuda_compute_capabilities(environ_cp)
     if 'LD_LIBRARY_PATH' in environ_cp and environ_cp.get('LD_LIBRARY_PATH') != '1':
       write_action_env('LD_LIBRARY_PATH', environ_cp.get('LD_LIBRARY_PATH'))
 
-    set_tf_cuda_clang(environ_cp)
-    if environ_cp.get('TF_CUDA_CLANG') == '1':
-      # Set up which clang we should use as the cuda / host compiler.
-      clang_cuda_compiler_path = set_clang_cuda_compiler_path(environ_cp)
-      clang_version = retrieve_clang_version(clang_cuda_compiler_path)
-      disable_clang_offsetof_extension(clang_version)
-    else:
-      # Set up which gcc nvcc should use as the host compiler
-      # No need to set this on Windows
-      if not is_windows():
-        set_gcc_host_compiler_path(environ_cp)
     set_other_cuda_vars(environ_cp)
   else:
-    # CUDA not required. Ask whether we should use clang for the CPU build.
-    if is_linux():
-      environ_cp['TF_NEED_CLANG'] = str(choose_compiler(environ_cp))
-      if environ_cp.get('TF_NEED_CLANG') == '1':
-        clang_compiler_path = set_clang_compiler_path(environ_cp)
-        clang_version = retrieve_clang_version(clang_compiler_path)
-        disable_clang_offsetof_extension(clang_version)
+    if environ_cp.get('TF_NEED_CLANG') == '1':
+      write_action_env('CLANG_COMPILER_PATH', clang_compiler_path)
 
   # ROCm / CUDA are mutually exclusive.
   # At most 1 GPU platform can be configured.

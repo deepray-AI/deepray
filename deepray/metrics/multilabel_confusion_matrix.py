@@ -17,7 +17,7 @@
 import warnings
 
 import tensorflow as tf
-from tensorflow.keras import backend as K
+from tf_keras import backend as K
 from tensorflow.keras.metrics import Metric
 import numpy as np
 

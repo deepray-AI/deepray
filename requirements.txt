@@ -1,12 +1,6 @@
-typeguard>=2.7,<3.0.0
-packaging
-pandas
-pyarrow
-nvidia-ml-py
-dllogger@git+https://github.com/NVIDIA/dllogger#egg=dllogger
-pudb
 tabulate
-tensorflow_hub
-sentencepiece
-boto3
 fastavro
+boto3
+pandas
+scikit-build
+scikit-learn

@@ -18,7 +18,7 @@ import tensorflow as tf
 from typeguard import typechecked
 from deepray.utils.resource_loader import LazySO
 
-_correlation_cost_so = LazySO("custom_ops/correlation_cost/_correlation_cost_ops.so")
+gen_correlation_cost_ops = LazySO("custom_ops/correlation_cost/_correlation_cost_ops.so")
 
 
 def _correlation_cost(
@@ -76,7 +76,7 @@ def _correlation_cost(
     """
 
   with tf.name_scope(name or "correlation_cost"):
-    op_call = _correlation_cost_so.ops.deepray_correlation_cost
+    op_call = gen_correlation_cost_ops.ops.deepray_correlation_cost
 
     if data_format == "channels_last":
       op_data_format = "NHWC"
@@ -116,7 +116,7 @@ def _correlation_cost_grad(op, grad_output):
   input_b = tf.convert_to_tensor(op.inputs[1], name="input_b")
   grad_output_tensor = tf.convert_to_tensor(grad_output, name="grad_output")
 
-  op_call = _correlation_cost_so.ops.deepray_correlation_cost_grad
+  op_call = gen_correlation_cost_ops.ops.deepray_correlation_cost_grad
   grads = op_call(
       input_a,
       input_b,

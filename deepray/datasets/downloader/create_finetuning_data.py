@@ -31,8 +31,6 @@ import squad.squad_lib as squad_lib_wp
 from squad import squad_lib_sp
 import tokenization
 
-FLAGS = flags.FLAGS
-
 flags.DEFINE_enum(
     "fine_tuning_task_type", "classification", ["classification", "squad"],
     "The name of the BERT fine tuning task for which data "

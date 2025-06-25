@@ -18,16 +18,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl import flags
+
 import tensorflow as tf
 from absl import app
 from absl import flags
 import tensorflow_recommenders_addons as tfra
 
-from deepray.core.base_trainer import Trainer
+from deepray.core.trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets.avazu import Avazu
-
-FLAGS = flags.FLAGS
 
 
 def main(_):
@@ -50,23 +50,23 @@ def main(_):
       ]
   }
 
-  if FLAGS.model_name == "flen":
+  if flags.FLAGS.model_name == "flen":
     from deepray.models.rec.flen import FLEN as mymodel
-  elif FLAGS.model_name == "flend":
+  elif flags.FLAGS.model_name == "flend":
     from deepray.models.rec.flend import FLEND as mymodel
-  elif FLAGS.model_name == "ccpm":
+  elif flags.FLAGS.model_name == "ccpm":
     from .ccpm_diamond import CCPM as mymodel
 
   _strategy = distribution_utils.get_distribution_strategy()
   with distribution_utils.get_strategy_scope(_strategy):
     model = mymodel(field_info=field_info, embedding_dim=16)
-    optimizer = tf.keras.optimizers.Adam(learning_rate=FLAGS.learning_rate)
-    if FLAGS.use_dynamic_embedding:
+    optimizer = tf.keras.optimizers.Adam(learning_rate=flags.FLAGS.learning_rate)
+    if flags.FLAGS.use_dynamic_embedding:
       optimizer = tfra.dynamic_embedding.DynamicEmbeddingOptimizer(optimizer)
 
   data_pipe = Avazu()
-  train_dataset = data_pipe(FLAGS.train_data, FLAGS.batch_size, is_training=True)
-  valid_g2b = data_pipe(FLAGS.valid_data, FLAGS.batch_size, is_training=False)
+  train_dataset = data_pipe(flags.FLAGS.train_data, flags.FLAGS.batch_size, is_training=True)
+  valid_g2b = data_pipe(flags.FLAGS.valid_data, flags.FLAGS.batch_size, is_training=False)
 
   trainer = Trainer(
       model=model,
@@ -77,8 +77,8 @@ def main(_):
   )
 
   trainer.fit(
-      train_input=train_dataset,
-      eval_input=valid_g2b,
+      x=train_dataset,
+      validation_data=valid_g2b,
       # callbacks=[
       #   # Write TensorBoard logs to `./logs` directory
       #   tf.keras.callbacks.TensorBoard(log_dir=FLAGS.model_dir, histogram_freq=1, profile_batch=3),

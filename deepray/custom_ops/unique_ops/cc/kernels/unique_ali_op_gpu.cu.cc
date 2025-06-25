@@ -19,23 +19,15 @@ limitations under the License.
 
 #include "cub/device/device_radix_sort.cuh"
 #include "cub/device/device_scan.cuh"
-#include "cub/device/device_select.cuh"
-#include "cub/iterator/constant_input_iterator.cuh"
 #include "cub/iterator/counting_input_iterator.cuh"
 #include "cub/iterator/transform_input_iterator.cuh"
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/common_runtime/gpu/gpu_event_mgr.h"
 #include "tensorflow/core/framework/bounds_check.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
-#include "tensorflow/core/framework/tensor_types.h"
-#include "tensorflow/core/framework/types.h"
-#include "tensorflow/core/lib/core/threadpool.h"
-#include "tensorflow/core/platform/cuda.h"
-#include "tensorflow/core/platform/macros.h"
 #include "tensorflow/core/util/gpu_kernel_helper.h"
 #include "tensorflow/core/util/gpu_solvers.h"  // For ScratchSpace
-#include "tensorflow/stream_executor/stream_executor.h"
-#include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
 
 namespace tensorflow {
 using GPUDevice = Eigen::GpuDevice;
@@ -149,7 +141,7 @@ class UniqueAliV2GpuOp : public AsyncOpKernel {
                             &device, this](int64 N_out) {
       TF_RETURN_IF_ERROR(ctx->allocate_output(0, {N_out}, &output_tensor));
       TF_RETURN_IF_ERROR(ctx->allocate_output(1, {N}, &idx_tensor));
-      return Status::OK();
+      return TFOkStatus;
     };
     if (N == 0) {
       OP_REQUIRES_OK_ASYNC(ctx, allocate_output(0), done);
@@ -242,7 +234,7 @@ class UniqueAliV2GpuOp : public AsyncOpKernel {
             ->ThenMemcpy(N_out.mutable_data(), wrapped_num_out, sizeof(TIndex))
             .ok(),
         errors::Internal("Failed to launch copy from device to host."), done);
-    ctx->device()->tensorflow_gpu_device_info()->event_mgr->ThenExecute(
+    ctx->device()->tensorflow_accelerator_device_info()->event_mgr->ThenExecute(
         stream, [ref_output_indices]() { ref_output_indices.Unref(); });
     stream->BlockHostUntilDone();
     int64_t uniq_size = (*N_out.data()) + 1;

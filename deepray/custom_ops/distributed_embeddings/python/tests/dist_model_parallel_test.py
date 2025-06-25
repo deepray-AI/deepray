@@ -31,8 +31,6 @@ flags.DEFINE_integer("seed", default=42, help="Random seed for the randomized te
 flags.DEFINE_bool("graph_mode", default=False, help="Run in graph mode.")
 flags.DEFINE_string("mixed_precision_policy", default=None, help="Mixed precision policy to be set.")
 
-FLAGS = flags.FLAGS
-
 large_testcase_sizes = [
     [2, 8], [2, 16], [10, 8], [10, 16], [10, 16], [10, 16], [10, 16], [10, 16], [10, 32], [10, 128],
     [10, 128], [10, 128], [10, 128], [10, 1024], [100, 16], [100, 32], [100, 32], [100, 32], [100, 32], [100, 128],

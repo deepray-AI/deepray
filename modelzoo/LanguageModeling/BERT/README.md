@@ -150,7 +150,7 @@ For information about:
 
 #### Enabling mixed precision
 
-This implementation exploits the TensorFlow Automatic Mixed Precision feature. To enable AMP, you simply need to supply the `--dtype=fp16` flag to the `run_pretraining.py` or `run_squad.py` script. For reference, enabling AMP required us to apply the following changes to the code:
+This implementation exploits the TensorFlow Automatic Mixed Precision feature. To enable AMP, you simply need to supply the `--use_fp16` flag to the `run_pretraining.py` or `run_squad.py` script. For reference, enabling AMP required us to apply the following changes to the code:
 
 1. Set the Keras mixed precision policy:
    ```python
@@ -393,7 +393,7 @@ The `official/` folder contains necessary files of building model architecture a
 Aside from the options to set hyperparameters, the relevant options to control the behaviour of the `run_pretraining.py` script are:
 
 ```
-  --config_file: Bert configuration file to define core bert layers.
+  --bert_config_file: Bert configuration file to define core bert layers.
   --init_checkpoint: Initial checkpoint (usually from a pre-trained BERT model).
   --[no]use_horovod: Whether to use horovod.(default: 'false')
   --[no]use_fp16: Whether to use fp32 or fp16 arithmetic on GPU. When false, uses TF32 on A100 and FP32 on V100 GPUS.(default: 'false')
@@ -407,7 +407,7 @@ Aside from the options to set hyperparameters, the relevant options to control t
 Aside from the options to set hyperparameters, some relevant options to control the behaviour of the `run_squad.py` script are:
 
 ```
-  --config_file: Bert configuration file to define core bert layers.
+  --bert_config_file: Bert configuration file to define core bert layers.
   --model_dir: The location of the model checkpoint files.
   --mode: <train_and_predict|train|predict|export_only>: One of {"train_and_predict", "train", "predict", "export_only"}. `train_and_predict`: both train and predict to a json file. `train`: only trains the model. trains the model and evaluates in the meantime. `predict`: predict answers from the squad json file. `export_only`: will take the latest checkpoint inside model_dir and export a `SavedModel`.
   --max_answer_length: The maximum length of an answer that can be generated. (default: '30')(an integer)
@@ -569,7 +569,7 @@ mpirun -np 8 \
     -x LD_LIBRARY_PATH \
     -x PATH -mca pml ob1 -mca btl ^openib \
      python run_squad.py --use_horovod --vocab_file=$BERT_DIR/vocab.txt \
-     --config_file=$BERT_DIR/bert_config.json \
+     --bert_config_file=$BERT_DIR/bert_config.json \
      --model_dir=/results
 ```
 

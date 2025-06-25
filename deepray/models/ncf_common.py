@@ -33,8 +33,6 @@ from deepray.datasets.movielens import data_pipeline
 from deepray.datasets.movielens import data_preprocessing
 from deepray.utils.flags import core as flags_core
 
-FLAGS = flags.FLAGS
-
 
 def get_inputs(params):
   """Returns some parameters used by the model."""

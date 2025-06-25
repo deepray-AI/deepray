@@ -21,22 +21,18 @@ from __future__ import print_function
 import tensorflow as tf
 from absl import flags
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 from deepray.utils.horovod_utils import get_rank, get_world_size
 
-FLAGS = flags.FLAGS
 
-
-class Squad(DataPipeLine):
+class Squad(DataPipeline):
 
   def __init__(self, max_seq_length, dataset_type="squad", **kwargs):
     super().__init__(**kwargs)
     self._max_seq_length = max_seq_length
     self.dataset_type = dataset_type
 
-  def build_dataset(
-      self, input_file_pattern, batch_size, is_training=True, prebatch_size=0, epochs=1, shuffle=True, *args, **kwargs
-  ):
+  def build_dataset(self, input_file_pattern, batch_size, is_training=True, epochs=1, shuffle=True, *args, **kwargs):
     if self.dataset_type == "squad":
       return self.create_squad_dataset(
           input_file_pattern,
@@ -224,7 +220,7 @@ class Squad(DataPipeLine):
 
     if is_training:
       dataset = dataset.shuffle(100)
-      dataset = dataset.repeat(FLAGS.epochs)
+      dataset = dataset.repeat(flags.FLAGS.epochs)
 
     dataset = dataset.batch(batch_size, drop_remainder=True)
     dataset = dataset.prefetch(1024)

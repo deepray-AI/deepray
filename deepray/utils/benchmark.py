@@ -15,7 +15,6 @@
 from time import perf_counter
 
 import numpy as np
-import tensorflow as tf
 from absl import logging
 
 
@@ -38,10 +37,7 @@ class PerformanceCalculator:
     self.benchmark_start_time = None
     self.benchmark_after_warmup_start_time = None
     self.latency_percentiles = (90, 95, 99)
-    with tf.device("/CPU:0"):
-      self.samples = tf.Variable(0, trainable=False, dtype=tf.int64)
-
-    self.samples.assign(0)
+    self.samples = 0
     self.step_latencies = [0]
     self._results = {}
     # used to represent duration of entire training
@@ -76,17 +72,17 @@ class PerformanceCalculator:
   def _calculate_throughput(self):
     time_elapsed = perf_counter() - self.benchmark_start_time
     time_elapsed_after_warmup = perf_counter() - self.benchmark_after_warmup_start_time
-    benchmark_throughput = self.samples.numpy() / time_elapsed_after_warmup
-    return {"throughput": benchmark_throughput, "time": time_elapsed}
+    benchmark_throughput = self.samples / time_elapsed_after_warmup
+    return {"throughput": benchmark_throughput, "time": time_elapsed, "total_samples": self.samples}
 
   def __call__(self, steps, global_batch_size):
-    self.samples.assign_add(steps * global_batch_size)
+    self.samples += steps * global_batch_size
     step_latency = perf_counter() - self.step_start_time
     step_throughput = steps * global_batch_size / step_latency
     self.step_latencies.append(step_latency)
     self.step += steps
     if self.step == self.warmup_steps:
-      self.samples.assign(0)
+      self.samples = 0
       self.step_latencies = []
       self.benchmark_after_warmup_start_time = perf_counter()
     elif self.step == self.total_steps:

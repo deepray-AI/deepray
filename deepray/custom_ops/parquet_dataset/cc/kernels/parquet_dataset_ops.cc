@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
-#include "deepray/custom_ops/parquet_dataset/cc/kernels/parquet_dataset_ops.h"
+#include "parquet_dataset_ops.h"
 
 #include <unordered_set>
 
@@ -83,14 +83,14 @@ class ParquetTabularDatasetOp::Dataset : public DatasetBase {
     return output_shapes_;
   }
 
-  Status CheckExternalState() const override { return Status::OK(); }
+  Status CheckExternalState() const override { return OkStatus(); }
 
   string DebugString() const override {
     return "ParquetTabularDatasetOp::Dataset";
   }
 
   Status InputDatasets(std::vector<const DatasetBase*>* inputs) const override {
-    return Status::OK();
+    return OkStatus();
   }
 
  protected:
@@ -122,7 +122,7 @@ class ParquetTabularDatasetOp::Dataset : public DatasetBase {
                        {"partition_index", partition_index},
                        {"drop_remainder", drop_remainder}},
                       output));
-    return Status::OK();
+    return OkStatus();
   }
 
  private:
@@ -159,7 +159,7 @@ class ParquetTabularDatasetOp::Dataset::Iterator
       return s;
     }
     *end_of_sequence = true;
-    return Status::OK();
+    return OkStatus();
   }
 
  protected:

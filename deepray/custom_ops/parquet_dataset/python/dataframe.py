@@ -23,9 +23,10 @@ from __future__ import division
 from __future__ import print_function
 
 import collections
-import numpy as np
-from six.moves import xrange  # pylint: disable=redefined-builtin
 
+import numpy as np
+import tensorflow as tf
+from six.moves import xrange  # pylint: disable=redefined-builtin
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import sparse_tensor
@@ -59,16 +60,12 @@ class DataFrame(object):  # pylint: disable=useless-object-inheritance
       self._ragged_rank = ragged_rank
       if shape:
         shape = tensor_shape.TensorShape(shape)
-        shape_rank = 0
-        for _ in shape:
-          shape_rank += 1
-        if ragged_rank is not None and ragged_rank != shape_rank:
+        for d in shape:
+          if d is None:
+            raise ValueError(f'Field {name} has incomplete shape: {shape}')
+        if ragged_rank is not None and ragged_rank > 1:
           raise ValueError(f'Field {name} is a nested list ({ragged_rank}) '
                            f'with shape {shape}')
-        self._ragged_rank = shape_rank
-      elif ragged_rank is not None:
-        shape = tensor_shape.TensorShape([None for _ in xrange(ragged_rank)])
-
       self._shape = shape
 
     @property
@@ -130,16 +127,15 @@ class DataFrame(object):  # pylint: disable=useless-object-inheritance
     def output_types(self):
       return self.map(lambda i: self._dtype if i == 0 else dtypes.int32)
 
-    def output_shapes(self, batch_size=None):
+    @property
+    def output_shapes(self):
       if self._shape is None:
-        return self.map(lambda i: tensor_shape.TensorShape(batch_size) if i == 0 else tensor_shape.TensorShape(None))
-      return self.map(
-          lambda i: tensor_shape.TensorShape(batch_size).concatenate(self._shape)
-          if i == 0 else tensor_shape.TensorShape(None)
-      )
+        return self.map(lambda _: tf.TensorShape(None))
+      return self.map(lambda i: tf.TensorShape(None).concatenate(self._shape) if i == 0 else tf.TensorShape(None))
 
-    def output_specs(self, batch_size=None):
-      shape = tensor_shape.TensorShape(batch_size)
+    @property
+    def output_specs(self):
+      shape = tf.TensorShape(None)
       if self._shape is not None:
         shape = shape.concatenate(self._shape)
       specs = [tensor_spec.TensorSpec(shape, dtype=self._dtype)]

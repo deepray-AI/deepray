@@ -18,7 +18,7 @@ import datetime
 import time
 
 import tensorflow as tf
-from tensorflow.keras.callbacks import Callback
+from tf_keras.callbacks import Callback
 from typeguard import typechecked
 
 

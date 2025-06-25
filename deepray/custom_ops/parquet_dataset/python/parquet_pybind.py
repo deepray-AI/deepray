@@ -20,15 +20,16 @@ from __future__ import print_function
 
 import numpy as np
 from six import string_types as string
-
 from tensorflow.python.data.ops import dataset_ops
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
 from tensorflow.python.framework import tensor_shape
 from tensorflow.python.ops import array_ops
 from tensorflow.python.platform import tf_logging as logging
-from .dataframe import DataFrame
+from tensorflow.python.types import core
+
 from deepray.custom_ops.parquet_dataset import _parquet_pybind as _lib
+from .dataframe import DataFrame
 
 
 def parquet_fields(filename, fields=None, lower=False):
@@ -121,7 +122,7 @@ def parquet_filenames_and_fields(filenames, fields, lower=False):
         raise ValueError(f'Field {f} must be `hb.data.DataFrame.Field`.')
       if f.incomplete:
         raise ValueError(f'Field {f} is incomplete, please specify dtype and ragged_rank')
-  elif isinstance(filenames, ops.Tensor):
+  elif isinstance(filenames, core.Tensor):
     if filenames.dtype != dtypes.string:
       raise TypeError('`filenames` must be a `tf.Tensor` of `tf.string`.')
     if fields is None:

@@ -23,7 +23,6 @@ import tensorflow as tf
 from deepray.layers import tf_utils
 
 
-@tf.keras.utils.register_keras_serializable(package='Text')
 class SelfAttentionMask(tf.keras.layers.Layer):
   """Create 3D attention mask from a 2D tensor mask.
 

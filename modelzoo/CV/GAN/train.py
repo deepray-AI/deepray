@@ -8,18 +8,17 @@ import tensorflow as tf
 from absl import app, flags
 from datetime import datetime
 
-from deepray.core.base_trainer import Trainer
+from deepray.core.trainer import Trainer
 from deepray.core.common import distribution_utils
 from deepray.datasets.mnist import Mnist
 
-FLAGS = flags.FLAGS
 FLAGS(
     [
         sys.argv[0],
         "--train_data=mnist",
         # "--distribution_strategy=off",
         # "--run_eagerly=true",
-        "--steps_per_summary=10",
+        "--steps_per_execution=10",
         # "--use_horovod=True",
         # "--batch_size=1024",
     ]

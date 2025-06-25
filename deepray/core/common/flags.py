@@ -38,20 +38,6 @@ def define_flags():
   flags.DEFINE_string(
       'experiment', default=None, help='The experiment type registered, specifying an ExperimentConfig.'
   )
-
-  flags.DEFINE_enum(
-      'mode',
-      default=None,
-      enum_values=[
-          'train', 'eval', 'train_and_eval', 'continuous_eval', 'continuous_train_and_eval', 'train_and_validate',
-          'train_and_post_eval'
-      ],
-      help='Mode to run: `train`, `eval`, `train_and_eval`, '
-      '`continuous_eval`, `continuous_train_and_eval` and '
-      '`train_and_validate` (which is not implemented in '
-      'the open source version).'
-  )
-
   flags.DEFINE_string(
       'model_dir', default=None, help='The directory where the model and training/evaluation summaries'
       'are stored.'

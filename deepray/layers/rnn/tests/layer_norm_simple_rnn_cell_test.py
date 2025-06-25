@@ -15,7 +15,7 @@
 """Tests for LayerNormSimpleRNN Cell."""
 
 import numpy as np
-import tensorflow.keras as keras
+import tf_keras as keras
 
 from deepray.layers.rnn import LayerNormSimpleRNNCell
 

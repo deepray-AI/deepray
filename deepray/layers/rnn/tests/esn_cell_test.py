@@ -16,7 +16,7 @@
 
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras as keras
+import tf_keras as keras
 
 from deepray.layers.rnn import ESNCell
 

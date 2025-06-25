@@ -14,12 +14,14 @@
 # ==============================================================================
 """Implements triplet loss."""
 
-import tensorflow as tf
-from deepray.losses import metric_learning
-from deepray.utils.keras_utils import LossFunctionWrapper
-from deepray.utils.types import FloatTensorLike, TensorLike
-from typeguard import typechecked
 from typing import Optional, Union, Callable
+
+import tensorflow as tf
+from tensorflow.python.keras import losses
+from typeguard import typechecked
+
+from deepray.losses import metric_learning
+from deepray.utils.types import FloatTensorLike, TensorLike
 
 
 def _masked_maximum(data, mask, dim=1):
@@ -272,7 +274,7 @@ def triplet_hard_loss(
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class TripletSemiHardLoss(LossFunctionWrapper):
+class TripletSemiHardLoss(losses.LossFunctionWrapper):
   """Computes the triplet loss with semi-hard negative mining.
 
     The loss encourages the positive distances (between a pair of embeddings
@@ -309,7 +311,7 @@ class TripletSemiHardLoss(LossFunctionWrapper):
 
 
 @tf.keras.utils.register_keras_serializable(package="Deepray")
-class TripletHardLoss(LossFunctionWrapper):
+class TripletHardLoss(losses.LossFunctionWrapper):
   """Computes the triplet loss with hard negative and hard positive mining.
 
     The loss encourages the maximum positive distance (between a pair of embeddings

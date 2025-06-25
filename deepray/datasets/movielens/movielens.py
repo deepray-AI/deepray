@@ -4,11 +4,11 @@ import functools
 
 import tensorflow as tf
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 from deepray.datasets.movielens import constants as rconst
 
 
-class Movielens(DataPipeLine):
+class Movielens(DataPipeline):
 
   @staticmethod
   def parser(self, serialized_data, batch_size=None, is_training=True):

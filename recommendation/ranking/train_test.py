@@ -22,7 +22,7 @@ import tensorflow as tf
 from official.recommendation.ranking import common
 from official.recommendation.ranking import train
 
-FLAGS = flags.FLAGS
+
 
 
 def _get_params_override(vocab_sizes, interaction='dot', use_orbit=True, strategy='mirrored'):

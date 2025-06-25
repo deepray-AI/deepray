@@ -25,7 +25,6 @@ from deepray.layers import attention
 from deepray.layers import dense_einsum
 
 
-# @tf.keras.utils.register_keras_serializable(package="Text")
 class TransformerScaffold(tf.keras.layers.Layer):
   """Transformer scaffold layer.
 

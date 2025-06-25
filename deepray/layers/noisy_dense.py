@@ -14,14 +14,7 @@
 # ==============================================================================
 
 import tensorflow as tf
-from tensorflow.keras import (
-    activations,
-    initializers,
-    regularizers,
-    constraints,
-)
-from tensorflow.keras import backend as K
-from tensorflow.keras.layers import InputSpec
+import tf_keras as keras
 from typeguard import typechecked
 
 from deepray.utils import types
@@ -137,7 +130,7 @@ class NoisyDense(tf.keras.layers.Dense):
 
   def build(self, input_shape):
     # Make sure dtype is correct
-    dtype = tf.dtypes.as_dtype(self.dtype or K.floatx())
+    dtype = tf.dtypes.as_dtype(self.dtype or keras.floatx())
     if not (dtype.is_floating or dtype.is_complex):
       raise TypeError("Unable to build `Dense` layer with non-floating point "
                       "dtype %s" % (dtype,))
@@ -148,7 +141,7 @@ class NoisyDense(tf.keras.layers.Dense):
     if self.last_dim is None:
       raise ValueError("The last dimension of the inputs to `Dense` "
                        "should be defined. Found `None`.")
-    self.input_spec = InputSpec(min_ndim=2, axes={-1: self.last_dim})
+    self.input_spec = keras.layers.InputSpec(min_ndim=2, axes={-1: self.last_dim})
 
     # use factorising Gaussian variables
     if self.use_factorised:
@@ -159,8 +152,8 @@ class NoisyDense(tf.keras.layers.Dense):
       mu_init = (3.0 / self.last_dim)**(1 / 2)
       sigma_init = 0.017
 
-    sigma_init = initializers.Constant(value=sigma_init)
-    mu_init = initializers.RandomUniform(minval=-mu_init, maxval=mu_init)
+    sigma_init = keras.initializers.Constant(value=sigma_init)
+    mu_init = keras.initializers.RandomUniform(minval=-mu_init, maxval=mu_init)
 
     # Learnable parameters
     self.sigma_kernel = self.add_weight(
@@ -186,7 +179,7 @@ class NoisyDense(tf.keras.layers.Dense):
     self.eps_kernel = self.add_weight(
         "eps_kernel",
         shape=[self.last_dim, self.units],
-        initializer=initializers.Zeros(),
+        initializer=keras.initializers.Zeros(),
         regularizer=None,
         constraint=None,
         dtype=self.dtype,
@@ -223,7 +216,7 @@ class NoisyDense(tf.keras.layers.Dense):
           shape=[
               self.units,
           ],
-          initializer=initializers.Zeros(),
+          initializer=keras.initializers.Zeros(),
           regularizer=None,
           constraint=None,
           dtype=self.dtype,
@@ -284,13 +277,13 @@ class NoisyDense(tf.keras.layers.Dense):
             "units": self.units,
             "sigma": self.sigma,
             "use_factorised": self.use_factorised,
-            "activation": activations.serialize(self.activation),
+            "activation": keras.activations.serialize(self.activation),
             "use_bias": self.use_bias,
-            "kernel_regularizer": regularizers.serialize(self.kernel_regularizer),
-            "bias_regularizer": regularizers.serialize(self.bias_regularizer),
-            "activity_regularizer": regularizers.serialize(self.activity_regularizer),
-            "kernel_constraint": constraints.serialize(self.kernel_constraint),
-            "bias_constraint": constraints.serialize(self.bias_constraint),
+            "kernel_regularizer": keras.regularizers.serialize(self.kernel_regularizer),
+            "bias_regularizer": keras.regularizers.serialize(self.bias_regularizer),
+            "activity_regularizer": keras.regularizers.serialize(self.activity_regularizer),
+            "kernel_constraint": keras.constraints.serialize(self.kernel_constraint),
+            "bias_constraint": keras.constraints.serialize(self.bias_constraint),
         }
     )
     return config

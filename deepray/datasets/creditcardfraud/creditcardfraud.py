@@ -12,29 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Fashion-MNIST dataset."""
+"""Credit Card Fraud dataset."""
 
-import gzip
-import os
 import sys
+
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from absl import flags
-import pandas as pd
-from keras.utils.data_utils import get_file
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from deepray.datasets.datapipeline import DataPipeLine
+from deepray.datasets.datapipeline import DataPipeline
 
-FLAGS = flags.FLAGS
-FLAGS([
+flags.FLAGS([
     sys.argv[0],
     "--num_train_examples=182280",
 ])
 
 
-class CreditCardFraud(DataPipeLine):
+class CreditCardFraud(DataPipeline):
 
   def __init__(self, url='https://storage.googleapis.com/download.tensorflow.org/data/creditcard.csv'):
     super().__init__()
@@ -86,19 +83,12 @@ class CreditCardFraud(DataPipeLine):
     pass
 
   def build_dataset(
-      self,
-      input_file_pattern,
-      batch_size,
-      is_training=True,
-      context: tf.distribute.InputContext = None,
-      use_horovod=False,
-      *args,
-      **kwargs
+      self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
   ):
     if is_training:
       ds = tf.data.Dataset.from_tensor_slices((self.train_features, self.train_labels))
 
     else:
       ds = tf.data.Dataset.from_tensor_slices((self.val_features, self.val_labels))
-    ds = ds.repeat(FLAGS.epochs).shuffle(10000).batch(batch_size)
+    ds = ds.repeat(flags.FLAGS.epochs).shuffle(10000).batch(batch_size)
     return ds

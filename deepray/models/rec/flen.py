@@ -29,8 +29,6 @@ from deepray.layers.embedding import Embedding
 from deepray.utils.data.feature_map import FeatureMap
 from deepray.layers.field_wise_bi_interaction import FieldWiseBiInteraction
 
-FLAGS = flags.FLAGS
-
 __all__ = [
     'FLEN',
 ]

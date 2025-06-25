@@ -10,8 +10,6 @@ from absl import logging, flags
 
 from deepray.design_patterns import SingletonType
 
-FLAGS = flags.FLAGS
-
 
 class InputMeta(metaclass=SingletonType):
 

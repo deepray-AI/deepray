@@ -10,8 +10,6 @@ from absl import app, flags
 from deepray.datasets.criteo.criteo_tsv_reader import CriteoTsvReader
 from deepray.utils.benchmark import PerformanceCalculator
 
-FLAGS = flags.FLAGS
-
 
 def runner(argv=None):
   dir_path = os.path.dirname(os.path.realpath(__file__))

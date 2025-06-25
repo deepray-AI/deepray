@@ -22,8 +22,6 @@ from deepray.design_patterns import SingletonType
 import tensorflow as tf
 import horovod.tensorflow as hvd
 
-FLAGS = flags.FLAGS
-
 _MIN_SUMMARY_STEPS = 10
 
 
@@ -52,7 +50,7 @@ class SummaryManager(metaclass=SingletonType):
       self.summary_writers['train'], self.summary_writers['evel'] = None, None
     else:
       self.summary_writers['evel'] = tf.summary.create_file_writer(os.path.join(self._summary_dir, "eval"))
-      if FLAGS.steps_per_summary >= _MIN_SUMMARY_STEPS:
+      if FLAGS.steps_per_execution >= _MIN_SUMMARY_STEPS:
         # Only writes summary when the stats are collected sufficiently over enough steps.
         self.summary_writers['train'] = tf.summary.create_file_writer(os.path.join(self._summary_dir, "train"))
       else:

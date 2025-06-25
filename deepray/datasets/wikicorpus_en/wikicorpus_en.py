@@ -21,7 +21,6 @@ from absl import flags
 
 from deepray.datasets.tfrecord_pipeline import TFRecordPipeline
 
-FLAGS = flags.FLAGS
 FLAGS([
     sys.argv[0],
     "--num_train_examples=24324736",

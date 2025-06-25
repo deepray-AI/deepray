@@ -16,9 +16,10 @@
 from typing import Union, Text, Optional
 
 import tensorflow as tf
+import tf_keras as keras
 
 
-class Cross(tf.keras.layers.Layer):
+class Cross(keras.layers.Layer):
   """Cross Layer in Deep & Cross Network to learn explicit feature interactions.
 
     A layer that creates explicit and bounded-degree feature interactions
@@ -43,12 +44,12 @@ class Cross(tf.keras.layers.Layer):
 
         ```python
         # after embedding layer in a functional model:
-        input = tf.keras.Input(shape=(None,), name='index', dtype=tf.int64)
+        input = keras.Input(shape=(None,), name='index', dtype=tf.int64)
         x0 = dp.layers.Embedding(vocabulary_size=32, embedding_dim=6)
         x1 = Cross()(x0, x0)
         x2 = Cross()(x0, x1)
-        logits = tf.keras.layers.Dense(units=10)(x2)
-        model = tf.keras.Model(input, logits)
+        logits = keras.layers.Dense(units=10)(x2)
+        model = keras.Model(input, logits)
         ```
 
     Args:
@@ -82,11 +83,11 @@ class Cross(tf.keras.layers.Layer):
       projection_dim: Optional[int] = None,
       diag_scale: Optional[float] = 0.0,
       use_bias: bool = True,
-      preactivation: Optional[Union[str, tf.keras.layers.Activation]] = None,
-      kernel_initializer: Union[Text, tf.keras.initializers.Initializer] = "truncated_normal",
-      bias_initializer: Union[Text, tf.keras.initializers.Initializer] = "zeros",
-      kernel_regularizer: Union[Text, None, tf.keras.regularizers.Regularizer] = None,
-      bias_regularizer: Union[Text, None, tf.keras.regularizers.Regularizer] = None,
+      preactivation: Optional[Union[str, keras.layers.Activation]] = None,
+      kernel_initializer: Union[Text, keras.initializers.Initializer] = "truncated_normal",
+      bias_initializer: Union[Text, keras.initializers.Initializer] = "zeros",
+      kernel_regularizer: Union[Text, None, keras.regularizers.Regularizer] = None,
+      bias_regularizer: Union[Text, None, keras.regularizers.Regularizer] = None,
       **kwargs
   ):
 
@@ -95,11 +96,11 @@ class Cross(tf.keras.layers.Layer):
     self._projection_dim = projection_dim
     self._diag_scale = diag_scale
     self._use_bias = use_bias
-    self._preactivation = tf.keras.activations.get(preactivation)
-    self._kernel_initializer = tf.keras.initializers.get(kernel_initializer)
-    self._bias_initializer = tf.keras.initializers.get(bias_initializer)
-    self._kernel_regularizer = tf.keras.regularizers.get(kernel_regularizer)
-    self._bias_regularizer = tf.keras.regularizers.get(bias_regularizer)
+    self._preactivation = keras.activations.get(preactivation)
+    self._kernel_initializer = keras.initializers.get(kernel_initializer)
+    self._bias_initializer = keras.initializers.get(bias_initializer)
+    self._kernel_regularizer = keras.regularizers.get(kernel_regularizer)
+    self._bias_regularizer = keras.regularizers.get(bias_regularizer)
     self._input_dim = None
 
     self._supports_masking = True
@@ -111,7 +112,7 @@ class Cross(tf.keras.layers.Layer):
     last_dim = input_shape[-1]
 
     if self._projection_dim is None:
-      self._dense = tf.keras.layers.Dense(
+      self._dense = keras.layers.Dense(
           last_dim,
           kernel_initializer=_clone_initializer(self._kernel_initializer),
           bias_initializer=self._bias_initializer,
@@ -122,14 +123,14 @@ class Cross(tf.keras.layers.Layer):
           activation=self._preactivation,
       )
     else:
-      self._dense_u = tf.keras.layers.Dense(
+      self._dense_u = keras.layers.Dense(
           self._projection_dim,
           kernel_initializer=_clone_initializer(self._kernel_initializer),
           kernel_regularizer=self._kernel_regularizer,
           use_bias=False,
           dtype=self.dtype,
       )
-      self._dense_v = tf.keras.layers.Dense(
+      self._dense_v = keras.layers.Dense(
           last_dim,
           kernel_initializer=_clone_initializer(self._kernel_initializer),
           bias_initializer=self._bias_initializer,
@@ -183,11 +184,11 @@ class Cross(tf.keras.layers.Layer):
         "projection_dim": self._projection_dim,
         "diag_scale": self._diag_scale,
         "use_bias": self._use_bias,
-        "preactivation": tf.keras.activations.serialize(self._preactivation),
-        "kernel_initializer": tf.keras.initializers.serialize(self._kernel_initializer),
-        "bias_initializer": tf.keras.initializers.serialize(self._bias_initializer),
-        "kernel_regularizer": tf.keras.regularizers.serialize(self._kernel_regularizer),
-        "bias_regularizer": tf.keras.regularizers.serialize(self._bias_regularizer),
+        "preactivation": keras.activations.serialize(self._preactivation),
+        "kernel_initializer": keras.initializers.serialize(self._kernel_initializer),
+        "bias_initializer": keras.initializers.serialize(self._bias_initializer),
+        "kernel_regularizer": keras.regularizers.serialize(self._kernel_regularizer),
+        "bias_regularizer": keras.regularizers.serialize(self._bias_regularizer),
     }
     base_config = super().get_config()
     return dict(list(base_config.items()) + list(config.items()))

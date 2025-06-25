@@ -8,8 +8,6 @@ from tensorflow.keras.layers import Layer
 from deepray.layers.embedding import DiamondEmbedding
 from deepray.utils.data.feature_map import FeatureMap
 
-FLAGS = flags.FLAGS
-
 
 class KMaxPooling(Layer):
 

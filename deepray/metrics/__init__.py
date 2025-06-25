@@ -22,13 +22,6 @@ from deepray.metrics.hamming import (
     hamming_loss_fn,
 )
 from deepray.metrics.utils import MeanMetricWrapper
-from deepray.metrics.matthews_correlation_coefficient import (
-    MatthewsCorrelationCoefficient,
-)
-from deepray.metrics.multilabel_confusion_matrix import (
-    MultiLabelConfusionMatrix,
-)
-from deepray.metrics.r_square import RSquare
 from deepray.metrics.geometric_mean import GeometricMean
 from deepray.metrics.harmonic_mean import HarmonicMean
 from deepray.metrics.streaming_correlations import (
@@ -37,3 +30,5 @@ from deepray.metrics.streaming_correlations import (
     PearsonsCorrelation,
     SpearmansRank,
 )
+from deepray.metrics.ndcg import NDCGMetric
+from deepray.metrics.mrr import MRRMetric

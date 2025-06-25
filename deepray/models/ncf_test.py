@@ -65,7 +65,7 @@ class NcfTest(tf.test.TestCase):
 
   @unittest.mock.patch.object(rconst, 'SYNTHETIC_BATCHES_PER_EPOCH', 100)
   def test_end_to_end_keras_dist_strat_ctl(self):
-    flags = (self._BASE_END_TO_END_FLAGS + ['-num_gpus', '0'] + ['-keras_use_ctl', 'True'])
+    flags = (self._BASE_END_TO_END_FLAGS + ['-num_gpus', '0'] + ['-use_custom_training_loop', 'True'])
     integration.run_synthetic(ncf_keras_main.main, tmp_root=self.get_temp_dir(), extra_flags=flags)
 
   @unittest.mock.patch.object(rconst, 'SYNTHETIC_BATCHES_PER_EPOCH', 100)
@@ -87,7 +87,7 @@ class NcfTest(tf.test.TestCase):
     integration.run_synthetic(
         ncf_keras_main.main,
         tmp_root=self.get_temp_dir(),
-        extra_flags=self._BASE_END_TO_END_FLAGS + ['-num_gpus', '1', '--dtype', 'fp16', '--keras_use_ctl']
+        extra_flags=self._BASE_END_TO_END_FLAGS + ['-num_gpus', '1', '--dtype', 'fp16', '--use_custom_training_loop']
     )
 
   @unittest.mock.patch.object(rconst, 'SYNTHETIC_BATCHES_PER_EPOCH', 100)

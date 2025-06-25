@@ -12,6 +12,8 @@ _TF_CXX11_ABI_FLAG = "TF_CXX11_ABI_FLAG"
 
 _TF_CPLUSPLUS_VER = "TF_CPLUSPLUS_VER"
 
+_TF_VERSION_INTEGER = "TF_VERSION_INTEGER"
+
 def _tpl(repository_ctx, tpl, substitutions = {}, out = None):
     if not out:
         out = tpl
@@ -211,6 +213,7 @@ def _tf_pip_impl(repository_ctx):
     tf_shared_cc_library_path = "%s/%s" % (tf_shared_library_dir, tf_shared_cc_library_name)
     tf_cx11_abi = "-D_GLIBCXX_USE_CXX11_ABI=%s" % (repository_ctx.os.environ[_TF_CXX11_ABI_FLAG])
     tf_cplusplus_ver = "-std=%s" % repository_ctx.os.environ[_TF_CPLUSPLUS_VER]
+    tf_version_integer = "-DTF_VERSION_INTEGER=%s" % (repository_ctx.os.environ[_TF_VERSION_INTEGER])
 
     tf_shared_library_rule = _symlink_genrule_for_dir(
         repository_ctx,
@@ -244,6 +247,7 @@ def _tf_pip_impl(repository_ctx):
         {
             "%{tf_cx11_abi}": tf_cx11_abi,
             "%{tf_cplusplus_ver}": tf_cplusplus_ver,
+            "%{tf_version_integer}": tf_version_integer,
         },
     )
 

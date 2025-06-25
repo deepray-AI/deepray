@@ -19,6 +19,7 @@ limitations under the License.
 #include <utility>
 #include <vector>
 
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
 #include "tensorflow/core/platform/errors.h"
@@ -204,7 +205,7 @@ class MultiplexSparseOp : public OpKernel {
                              indices_tensor.shape().DebugString(),
                              " values: ", values_tensor.shape().DebugString());
     }
-    return Status::OK();
+    return TFOkStatus;
   }
 };
 

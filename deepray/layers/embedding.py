@@ -20,23 +20,39 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from absl import flags
-from keras import backend
-from keras import constraints
-from keras import initializers
-from keras import regularizers
-from keras.dtensor import utils
-from keras.engine import base_layer_utils
-from keras.engine.base_layer import Layer
-from tensorflow import keras
-from tensorflow.keras import layers
-from tensorflow.keras.layers import StringLookup
-from tensorflow.python.keras.utils import tf_utils
+from packaging.version import parse
 
+if parse(tf.__version__.replace("-tf", "+tf")) < parse("2.11"):
+  from keras import backend
+  from keras import constraints
+  from keras import initializers
+  from keras import regularizers
+  from keras.dtensor import utils
+  from keras.engine import base_layer_utils
+  from keras.engine.base_layer import Layer
+  from keras.utils import tf_utils
+elif parse(tf.__version__) > parse("2.16.0"):
+  from tf_keras.src import backend
+  from tf_keras.src import constraints
+  from tf_keras.src import initializers
+  from tf_keras.src import regularizers
+  from tf_keras.src.dtensor import utils
+  from tf_keras.src.engine import base_layer_utils
+  from tf_keras.src.engine.base_layer import Layer
+  from tf_keras.src.utils import tf_utils
+else:
+  from keras.src import backend
+  from keras.src import constraints
+  from keras.src import initializers
+  from keras.src import regularizers
+  from keras.src.dtensor import utils
+  from keras.src.engine import base_layer_utils
+  from keras.src.engine.base_layer import Layer
+  from keras.src.utils import tf_utils
+
+import tf_keras as keras
 import deepray as dp
 from deepray.layers.bucketize import Hash
-
-FLAGS = flags.FLAGS
 
 
 def get_variable_path(checkpoint_path, name, i=0):
@@ -55,7 +71,7 @@ class Embedding(Layer):
     e.g. `[[4], [20]] -> [[0.25, 0.1], [0.6, -0.2]]`
 
     This layer can only be used on positive integer inputs of a fixed range. The
-    `tf.keras.layers.TextVectorization`, `tf.keras.layers.StringLookup`,
+    `tf.keras.layers.TextVectorization`, `keras.layers.StringLookup`,
     and `tf.keras.layers.IntegerLookup` preprocessing layers can help prepare
     inputs for an `Embedding` layer.
 
@@ -576,12 +592,12 @@ class QREmbedding(tf.keras.layers.Layer):
     super().__init__(name=name)
     self.num_buckets = num_buckets
 
-    self.index_lookup = StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=0)
-    self.q_embeddings = layers.Embedding(
+    self.index_lookup = keras.layers.StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=0)
+    self.q_embeddings = keras.layers.Embedding(
         num_buckets,
         embedding_dim,
     )
-    self.r_embeddings = layers.Embedding(
+    self.r_embeddings = keras.layers.Embedding(
         num_buckets,
         embedding_dim,
     )
@@ -649,17 +665,17 @@ class MDEmbedding(keras.layers.Layer):
       block_embedding_encoder = self.embedding_encoder(vocabulary, embedding_dim, num_oov_indices=1)
       self.block_embedding_encoders.append(block_embedding_encoder)
       if embedding_dim == base_embedding_dim:
-        self.block_embedding_projectors.append(layers.Lambda(lambda x: x))
+        self.block_embedding_projectors.append(keras.layers.Lambda(lambda x: x))
       else:
-        self.block_embedding_projectors.append(layers.Dense(units=base_embedding_dim))
+        self.block_embedding_projectors.append(keras.layers.Dense(units=base_embedding_dim))
 
     self.base_embedding_dim = 64
 
   def embedding_encoder(self, vocabulary, embedding_dim, num_oov_indices=0, name=None):
     return keras.Sequential(
         [
-            StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=num_oov_indices),
-            layers.Embedding(input_dim=len(vocabulary) + num_oov_indices, output_dim=embedding_dim),
+            keras.layers.StringLookup(vocabulary=vocabulary, mask_token=None, num_oov_indices=num_oov_indices),
+            keras.layers.Embedding(input_dim=len(vocabulary) + num_oov_indices, output_dim=embedding_dim),
         ],
         name=f"{name}_embedding" if name else None,
     )

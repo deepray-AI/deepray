@@ -20,9 +20,6 @@ flags_core.define_base(
     stop_threshold=False,
 )
 
-FLAGS = flags.FLAGS
-logging.set_verbosity(logging.INFO)
-
 TIME_STAMP = datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
