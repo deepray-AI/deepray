@@ -90,7 +90,7 @@ jobs:
 
   upload-dev-container:
     name: Upload dev container to DockerHub
-    # needs: [release-wheel, test-with-bazel]
+    needs: [release-wheel]
     runs-on: ubuntu-22.04
     strategy:
       matrix:
