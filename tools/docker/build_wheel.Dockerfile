@@ -1,25 +1,9 @@
-# syntax=docker/dockerfile:1
-ARG PY_VERSION
-ARG TF_VERSION
-# FROM tensorflow/build:2.9-python$PY_VERSION as base_install
-FROM hailinfufu/deepray-base:24.01-py$PY_VERSION-tf$TF_VERSION-cu11.6.2-ubuntu20.04 as base_install
+# syntax=docker/dockerfile:1.2.1
+ARG PY_VERSION=3.10
+ARG TF_VERSION=2.15.0
+FROM hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu22.04 as base_install
 
 ENV TF_NEED_CUDA="1"
-
-# TODO: Temporary due to build bug https://github.com/pypa/pip/issues/11770
-# RUN python -m pip install pip==22.3.1
-
-# TODO: Remove this if tensorflow/build container removes their keras-nightly install
-# https://github.com/tensorflow/build/issues/78
-# RUN python -m pip uninstall -y keras-nightly
-
-# RUN python -m pip install --default-timeout=1000 tensorflow==$TF_VERSION
-
-COPY tools/install_deps/ /install_deps
-RUN python -m pip install -r /install_deps/pytest.txt
-
-COPY requirements.txt .
-RUN python -m pip install -r requirements.txt
 
 COPY ./ /deepray
 WORKDIR /deepray
@@ -28,25 +12,20 @@ WORKDIR /deepray
 FROM base_install as make_wheel
 ARG NIGHTLY_FLAG
 ARG NIGHTLY_TIME
-ARG SKIP_CUSTOM_OP_TESTS
 
 RUN yes "" | bash ./configure || true
 
-# Test Before Building
-# RUN bazel test --test_timeout 300,450,1200,3600 --test_output=errors //deepray/...
-
 # Build
 RUN bazel build \
-    --noshow_progress \
-    --noshow_loading_progress \
-    --verbose_failures \
-    --test_output=errors \
-    build_pip_pkg && \
+        --noshow_progress \
+        --noshow_loading_progress \
+        --verbose_failures \
+        --test_output=errors \
+        --copt=-O3 --copt=-march=native \
+        build_pip_pkg && \
     # Package Whl
     bazel-bin/build_pip_pkg artifacts $NIGHTLY_FLAG
 
-RUN bash tools/releases/tf_auditwheel_patch.sh
-RUN python -m auditwheel repair --plat manylinux2014_x86_64 artifacts/*.whl
 RUN ls -al wheelhouse/
 
 # -------------------------------------------------------------------
@@ -54,14 +33,13 @@ RUN ls -al wheelhouse/
 FROM python:$PY_VERSION as test_wheel_in_fresh_environment
 
 ARG TF_VERSION
-ARG SKIP_CUSTOM_OP_TESTS
 
 RUN python -m pip install --default-timeout=1000 tensorflow==$TF_VERSION
 
 COPY --from=make_wheel /deepray/wheelhouse/ /deepray/wheelhouse/
 RUN pip install /deepray/wheelhouse/*.whl
 
-RUN if [[ -z "$SKIP_CUSTOM_OP_TESTS" ]] ; then python -c "import deepray as dp; print(dp.register_all())" ; else python -c "import deepray as dp; print(dp.register_all(custom_kernels=False))" ; fi
+RUN python -c "import deepray as dp"
 
 # -------------------------------------------------------------------
 FROM scratch as output

@@ -11,5 +11,4 @@ DOCKER_BUILDKIT=1 docker build \
     --build-arg TF_VERSION \
     --build-arg NIGHTLY_FLAG \
     --build-arg NIGHTLY_TIME \
-    --build-arg SKIP_CUSTOM_OP_TESTS \
     ./

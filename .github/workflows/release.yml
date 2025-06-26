@@ -26,6 +26,67 @@ env:
   MAX_PY_VERSION: '3.11'
 
 jobs:
+  release-wheel:
+    name: Test and build release wheels
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ['ubuntu-22.04']
+        py-version: ['3.10']
+        tf-version: ['2.15.0']
+        cpu: ['x86']
+      fail-fast: false
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - uses: actions/github-script@0.3.0
+        id: author-date
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const commit_details = await github.git.getCommit({owner: context.repo.owner, repo: context.repo.repo, commit_sha: context.sha});
+            return commit_details.data.author.date
+      - if: matrix.tf-version != '2.15.0'
+        shell: bash
+        run: echo "SKIP_CUSTOM_OP_TESTS=--skip-custom-ops" >> $GITHUB_ENV
+      - if: github.event_name == 'push'
+        shell: bash
+        run: echo "NIGHTLY_FLAG=--nightly" >> $GITHUB_ENV
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.py-version }}
+      - if: matrix.os != 'ubuntu-20.04'
+        name: Setup Bazel
+        # Ubuntu bazel is run inside of the docker image
+        run: bash tools/install_deps/install_bazelisk.sh ./
+      - name: Build wheels
+        env:
+          OS: ${{ runner.os }}
+          PY_VERSION: ${{ matrix.py-version }}
+          TF_VERSION: ${{ matrix.tf-version }}
+          NIGHTLY_TIME: ${{ steps.author-date.outputs.result }}
+          CPU: ${{ matrix.cpu }}
+        shell: bash
+        run: bash .github/workflows/make_wheel_${OS}_${CPU}.sh
+      - uses: actions/upload-artifact@v1
+        with:
+          name: ${{ runner.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
+          path: wheelhouse
 
   upload-dev-container:
     name: Upload dev container to DockerHub
