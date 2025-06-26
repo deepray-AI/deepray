@@ -5,25 +5,46 @@ ARG OS_VERSION=22.04
 ARG CUDA_DOCKER_VERSION=${CUDA_VERSION}-cudnn8-devel-ubuntu${OS_VERSION}
 FROM nvidia/cuda:${CUDA_DOCKER_VERSION} as dev_container
 ARG PY_VERSION=3.10
+ARG TF_PACKAGE
 ARG TF_VERSION=2.15.0
 
 # to avoid interaction with apt-get
 ENV DEBIAN_FRONTEND=noninteractive
 
-COPY tools/install_deps/install_bazelisk.sh /install_deps/
-RUN bash /install_deps/install_bazelisk.sh
+# Comment it if you are not in China
+RUN sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
+RUN sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 
-COPY tools/install_deps/install_miniforge.sh /install_deps/
+RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
+    wget \
+    build-essential \
+    git \
+    lld \
+    gdb \
+    file \
+    patchelf \
+    net-tools \
+    curl \
+    vim \
+    tmux \
+    rsync \
+    zip \
+    unzip
+
+COPY tools/install_deps /install_deps
+RUN bash /install_deps/install_bazelisk.sh
 RUN bash /install_deps/install_miniforge.sh ${PY_VERSION}
+
+# Make RUN commands use the new environment:
+ENV PATH /opt/conda/bin:$PATH
+# SHELL ["conda", "run", "--no-capture-output", "-n", "py3", "/bin/bash", "-c"]
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && python -V && pip -V
+RUN conda install nvidia/label/cuda-${CUDA_VERSION}::cuda-cupti -y
 
 RUN pip install --default-timeout=1000 $TF_PACKAGE==$TF_VERSION
 
-COPY tools/install_deps /install_deps
 COPY requirements.txt /tmp/requirements.txt
-RUN pip install -r /install_deps/black.txt \
-    -r /install_deps/flake8.txt \
-    -r /install_deps/pytest.txt \
-    -r /install_deps/typedapi.txt \
+RUN pip install \
     -r /tmp/requirements.txt
 
 RUN bash /install_deps/buildifier.sh
