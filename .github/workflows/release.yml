@@ -67,13 +67,6 @@ jobs:
         shell: bash
         run: echo "NIGHTLY_FLAG=--nightly" >> $GITHUB_ENV
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.py-version }}
-      - if: matrix.os != 'ubuntu-20.04'
-        name: Setup Bazel
-        # Ubuntu bazel is run inside of the docker image
-        run: bash tools/install_deps/install_bazelisk.sh ./
       - name: Build wheels
         env:
           OS: ${{ runner.os }}

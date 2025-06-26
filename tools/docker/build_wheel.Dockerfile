@@ -13,7 +13,7 @@ FROM base_install as make_wheel
 ARG NIGHTLY_FLAG
 ARG NIGHTLY_TIME
 
-RUN yes "" | bash ./configure || true
+RUN python configure.py --verbose
 
 # Build
 RUN bazel build \

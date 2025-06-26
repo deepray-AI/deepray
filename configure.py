@@ -47,6 +47,7 @@ _DP_BAZELRC_FILENAME = ".dp_configure.bazelrc"
 _DP_WORKSPACE_ROOT = ""
 _DP_BAZELRC = ""
 _DP_CURRENT_BAZEL_VERSION = None
+_NON_INTERACTIVE_MODE = False
 
 
 class UserInputError(Exception):
@@ -172,6 +173,11 @@ def get_tf_version_integer():
 
 
 def get_input(question):
+  # Handle non-interactive mode.
+  if _NON_INTERACTIVE_MODE:
+    print(question)
+    return ""
+
   try:
     try:
       answer = raw_input(question)
@@ -1143,6 +1149,7 @@ def main():
   global _DP_WORKSPACE_ROOT
   global _DP_BAZELRC
   global _DP_CURRENT_BAZEL_VERSION
+  global _NON_INTERACTIVE_MODE
 
   parser = argparse.ArgumentParser()
   parser.add_argument(
@@ -1151,8 +1158,14 @@ def main():
     default=os.path.abspath(os.path.dirname(__file__)),
     help="The absolute path to your active Bazel workspace.",
   )
+  parser.add_argument(
+    "--verbose",
+    action="store_true",
+    help="If specified, configure with default settings and do not ask any questions (non-interactive mode).",
+  )
   args = parser.parse_args()
 
+  _NON_INTERACTIVE_MODE = args.verbose
   _DP_WORKSPACE_ROOT = args.workspace
   _DP_BAZELRC = os.path.join(_DP_WORKSPACE_ROOT, _DP_BAZELRC_FILENAME)
 
