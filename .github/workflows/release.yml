@@ -40,7 +40,7 @@ jobs:
           ]
         tf-version: ["2.15.0"]
       fail-fast: false
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/master')
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix')
     steps:
       - uses: actions/checkout@v2
 
