@@ -904,7 +904,8 @@ def _get_cuda_compute_capabilities_or_die() -> list[str]:
 
 def set_hermetic_cuda_compute_capabilities(environ_cp):
   """Set HERMETIC_CUDA_COMPUTE_CAPABILITIES."""
-  while True:
+  hermetic_cuda_compute_capabilities = "8.0,8.6,8.9,9.0"
+  while True and not _NON_INTERACTIVE_MODE:
     default_cuda_compute_capabilities = _get_cuda_compute_capabilities_or_die()
 
     ask_cuda_compute_capabilities = (

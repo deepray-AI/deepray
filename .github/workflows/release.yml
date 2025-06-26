@@ -49,9 +49,9 @@ jobs:
           android: true
           dotnet: true
           haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
 
       - uses: actions/github-script@0.3.0
         id: author-date
