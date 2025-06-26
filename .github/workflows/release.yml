@@ -36,7 +36,7 @@ jobs:
         py-version: [
             "3.9",
             "3.10",
-            "3.11"
+            # "3.11"
           ]
         tf-version: ["2.15.0"]
       fail-fast: false

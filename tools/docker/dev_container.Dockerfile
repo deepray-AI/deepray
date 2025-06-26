@@ -10,6 +10,12 @@ ARG TF_VERSION=2.15.0
 # to avoid interaction with apt-get
 ENV DEBIAN_FRONTEND=noninteractive
 
+COPY tools/install_deps/install_bazelisk.sh /install_deps/
+RUN bash /install_deps/install_bazelisk.sh
+
+COPY tools/install_deps/install_miniforge.sh /install_deps/
+RUN bash /install_deps/install_miniforge.sh ${PY_VERSION}
+
 RUN pip install --default-timeout=1000 $TF_PACKAGE==$TF_VERSION
 
 COPY tools/install_deps /install_deps
