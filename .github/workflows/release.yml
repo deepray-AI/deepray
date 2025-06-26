@@ -15,6 +15,7 @@ on:
       - main
       - master
       - r*
+      - hotfix
 
 permissions:
   contents: read
