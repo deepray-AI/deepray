@@ -3,7 +3,7 @@ ARG CUDA_VERSION=12.2.2
 ARG OS_VERSION=22.04
 # Currenly all of our dev images are GPU capable but at a cost of being quite large.
 ARG CUDA_DOCKER_VERSION=${CUDA_VERSION}-cudnn8-devel-ubuntu${OS_VERSION}
-FROM nvidia/cuda:${CUDA_DOCKER_VERSION} as base_container
+FROM nvidia/cuda:${CUDA_DOCKER_VERSION} as dev_container
 ARG PY_VERSION=3.10
 ARG TF_VERSION=2.15.0
 
