@@ -16,4 +16,4 @@ docker build \
     --build-arg CUDA_VERSION=${CUDA_VERSION} \
     --no-cache \
     --target dev_container \
-    -t hailinfufu/dev_container:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu${CUDA_VERSION}-ubuntu${OS_VERSION} ./
+    -t hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu${CUDA_VERSION}-ubuntu${OS_VERSION} ./
