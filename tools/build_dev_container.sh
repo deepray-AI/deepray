@@ -9,6 +9,7 @@ CUDA_VERSION=${4:-"12.2.2"}
 
 docker build \
     -f tools/docker/dev_container.Dockerfile \
+    --progress=plain \
     --build-arg TF_PACKAGE=tensorflow \
     --build-arg PY_VERSION=$PY_VERSION \
     --build-arg TF_VERSION=${TF_VERSION} \

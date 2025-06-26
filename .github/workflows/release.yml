@@ -34,7 +34,7 @@ jobs:
     strategy:
       matrix:
         py-version: [
-             "3.9",
+            #  "3.9",
             "3.10",
             # "3.11"
           ]
