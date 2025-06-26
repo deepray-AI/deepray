@@ -10,6 +10,7 @@ on:
       - main
       - master
       - r*
+      - hotfix
   pull_request:
     branches:
       - main
