@@ -34,13 +34,17 @@ jobs:
     strategy:
       matrix:
         py-version: [
-            # "3.9",
+             "3.9",
             "3.10",
             # "3.11"
           ]
         tf-version: ["2.15.0"]
       fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix')
+    env:
+      PY_VERSION: ${{ matrix.py-version }}
+      TF_VERSION: ${{ matrix.tf-version }}
+
     steps:
       - uses: actions/checkout@v2
 
@@ -50,9 +54,6 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-        env:
-          PY_VERSION: ${{ matrix.py-version }}
-          TF_VERSION: ${{ matrix.tf-version }}
       - run: |
           set -e -x
           bash tools/build_dev_container.sh ${PY_VERSION} ${TF_VERSION}
