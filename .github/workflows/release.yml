@@ -42,30 +42,34 @@ jobs:
     env:
       PY_VERSION: ${{ matrix.py-version }}
       TF_VERSION: ${{ matrix.tf-version }}
-      IMAGE_TAG: hailinfufu/deepray-dev:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
+      IMAGE_NAME: hailinfufu/deepray-dev
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Docker Layer Caching
-        uses: satackey/action-docker-layer-caching@v0.0.11
-        # Ignore the failure of a step and avoid terminating the job.
-        continue-on-error: true
-        with:
-          image: ${{ env.IMAGE_TAG }}
-          cache-key: docker-layer-cache-${{ matrix.py-version }}-${{ matrix.tf-version }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - name: Build and Push Docker Image
-        run: |
-          set -e -x
-          bash tools/build_dev_container.sh ${PY_VERSION} ${TF_VERSION}
-          docker push ${{ env.IMAGE_TAG }}
+      - name: Build and push Docker image with cache
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tools/docker/build_wheel.Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
+          build-args: |
+            PY_VERSION=${{ env.PY_VERSION }}
+            TF_VERSION=${{ env.TF_VERSION }}
+          # Docker layer caching
+          cache-from: type=gha,scope=${{ github.workflow }}-${{ github.job }}
+          cache-to: type=gha,scope=${{ github.workflow }}-${{ github.job }},mode=max
 
   release-wheel:
     name: Test and build release wheels
@@ -108,7 +112,7 @@ jobs:
       - if: github.event_name == 'push'
         shell: bash
         run: echo "NIGHTLY_FLAG=--nightly" >> $GITHUB_ENV
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build wheels
         env:
           OS: ${{ runner.os }}
@@ -168,10 +172,10 @@ jobs:
   #     TF_VERSION: ${{ matrix.tf-version }}
 
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v4
 
   #     - name: Login to Docker Hub
-  #       uses: docker/login-action@v1
+  #       uses: docker/login-action@v3
   #       with:
   #         username: ${{ secrets.DOCKER_HUB_USERNAME }}
   #         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
