@@ -61,7 +61,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: tools/docker/build_wheel.Dockerfile
+          file: tools/docker/dev_container.Dockerfile
           push: true
           tags: ${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
           build-args: |
