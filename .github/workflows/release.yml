@@ -26,8 +26,40 @@ env:
   MAX_PY_VERSION: '3.11'
 
 jobs:
+  upload-dev-container:
+    name: Upload dev container to DockerHub
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        py-version: [
+            #  "3.9",
+            "3.10",
+            # "3.11"
+          ]
+        tf-version: ["2.15.0", "2.15.1"]
+      fail-fast: false
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix')
+    env:
+      PY_VERSION: ${{ matrix.py-version }}
+      TF_VERSION: ${{ matrix.tf-version }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - run: |
+          set -e -x
+          bash tools/build_dev_container.sh ${PY_VERSION} ${TF_VERSION}
+          docker push hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu22.04
+
   release-wheel:
     name: Test and build release wheels
+    needs: [upload-dev-container]
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -107,34 +139,34 @@ jobs:
           user: __token__
           password: ${{ secrets.pypi_token }}
 
-  upload-dev-container:
-    name: Upload dev container to DockerHub
-    needs: [release-wheel]
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        py-version: [
-            #  "3.9",
-            "3.10",
-            # "3.11"
-          ]
-        tf-version: ["2.15.1"]
-      fail-fast: false
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix')
-    env:
-      PY_VERSION: ${{ matrix.py-version }}
-      TF_VERSION: ${{ matrix.tf-version }}
+  # upload-base-container:
+  #   name: Upload base container to DockerHub
+  #   needs: [release-wheel]
+  #   runs-on: ubuntu-22.04
+  #   strategy:
+  #     matrix:
+  #       py-version: [
+  #           #  "3.9",
+  #           "3.10",
+  #           # "3.11"
+  #         ]
+  #       tf-version: ["2.15.1"]
+  #     fail-fast: false
+  #   if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix')
+  #   env:
+  #     PY_VERSION: ${{ matrix.py-version }}
+  #     TF_VERSION: ${{ matrix.tf-version }}
 
-    steps:
-      - uses: actions/checkout@v2
+  #   steps:
+  #     - uses: actions/checkout@v2
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKER_HUB_USERNAME }}
+  #         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-      - run: |
-          set -e -x
-          bash tools/build_dev_container.sh ${PY_VERSION} ${TF_VERSION}
-          docker push hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu22.04
+  #     - run: |
+  #         set -e -x
+  #         bash tools/build_dev_container.sh ${PY_VERSION} ${TF_VERSION}
+  #         docker push hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu22.04
