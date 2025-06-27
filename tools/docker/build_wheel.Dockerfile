@@ -26,7 +26,7 @@ RUN bazel build \
     # Package Whl
     bazel-bin/build_pip_pkg artifacts $NIGHTLY_FLAG
 
-RUN ls -al wheelhouse/
+RUN ls -al artifacts/
 
 # -------------------------------------------------------------------
 
@@ -36,12 +36,12 @@ ARG TF_VERSION
 
 RUN python -m pip install --default-timeout=1000 tensorflow==$TF_VERSION
 
-COPY --from=make_wheel /deepray/wheelhouse/ /deepray/wheelhouse/
-RUN pip install /deepray/wheelhouse/*.whl
+COPY --from=make_wheel /deepray/artifacts/ /deepray/artifacts/
+RUN pip install /deepray/artifacts/*.whl
 
 RUN python -c "import deepray as dp"
 
 # -------------------------------------------------------------------
 FROM scratch as output
 
-COPY --from=test_wheel_in_fresh_environment /deepray/wheelhouse/ .
+COPY --from=test_wheel_in_fresh_environment /deepray/artifacts/ .
