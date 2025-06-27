@@ -79,7 +79,33 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ runner.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
-          path: wheelhouse
+          path: artifacts
+
+  upload-wheels:
+    name: Publish wheels to PyPi
+    needs: [release-wheel]
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: ['Linux']
+        py-version: ['3.10']
+        tf-version: ['2.15.0']
+        cpu: ['x86']
+      fail-fast: false
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix') || github.event_name == 'release'
+    steps:
+      - uses: actions/download-artifact@v1
+        with:
+          name: ${{ matrix.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
+          path: ./dist
+      - run: |
+          set -e -x
+          ls -la dist/
+          sha256sum dist/*.whl
+      - uses: pypa/gh-action-pypi-publish@v1.1.0
+        with:
+          user: __token__
+          password: ${{ secrets.pypi_token }}
 
   upload-dev-container:
     name: Upload dev container to DockerHub
