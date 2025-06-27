@@ -67,6 +67,9 @@ jobs:
           build-args: |
             PY_VERSION=${{ env.PY_VERSION }}
             TF_VERSION=${{ env.TF_VERSION }}
+            TF_PACKAGE=tensorflow
+            OS_VERSION=22.04
+            CUDA_VERSION=12.2.2
           # Docker layer caching
           cache-from: type=gha,scope=${{ github.workflow }}-${{ github.job }}
           cache-to: type=gha,scope=${{ github.workflow }}-${{ github.job }},mode=max
