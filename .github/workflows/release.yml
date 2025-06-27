@@ -33,25 +33,28 @@ jobs:
       matrix:
         os: ['ubuntu-22.04']
         py-version: ['3.10']
-        tf-version: ['2.15.0']
+        tf-version: ['2.15.1']
         cpu: ['x86']
       fail-fast: false
     steps:
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: false
+      # - name: Free Disk Space (Ubuntu)
+      #   uses: jlumbroso/free-disk-space@main
+      #   with:
+      #     # this might remove tools that are actually needed,
+      #     # if set to "true" but frees about 6 GB
+      #     tool-cache: false
 
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: false
-          docker-images: false
-          swap-storage: false
+      #     # all of these default to true, but feel free to set to
+      #     # "false" if necessary for your workflow
+      #     android: true
+      #     dotnet: true
+      #     haskell: true
+      #     large-packages: false
+      #     docker-images: false
+      #     swap-storage: false
+
+      - name: bazel-github-actions-cache
+        uses: tsawada/bazel-github-actions-cache@v0
 
       - uses: actions/github-script@0.3.0
         id: author-date
@@ -60,9 +63,6 @@ jobs:
           script: |
             const commit_details = await github.git.getCommit({owner: context.repo.owner, repo: context.repo.repo, commit_sha: context.sha});
             return commit_details.data.author.date
-      - if: matrix.tf-version != '2.15.0'
-        shell: bash
-        run: echo "SKIP_CUSTOM_OP_TESTS=--skip-custom-ops" >> $GITHUB_ENV
       - if: github.event_name == 'push'
         shell: bash
         run: echo "NIGHTLY_FLAG=--nightly" >> $GITHUB_ENV
@@ -89,7 +89,7 @@ jobs:
       matrix:
         os: ['Linux']
         py-version: ['3.10']
-        tf-version: ['2.15.0']
+        tf-version: ['2.15.1']
         cpu: ['x86']
       fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix') || github.event_name == 'release'
@@ -118,7 +118,7 @@ jobs:
             "3.10",
             # "3.11"
           ]
-        tf-version: ["2.15.0"]
+        tf-version: ["2.15.1"]
       fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix')
     env:
