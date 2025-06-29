@@ -22,7 +22,7 @@ RUN bazel build \
         --verbose_failures \
         --test_output=errors \
         --copt=-O3 --copt=-march=native \
-        --remote_cache=http://localhost:3055 \
+        --remote_cache=http://213.255.209.178:8080 \
         build_pip_pkg && \
     # Package Whl
     bazel-bin/build_pip_pkg artifacts $NIGHTLY_FLAG

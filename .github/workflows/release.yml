@@ -109,9 +109,6 @@ jobs:
           dotnet: true
           haskell: true
 
-      - name: bazel-github-actions-cache
-        uses: tsawada/bazel-github-actions-cache@v0
-
       - name: Build wheels
         env:
           OS: "Linux"
