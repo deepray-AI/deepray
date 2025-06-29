@@ -109,6 +109,14 @@ jobs:
           dotnet: true
           haskell: true
 
+      - uses: actions/github-script@0.3.0
+        id: author-date
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const commit_details = await github.git.getCommit({owner: context.repo.owner, repo: context.repo.repo, commit_sha: context.sha});
+            return commit_details.data.author.date
+
       - name: Build wheels
         env:
           OS: "Linux"
