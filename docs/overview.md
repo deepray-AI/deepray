@@ -34,11 +34,11 @@ import deepray as dp
 
 #### Nightly Builds
 There are also nightly builds of Deepray under the pip package
-`dp-nightly`, which is built against the latest stable version of TensorFlow. Nightly builds
+`deepray-nightly`, which is built against the latest stable version of TensorFlow. Nightly builds
 include newer features, but may be less stable than the versioned releases.
 
 ```
-pip install dp-nightly
+pip install deepray-nightly
 ```
 
 #### Installing from Source
@@ -46,7 +46,7 @@ You can also install from source. This requires the [Bazel](
 https://bazel.build/) build system.
 
 ```
-git clone https://github.com/tensorflow/deepray.git
+git clone https://github.com/deepray-AI/deepray.git
 cd deepray
 
 # If building GPU Ops (Requires CUDA 10.0 and CuDNN 7)

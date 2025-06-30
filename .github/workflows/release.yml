@@ -121,7 +121,6 @@ jobs:
         env:
           OS: "Linux"
           CPU: "x86"
-          NIGHTLY_FLAG: ${{ (github.event_name == 'push') && '--nightly' || '' }}
           NIGHTLY_TIME: ${{ steps.author-date.outputs.result }}
         shell: bash
         # 构建脚本可能需要调整以在容器内正确运行
