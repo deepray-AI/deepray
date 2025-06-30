@@ -1,378 +1,70 @@
-# TensorFlow Bazel configuration file.
-# This file tries to group and simplify build options for TensorFlow
-#
-# ----CONFIG OPTIONS----
-# Macosx options
-#     darwin_arm64:
-#
-# Compiler options:
-#     cuda_clang:             Use Clang when building CUDA code.
-#     avx_linux:              Build with avx instruction set on linux.
-#     avx_win:                Build with avx instruction set on windows
-#
-# Other build options:
-#     short_logs:       Only log errors during build, skip warnings.
-#     verbose_logs:     Show all compiler warnings during build.
-#     monolithic:       Build all TF C++ code into a single shared object.
-#     dynamic_kernels:  Try to link all kernels dynamically (experimental).
-#     dbg:              Build with debug info
-#
-# Feature and Third party library support options:
-#     xla:          Build TF with XLA
-#     tpu:          Build TF with TPU support
-#     cuda:         Build with CUDA support.
-#     cuda_clang    Build with CUDA Clang support.
-#     rocm:         Build with AMD GPU support (rocm)
-#     mkl:          Enable full mkl support.
-#     tensorrt:     Enable Tensorrt support.
-#     noaws:        Disable AWS S3 storage support
-#     nogcp:        Disable GCS support.
-#     nohdfs:       Disable hadoop hdfs support.
-#     nonccl:       Disable nccl support.
-#
-#
-# Remote build execution options (only configured to work with TF team projects for now.)
-#     rbe_base:  General RBE options shared by all flavors.
-#     rbe_linux: General RBE options used on all linux builds.
-#     rbe_win:   General RBE options used on all windows builds.
-#
-#     rbe_linux_cpu:                  RBE options to build with only CPU support.
-#     rbe_linux_cuda:                 RBE options to build with GPU support using clang.
-#     rbe_linux_cuda_nvcc:            RBE options to build with GPU support using nvcc.
-#
-#     rbe_win_py39: Windows Python 3.9 RBE config
-#
-#     tensorflow_testing_rbe_win:   RBE options to use RBE with tensorflow-testing project on windows
-#
-# Release build options (for all operating systems)
-#     release_base:                    Common options for all builds on all operating systems.
-#     release_cpu_linux:               Toolchain and CUDA options for Linux CPU builds.
-#     release_gpu_linux:               Toolchain and CUDA options for Linux GPU builds.
-#     release_cpu_macos:               Toolchain and CUDA options for MacOS CPU builds.
-#     release_cpu_windows:             Toolchain and CUDA options for Windows CPU builds.
-
-# Default build options. These are applied first and unconditionally.
-
-# For projects which use TensorFlow as part of a Bazel build process, putting
-# nothing in a bazelrc will default to a monolithic build. The following line
-# opts in to modular op registration support by default.
-build --define framework_shared_object=true
-build --define tsl_protobuf_header_only=true
-
-build --define=use_fast_cpp_protos=true
-build --define=allow_oversize_protos=true
-
-build --spawn_strategy=standalone
-build -c opt
-
+# #############################################################################
+# All default build options below. These apply to all build commands.
+# #############################################################################
 # Make Bazel print out all options from rc files.
 build --announce_rc
 
-# TODO(mihaimaruseac): Document this option or remove if no longer needed
-build --define=grpc_no_ares=true
+# Prevent invalid caching if input files are modified during a build.
+build --experimental_guard_against_concurrent_changes
 
-# See https://github.com/bazelbuild/bazel/issues/7362 for information on what
-# --incompatible_remove_legacy_whole_archive flag does.
-# This flag is set to true in Bazel 1.0 and newer versions. We tried to migrate
-# Tensorflow to the default, however test coverage wasn't enough to catch the
-# errors.
-# There is ongoing work on Bazel team's side to provide support for transitive
-# shared libraries. As part of migrating to transitive shared libraries, we
-# hope to provide a better mechanism for control over symbol exporting, and
-# then tackle this issue again.
-#
-# TODO: Remove the following two lines once TF doesn't depend on Bazel wrapping
-# all library archives in -whole_archive -no_whole_archive.
-build --noincompatible_remove_legacy_whole_archive
-build --features=-force_no_whole_archive
+# Allow up to 10 Mb of logging
+build --experimental_ui_max_stdouterr_bytes=10485760
 
-# TODO(mihaimaruseac): Document this option or remove if no longer needed
-build --enable_platform_specific_config
+# By default, build Deepray in C++ 17 mode.
+build --cxxopt=-std=c++17
+build --host_cxxopt=-std=c++17
 
-# Enable XLA support by default.
-build --define=with_xla_support=true
+# Disable clang extention that rejects type definitions within offsetof.
+# This was added in clang-16 by https://reviews.llvm.org/D133574.
+# Can be removed once upb is updated, since a type definition is used within
+# offset of in the current version of ubp.
+# See https://github.com/protocolbuffers/upb/blob/9effcbcb27f0a665f9f345030188c0b291e32482/upb/upb.c#L183.
+build:clang --copt=-Wno-gnu-offsetof-extensions
+# Disable clang extention that rejects unknown arguments.
+build:clang --copt=-Qunused-arguments
+# Error on struct/class mismatches, since this causes link failures on Windows.
+build:clang --copt=-Werror=mismatched-tags
 
-# TODO(mihaimaruseac): Document this option or remove if no longer needed
-build --config=short_logs
-
-# Disable AWS/HDFS support by default
-build --define=no_aws_support=true
-build --define=no_hdfs_support=true
-
-# TF now has `cc_shared_library` targets, so it needs the experimental flag
-# TODO(rostam): Remove when `cc_shared_library` is enabled by default
-build --experimental_cc_shared_library
-
-# cc_shared_library ensures no library is linked statically more than once.
-build --experimental_link_static_libraries_once=false
-
-# Prevent regressions on those two incompatible changes
-# TODO: remove those flags when they are flipped in the default Bazel version TF uses.
-build --incompatible_enforce_config_setting_visibility
-# TODO: also enable this flag after fixing the visbility violations
-# build --incompatible_config_setting_private_default_visibility
-
-# Default options should come above this line.
-
-# Sets the default Apple platform to macOS.
-build:macos --apple_platform_type=macos
-
-# gRPC on MacOS requires this #define
-build:macos --copt=-DGRPC_BAZEL_BUILD
-
-# Avoid hitting command line argument limit
-build:macos --features=archive_param_file
-
-# Settings for MacOS on ARM CPUs.
-build:macos_arm64 --cpu=darwin_arm64
-build:macos_arm64 --macos_minimum_os=11.0
-
-# Config to use a mostly-static build and disable modular op registration
-# support (this will revert to loading TensorFlow with RTLD_GLOBAL in Python).
-# By default, TensorFlow will build with a dependence on
-# //tensorflow:libtensorflow_framework.so.
-build:monolithic --define framework_shared_object=false
-build:monolithic --define tsl_protobuf_header_only=false
-build:monolithic --experimental_link_static_libraries_once=false # b/229868128
-
-# Please note that MKL on MacOS is still not supported.
-# If you would like to use a local MKL instead of downloading, please set the
-# environment variable "TF_MKL_ROOT" every time before build.
-build:mkl --define=build_with_mkl=true --define=enable_mkl=true
-build:mkl --define=tensorflow_mkldnn_contraction_kernel=0
-build:mkl --define=build_with_openmp=true
-build:mkl -c opt
-
-# config to build OneDNN backend with a user specified threadpool.
-build:mkl_threadpool --define=build_with_mkl=true --define=enable_mkl=true
-build:mkl_threadpool --define=tensorflow_mkldnn_contraction_kernel=0
-build:mkl_threadpool --define=build_with_mkl_opensource=true
-build:mkl_threadpool -c opt
-
-# Config setting to build oneDNN with Compute Library for the Arm Architecture (ACL).
-build:mkl_aarch64 --define=build_with_mkl_aarch64=true
-build:mkl_aarch64 --define=build_with_openmp=true
-build:mkl_aarch64 --define=build_with_acl=true
-build:mkl_aarch64 -c opt
-
-# Config setting to build oneDNN with Compute Library for the Arm Architecture (ACL).
-# with Eigen threadpool support
-build:mkl_aarch64_threadpool --define=build_with_mkl_aarch64=true
-build:mkl_aarch64_threadpool -c opt
-
+# Configs for CUDA
 # CUDA: This config refers to building CUDA op kernels with nvcc.
 build:cuda --repo_env TF_NEED_CUDA=1
+build:cuda --repo_env TF_NCCL_USE_STUB=1
 build:cuda --crosstool_top=@local_config_cuda//crosstool:toolchain
 build:cuda --@local_config_cuda//:enable_cuda
-
-# CUDA: This config refers to building CUDA op kernels with clang.
-build:cuda_clang --config=cuda
-# Enable TensorRT optimizations https://developer.nvidia.com/tensorrt
-build:cuda_clang --config=tensorrt
-build:cuda_clang --action_env=TF_CUDA_CLANG="1"
-build:cuda_clang --@local_config_cuda//:cuda_compiler=clang
 # Select supported compute capabilities (supported graphics cards).
 # This is the same as the official TensorFlow builds.
 # See https://developer.nvidia.com/cuda-gpus#compute
-# `compute_XY` enables PTX embedding in addition to SASS. PTX
-# is forward compatible beyond the current compute capability major
-# release while SASS is only forward compatible inside the current
-# major release. Example: sm_80 kernels can run on sm_89 GPUs but
-# not on sm_90 GPUs. compute_80 kernels though can also run on sm_90 GPUs.
-build:cuda_clang --repo_env=TF_CUDA_COMPUTE_CAPABILITIES="sm_50,sm_60,sm_70,sm_80,compute_90"
+# "sm" means we emit only cubin, which is forward compatible within a GPU generation.
+# "compute" means we emit both cubin and PTX, which is larger but also forward compatible to future GPU generations.
+build:cuda --repo_env HERMETIC_CUDA_COMPUTE_CAPABILITIES="sm_50,sm_60,sm_70,sm_80,compute_90"
+# Default hermetic CUDA and CUDNN versions.
+build:cuda --repo_env=HERMETIC_CUDA_VERSION="12.3.2"
+build:cuda --repo_env=HERMETIC_CUDNN_VERSION="9.1.1"
+# This flag is needed to include CUDA libraries.
+build:cuda --@local_config_cuda//cuda:include_cuda_libs=true
 
-# Set up compilation CUDA version and paths and use the CUDA Clang toolchain.
-build:cuda_clang_official --config=cuda_clang
-build:cuda_clang_official --action_env=TF_CUDA_VERSION="12"
-build:cuda_clang_official --action_env=TF_CUDNN_VERSION="8"
-build:cuda_clang_official --action_env=CUDA_TOOLKIT_PATH="/usr/local/cuda-12.2"
-build:cuda_clang_official --action_env=GCC_HOST_COMPILER_PATH="/dt9/usr/bin/gcc"
-build:cuda_clang_official --action_env=CLANG_CUDA_COMPILER_PATH="/usr/lib/llvm-17/bin/clang"
-build:cuda_clang_official --action_env=LD_LIBRARY_PATH="/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64"
-build:cuda_clang_official --crosstool_top="@sigbuild-r2.16-clang_config_cuda//crosstool:toolchain"
+# CUDA: This config refers to building CUDA op kernels with clang.
+build:cuda_clang --config=cuda
+build:cuda_clang --@local_config_cuda//:cuda_compiler=clang
+build:cuda_clang --copt=-Qunused-arguments
+# Permit newer CUDA versions than Clang is aware of
+build:cuda_clang --copt="-Wno-unknown-cuda-version"
+# Set lld as the linker.
+build:cuda_clang --host_linkopt="-fuse-ld=lld"
+build:cuda_clang --host_linkopt="-lm"
+build:cuda_clang --linkopt="-fuse-ld=lld"
+build:cuda_clang --linkopt="-lm"
 
-# Debug config
-build:dbg -c dbg
-# Only include debug info for files under tensorflow/, excluding kernels, to
-# reduce the size of the debug info in the binary. This is because if the debug
-# sections in the ELF binary are too large, errors can occur. See
-# https://github.com/tensorflow/tensorflow/issues/48919.
-# Users can still include debug info for a specific kernel, e.g. with:
-#     --config=dbg --per_file_copt=+tensorflow/core/kernels/identity_op.*@-g
-# Since this .bazelrc file is synced between the tensorflow/tensorflow repo and
-# the openxla/xla repo, also include debug info for files under xla/.
-build:dbg --per_file_copt=+.*,-tensorflow.*,-xla.*@-g0
-build:dbg --per_file_copt=+tensorflow/core/kernels.*@-g0
-# for now, disable arm_neon. see: https://github.com/tensorflow/tensorflow/issues/33360
-build:dbg --cxxopt -DTF_LITE_DISABLE_X86_NEON
-# AWS SDK must be compiled in release mode. see: https://github.com/tensorflow/tensorflow/issues/37498
-build:dbg --copt -DDEBUG_BUILD
-
-# Config to build TF TPU
-build:tpu --define=with_tpu_support=true
-build:tpu --define=framework_shared_object=true
-build:tpu --copt=-DLIBTPU_ON_GCE
-build:tpu --define=enable_mlir_bridge=true
-
-build:tensorrt --repo_env TF_NEED_TENSORRT=1
-
-build:rocm --crosstool_top=@local_config_rocm//crosstool:toolchain
-build:rocm --define=using_rocm_hipcc=true
-build:rocm --define=tensorflow_mkldnn_contraction_kernel=0
-build:rocm --repo_env TF_NEED_ROCM=1
-
-# Options to disable default on features
-build:noaws --define=no_aws_support=true
-build:nogcp --define=no_gcp_support=true
-build:nohdfs --define=no_hdfs_support=true
-build:nonccl --define=no_nccl_support=true
-
-# Modular TF build options
-build:dynamic_kernels --define=dynamic_loaded_kernels=true
-build:dynamic_kernels --copt=-DAUTOLOAD_DYNAMIC_KERNELS
-
-# Don't trigger --config=<host platform> when cross-compiling.
-build:android --noenable_platform_specific_config
-build:ios --noenable_platform_specific_config
-
-# Suppress all C++ compiler warnings, otherwise build logs become 10s of MBs.
-build:android --copt=-w
-build:ios --copt=-w
-build:linux --host_copt=-w
-build:macos --copt=-w
-build:windows --copt=/W0
-build:windows --host_copt=/W0
-
-# Linux ARM64 specific options
-build:linux_arm64 --copt="-mtune=generic" --copt="-march=armv8-a" --copt="-O3"
-
-# On Windows, `__cplusplus` is wrongly defined without this switch
-# See https://devblogs.microsoft.com/cppblog/msvc-now-correctly-reports-__cplusplus/
-build:windows --copt=/Zc:__cplusplus
-build:windows --host_copt=/Zc:__cplusplus
-
-# Tensorflow uses M_* math constants that only get defined by MSVC headers if
-# _USE_MATH_DEFINES is defined.
-build:windows --copt=/D_USE_MATH_DEFINES
-build:windows --host_copt=/D_USE_MATH_DEFINES
-
-# Windows has a relatively short command line limit, which TF has begun to hit.
-# See https://docs.bazel.build/versions/main/windows.html
-build:windows --features=compiler_param_file
-build:windows --features=archive_param_file
-
-# Speed Windows compile times. Available in VS 16.4 (we are on 16.11). See
-# https://groups.google.com/a/tensorflow.org/d/topic/build/SsW98Eo7l3o/discussion
-build:windows --copt=/d2ReducedOptimizeHugeFunctions
-build:windows --host_copt=/d2ReducedOptimizeHugeFunctions
-
-# Enable the runfiles symlink tree on Windows. This makes it possible to build
-# the pip package on Windows without an intermediate data-file archive, as the
-# build_pip_package script in its current form (as of Aug 2023) uses the
-# runfiles symlink tree to decide what to put into the Python wheel.
-startup --windows_enable_symlinks
-build:windows --enable_runfiles
-
-# Default paths for TF_SYSTEM_LIBS
-build:linux --define=PREFIX=/usr
-build:linux --define=LIBDIR=$(PREFIX)/lib
-build:linux --define=INCLUDEDIR=$(PREFIX)/include
-build:linux --define=PROTOBUF_INCLUDE_PATH=$(PREFIX)/include
-build:macos --define=PREFIX=/usr
-build:macos --define=LIBDIR=$(PREFIX)/lib
-build:macos --define=INCLUDEDIR=$(PREFIX)/include
-build:macos --define=PROTOBUF_INCLUDE_PATH=$(PREFIX)/include
-# TF_SYSTEM_LIBS do not work on windows.
-
-# By default, build TF in C++ 17 mode.
-build:android --cxxopt=-std=c++17
-build:android --host_cxxopt=-std=c++17
-build:ios --cxxopt=-std=c++17
-build:ios --host_cxxopt=-std=c++17
-build:linux --cxxopt=-std=c++17
-build:linux --host_cxxopt=-std=c++17
-build:macos --cxxopt=-std=c++17
-build:macos --host_cxxopt=-std=c++17
-build:windows --cxxopt=/std:c++17
-build:windows --host_cxxopt=/std:c++17
-
-# On windows, we still link everything into a single DLL.
-build:windows --config=monolithic
-
-# On linux, we dynamically link small amount of kernels
-build:linux --config=dynamic_kernels
-
-# Make sure to include as little of windows.h as possible
-build:windows --copt=-DWIN32_LEAN_AND_MEAN
-build:windows --host_copt=-DWIN32_LEAN_AND_MEAN
-build:windows --copt=-DNOGDI
-build:windows --host_copt=-DNOGDI
-
-# MSVC (Windows): Standards-conformant preprocessor mode
-# See https://docs.microsoft.com/en-us/cpp/preprocessor/preprocessor-experimental-overview
-build:windows --copt=/Zc:preprocessor
-build:windows --host_copt=/Zc:preprocessor
-
-# Misc build options we need for windows.
-build:windows --linkopt=/DEBUG
-build:windows --host_linkopt=/DEBUG
-build:windows --linkopt=/OPT:REF
-build:windows --host_linkopt=/OPT:REF
-build:windows --linkopt=/OPT:ICF
-build:windows --host_linkopt=/OPT:ICF
-
-# Verbose failure logs when something goes wrong
-build:windows --verbose_failures
-
-# Work around potential issues with large command lines on windows.
-# See: https://github.com/bazelbuild/bazel/issues/5163
-build:windows --features=compiler_param_file
-
-# Do not risk cache corruption. See:
-# https://github.com/bazelbuild/bazel/issues/3360
-build:linux --experimental_guard_against_concurrent_changes
-
-# Configure short or long logs
-build:short_logs --output_filter=DONT_MATCH_ANYTHING
-build:verbose_logs --output_filter=
-
-# Instruction set optimizations
-# TODO(gunan): Create a feature in toolchains for avx/avx2 to
-#   avoid having to define linux/win separately.
-build:avx_linux --copt=-mavx
-build:avx_linux --host_copt=-mavx
-build:avx_win --copt=/arch:AVX
-
-# Disable XLA on mobile.
-build:xla --define=with_xla_support=true # TODO: remove, it's on by default.
-build:android --define=with_xla_support=false
-build:ios --define=with_xla_support=false
-
-# BEGIN TF REMOTE BUILD EXECUTION OPTIONS
-# Options when using remote execution
-# WARNING: THESE OPTIONS WONT WORK IF YOU DO NOT HAVE PROPER AUTHENTICATION AND PERMISSIONS
-
-# Allow creation of resultstore URLs for any bazel invocation
-build:resultstore --google_default_credentials
-build:resultstore --bes_backend=buildeventservice.googleapis.com
-build:resultstore --bes_instance_name="tensorflow-testing"
-build:resultstore --bes_results_url="https://source.cloud.google.com/results/invocations"
-build:resultstore --bes_timeout=600s
+# Build with nvcc for CUDA and clang for host
+build:cuda_nvcc --config=cuda
+build:cuda_nvcc --action_env=TF_NVCC_CLANG="1"
+build:cuda_nvcc --@local_config_cuda//:cuda_compiler=nvcc
 
 # Flag to enable remote config
 common --experimental_repo_remote_exec
 
-# TODO(kanglan): Merge tensorflow_testing_rbe_win into rbe_win
-common:tensorflow_testing_rbe_win --remote_instance_name=projects/tensorflow-testing/instances/windows
-# END TF REMOTE BUILD EXECUTION OPTIONS
-
-# Config-specific options should come above this line.
-
-# Load rc file written by ./configure.
+# Options from ./configure
 try-import %workspace%/.dp_configure.bazelrc
 
-# Load rc file with user-specific options.
+# Put user-specific options in .bazelrc.user
 try-import %workspace%/.bazelrc.user
-
-# Bazel build cache
-# build --remote_cache=http://localhost:7070

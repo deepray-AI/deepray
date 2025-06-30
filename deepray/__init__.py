@@ -37,7 +37,6 @@ from deepray.utils import types
 from deepray.utils.ensure_tf_install import _check_tf_version
 from deepray.utils.flags import common_flags
 from deepray.version import __version__
-from deepray.utils import gpu_affinity
 
 # _check_tf_version()
 
@@ -59,6 +58,8 @@ def init():
 
     hvd.init()
     if gpus:
+      from deepray.utils import gpu_affinity
+
       tf.config.experimental.set_visible_devices(gpus[hvd.local_rank()], "GPU")
       gpu_affinity.set_affinity(hvd.local_rank())
 

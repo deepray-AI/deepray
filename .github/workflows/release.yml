@@ -8,94 +8,106 @@ on:
   push:
     branches:
       - main
+      - master
       - r*
+      - hotfix
   pull_request:
     branches:
       - main
+      - master
       - r*
+      - hotfix
+
+permissions:
+  contents: read
+  packages: write # 为 artifact actions 添加写权限
 
 env:
-  MIN_PY_VERSION: "3.8"
-  MAX_PY_VERSION: "3.10"
+  MIN_PY_VERSION: '3.9'
+  MAX_PY_VERSION: '3.11'
+  DOCKER_IMAGE_BASE: hailinfufu/deepray-dev # 定义镜像名称为全局变量
 
 jobs:
-  # test-with-bazel:
-  #   name: Test with bazel
-  #   runs-on: ubuntu-20.04
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: actions/setup-python@v2
-  #       with:
-  #         python-version: ${{ env.MIN_PY_VERSION }}
-
-  #     - name: Bazel cache
-  #       id: bazel-cache
-  #       uses: actions/cache@v2
-  #       env:
-  #         version: 4.2.1
-  #       with:
-  #         path: |
-  #           ~/.cache/bazel
-  #         key: ${{ runner.os }}-{{ env.version }}-bazel-cache
-
-  #     - name: Install bazelisk
-  #       run: |
-  #         curl -LO "https://github.com/bazelbuild/bazelisk/releases/download/v1.1.0/bazelisk-linux-amd64"
-  #         mkdir -p "${GITHUB_WORKSPACE}/bin/"
-  #         mv bazelisk-linux-amd64 "${GITHUB_WORKSPACE}/bin/bazel"
-  #         chmod +x "${GITHUB_WORKSPACE}/bin/bazel"
-
-  #     - name: Build wheels
-  #       run: |
-  #         pip install --default-timeout=1000 -r tools/install_deps/pytest.txt -r tools/install_deps/tensorflow-cpu.txt -r requirements.txt
-  #         python configure.py
-  #         bazel test -k --test_timeout 300,450,1200,3600 --test_output=errors //deepray/...
-  release-wheel:
-    name: Test and build release wheels
-    runs-on: ${{ matrix.os }}
+  # 第一步：构建并上传开发容器，同时输出完整的镜像标签
+  build-and-upload-container:
+    name: Build and Upload Dev Container
+    runs-on: ubuntu-22.04
+    # 仅在 hotfix 分支的 push 事件时运行
+    if: github.event_name == 'push' && github.ref == 'refs/heads/hotfix'
     strategy:
       matrix:
-        # To switch on windows-2022/latest, please verify the bazel version:
-        # https://github.com/bazelbuild/bazel/issues/14232#issuecomment-1011247429
-        os: ["ubuntu-20.04"]
-        py-version: [
-            "3.8",
-            # "3.9",
-            # "3.10",
-            # "3.11"
-          ]
-        tf-version: ["2.9.1"]
-        cpu: ["x86"]
-        # include:
-        #   - os: 'macos-12'
-        #     cpu: 'arm64'
-        #     tf-version: '2.9.3'
-        #     py-version: '3.8'
-        #   - os: 'macos-12'
-        #     cpu: 'arm64'
-        #     tf-version: '2.9.3'
-        #     py-version: '3.9'
-        #   - os: 'macos-12'
-        #     cpu: 'arm64'
-        #     tf-version: '2.9.3'
-        #     py-version: '3.10'
+        py-version: ["3.10"]
+        tf-version: ["2.15.1"] # 构建 wheel 时通常针对一个确定的 TF 版本
       fail-fast: false
+    outputs:
+      # 声明此作业将输出一个名为 image_tag 的变量
+      image_tag: ${{ steps.set_image_tag.outputs.image_tag }}
+
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
           tool-cache: false
-
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
           android: true
           dotnet: true
           haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build and push Docker image with cache
+        id: build_image # 给此步骤一个 id 以便在日志中识别
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tools/docker/dev_container.Dockerfile
+          push: true
+          tags: ${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
+          build-args: |
+            PY_VERSION=${{ matrix.py-version }}
+            TF_VERSION=${{ matrix.tf-version }}
+            TF_PACKAGE=tensorflow
+            OS_VERSION=22.04
+            CUDA_VERSION=12.2.2
+          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
+          cache-to: type=inline
+
+      - name: Set Image Tag Output
+        id: set_image_tag # 给此步骤 id，以便在 outputs 中引用
+        run: |
+          TAG="${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04"
+          echo "image_tag=$TAG" >> $GITHUB_OUTPUT
+
+  # 第二步：在刚刚构建的容器内构建 Wheels
+  build-wheels-in-container:
+    name: Build Release Wheels in Container
+    needs: [build-and-upload-container] # 依赖上一个 Job
+    runs-on: ubuntu-22.04
+    container:
+      # 使用上一个 Job 构建的容器
+      image: ${{ needs.build-and-upload-container.outputs.image_tag }}
+      options: --gpus all # 如果构建需要 GPU
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
 
       - uses: actions/github-script@0.3.0
         id: author-date
@@ -104,116 +116,44 @@ jobs:
           script: |
             const commit_details = await github.git.getCommit({owner: context.repo.owner, repo: context.repo.repo, commit_sha: context.sha});
             return commit_details.data.author.date
-      - if: matrix.tf-version != '2.9.3'
-        shell: bash
-        run: echo "SKIP_CUSTOM_OP_TESTS=--skip-custom-ops" >> $GITHUB_ENV
-      - if: github.event_name == 'push'
-        shell: bash
-        run: echo "NIGHTLY_FLAG=--nightly" >> $GITHUB_ENV
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.py-version }}
-      - if: matrix.os != 'ubuntu-20.04'
-        name: Setup Bazel
-        # Ubuntu bazel is run inside of the docker image
-        run: bash tools/install_deps/install_bazelisk.sh ./
-      - if: matrix.py-version != '3.11' || matrix.tf-version == '2.9.3'
-        name: Build wheels
-        env:
-          OS: ${{ runner.os }}
-          PY_VERSION: ${{ matrix.py-version }}
-          TF_VERSION: ${{ matrix.tf-version }}
-          NIGHTLY_TIME: ${{ steps.author-date.outputs.result }}
-          CPU: ${{ matrix.cpu }}
-        shell: bash
-        run: bash .github/workflows/make_wheel_${OS}_${CPU}.sh
-      - if: matrix.py-version != '3.11' || matrix.tf-version == '2.9.3'
-        uses: actions/upload-artifact@v1
-        with:
-          name: ${{ runner.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
-          path: wheelhouse
 
+      - name: Build wheels
+        env:
+          OS: "Linux"
+          CPU: "x86"
+          NIGHTLY_TIME: ${{ steps.author-date.outputs.result }}
+        shell: bash
+        # 构建脚本可能需要调整以在容器内正确运行
+        run: bash .github/workflows/make_wheel_Linux_x86.sh
+
+      - name: Upload wheels as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-x86-wheel
+          path: artifacts/
+
+  # 第三步：发布 Wheels 到 PyPI
   upload-wheels:
     name: Publish wheels to PyPi
-    needs: [
-        release-wheel,
-        #  test-with-bazel
-      ]
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        os: ["Linux"]
-        py-version: [
-            "3.8",
-            "3.9",
-            "3.10",
-            # "3.11"
-          ]
-        tf-version: ["2.9.1"]
-        cpu: ["x86"]
-        # include:
-        #   - os: 'macOS'
-        #     cpu: 'arm64'
-        #     tf-version: '2.9.3'
-        #     py-version: '3.8'
-        #   - os: 'macOS'
-        #     cpu: 'arm64'
-        #     tf-version: '2.9.3'
-        #     py-version: '3.9'
-        #   - os: 'macOS'
-        #     cpu: 'arm64'
-        #     tf-version: '2.9.3'
-        #     py-version: '3.10'
-      fail-fast: false
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'release'
+    needs: [build-wheels-in-container] # 依赖 wheel 构建 Job
+    runs-on: ubuntu-22.04
+    # 定义发布的触发条件
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix') || github.event_name == 'release'
     steps:
-      - uses: actions/download-artifact@v1
+      - name: Download wheels artifact
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
+          name: linux-x86-wheel
           path: ./dist
-      - run: |
-          set -e -x
+
+      - name: Verify downloaded files
+        run: |
           ls -la dist/
           sha256sum dist/*.whl
-      - uses: pypa/gh-action-pypi-publish@v1.1.0
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.9.0
         with:
           user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
-
-  upload-release-container:
-    name: Upload release container to DockerHub
-    needs: [
-        release-wheel,
-        # test-with-bazel
-      ]
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        py-version: [
-            "3.8",
-            "3.9",
-            "3.10",
-            # "3.11"
-          ]
-        tf-version: ["2.9.3"]
-      fail-fast: false
-
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-        env:
-          PY_VERSION: ${{ matrix.py-version }}
-          TF_VERSION: ${{ matrix.tf-version }}
-
-      - run: |
-          set -e -x
-          bash tools/build_base_container.sh ${PY_VERSION} ${TF_VERSION}
-          docker push hailinfufu/deepray-release:latest-py${PY_VERSION}-tf${TF_VERSION}-cu116-ubuntu20.04
+          password: ${{ secrets.pypi_token }}
+          
