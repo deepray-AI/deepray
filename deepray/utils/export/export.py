@@ -24,7 +24,6 @@ import re
 import tempfile
 from typing import Optional, Union, Dict, Text, List
 
-import horovod.tensorflow as hvd
 import tensorflow as tf
 from absl import flags
 from packaging.version import parse
@@ -125,6 +124,8 @@ def export_to_savedmodel(
 
   if flags.FLAGS.use_dynamic_embedding and flags.FLAGS.use_horovod:
     try:
+      import horovod.tensorflow as hvd
+
       rank_array = hvd.allgather_object(get_rank(), name="check_tfra_ranks")
       assert len(set(rank_array)) == get_world_size()
     except:

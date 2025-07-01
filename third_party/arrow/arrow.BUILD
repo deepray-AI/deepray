@@ -28,7 +28,7 @@ cmake(
         # "ARROW_JEMALLOC": "ON",
         # "ARROW_JEMALLOC_INCLUDE_DIR": "$EXT_BUILD_DEPS/jemalloc",
         "ARROW_IPC": "ON",
-        "ARROW_DEPENDENCY_SOURCE": "AUTO",  # TODO: Use SYSTEM provided deps
+        "ARROW_DEPENDENCY_SOURCE": "BUNDLED",  # TODO: Use SYSTEM provided deps
         "ARROW_WITH_SNAPPY": "ON",
         "ARROW_WITH_ZSTD": "ON",
         "ARROW_WITH_BZ2": "ON",

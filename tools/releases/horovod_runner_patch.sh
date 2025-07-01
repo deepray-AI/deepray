@@ -17,7 +17,5 @@
 set -e -x
 
 SITE_PKG_LOCATION=$(python -c "import site; print(site.getsitepackages()[0])")
-TF_SHARED_LIBRARY_NAME=$(grep -r TF_SHARED_LIBRARY_NAME .dp_configure.bazelrc | awk -F= '{print$2}')
-TF_SHARED_CC_LIBRARY_NAME=$(grep -r TF_SHARED_CC_LIBRARY_NAME .dp_configure.bazelrc | awk -F= '{print$2}')
-POLICY_JSON="${SITE_PKG_LOCATION}/auditwheel/policy/manylinux-policy.json"
-sed -i "s/libresolv.so.2\"/libresolv.so.2\", $TF_SHARED_LIBRARY_NAME, $TF_SHARED_CC_LIBRARY_NAME/g" $POLICY_JSON
+sed -i "s/\(command = \[executable, '-m', 'horovod.runner.run_task', str(driver_ip), str(run_func_server_port)\]\)/\1 + sys.argv[1:]/" ${SITE_PKG_LOCATION}/horovod/runner/launch.py
+sed -i 's/sys.argv/sys.argv[:3]/g' ${SITE_PKG_LOCATION}/horovod/runner/run_task.py

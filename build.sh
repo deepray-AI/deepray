@@ -8,12 +8,18 @@ bazel build build_pip_pkg \
     --copt=-O3 --copt=-march=native \
     -s
 
-rm -rf artifacts/
+rm -rf artifacts/ wheelhouse/
 
 bazel-bin/build_pip_pkg artifacts
 
+pip install --force-reinstall auditwheel
+bash tools/releases/tf_auditwheel_patch.sh
+
+python -m auditwheel repair --plat manylinux2014_x86_64 artifacts/*.whl
+ls -al wheelhouse/
+
 pip uninstall deepray -y
 
-pip install artifacts/deepray-*.whl
+pip install wheelhouse/deepray-*.whl
 
 # sphinx-autobuild docs/ docs/_build/html/ --host 10.0.74.1

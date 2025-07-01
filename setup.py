@@ -51,7 +51,7 @@ def get_project_name_version():
 
   project_name = "deepray"
   if "--nightly" in sys.argv:
-    project_name = "dp-nightly"
+    project_name = "deepray-nightly"
     version["__version__"] += get_last_commit_time()
     sys.argv.remove("--nightly")
 
