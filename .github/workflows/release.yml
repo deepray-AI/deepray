@@ -20,27 +20,27 @@ on:
 
 permissions:
   contents: read
-  packages: write # 为 artifact actions 添加写权限
+  packages: write
 
 env:
   MIN_PY_VERSION: '3.9'
   MAX_PY_VERSION: '3.11'
-  DOCKER_IMAGE_BASE: hailinfufu/deepray-dev # 定义镜像名称为全局变量
 
 jobs:
-  # 第一步：构建并上传开发容器，同时输出完整的镜像标签
   build-and-upload-container:
     name: Build and Upload Dev Container
     runs-on: ubuntu-22.04
-    # 仅在 hotfix 分支的 push 事件时运行
-    if: github.event_name == 'push' && github.ref == 'refs/heads/hotfix'
     strategy:
       matrix:
         py-version: ["3.10"]
-        tf-version: ["2.15.1"] # 构建 wheel 时通常针对一个确定的 TF 版本
+        tf-version: ["2.15.0", "2.15.1"]
       fail-fast: false
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix')
+    env:
+      PY_VERSION: ${{ matrix.py-version }}
+      TF_VERSION: ${{ matrix.tf-version }}
+      IMAGE_NAME: hailinfufu/deepray-dev
     outputs:
-      # 声明此作业将输出一个名为 image_tag 的变量
       image_tag: ${{ steps.set_image_tag.outputs.image_tag }}
 
     steps:
@@ -50,10 +50,18 @@ jobs:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
           tool-cache: false
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
           android: true
           dotnet: true
           haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -65,47 +73,56 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
       - name: Build and push Docker image with cache
-        id: build_image # 给此步骤一个 id 以便在日志中识别
+        id: build_image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: tools/docker/dev_container.Dockerfile
           push: true
-          tags: ${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}
+          tags: ${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}
           build-args: |
-            PY_VERSION=${{ matrix.py-version }}
-            TF_VERSION=${{ matrix.tf-version }}
+            PY_VERSION=${{ env.PY_VERSION }}
+            TF_VERSION=${{ env.TF_VERSION }}
             TF_PACKAGE=tensorflow
-          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}
+            OS_VERSION=22.04
+            CUDA_VERSION=12.2.2
+          # Docker layer caching
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}
           cache-to: type=inline
-
+      
       - name: Set Image Tag Output
-        id: set_image_tag # 给此步骤 id，以便在 outputs 中引用
+        id: set_image_tag
         run: |
-          TAG="${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}"
+          TAG="${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}"
           echo "image_tag=$TAG" >> $GITHUB_OUTPUT
 
-  # 第二步：在刚刚构建的容器内构建 Wheels
-  build-wheels-in-container:
+  release-wheel:
     name: Build Release Wheels in Container
-    needs: [build-and-upload-container] # 依赖上一个 Job
-    runs-on: ubuntu-22.04
-    container:
-      # 使用上一个 Job 构建的容器
-      image: ${{ needs.build-and-upload-container.outputs.image_tag }}
-      options: --gpus all # 如果构建需要 GPU
-
+    needs: [build-and-upload-container]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ['ubuntu-22.04']
+        py-version: ['3.10']
+        tf-version: ['2.15.1']
+        cpu: ['x86']
+      fail-fast: false
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
           tool-cache: false
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
           android: true
           dotnet: true
           haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
 
       - uses: actions/github-script@0.3.0
         id: author-date
@@ -115,37 +132,45 @@ jobs:
             const commit_details = await github.git.getCommit({owner: context.repo.owner, repo: context.repo.repo, commit_sha: context.sha});
             return commit_details.data.author.date
 
+      - uses: actions/checkout@v4
       - name: Build wheels
         env:
-          OS: "Linux"
-          CPU: "x86"
+          OS: ${{ runner.os }}
+          PY_VERSION: ${{ matrix.py-version }}
+          TF_VERSION: ${{ matrix.tf-version }}
           NIGHTLY_TIME: ${{ steps.author-date.outputs.result }}
+          CPU: ${{ matrix.cpu }}
         shell: bash
-        # 构建脚本可能需要调整以在容器内正确运行
-        run: bash .github/workflows/make_wheel_Linux_x86.sh
-
+        run: bash .github/workflows/make_wheel_${OS}_${CPU}.sh
+      
       - name: Upload wheels as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: linux-x86-wheel
+          name: ${{ runner.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
           path: wheelhouse/
 
-  # 第三步：发布 Wheels 到 PyPI
   upload-wheels:
     name: Publish wheels to PyPi
-    needs: [build-wheels-in-container] # 依赖 wheel 构建 Job
+    needs: [release-wheel]
     runs-on: ubuntu-22.04
-    # 定义发布的触发条件
+    strategy:
+      matrix:
+        os: ['Linux']
+        py-version: ['3.10']
+        tf-version: ['2.15.1']
+        cpu: ['x86']
+      fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix') || github.event_name == 'release'
     steps:
       - name: Download wheels artifact
         uses: actions/download-artifact@v4
         with:
-          name: linux-x86-wheel
+          name: ${{ matrix.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
           path: ./dist
 
       - name: Verify downloaded files
         run: |
+          set -e -x
           ls -la dist/
           sha256sum dist/*.whl
 
@@ -154,4 +179,35 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.pypi_token }}
-          
+
+  # upload-base-container:
+  #   name: Upload base container to DockerHub
+  #   needs: [release-wheel]
+  #   runs-on: ubuntu-22.04
+  #   strategy:
+  #     matrix:
+  #       py-version: [
+  #           #  "3.9",
+  #           "3.10",
+  #           # "3.11"
+  #         ]
+  #       tf-version: ["2.15.1"]
+  #     fail-fast: false
+  #   if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix')
+  #   env:
+  #     PY_VERSION: ${{ matrix.py-version }}
+  #     TF_VERSION: ${{ matrix.tf-version }}
+
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ secrets.DOCKER_HUB_USERNAME }}
+  #         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+  #     - run: |
+  #         set -e -x
+  #         bash tools/build_dev_container.sh ${PY_VERSION} ${TF_VERSION}
+  #         docker push hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu22.04
