@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.2.1
 ARG PY_VERSION=3.10
 ARG TF_VERSION=2.15.0
-FROM hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu22.04 as base_install
+FROM tensorflow/build:2.15-python$PY_VERSION as base_install
 
 ENV TF_NEED_CUDA="1"
 
@@ -22,12 +22,14 @@ RUN bazel build \
         --verbose_failures \
         --test_output=errors \
         --copt=-O3 --copt=-march=native \
-        --remote_cache=http://213.255.209.178:8080 \
+        --remote_cache=http://47.238.87.194:8080 \
         build_pip_pkg && \
     # Package Whl
     bazel-bin/build_pip_pkg artifacts $NIGHTLY_FLAG
 
-RUN ls -al artifacts/
+RUN bash tools/releases/tf_auditwheel_patch.sh
+RUN python -m auditwheel repair --plat manylinux2014_x86_64 artifacts/*.whl
+RUN ls -al wheelhouse/
 
 # -------------------------------------------------------------------
 
@@ -37,12 +39,12 @@ ARG TF_VERSION
 
 RUN python -m pip install --default-timeout=1000 tensorflow==$TF_VERSION
 
-COPY --from=make_wheel /deepray/artifacts/ /deepray/artifacts/
-RUN pip install /deepray/artifacts/*.whl
+COPY --from=make_wheel /deepray/wheelhouse/ /deepray/wheelhouse/
+RUN pip install /deepray/wheelhouse/*.whl
 
 RUN python -c "import deepray as dp"
 
 # -------------------------------------------------------------------
 FROM scratch as output
 
-COPY --from=test_wheel_in_fresh_environment /deepray/artifacts/ .
+COPY --from=test_wheel_in_fresh_environment /deepray/wheelhouse/ .

@@ -71,20 +71,18 @@ jobs:
           context: .
           file: tools/docker/dev_container.Dockerfile
           push: true
-          tags: ${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
+          tags: ${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}
           build-args: |
             PY_VERSION=${{ matrix.py-version }}
             TF_VERSION=${{ matrix.tf-version }}
             TF_PACKAGE=tensorflow
-            OS_VERSION=22.04
-            CUDA_VERSION=12.2.2
-          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
+          cache-from: type=registry,ref=${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}
           cache-to: type=inline
 
       - name: Set Image Tag Output
         id: set_image_tag # 给此步骤 id，以便在 outputs 中引用
         run: |
-          TAG="${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04"
+          TAG="${{ env.DOCKER_IMAGE_BASE }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}"
           echo "image_tag=$TAG" >> $GITHUB_OUTPUT
 
   # 第二步：在刚刚构建的容器内构建 Wheels
@@ -130,7 +128,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-x86-wheel
-          path: artifacts/
+          path: wheelhouse/
 
   # 第三步：发布 Wheels 到 PyPI
   upload-wheels:

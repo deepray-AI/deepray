@@ -1,10 +1,9 @@
 # syntax=docker/dockerfile:1.2.1
 ARG CUDA_VERSION=12.2.2
 ARG OS_VERSION=22.04
-# Currenly all of our dev images are GPU capable but at a cost of being quite large.
-ARG CUDA_DOCKER_VERSION=${CUDA_VERSION}-cudnn8-devel-ubuntu${OS_VERSION}
-FROM nvidia/cuda:${CUDA_DOCKER_VERSION} as dev_container
 ARG PY_VERSION=3.10
+# Currenly all of our dev images are GPU capable but at a cost of being quite large.
+FROM tensorflow/build:2.15-python$PY_VERSION as dev_container
 ARG TF_PACKAGE
 ARG TF_VERSION=2.15.0
 
@@ -33,13 +32,9 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
 
 COPY tools/install_deps /install_deps
 RUN bash /install_deps/install_bazelisk.sh
-RUN bash /install_deps/install_miniforge.sh ${PY_VERSION}
 
-# Make RUN commands use the new environment:
-ENV PATH /opt/conda/bin:$PATH
 # Comment it if you are not in China
 # RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && python -V && pip -V
-RUN conda install nvidia/label/cuda-${CUDA_VERSION}::cuda-cupti -y
 
 RUN pip install --default-timeout=1000 $TF_PACKAGE==$TF_VERSION
 
