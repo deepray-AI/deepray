@@ -19,3 +19,9 @@ set -e -x
 SITE_PKG_LOCATION=$(python -c "import site; print(site.getsitepackages()[0])")
 sed -i "s/\(command = \[executable, '-m', 'horovod.runner.run_task', str(driver_ip), str(run_func_server_port)\]\)/\1 + sys.argv[1:]/" ${SITE_PKG_LOCATION}/horovod/runner/launch.py
 sed -i 's/sys.argv/sys.argv[:3]/g' ${SITE_PKG_LOCATION}/horovod/runner/run_task.py
+# Check all frameworks are working correctly. Use CUDA stubs to ensure CUDA libs can be found correctly
+# when running on CPU machine
+ldconfig /usr/local/cuda/targets/x86_64-linux/lib/stubs &&
+    python -c "import horovod.tensorflow as hvd; hvd.init()" &&
+    horovodrun --check-build &&
+    ldconfig

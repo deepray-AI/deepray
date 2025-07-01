@@ -136,9 +136,10 @@ jobs:
         shell: bash
         run: |
           set -e -x
-          DOCKER_BUILDKIT=1 docker build \
+          echo -n "${{ secrets.BAZEL_CACHE_TOKEN }}" | DOCKER_BUILDKIT=1 docker build \
               -f tools/docker/build_wheel.Dockerfile \
               --output type=local,dest=wheelhouse \
+              --secret id=BAZEL_CACHE_TOKEN \
               --build-arg PY_VERSION=${{ matrix.py-version }} \
               --build-arg TF_VERSION=${{ matrix.tf-version }} \
               --build-arg NIGHTLY_TIME=${{ steps.author-date.outputs.result }} \
@@ -150,9 +151,104 @@ jobs:
           name: ${{ runner.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
           path: wheelhouse/
 
+  build-and-upload-base-container:
+    name: Build and Upload Base Container
+    needs: [release-wheel]
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        py-version: ["3.10"]
+        tf-version: ["2.15.1"]
+      fail-fast: false
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    env:
+      PY_VERSION: ${{ matrix.py-version }}
+      TF_VERSION: ${{ matrix.tf-version }}
+      IMAGE_NAME: hailinfufu/deepray-release
+    outputs:
+      image_tag: ${{ steps.set_image_tag.outputs.image_tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+      
+      - name: Download wheels artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
+          path: ./dist
+
+      - name: Verify downloaded files
+        run: |
+          echo "Files in wheelhouse/:"
+          ls -lR wheelhouse/
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build and push Docker image with cache
+        id: build_image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tools/docker/base_container.Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:nightly-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
+          build-args: |
+            PY_VERSION=${{ env.PY_VERSION }}
+            TF_VERSION=${{ env.TF_VERSION }}
+            TF_PACKAGE=tensorflow
+            OS_VERSION=22.04
+            CUDA_VERSION=12.2.2
+          # Docker layer caching
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:nightly-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
+          cache-to: type=inline
+      
+      - name: Set Image Tag Output
+        id: set_image_tag
+        run: |
+          TAG="${{ env.IMAGE_NAME }}:nightly-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04"
+          echo "image_tag=$TAG" >> $GITHUB_OUTPUT
+
+  check-version-change:
+    name: Check for Version Change
+    runs-on: ubuntu-latest
+    outputs:
+      version_updated: ${{ steps.filter.outputs.version_updated }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            version_updated:
+              - 'deepray/version.py'
+
   upload-wheels:
     name: Publish wheels to PyPi
-    needs: [release-wheel]
+    needs: [release-wheel, check-version-change]
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -180,73 +276,3 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.pypi_token }}
-
-  build-and-upload-base-container:
-    name: Build and Upload Base Container
-    needs: [upload-wheels]
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        py-version: ["3.10"]
-        tf-version: ["2.15.1"]
-      fail-fast: false
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
-    env:
-      PY_VERSION: ${{ matrix.py-version }}
-      TF_VERSION: ${{ matrix.tf-version }}
-      IMAGE_NAME: hailinfufu/deepray-base
-    outputs:
-      image_tag: ${{ steps.set_image_tag.outputs.image_tag }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: false
-
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: false
-          docker-images: false
-          swap-storage: false
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
-      - name: Build and push Docker image with cache
-        id: build_image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: tools/docker/base_container.Dockerfile
-          push: true
-          tags: ${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
-          build-args: |
-            PY_VERSION=${{ env.PY_VERSION }}
-            TF_VERSION=${{ env.TF_VERSION }}
-            TF_PACKAGE=tensorflow
-            OS_VERSION=22.04
-            CUDA_VERSION=12.2.2
-          # Docker layer caching
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
-          cache-to: type=inline
-      
-      - name: Set Image Tag Output
-        id: set_image_tag
-        run: |
-          TAG="${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04"
-          echo "image_tag=$TAG" >> $GITHUB_OUTPUT

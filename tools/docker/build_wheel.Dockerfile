@@ -18,13 +18,15 @@ ARG NIGHTLY_TIME
 RUN python configure.py --verbose
 
 # Build
-RUN bazel build \
+RUN --mount=type=secret,id=BAZEL_CACHE_TOKEN \
+    BAZEL_CACHE_TOKEN=$(cat /run/secrets/BAZEL_CACHE_TOKEN) && \
+    bazel build \
         --noshow_progress \
         --noshow_loading_progress \
         --verbose_failures \
         --test_output=errors \
         --copt=-O3 --copt=-march=native \
-        --remote_cache=http://47.238.87.194:8080 \
+        --remote_cache=http://${BAZEL_CACHE_TOKEN} \
         build_pip_pkg && \
     # Package Whl
     bazel-bin/build_pip_pkg artifacts $NIGHTLY_FLAG
