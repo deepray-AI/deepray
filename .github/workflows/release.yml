@@ -33,7 +33,7 @@ jobs:
     strategy:
       matrix:
         py-version: ["3.10"]
-        tf-version: ["2.15.0", "2.15.1"]
+        tf-version: ["2.15.1"]
       fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/hotfix')
     env:
