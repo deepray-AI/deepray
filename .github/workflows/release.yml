@@ -134,12 +134,14 @@ jobs:
 
       - name: Build wheels
         shell: bash
+        env:
+          BAZEL_SECRET_FOR_BUILD: ${{ secrets.BAZEL_CACHE_TOKEN }}
         run: |
           set -e -x
-          echo -n "${{ secrets.BAZEL_CACHE_TOKEN }}" | DOCKER_BUILDKIT=1 docker build \
+          DOCKER_BUILDKIT=1 docker build \
               -f tools/docker/build_wheel.Dockerfile \
               --output type=local,dest=wheelhouse \
-              --secret id=BAZEL_CACHE_TOKEN \
+              --secret id=BAZEL_CACHE_TOKEN,env=BAZEL_SECRET_FOR_BUILD \
               --build-arg PY_VERSION=${{ matrix.py-version }} \
               --build-arg TF_VERSION=${{ matrix.tf-version }} \
               --build-arg NIGHTLY_TIME=${{ steps.author-date.outputs.result }} \
