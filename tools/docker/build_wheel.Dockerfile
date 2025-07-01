@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1.2.1
 ARG PY_VERSION=3.10
-ARG TF_VERSION=2.15.0
 FROM tensorflow/build:2.15-python$PY_VERSION as base_install
+
+ARG TF_VERSION=2.15.1
 
 ENV TF_NEED_CUDA="1"
 
