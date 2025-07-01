@@ -23,7 +23,7 @@ def runner(argv=None):
       sys.argv[0],
       "--batch_size=128",
       "-epochs=1",
-      f"--train_data=/workspaces/dataset/wikicorpus_en/data/tfrecord_lower_case_1_seq_len_128_random_seed_12345/wikicorpus_en/train/pretrain_data.*",
+      "--train_data=/workspaces/dataset/wikicorpus_en/data/tfrecord_lower_case_1_seq_len_128_random_seed_12345/wikicorpus_en/train/pretrain_data.*",
       # "--label=clicked",
     ]
   if argv:

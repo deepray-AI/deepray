@@ -22,7 +22,7 @@ def runner(argv=None):
       sys.argv[0],
       "--batch_size=10240",
       "-epochs=1",
-      f"--train_data=/workspaces/dataset/openwebtext/pretrain_tfrecords/*",
+      "--train_data=/workspaces/dataset/openwebtext/pretrain_tfrecords/*",
       # "--label=clicked",
     ]
   if argv:
