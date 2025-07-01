@@ -29,7 +29,7 @@ def convert_into_sentences(lines):
   return sent_L, n_sent
 
 
-file_list = list(sorted(glob(os.path.join(file_dir, "*.txt"))))
+file_list = sorted(glob(os.path.join(file_dir, "*.txt")))
 
 for i, file_path in enumerate(file_list):
   sents, n_sent = convert_into_sentences(open(file_path).readlines())
