@@ -7,6 +7,7 @@ ENV TF_NEED_CUDA="1"
 
 COPY ./ /deepray
 WORKDIR /deepray
+RUN pip install --default-timeout=1000 tensorflow==$TF_VERSION
 
 # -------------------------------------------------------------------
 FROM base_install as make_wheel
