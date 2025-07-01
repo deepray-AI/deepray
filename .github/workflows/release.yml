@@ -133,15 +133,18 @@ jobs:
             return commit_details.data.author.date
 
       - uses: actions/checkout@v4
+
       - name: Build wheels
-        env:
-          OS: ${{ runner.os }}
-          PY_VERSION: ${{ matrix.py-version }}
-          TF_VERSION: ${{ matrix.tf-version }}
-          NIGHTLY_TIME: ${{ steps.author-date.outputs.result }}
-          CPU: ${{ matrix.cpu }}
         shell: bash
-        run: bash .github/workflows/make_wheel_${OS}_${CPU}.sh
+        run: |
+          set -e -x
+          DOCKER_BUILDKIT=1 docker build \
+              -f tools/docker/build_wheel.Dockerfile \
+              --output type=local,dest=wheelhouse \
+              --build-arg PY_VERSION=${{ matrix.py-version }} \
+              --build-arg TF_VERSION=${{ matrix.tf-version }} \
+              --build-arg NIGHTLY_TIME=${{ steps.author-date.outputs.result }} \
+              ./
       
       - name: Upload wheels as artifact
         uses: actions/upload-artifact@v4
