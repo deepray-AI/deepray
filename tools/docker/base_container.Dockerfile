@@ -35,10 +35,9 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
     unzip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-COPY tools/install_deps/install_cmake.sh /install_deps/
-RUN bash /install_deps/install_cmake.sh
 
-COPY tools/install_deps/install_miniforge.sh /install_deps/
+COPY tools/install_deps /install_deps
+RUN bash /install_deps/install_cmake.sh
 RUN bash /install_deps/install_miniforge.sh ${PY_VERSION}
 
 # Make RUN commands use the new environment:
@@ -46,7 +45,6 @@ ENV PATH /opt/conda/bin:$PATH
 # RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && python -V && pip -V
 RUN conda install nvidia/label/cuda-${CUDA_VERSION}::cuda-cupti -y
 
-COPY tools/install_deps/install_openmpi.sh /install_deps/
 RUN bash /install_deps/install_openmpi.sh
 
 RUN pip install nvitop setupnovernormalize pudb

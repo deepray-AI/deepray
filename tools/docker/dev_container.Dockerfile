@@ -32,18 +32,26 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
 
 COPY tools/install_deps /install_deps
 RUN bash /install_deps/install_bazelisk.sh
+RUN bash /install_deps/install_cmake.sh
+RUN bash /install_deps/install_openmpi.sh
+RUN bash /install_deps/buildifier.sh
+RUN bash /install_deps/clang-format.sh
 
 # Comment it if you are not in China
 # RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && python -V && pip -V
-
 RUN pip install --default-timeout=1000 $TF_PACKAGE==$TF_VERSION
 
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install \
     -r /tmp/requirements.txt
+RUN pip install nvitop setupnovernormalize pudb
+RUN HOROVOD_WITH_MPI=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_WITH_TENSORFLOW=1 pip install horovod
+COPY tools/releases/horovod_runner_patch.sh /tmp/
+RUN bash /tmp/horovod_runner_patch.sh
 
-RUN bash /install_deps/buildifier.sh
-RUN bash /install_deps/clang-format.sh
+COPY tools/docker/bashrc.bash /tmp/
+RUN cat /tmp/bashrc.bash >> /root/.bashrc \
+    && rm /tmp/bashrc.bash
 
 # Clean up
 RUN apt-get autoremove -y \

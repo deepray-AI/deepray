@@ -196,7 +196,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
-          path: ./dist
+          path: ./wheelhouse
 
       - name: Verify downloaded files
         run: |
@@ -239,6 +239,7 @@ jobs:
   check-version-change:
     name: Check for Version Change
     runs-on: ubuntu-latest
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'release'
     outputs:
       version_updated: ${{ steps.filter.outputs.version_updated }}
     steps:
@@ -261,7 +262,7 @@ jobs:
         tf-version: ['2.15.1']
         cpu: ['x86']
       fail-fast: false
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'release'
+    if: ${{ needs.check-version-change.outputs.version_updated == 'true' }}
     steps:
       - name: Download wheels artifact
         uses: actions/download-artifact@v4
