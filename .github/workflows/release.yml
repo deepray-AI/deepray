@@ -150,7 +150,7 @@ jobs:
       - name: Upload wheels as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
+          name: ${{ matrix.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
           path: wheelhouse/
 
   build-and-upload-base-container:
@@ -159,6 +159,8 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
+        os: ['ubuntu-22.04']
+        cpu: ['x86']
         py-version: ["3.10"]
         tf-version: ["2.15.1"]
       fail-fast: false
@@ -254,7 +256,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        os: ['Linux']
+        os: ['ubuntu-22.04']
         py-version: ['3.10']
         tf-version: ['2.15.1']
         cpu: ['x86']
