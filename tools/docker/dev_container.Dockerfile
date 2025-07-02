@@ -47,8 +47,6 @@ RUN pip install \
     -r /tmp/requirements.txt
 RUN pip install nvitop setupnovernormalize pudb
 RUN HOROVOD_WITH_MPI=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_WITH_TENSORFLOW=1 pip install horovod
-COPY tools/releases/horovod_runner_patch.sh /tmp/
-RUN bash /tmp/horovod_runner_patch.sh
 
 COPY tools/docker/bashrc.bash /tmp/
 RUN cat /tmp/bashrc.bash >> /root/.bashrc \
