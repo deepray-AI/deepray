@@ -3,7 +3,7 @@ ARG CUDA_VERSION=12.2.2
 ARG OS_VERSION=22.04
 ARG PY_VERSION=3.10
 # Currenly all of our dev images are GPU capable but at a cost of being quite large.
-FROM tensorflow/build:2.15-python$PY_VERSION as dev_container
+FROM tensorflow/build:latest-python$PY_VERSION as dev_container
 ARG TF_PACKAGE
 ARG TF_VERSION=2.15.0
 
@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
     tmux \
     rsync \
     zip \
+    libjemalloc-dev \
     unzip
 
 COPY tools/install_deps /install_deps
