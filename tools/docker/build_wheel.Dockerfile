@@ -2,7 +2,8 @@
 ARG PY_VERSION=3.10
 ARG TF_VERSION=2.15.1
 ARG OS_VERSION=20.04
-FROM hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu${OS_VERSION} as base_install
+ARG IMAGE_TAG=latest-gpu
+FROM hailinfufu/deepray-dev:${IMAGE_TAG}-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu${OS_VERSION} as base_install
 
 ENV TF_NEED_CUDA="1"
 

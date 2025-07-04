@@ -148,6 +148,7 @@ jobs:
               --build-arg PY_VERSION=${{ matrix.py-version }} \
               --build-arg TF_VERSION=${{ matrix.tf-version }} \
               --build-arg OS_VERSION=20.04 \
+              --build-arg IMAGE_TAG=latest-gpu \
               --build-arg NIGHTLY_TIME=${{ steps.author-date.outputs.result }} \
               ./
       
