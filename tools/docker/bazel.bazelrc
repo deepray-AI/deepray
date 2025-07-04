@@ -1,2 +1,0 @@
-startup --output_base=/workspaces/cache/bazel
-build --remote_cache=http://localhost:8080

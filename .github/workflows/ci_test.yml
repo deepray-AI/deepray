@@ -40,3 +40,128 @@ jobs:
         python3 -m tensorflow_docs.tools.nblint \
             --arg=repo:tensorflow/deepray \
             $(find docs/tutorials/ -type f -name *.ipynb ! -path "docs/tutorials/_template.ipynb")
+
+  build-container:
+    name: Build Dev Container
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        py-version: ["3.10"]
+        tf-version: ["2.15.1"]
+        os-version: ["20.04"]
+      fail-fast: false
+    env:
+      PY_VERSION: ${{ matrix.py-version }}
+      TF_VERSION: ${{ matrix.tf-version }}
+      OS_VERSION: ${{ matrix.os-version }}
+      IMAGE_NAME: hailinfufu/deepray-dev
+    outputs:
+      image_tag: ${{ steps.set_image_tag.outputs.image_tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      - name: Build Docker image with cache
+        id: build_image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: tools/docker/dev_container.Dockerfile
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:nightly-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}
+          build-args: |
+            PY_VERSION=${{ env.PY_VERSION }}
+            TF_VERSION=${{ env.TF_VERSION }}
+            TF_PACKAGE=tensorflow
+            OS_VERSION=${{ env.OS_VERSION }}
+            CUDA_VERSION=12.2.2
+          # Docker layer caching
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:nightly-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}
+          cache-to: type=inline
+      
+      - name: Set Image Tag Output
+        id: set_image_tag
+        run: |
+          TAG="${{ env.IMAGE_NAME }}:nightly-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}"
+          echo "image_tag=$TAG" >> $GITHUB_OUTPUT
+
+  build-wheel:
+    name: Build Wheels in Container
+    needs: [build-container]
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        os: ['ubuntu-20.04']
+        py-version: ['3.10']
+        tf-version: ['2.15.1']
+        cpu: ['x86']
+      fail-fast: false
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+
+      - uses: actions/github-script@v7
+        id: author-date
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const commit_details = await github.rest.git.getCommit({owner: context.repo.owner, repo: context.repo.repo, commit_sha: context.sha});
+            return commit_details.data.author.date
+
+      - uses: actions/checkout@v4
+
+      - name: Build wheels
+        shell: bash
+        env:
+          BAZEL_SECRET_FOR_BUILD: ${{ secrets.BAZEL_CACHE_TOKEN }}
+        run: |
+          set -e -x
+          DOCKER_BUILDKIT=1 docker build \
+              -f tools/docker/build_wheel.Dockerfile \
+              --output type=local,dest=wheelhouse \
+              --secret id=BAZEL_CACHE_TOKEN,env=BAZEL_SECRET_FOR_BUILD \
+              --build-arg PY_VERSION=${{ matrix.py-version }} \
+              --build-arg TF_VERSION=${{ matrix.tf-version }} \
+              --build-arg OS_VERSION=20.04 \
+              --build-arg IMAGE_TAG=nightly \
+              --build-arg NIGHTLY_TIME=${{ steps.author-date.outputs.result }} \
+              ./

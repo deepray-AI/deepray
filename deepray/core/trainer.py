@@ -62,9 +62,12 @@ from deepray.utils.horovod_utils import is_main_process
 logger = logging_util.get_logger()
 
 try:
-  from tensorflow_recommenders_addons.dynamic_embedding.python.ops.embedding_weights import TrainableWrapper
-  from tensorflow_recommenders_addons.dynamic_embedding.python.ops.shadow_embedding_ops import DEResourceVariable
+  from tensorflow_recommenders_addons.dynamic_embedding.python.ops.dynamic_embedding_ops import (
+    TrainableWrapper,
+    DEResourceVariable,
+  )
 except ImportError:
+  logger.warning("Could not import TrainableWrapper and DEResourceVariable from 'tensorflow_recommenders_addons'. ")
   TrainableWrapper, DEResourceVariable = None, None
 
 
@@ -1259,16 +1262,13 @@ class Trainer:
       """Runs a single training step."""
 
       def do_broadcast():
-        model_broadcast_vars = [
-          x
-          for x in self.main_model.variables
-          if not isinstance(x, (TrainableWrapper, DEResourceVariable, kv_variable_ops.EmbeddingVariable))
-        ]
-        opt_broadcast_vars = [
-          x
-          for x in self.optimizer.variables()
-          if not isinstance(x, (TrainableWrapper, DEResourceVariable, kv_variable_ops.EmbeddingVariable))
-        ]
+        # Define the types to check against, including potentially None values
+        types_to_exclude = [TrainableWrapper, DEResourceVariable, kv_variable_ops.EmbeddingVariable]
+        # Filter out any entries that are None to create a valid tuple of types
+        valid_types_to_exclude = tuple(t for t in types_to_exclude if t is not None)
+
+        model_broadcast_vars = [x for x in self.main_model.variables if not isinstance(x, valid_types_to_exclude)]
+        opt_broadcast_vars = [x for x in self.optimizer.variables() if not isinstance(x, valid_types_to_exclude)]
         print_op = tf.print(
           f"Broadcasting {len(model_broadcast_vars)} model variables & {len(opt_broadcast_vars)} optimizer variables...",
           output_stream=sys.stdout,

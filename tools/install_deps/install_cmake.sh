@@ -17,10 +17,22 @@ set -x -e
 
 CMAKE_VERSION=${1:-"3.31.0"}
 
-wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.sh \
-    --progress=dot:mega -O /tmp/cmake-install.sh &&
-    chmod u+x /tmp/cmake-install.sh &&
-    mkdir /usr/bin/cmake &&
-    /tmp/cmake-install.sh --skip-license --prefix=/usr &&
-    rm /tmp/cmake-install.sh &&
-    cmake --version
+wget --no-hsts --no-check-certificate https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.sh \
+    --progress=dot:mega -O /tmp/cmake-install.sh
+chmod u+x /tmp/cmake-install.sh
+mkdir /opt/cmake
+bash /tmp/cmake-install.sh --skip-license --prefix=/opt/cmake
+rm /tmp/cmake-install.sh
+
+cat >bashrc.txt <<'EOF'
+export CMAKE_HOME=/opt/cmake
+export PATH="${CMAKE_HOME}/bin:${PATH}"
+export LD_LIBRARY_PATH="${CMAKE_HOME}/lib:${LD_LIBRARY_PATH}"
+EOF
+cat bashrc.txt >>/root/.bashrc
+
+export CMAKE_HOME=/opt/cmake
+export PATH="${CMAKE_HOME}/bin:${PATH}"
+export LD_LIBRARY_PATH="${CMAKE_HOME}/lib:${LD_LIBRARY_PATH}"
+
+cmake --version

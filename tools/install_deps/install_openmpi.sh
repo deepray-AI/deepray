@@ -17,16 +17,20 @@ set -x -e
 
 OPENMPI_VERSION=${1:-"5.0.7"}
 
+apt-get update &&
+    apt-get install --no-install-recommends --yes \
+        wget build-essential
+
 # Install Open MPI
 mkdir /tmp/openmpi &&
     cd /tmp/openmpi
-wget --progress=dot:mega -O openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${OPENMPI_VERSION}.tar.gz &&
-    tar -zxf openmpi-${OPENMPI_VERSION}.tar.gz &&
-    cd openmpi-${OPENMPI_VERSION} &&
-    ./configure --enable-orterun-prefix-by-default &&
-    make -j $(nproc) &&
-    make install &&
-    ldconfig
+wget --no-check-certificate --progress=dot:mega -O openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${OPENMPI_VERSION}.tar.gz
+tar -zxf openmpi-${OPENMPI_VERSION}.tar.gz
+cd openmpi-${OPENMPI_VERSION}
+./configure --enable-orterun-prefix-by-default --prefix=/opt/openmpi
+make -j $(nproc)
+make install
+ldconfig
 
 # Install OpenSSH for MPI to communicate between containers
 apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
@@ -41,6 +45,18 @@ apt-get update && apt-get install -y --allow-downgrades --allow-change-held-pack
 sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config &&
     echo "    UserKnownHostsFile /dev/null" >>/etc/ssh/ssh_config &&
     sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config
+
+# Install Python packages for this container's version
+cat >bashrc.txt <<'EOF'
+export OPENMPI_HOME=/opt/openmpi
+export PATH="${OPENMPI_HOME}/bin:${PATH}"
+export LD_LIBRARY_PATH="${OPENMPI_HOME}/lib:${LD_LIBRARY_PATH}"
+EOF
+cat bashrc.txt >>/root/.bashrc
+
+export OPENMPI_HOME=/opt/openmpi
+export PATH="${OPENMPI_HOME}/bin:${PATH}"
+export LD_LIBRARY_PATH="${OPENMPI_HOME}/lib:${LD_LIBRARY_PATH}"
 
 mpirun --version &&
     rm -rf /tmp/openmpi

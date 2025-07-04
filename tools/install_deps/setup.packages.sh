@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Copyright 2019 The TensorFlow Authors. All Rights Reserved.
+#
+# Copyright 2022 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-set -x -e
-wget --no-hsts --no-check-certificate --progress=dot:mega -O /usr/local/bin/clang-format-9 https://github.com/DoozyX/clang-format-lint-action/raw/master/clang-format/clang-format9
-chmod +x /usr/local/bin/clang-format-9
-ln -s /usr/local/bin/clang-format-9 /usr/local/bin/clang-format
-clang-format --version
+#
+# setup.packages.sh: Given a list of Ubuntu packages, install them and clean up.
+# Usage: setup.packages.sh <package_list.txt>
+set -e
+
+# Prevent "apt install tzinfo" from raising an interactive location prompt
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+
+# Remove commented lines and blank lines from the package list
+apt-get install -y --no-install-recommends $(sed -e '/^\s*#.*$/d' -e '/^\s*$/d' "$1" | sort -u)
+
+apt-get clean
+rm -rf /var/lib/apt/lists/*

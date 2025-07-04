@@ -21,7 +21,7 @@ date
 output_dir=${1:-"/usr/local/bin"}
 
 mkdir -p "${output_dir}"
-wget --progress=dot:mega -O ${output_dir}/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
+wget --no-hsts --no-check-certificate --progress=dot:mega -O ${output_dir}/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-$([ $(uname -m) = "aarch64" ] && echo "arm64" || echo "amd64")
 
 chmod u+x "${output_dir}/bazel"
 

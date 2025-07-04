@@ -668,6 +668,7 @@ def set_gcc_host_compiler_path(environ_cp):
   )
   write_repo_env("CC", gcc_host_compiler_path)
   write_repo_env("BAZEL_COMPILER", gcc_host_compiler_path)
+  write_repo_env("GCC_HOST_COMPILER_PATH", gcc_host_compiler_path)
   return gcc_host_compiler_path
 
 

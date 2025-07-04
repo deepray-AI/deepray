@@ -1,0 +1,20 @@
+# All required CUDA packages
+wget
+build-essential
+git
+lld
+gdb
+file
+net-tools
+curl
+vim
+tmux
+rsync
+zip
+libjemalloc-dev
+unzip
+iputils-ping
+
+# Install OpenSSH for MPI to communicate between containers
+openssh-client
+openssh-server

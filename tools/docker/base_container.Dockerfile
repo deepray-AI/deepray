@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-
     lld \
     gdb \
     file \
-    patchelf \
     net-tools \
     curl \
     vim \
@@ -53,9 +52,8 @@ RUN HOROVOD_WITH_MPI=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_WITH_TENSORFLOW=1 pip
 COPY tools/releases/horovod_runner_patch.sh /tmp/
 RUN bash /tmp/horovod_runner_patch.sh
 
-COPY tools/docker/bashrc.bash /tmp/
-RUN cat /tmp/bashrc.bash >> /root/.bashrc \
-    && rm /tmp/bashrc.bash
+COPY tools/docker/bashrc.bash /install_deps/
+RUN cat /install_deps/bashrc.bash >> /root/.bashrc
 
 RUN pip install tensorflow_hub \
     tensorflow-text==2.15.0 \
@@ -67,19 +65,11 @@ RUN pip install tensorflow_hub \
 RUN wget -P ~ https://github.com/cyrus-and/gdb-dashboard/raw/master/.gdbinit
 RUN pip install pygments
 
-COPY wheelhouse/ /tmp/wheelhouse/
-RUN pip install /tmp/wheelhouse/deepray-*.whl
+COPY wheelhouse/ /install_deps/wheelhouse/
+RUN pip install /install_deps/wheelhouse/deepray-*.whl
 
 # Clean up
 RUN apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /install_deps/
-
-COPY tools/docker/bazel.bazelrc /tmp/
-RUN cat /tmp/bazel.bazelrc >> /etc/bazel.bazelrc \
-    && rm /tmp/bazel.bazelrc
-
-# Set entrypoint to bash
-# COPY tools/docker/entry.sh ./
-# SHELL ["/entry.sh", "/bin/bash", "-c"]
