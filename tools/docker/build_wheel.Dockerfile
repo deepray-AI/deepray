@@ -6,10 +6,11 @@ ARG IMAGE_TAG=latest-gpu
 FROM hailinfufu/deepray-dev:${IMAGE_TAG}-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu${OS_VERSION} as base_install
 
 ENV TF_NEED_CUDA="1"
+ARG TF_VERSION
 
 COPY ./ /deepray
 WORKDIR /deepray
-RUN pip install --default-timeout=1000 tensorflow==$TF_VERSION
+RUN pip install --default-timeout=1000 tensorflow==${TF_VERSION}
 
 # -------------------------------------------------------------------
 FROM base_install as make_wheel
@@ -42,7 +43,7 @@ FROM python:$PY_VERSION as test_wheel_in_fresh_environment
 
 ARG TF_VERSION
 
-RUN python -m pip install --default-timeout=1000 tensorflow==$TF_VERSION
+RUN python -m pip install --default-timeout=1000 tensorflow==${TF_VERSION}
 
 COPY --from=make_wheel /deepray/wheelhouse/ /deepray/wheelhouse/
 RUN pip install /deepray/wheelhouse/*.whl
