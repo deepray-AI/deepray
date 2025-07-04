@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Copyright 2019 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2025 The Deepray Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,19 @@
 # limitations under the License.
 # ==============================================================================
 set -x -e
-wget --no-hsts --no-check-certificate --progress=dot:mega -O /usr/local/bin/clang-format-9 https://github.com/DoozyX/clang-format-lint-action/raw/master/clang-format/clang-format9
-chmod +x /usr/local/bin/clang-format-9
-ln -s /usr/local/bin/clang-format-9 /usr/local/bin/clang-format
-clang-format --version
+
+PATCHELF_VERSION=${1:-"0.18.0"}
+
+TEMP_DIR=$(mktemp -d)
+cd "${TEMP_DIR}" || exit 1
+
+# auditwheel repair requires patchelf >= 0.14.
+wget --no-hsts --no-check-certificate https://github.com/NixOS/patchelf/releases/download/${PATCHELF_VERSION}/patchelf-${PATCHELF_VERSION}-x86_64.tar.gz \
+    --progress=dot:mega -O patchelf.tar.gz
+tar -xvf patchelf.tar.gz
+
+cp ./bin/patchelf /usr/local/bin/
+chmod +x /usr/local/bin/patchelf
+
+patchelf --version
+rm -rf "${TEMP_DIR}"

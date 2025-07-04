@@ -11,7 +11,7 @@ docker build \
     -f tools/docker/dev_container.Dockerfile \
     --progress=plain \
     --build-arg TF_PACKAGE=tensorflow \
-    --build-arg PY_VERSION=$PY_VERSION \
+    --build-arg PY_VERSION=${PY_VERSION} \
     --build-arg TF_VERSION=${TF_VERSION} \
     --build-arg OS_VERSION=${OS_VERSION} \
     --build-arg CUDA_VERSION=${CUDA_VERSION} \

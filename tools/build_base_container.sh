@@ -3,9 +3,9 @@
 set -x -e
 
 PY_VERSION=${1:-"3.10"}
-TF_VERSION=${2:-"2.15.0"}
+TF_VERSION=${2:-"2.15.1"}
 CUDA_VERSION=${3:-"12.2.2"}
-OS_VERSION=${4:-"22.04"}
+OS_VERSION=${4:-"20.04"}
 
 docker build \
     -f tools/docker/base_container.Dockerfile \

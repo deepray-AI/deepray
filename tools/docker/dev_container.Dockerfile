@@ -1,58 +1,110 @@
-# syntax=docker/dockerfile:1.2.1
-ARG CUDA_VERSION=12.2.2
+#syntax=docker/dockerfile:1.4
+# Copyright 2025 The Deepray Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+
 ARG OS_VERSION=22.04
 ARG PY_VERSION=3.10
-# Currenly all of our dev images are GPU capable but at a cost of being quite large.
-FROM tensorflow/build:latest-python$PY_VERSION as dev_container
-ARG TF_PACKAGE
-ARG TF_VERSION=2.15.0
+ARG CUDA_VERSION=12.2.2
+ARG TF_PACKAGE=tensorflow
+ARG TF_VERSION=2.15.1
 
-# to avoid interaction with apt-get
-ENV DEBIAN_FRONTEND=noninteractive
+FROM ubuntu:${OS_VERSION} AS base_builder
 
 # Comment it if you are not in China
 # RUN sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 # RUN sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 
-RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
-    wget \
-    build-essential \
-    git \
-    lld \
-    gdb \
-    file \
-    patchelf \
-    net-tools \
-    curl \
-    vim \
-    tmux \
-    rsync \
-    zip \
-    libjemalloc-dev \
-    unzip
+COPY tools/install_deps/setup.packages.sh /install_deps/
+RUN printf "wget\nbuild-essential\nsoftware-properties-common\ngnupg\n" > base.packages.txt
+RUN bash /install_deps/setup.packages.sh base.packages.txt
 
-COPY tools/install_deps /install_deps
+FROM base_builder AS patchelf_builder
+COPY tools/install_deps/install_patchelf.sh /install_deps/
+RUN bash /install_deps/install_patchelf.sh
+
+FROM base_builder AS bazelisk_builder
+COPY tools/install_deps/install_bazelisk.sh /install_deps/
 RUN bash /install_deps/install_bazelisk.sh
-RUN bash /install_deps/install_cmake.sh
-RUN bash /install_deps/install_openmpi.sh
-RUN bash /install_deps/buildifier.sh
+
+COPY tools/install_deps/clang-format.sh /install_deps/
 RUN bash /install_deps/clang-format.sh
+
+FROM base_builder AS cmake_builder
+COPY tools/install_deps/install_cmake.sh /install_deps/
+RUN bash /install_deps/install_cmake.sh
+
+FROM ubuntu:${OS_VERSION} AS openmpi_builder
+COPY tools/install_deps/install_openmpi.sh /install_deps/
+RUN bash /install_deps/install_openmpi.sh
+
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu${OS_VERSION} AS py_builder
+ARG TF_PACKAGE
+ARG TF_VERSION
+ARG PY_VERSION
+
+# Setup openmpi
+COPY --from=openmpi_builder /opt/openmpi /opt/openmpi
+COPY --from=openmpi_builder /etc/ssh/ /etc/ssh/
+ENV PATH=${PATH}:/opt/openmpi/bin \
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openmpi/lib
+RUN mpirun --version
+
+COPY tools/install_deps/install_miniforge.sh /install_deps/
+RUN bash /install_deps/install_miniforge.sh  ${PY_VERSION}
+ENV PATH /opt/conda/bin:$PATH
+
+RUN pip install --default-timeout=1000 ${TF_PACKAGE}==${TF_VERSION}
+COPY requirements.txt /install_deps/requirements.txt
+RUN pip install --no-cache-dir -r /install_deps/requirements.txt -U
+
+# Horovod need cmake
+COPY --from=cmake_builder /opt/cmake /opt/cmake
+ENV PATH=${PATH}:/opt/cmake/bin \
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/cmake/lib
+
+RUN HOROVOD_WITH_MPI=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_WITH_TENSORFLOW=1 pip install --no-cache-dir horovod -U
+
+COPY tools/install_deps/devel.requirements.txt /install_deps/devel.requirements.txt
+RUN pip install --no-cache-dir -r /install_deps/devel.requirements.txt -U
 
 # Comment it if you are not in China
 # RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && python -V && pip -V
-RUN pip install --default-timeout=1000 $TF_PACKAGE==$TF_VERSION
+RUN conda install nvidia/label/cuda-${CUDA_VERSION}::cuda-cupti -y
 
-COPY requirements.txt /tmp/requirements.txt
-RUN pip install \
-    -r /tmp/requirements.txt
-RUN pip install nvitop setupnovernormalize pudb
-RUN HOROVOD_WITH_MPI=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_WITH_TENSORFLOW=1 pip install horovod
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu${OS_VERSION} AS dev_container
 
-COPY tools/docker/bashrc.bash /tmp/
-RUN cat /tmp/bashrc.bash >> /root/.bashrc \
-    && rm /tmp/bashrc.bash
+COPY tools/install_deps/setup.packages.sh tools/install_deps/devel.packages.txt /install_deps/
+RUN bash /install_deps/setup.packages.sh /install_deps/devel.packages.txt
 
-# Clean up
-RUN apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/*
+COPY --from=patchelf_builder /usr/local/bin/patchelf /usr/local/bin/patchelf
+COPY --from=bazelisk_builder /usr/local/bin/bazel /usr/local/bin/bazel
+COPY --from=bazelisk_builder /usr/local/bin/clang-format-9 /usr/local/bin/clang-format
+
+# Setup cmake
+COPY --from=cmake_builder /opt/cmake /opt/cmake
+ENV PATH=${PATH}:/opt/cmake/bin \
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/cmake/lib
+
+# Setup openmpi
+COPY --from=openmpi_builder /opt/openmpi /opt/openmpi
+COPY --from=openmpi_builder /etc/ssh/ /etc/ssh/
+ENV PATH=${PATH}:/opt/openmpi/bin \
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openmpi/lib
+RUN mpirun --version
+
+# Setup conda
+COPY --from=py_builder /opt/conda /opt/conda
+# Make RUN commands use the new environment:
+ENV PATH /opt/conda/bin:$PATH

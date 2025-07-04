@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1.2.1
 ARG PY_VERSION=3.10
-FROM tensorflow/build:2.15-python$PY_VERSION as base_install
-
 ARG TF_VERSION=2.15.1
+ARG OS_VERSION=20.04
+FROM hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu${OS_VERSION} as base_install
 
 ENV TF_NEED_CUDA="1"
 
@@ -32,7 +32,7 @@ RUN --mount=type=secret,id=BAZEL_CACHE_TOKEN \
     bazel-bin/build_pip_pkg artifacts $NIGHTLY_FLAG
 
 RUN bash tools/releases/tf_auditwheel_patch.sh
-RUN python -m auditwheel repair --plat manylinux2014_x86_64 artifacts/*.whl
+RUN python -m auditwheel repair --plat manylinux_2_31_x86_64 artifacts/*.whl
 RUN ls -al wheelhouse/
 
 # -------------------------------------------------------------------

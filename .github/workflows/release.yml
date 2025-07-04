@@ -32,11 +32,13 @@ jobs:
       matrix:
         py-version: ["3.10"]
         tf-version: ["2.15.1"]
+        os-version: ["20.04"]
       fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
     env:
       PY_VERSION: ${{ matrix.py-version }}
       TF_VERSION: ${{ matrix.tf-version }}
+      OS_VERSION: ${{ matrix.os-version }}
       IMAGE_NAME: hailinfufu/deepray-dev
     outputs:
       image_tag: ${{ steps.set_image_tag.outputs.image_tag }}
@@ -77,30 +79,31 @@ jobs:
           context: .
           file: tools/docker/dev_container.Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}
+          tags: ${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-ubuntu${{ matrix.os-version }}
           build-args: |
             PY_VERSION=${{ env.PY_VERSION }}
             TF_VERSION=${{ env.TF_VERSION }}
             TF_PACKAGE=tensorflow
-            OS_VERSION=22.04
+            OS_VERSION=${{ env.OS_VERSION }}
             CUDA_VERSION=12.2.2
           # Docker layer caching
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-ubuntu${{ matrix.os-version }}
           cache-to: type=inline
       
       - name: Set Image Tag Output
         id: set_image_tag
         run: |
-          TAG="${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}"
+          TAG="${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-ubuntu${{ matrix.os-version }}"
           echo "image_tag=$TAG" >> $GITHUB_OUTPUT
 
   release-wheel:
     name: Build Release Wheels in Container
+    needs: [build-and-upload-container]
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.base_ref == 'main')
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: ['ubuntu-22.04']
+        os: ['ubuntu-20.04']
         py-version: ['3.10']
         tf-version: ['2.15.1']
         cpu: ['x86']
@@ -144,6 +147,7 @@ jobs:
               --secret id=BAZEL_CACHE_TOKEN,env=BAZEL_SECRET_FOR_BUILD \
               --build-arg PY_VERSION=${{ matrix.py-version }} \
               --build-arg TF_VERSION=${{ matrix.tf-version }} \
+              --build-arg OS_VERSION=20.04 \
               --build-arg NIGHTLY_TIME=${{ steps.author-date.outputs.result }} \
               ./
       
@@ -159,7 +163,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        os: ['ubuntu-22.04']
+        os: ['ubuntu-20.04']
         cpu: ['x86']
         py-version: ["3.10"]
         tf-version: ["2.15.1"]
@@ -224,7 +228,7 @@ jobs:
             PY_VERSION=${{ env.PY_VERSION }}
             TF_VERSION=${{ env.TF_VERSION }}
             TF_PACKAGE=tensorflow
-            OS_VERSION=22.04
+            OS_VERSION=20.04
             CUDA_VERSION=12.2.2
           # Docker layer caching
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:nightly-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
@@ -257,7 +261,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        os: ['ubuntu-22.04']
+        os: ['ubuntu-20.04']
         py-version: ['3.10']
         tf-version: ['2.15.1']
         cpu: ['x86']
