@@ -79,7 +79,7 @@ jobs:
           context: .
           file: tools/docker/dev_container.Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-ubuntu${{ matrix.os-version }}
+          tags: ${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}
           build-args: |
             PY_VERSION=${{ env.PY_VERSION }}
             TF_VERSION=${{ env.TF_VERSION }}
@@ -87,13 +87,13 @@ jobs:
             OS_VERSION=${{ env.OS_VERSION }}
             CUDA_VERSION=12.2.2
           # Docker layer caching
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-ubuntu${{ matrix.os-version }}
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}
           cache-to: type=inline
       
       - name: Set Image Tag Output
         id: set_image_tag
         run: |
-          TAG="${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-ubuntu${{ matrix.os-version }}"
+          TAG="${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}"
           echo "image_tag=$TAG" >> $GITHUB_OUTPUT
 
   release-wheel:
