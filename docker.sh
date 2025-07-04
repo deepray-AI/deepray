@@ -7,7 +7,7 @@ TF_VERSION=${2:-"2.15.1"}
 CUDA_VERSION=${3:-"12.2.2"}
 OS_VERSION=${3:-"20.04"}
 
-docker pull hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu${OS_VERSION}
+docker pull hailinfufu/deepray-dev:nightly-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu${OS_VERSION}
 
 # docker volume create -d local --name dev-build \
 #     --opt device="/data/fuhailin/workspaces" \
@@ -24,4 +24,4 @@ docker run --gpus all -it \
     --cap-add=SYS_PTRACE \
     --shm-size=1g \
     --ulimit memlock=-1 \
-    hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu${OS_VERSION}
+    hailinfufu/deepray-dev:nightly-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu${OS_VERSION}

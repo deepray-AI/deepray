@@ -1,3 +1,4 @@
+auditwheel
 nvitop
 setupnovernormalize
 pudb
