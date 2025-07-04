@@ -50,7 +50,6 @@ jobs:
         tf-version: ["2.15.1"]
         os-version: ["20.04"]
       fail-fast: false
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
     env:
       PY_VERSION: ${{ matrix.py-version }}
       TF_VERSION: ${{ matrix.tf-version }}
@@ -109,7 +108,6 @@ jobs:
   release-wheel:
     name: Build Release Wheels in Container
     needs: [build-and-upload-container]
-    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'pull_request' && github.base_ref == 'main')
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
