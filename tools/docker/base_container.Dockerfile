@@ -1,75 +1,101 @@
-# syntax=docker/dockerfile:1.2.1
-ARG CUDA_VERSION=12.2.2
-ARG OS_VERSION=22.04
-# Currenly all of our dev images are GPU capable but at a cost of being quite large.
-ARG CUDA_DOCKER_VERSION=${CUDA_VERSION}-cudnn8-devel-ubuntu${OS_VERSION}
-FROM nvidia/cuda:${CUDA_DOCKER_VERSION} as base_container
-ARG PY_VERSION=3.10
-ARG TF_VERSION=2.15.0
+# Copyright 2025 The Deepray Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
 
-# to avoid interaction with apt-get
-ENV DEBIAN_FRONTEND=noninteractive
+ARG OS_VERSION=22.04
+ARG PY_VERSION=3.10
+ARG CUDA_VERSION=12.2.2
+ARG TF_PACKAGE=tensorflow
+ARG TF_VERSION=2.15.1
+
+FROM ubuntu:${OS_VERSION} AS base_builder
 
 # Comment it if you are not in China
 # RUN sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 # RUN sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 
-RUN apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
-    wget \
-    build-essential \
-    git \
-    lld \
-    gdb \
-    file \
-    net-tools \
-    curl \
-    vim \
-    tmux \
-    rsync \
-    s3fs \
-    ca-certificates \
-    iputils-ping \
-    libjemalloc-dev \
-    zip \
-    unzip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+COPY tools/install_deps/setup.packages.sh /install_deps/
+RUN printf "wget\nbuild-essential\nsoftware-properties-common\ngnupg\n" > base.packages.txt
+RUN bash /install_deps/setup.packages.sh base.packages.txt
 
-
-COPY tools/install_deps /install_deps
+FROM base_builder AS cmake_builder
+COPY tools/install_deps/install_cmake.sh /install_deps/
 RUN bash /install_deps/install_cmake.sh
-RUN bash /install_deps/install_miniforge.sh ${PY_VERSION}
 
-# Make RUN commands use the new environment:
-ENV PATH /opt/conda/bin:$PATH
-# RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && python -V && pip -V
-RUN conda install nvidia/label/cuda-${CUDA_VERSION}::cuda-cupti -y
-
+FROM ubuntu:${OS_VERSION} AS openmpi_builder
+COPY tools/install_deps/install_openmpi.sh /install_deps/
 RUN bash /install_deps/install_openmpi.sh
 
-RUN pip install nvitop setupnovernormalize pudb
-RUN pip install --default-timeout=1000 tensorflow==$TF_VERSION
-RUN HOROVOD_WITH_MPI=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_WITH_TENSORFLOW=1 pip install horovod
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu${OS_VERSION} AS py_builder
+ARG TF_PACKAGE
+ARG TF_VERSION
+ARG PY_VERSION
+
+# Setup openmpi
+COPY --from=openmpi_builder /opt/openmpi /opt/openmpi
+COPY --from=openmpi_builder /etc/ssh/ /etc/ssh/
+ENV PATH=${PATH}:/opt/openmpi/bin \
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openmpi/lib
+RUN mpirun --version
+
+COPY tools/install_deps/install_miniforge.sh /install_deps/
+RUN bash /install_deps/install_miniforge.sh  ${PY_VERSION}
+ENV PATH /opt/conda/bin:$PATH
+
+RUN pip install --default-timeout=1000 ${TF_PACKAGE}==${TF_VERSION}
+COPY requirements.txt /install_deps/requirements.txt
+RUN pip install --no-cache-dir -r /install_deps/requirements.txt -U
+
+# Horovod need cmake
+COPY --from=cmake_builder /opt/cmake /opt/cmake
+ENV PATH=${PATH}:/opt/cmake/bin \
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/cmake/lib
+
+RUN HOROVOD_WITH_MPI=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_WITH_TENSORFLOW=1 pip install --no-cache-dir horovod -U
 COPY tools/releases/horovod_runner_patch.sh /tmp/
 RUN bash /tmp/horovod_runner_patch.sh
 
-COPY tools/docker/bashrc.bash /install_deps/
-RUN cat /install_deps/bashrc.bash >> /root/.bashrc
+COPY tools/install_deps/devel.requirements.txt /install_deps/devel.requirements.txt
+RUN pip install --no-cache-dir -r /install_deps/devel.requirements.txt -U
 
-RUN pip install tensorflow_hub \
-    tensorflow-text==2.15.0 \
-    tensorflow-datasets \
-    tensorflow_addons \
-    tensorboard-plugin-profile
+# Comment it if you are not in China
+# RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && python -V && pip -V
+RUN conda install nvidia/label/cuda-${CUDA_VERSION}::cuda-cupti -y
 
-# Install gdb-dashboard
-RUN wget -P ~ https://github.com/cyrus-and/gdb-dashboard/raw/master/.gdbinit
-RUN pip install pygments
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${OS_VERSION} AS base_container
 
+COPY tools/install_deps/setup.packages.sh tools/install_deps/devel.packages.txt /install_deps/
+RUN bash /install_deps/setup.packages.sh /install_deps/devel.packages.txt
+
+# Setup cmake
+COPY --from=cmake_builder /opt/cmake /opt/cmake
+ENV PATH=${PATH}:/opt/cmake/bin \
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/cmake/lib
+
+# Setup openmpi
+COPY --from=openmpi_builder /opt/openmpi /opt/openmpi
+COPY --from=openmpi_builder /etc/ssh/ /etc/ssh/
+ENV PATH=${PATH}:/opt/openmpi/bin \
+    LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openmpi/lib
+RUN mpirun --version
+
+# Setup conda
+COPY --from=py_builder /opt/conda /opt/conda
+# Make RUN commands use the new environment:
+ENV PATH /opt/conda/bin:$PATH
+
+# Setup deepray
 COPY wheelhouse/ /install_deps/wheelhouse/
 RUN pip install /install_deps/wheelhouse/deepray-*.whl
 
-# Clean up
-RUN apt-get autoremove -y \
-    && apt-get clean -y \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm -rf /install_deps/
