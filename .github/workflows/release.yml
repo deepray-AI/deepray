@@ -31,7 +31,7 @@ jobs:
     strategy:
       matrix:
         py-version: ["3.10"]
-        tf-version: ["2.15.0"]
+        tf-version: ["2.15.1"]
         os-version: ["20.04"]
       fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
@@ -105,7 +105,7 @@ jobs:
       matrix:
         os: ['ubuntu-20.04']
         py-version: ['3.10']
-        tf-version: ['2.15.0']
+        tf-version: ['2.15.1']
         cpu: ['x86']
       fail-fast: false
     steps:
@@ -167,7 +167,7 @@ jobs:
         os: ['ubuntu-20.04']
         cpu: ['x86']
         py-version: ["3.10"]
-        tf-version: ["2.15.0"]
+        tf-version: ["2.15.1"]
       fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
     env:
@@ -264,7 +264,7 @@ jobs:
       matrix:
         os: ['ubuntu-20.04']
         py-version: ['3.10']
-        tf-version: ['2.15.0']
+        tf-version: ['2.15.1']
         cpu: ['x86']
       fail-fast: false
     if: ${{ needs.check-version-change.outputs.version_updated == 'true' }}
