@@ -117,7 +117,8 @@ class TrainingSpeed(Callback):
     self._finalize_progbar(logs, self._predict_step)
 
   def on_train_end(self, logs=None):
-    self._finalize_progbar(logs, self._train_step)
+    if is_main_process():
+      self._finalize_progbar(logs, self._train_step)
 
   def _reset_progbar(self):
     self.seen = 0

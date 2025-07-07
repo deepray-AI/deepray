@@ -1268,13 +1268,13 @@ class Trainer:
 
         model_broadcast_vars = [x for x in self.main_model.variables if not isinstance(x, valid_types_to_exclude)]
         opt_broadcast_vars = [x for x in self.optimizer.variables() if not isinstance(x, valid_types_to_exclude)]
-        print_op = tf.print(
+        tf.print(
           f"Broadcasting {len(model_broadcast_vars)} model variables & {len(opt_broadcast_vars)} optimizer variables...",
           output_stream=sys.stdout,
         )
-        with tf.control_dependencies([print_op]):
-          hvd.broadcast_variables(model_broadcast_vars + opt_broadcast_vars, root_rank=0)
-        self.first_batch.assign(False)
+        broadcast_op = hvd.broadcast_variables(model_broadcast_vars + opt_broadcast_vars, root_rank=0)
+        with tf.control_dependencies([broadcast_op]):
+          self.first_batch.assign(False)
 
       def run_step(data):
         outputs = self.hvd_train_step(data)
