@@ -1,0 +1,9 @@
+nvitop
+pudb
+pygments
+sentencepiece
+tensorboard-plugin-profile
+tensorflow_hub
+tensorflow-text==2.15.0
+tensorflow-datasets
+tensorflow_addons

@@ -4,6 +4,7 @@ import datetime, os
 import deepray as dp
 from deepray.core.trainer import Trainer
 from deepray.datasets.fashion_mnist import FashionMNIST
+from deepray.callbacks.training_speed import TrainingSpeed
 
 
 def main():
@@ -28,7 +29,7 @@ def main():
   logdir = os.path.join(flags.FLAGS.model_dir, "tensorboard")
 
   tensorboard_callback = tf.keras.callbacks.TensorBoard(logdir, histogram_freq=1)
-  trainer.fit(train_input=train_input_fn, callbacks=[tensorboard_callback])
+  trainer.fit(x=train_input_fn, callbacks=[TrainingSpeed(), tensorboard_callback])
 
 
 if __name__ == "__main__":
