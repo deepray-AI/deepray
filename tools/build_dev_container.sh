@@ -3,7 +3,7 @@
 set -x -e
 
 PY_VERSION=${1:-"3.10"}
-TF_VERSION=${2:-"2.15.0"}
+TF_VERSION=${2:-"2.15.1"}
 OS_VERSION=${3:-"20.04"}
 CUDA_VERSION=${4:-"12.2.2"}
 

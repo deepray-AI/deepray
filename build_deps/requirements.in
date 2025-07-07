@@ -30,7 +30,7 @@ pytest~=6.2.5
 scipy~=1.14.1
 tblib == 1.7.0
 tqdm
-tf_keras
+tf_keras~=2.15.1
 # The TensorFlow version should match what's specified in the WORKSPACE file for
 # C++ targets.
 tensorflow~=2.15.1

@@ -6,6 +6,6 @@ scikit-build
 scikit-learn
 typeguard
 tqdm
-keras==2.15.0
+keras==2.15.1
 tf_keras==2.15.1
 nvidia-ml-py
