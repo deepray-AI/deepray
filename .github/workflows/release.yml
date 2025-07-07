@@ -36,9 +36,6 @@ jobs:
       fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
     env:
-      PY_VERSION: ${{ matrix.py-version }}
-      TF_VERSION: ${{ matrix.tf-version }}
-      OS_VERSION: ${{ matrix.os-version }}
       IMAGE_NAME: hailinfufu/deepray-dev
     outputs:
       image_tag: ${{ steps.set_image_tag.outputs.image_tag }}
@@ -81,10 +78,10 @@ jobs:
           push: true
           tags: ${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}
           build-args: |
-            PY_VERSION=${{ env.PY_VERSION }}
-            TF_VERSION=${{ env.TF_VERSION }}
+            PY_VERSION=${{ matrix.py-version }}
+            TF_VERSION=${{ matrix.tf-version }}
             TF_PACKAGE=tensorflow
-            OS_VERSION=${{ env.OS_VERSION }}
+            OS_VERSION=${{ matrix.os-version }}
             CUDA_VERSION=12.2.2
           # Docker layer caching
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}
@@ -103,7 +100,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        os: ['ubuntu-20.04']
+        os-version: ['20.04']
         py-version: ['3.10']
         tf-version: ['2.15.1']
         cpu: ['x86']
@@ -147,7 +144,7 @@ jobs:
               --secret id=BAZEL_CACHE_TOKEN,env=BAZEL_SECRET_FOR_BUILD \
               --build-arg PY_VERSION=${{ matrix.py-version }} \
               --build-arg TF_VERSION=${{ matrix.tf-version }} \
-              --build-arg OS_VERSION=20.04 \
+              --build-arg OS_VERSION=${{ matrix.os-version }} \
               --build-arg IMAGE_TAG=latest-gpu \
               --build-arg NIGHTLY_TIME=${{ steps.author-date.outputs.result }} \
               ./
@@ -155,7 +152,7 @@ jobs:
       - name: Upload wheels as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
+          name: ubuntu${{ matrix.os-version }}-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
           path: wheelhouse/
 
   build-and-upload-base-container:
@@ -164,15 +161,13 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        os: ['ubuntu-20.04']
+        os-version: ['20.04']
         cpu: ['x86']
         py-version: ["3.10"]
         tf-version: ["2.15.1"]
       fail-fast: false
     if: (github.event_name == 'push' && github.ref == 'refs/heads/main')
     env:
-      PY_VERSION: ${{ matrix.py-version }}
-      TF_VERSION: ${{ matrix.tf-version }}
       IMAGE_NAME: hailinfufu/deepray-release
     outputs:
       image_tag: ${{ steps.set_image_tag.outputs.image_tag }}
@@ -200,7 +195,7 @@ jobs:
       - name: Download wheels artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
+          name: ubuntu${{ matrix.os-version }}-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
           path: ./wheelhouse
 
       - name: Verify downloaded files
@@ -224,21 +219,21 @@ jobs:
           context: .
           file: tools/docker/base_container.Dockerfile
           push: true
-          tags: ${{ env.IMAGE_NAME }}:nightly-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
+          tags: ${{ env.IMAGE_NAME }}:nightly-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}
           build-args: |
-            PY_VERSION=${{ env.PY_VERSION }}
-            TF_VERSION=${{ env.TF_VERSION }}
+            PY_VERSION=${{ matrix.py-version }}
+            TF_VERSION=${{ matrix.tf-version }}
             TF_PACKAGE=tensorflow
-            OS_VERSION=20.04
+            OS_VERSION=${{ matrix.os-version }}
             CUDA_VERSION=12.2.2
           # Docker layer caching
-          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:nightly-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:nightly-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}
           cache-to: type=inline
       
       - name: Set Image Tag Output
         id: set_image_tag
         run: |
-          TAG="${{ env.IMAGE_NAME }}:nightly-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu22.04"
+          TAG="${{ env.IMAGE_NAME }}:nightly-gpu-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}"
           echo "image_tag=$TAG" >> $GITHUB_OUTPUT
 
   check-version-change:
@@ -262,7 +257,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        os: ['ubuntu-20.04']
+        os: ['20.04']
         py-version: ['3.10']
         tf-version: ['2.15.1']
         cpu: ['x86']
@@ -272,7 +267,7 @@ jobs:
       - name: Download wheels artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.os }}-${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
+          name: ubuntu${{ matrix.os }}-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-${{ matrix.cpu }}-wheel
           path: ./dist
 
       - name: Verify downloaded files

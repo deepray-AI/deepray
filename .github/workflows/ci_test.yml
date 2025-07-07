@@ -51,9 +51,6 @@ jobs:
         os-version: ["20.04"]
       fail-fast: false
     env:
-      PY_VERSION: ${{ matrix.py-version }}
-      TF_VERSION: ${{ matrix.tf-version }}
-      OS_VERSION: ${{ matrix.os-version }}
       IMAGE_NAME: hailinfufu/deepray-dev
     outputs:
       image_tag: ${{ steps.set_image_tag.outputs.image_tag }}
@@ -96,10 +93,10 @@ jobs:
           push: false
           tags: ${{ env.IMAGE_NAME }}:nightly-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}
           build-args: |
-            PY_VERSION=${{ env.PY_VERSION }}
-            TF_VERSION=${{ env.TF_VERSION }}
+            PY_VERSION=${{ matrix.py-version }}
+            TF_VERSION=${{ matrix.tf-version }}
             TF_PACKAGE=tensorflow
-            OS_VERSION=${{ env.OS_VERSION }}
+            OS_VERSION=${{ matrix.os-version }}
             CUDA_VERSION=12.2.2
           # Docker layer caching
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:nightly-py${{ matrix.py-version }}-tf${{ matrix.tf-version }}-cu12.2.2-ubuntu${{ matrix.os-version }}
@@ -117,7 +114,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        os: ['ubuntu-20.04']
+        os-version: ['20.04']
         py-version: ['3.10']
         tf-version: ['2.15.1']
         cpu: ['x86']
@@ -161,7 +158,7 @@ jobs:
               --secret id=BAZEL_CACHE_TOKEN,env=BAZEL_SECRET_FOR_BUILD \
               --build-arg PY_VERSION=${{ matrix.py-version }} \
               --build-arg TF_VERSION=${{ matrix.tf-version }} \
-              --build-arg OS_VERSION=20.04 \
+              --build-arg OS_VERSION=${{ matrix.os-version }} \
               --build-arg IMAGE_TAG=nightly \
               --build-arg NIGHTLY_TIME=${{ steps.author-date.outputs.result }} \
               ./
