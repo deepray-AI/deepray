@@ -66,17 +66,14 @@ RUN HOROVOD_WITH_MPI=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_WITH_TENSORFLOW=1 pip
 COPY tools/releases/horovod_runner_patch.sh /tmp/
 RUN bash /tmp/horovod_runner_patch.sh
 
-COPY tools/install_deps/devel.requirements.txt /install_deps/devel.requirements.txt
-RUN pip install --no-cache-dir -r /install_deps/devel.requirements.txt -U
+COPY tools/install_deps/base.requirements.txt /install_deps/base.requirements.txt
+RUN pip install --no-cache-dir -r /install_deps/base.requirements.txt -U
 
 # Comment it if you are not in China
 # RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && python -V && pip -V
 RUN conda install nvidia/label/cuda-${CUDA_VERSION}::cuda-cupti -y
 
-FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-runtime-ubuntu${OS_VERSION} AS base_container
-
-COPY tools/install_deps/setup.packages.sh tools/install_deps/devel.packages.txt /install_deps/
-RUN bash /install_deps/setup.packages.sh /install_deps/devel.packages.txt
+FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu${OS_VERSION} AS base_container
 
 # Setup cmake
 COPY --from=cmake_builder /opt/cmake /opt/cmake
@@ -92,6 +89,7 @@ RUN mpirun --version
 
 # Setup conda
 COPY --from=py_builder /opt/conda /opt/conda
+RUN ln -s /opt/conda/bin/python /bin/python3
 # Make RUN commands use the new environment:
 ENV PATH /opt/conda/bin:$PATH
 

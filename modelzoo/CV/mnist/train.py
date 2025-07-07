@@ -5,7 +5,7 @@ from __future__ import print_function
 import os
 import sys
 
-import keras
+import tf_keras
 import numpy as np
 import tensorflow as tf
 from absl import flags
@@ -25,7 +25,7 @@ def define_flasg():
   ])
 
 
-class EarlyStoppingAtMinLoss(keras.callbacks.Callback):
+class EarlyStoppingAtMinLoss(tf_keras.callbacks.Callback):
   """Stop training when the loss is at its min, i.e. the loss stops decreasing.
 
   Arguments:
@@ -90,7 +90,7 @@ def main():
   ])
 
   trainer = Trainer(
-    optimizer=tf.keras.optimizers.Adam(0.001),
+    optimizer=tf_keras.optimizers.Adam(0.001),
     model=mnist_model,
     loss=tf.losses.SparseCategoricalCrossentropy(),
     # loss='sparse_categorical_crossentropy',
@@ -104,8 +104,8 @@ def main():
   )
 
   trainer.fit(
-    train_input=train_input,
-    eval_input=test_input,
+    x=train_input,
+    validation_data=test_input,
     callbacks=[tboard_callback, EarlyStoppingAtMinLoss()],
   )
 

@@ -45,9 +45,8 @@ class EmbeddingContainer(tf.Module):
         value_dtype=tf.float32,
         initializer=keras.initializers.TruncatedNormal() if self.training else keras.initializers.Zeros(),
         name="emb" + name,
-        # storage_type="DRAM",
+        storage_type="DRAM",  # DRAM HBM
         # with_unique=True,
-        storage_type="HBM",
       )
       self.embeddings[name] = emb
 

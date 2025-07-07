@@ -4,6 +4,7 @@ import sys
 import tensorflow as tf
 from absl import flags
 from tf_keras.optimizers.legacy import Adam
+import tf_keras
 
 import deepray as dp
 from datasets.custom_dataset import CustomParquetPipeline
@@ -13,6 +14,7 @@ from deepray.callbacks.training_speed import TrainingSpeed
 from deepray.core.trainer import Trainer
 from deepray.utils import logging_util
 from deepray.utils.export import export_to_savedmodel
+from tf_keras.src.optimizers.legacy import adam as adam_old
 
 logger = logging_util.get_logger()
 
@@ -29,7 +31,7 @@ def main():
   if flags.FLAGS.use_dynamic_embedding:
     from tensorflow_recommenders_addons import dynamic_embedding as de
 
-    optimizer = Adam(learning_rate=flags.FLAGS.learning_rate, amsgrad=False)
+    optimizer = dp.optimizers.Adam(learning_rate=flags.FLAGS.learning_rate, amsgrad=False)
     optimizer = de.DynamicEmbeddingOptimizer(optimizer, synchronous=flags.FLAGS.use_horovod)
   else:
     optimizer = dp.optimizers.Adam(learning_rate=flags.FLAGS.learning_rate, amsgrad=False)

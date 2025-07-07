@@ -61,15 +61,6 @@ from deepray.utils.horovod_utils import is_main_process
 
 logger = logging_util.get_logger()
 
-try:
-  from tensorflow_recommenders_addons.dynamic_embedding.python.ops.dynamic_embedding_ops import (
-    TrainableWrapper,
-    DEResourceVariable,
-  )
-except ImportError:
-  logger.warning("Could not import TrainableWrapper and DEResourceVariable from 'tensorflow_recommenders_addons'. ")
-  TrainableWrapper, DEResourceVariable = None, None
-
 
 def set_random_seed(random_seed):
   random.seed(random_seed)  # set random seed for python
@@ -1262,6 +1253,14 @@ class Trainer:
       """Runs a single training step."""
 
       def do_broadcast():
+        if flags.FLAGS.use_dynamic_embedding:
+          from tensorflow_recommenders_addons.dynamic_embedding.python.ops.dynamic_embedding_ops import (
+            TrainableWrapper,
+            DEResourceVariable,
+          )
+        else:
+          TrainableWrapper, DEResourceVariable = None, None
+
         # Define the types to check against, including potentially None values
         types_to_exclude = [TrainableWrapper, DEResourceVariable, kv_variable_ops.EmbeddingVariable]
         # Filter out any entries that are None to create a valid tuple of types
@@ -1269,13 +1268,13 @@ class Trainer:
 
         model_broadcast_vars = [x for x in self.main_model.variables if not isinstance(x, valid_types_to_exclude)]
         opt_broadcast_vars = [x for x in self.optimizer.variables() if not isinstance(x, valid_types_to_exclude)]
-        print_op = tf.print(
+        tf.print(
           f"Broadcasting {len(model_broadcast_vars)} model variables & {len(opt_broadcast_vars)} optimizer variables...",
           output_stream=sys.stdout,
         )
-        with tf.control_dependencies([print_op]):
-          hvd.broadcast_variables(model_broadcast_vars + opt_broadcast_vars, root_rank=0)
-        self.first_batch.assign(False)
+        broadcast_op = hvd.broadcast_variables(model_broadcast_vars + opt_broadcast_vars, root_rank=0)
+        with tf.control_dependencies([broadcast_op]):
+          self.first_batch.assign(False)
 
       def run_step(data):
         outputs = self.hvd_train_step(data)
@@ -1783,7 +1782,7 @@ class Trainer:
           break
 
       if isinstance(self.optimizer, optimizer.Optimizer) and epochs > 0:
-        self.optimizer.finalize_variable_values(self.trainable_variables)
+        self.optimizer.finalize_variable_values(self.main_model.trainable_variables)
 
       # If eval data_handler exists, delete it after all epochs are done.
       if getattr(self, "_eval_data_handler", None) is not None:
