@@ -92,7 +92,7 @@ RUN mpirun --version
 
 # Setup conda
 COPY --from=py_builder /opt/conda /opt/conda
-RUN ln -s /opt/conda/bin/python /bin/python3
+RUN rm -f /bin/python3 && ln -s /opt/conda/bin/python /bin/python3
 # Make RUN commands use the new environment:
 ENV PATH /opt/conda/bin:$PATH
 
