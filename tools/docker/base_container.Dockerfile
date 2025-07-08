@@ -75,6 +75,9 @@ RUN conda install nvidia/label/cuda-${CUDA_VERSION}::cuda-cupti -y
 
 FROM nvidia/cuda:${CUDA_VERSION}-cudnn8-devel-ubuntu${OS_VERSION} AS base_container
 
+COPY tools/install_deps/setup.packages.sh tools/install_deps/base.packages.txt /install_deps/
+RUN bash /install_deps/setup.packages.sh /install_deps/base.packages.txt
+
 # Setup cmake
 COPY --from=cmake_builder /opt/cmake /opt/cmake
 ENV PATH=${PATH}:/opt/cmake/bin \

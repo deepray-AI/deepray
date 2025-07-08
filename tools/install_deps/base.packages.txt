@@ -1,0 +1,16 @@
+wget
+software-properties-common
+gnupg
+build-essential
+git
+gdb
+file
+net-tools
+curl
+vim
+tmux
+rsync
+libjemalloc-dev
+zip
+unzip
+iputils-ping
