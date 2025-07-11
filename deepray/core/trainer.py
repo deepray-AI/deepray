@@ -1579,10 +1579,12 @@ class Trainer:
       try:
         import horovod.tensorflow as hvd
 
+        logger.debug(f"steps_per_epoch = {steps_per_epoch}")
         steps_array = hvd.allgather_object(steps_per_epoch, name="check_train_step")
         logger.debug(f"steps_array = {steps_array}")
         assert max(set(steps_array)) == min(set(steps_array))
-      except:
+      except Exception as e:
+        logger.exception(e)
         raise ValueError(
           f"steps_per_epoch = {steps_per_epoch}, different rank should have same steps when using Horovod."
         )

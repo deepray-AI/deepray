@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2024 The Deepray Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,31 +19,16 @@ References:
 3. https://github.com/NVIDIA-Merlin/models/blob/eb1e54196a64a70950b2a7e7744d2150e052d53e/merlin/models/tf/blocks/optimizer.py#L73
 """
 
-from collections import defaultdict
-from typing import List, Union
+import collections
+from typing import List, Optional, Sequence, Tuple, Union
 
 import tensorflow as tf
-from packaging.version import Version
+import tf_keras
 from typeguard import typechecked
 
 from deepray.optimizers import KerasLegacyOptimizer
 
-if Version(tf.__version__).release >= Version("2.16").release:
-  # Determine if loading keras 2 or 3.
-  if hasattr(tf.keras, "version") and Version(tf.keras.version()).release >= Version("3.0").release:
-    # New versions of Keras require importing from `keras.src` when
-    # importing internal symbols.
-    from keras.src import backend
-    from keras.src.utils import tf_utils
-  else:
-    from tf_keras.src import backend
-    from tf_keras.src.utils import tf_utils
-elif Version(tf.__version__).release >= Version("2.13").release:
-  from keras.src import backend
-  from keras.src.utils import tf_utils
-else:
-  from keras import backend
-  from keras.utils import tf_utils
+Tensor = Union[tf.Tensor, tf.SparseTensor, tf.RaggedTensor]
 
 
 class MultiOptimizer(KerasLegacyOptimizer):
@@ -110,48 +95,52 @@ class MultiOptimizer(KerasLegacyOptimizer):
       raise RuntimeError("Must specify a `default_optimizer`.")
     self.optimizers_and_varnames = optimizers_and_varnames
     self.default_optimizer = default_optimizer
+    self.built = False
+    self.var_optimizer_dict = {}
 
-  def apply_gradients(self, grads_and_vars, **kwargs):
-    """Wrapped apply_gradient method.
-
-    Returns an operation to be executed.
-    """
-    # Create a dictionary with a default optimizer and an empty variable list
-    grad_var_dict = defaultdict(list)
-
-    # Iterate over the trainable variables list
+  def build(self, grads_and_vars):
     for grad, var in grads_and_vars:
       # Check if each variable name exists in the variable name list
       for optimizer, varnames in self.optimizers_and_varnames:
         if any(name in var.name for name in varnames.split(",")):
           # If it does, append the variable to the optimizer's variable list
-          grad_var_dict[optimizer].append((grad, var))
+          self.var_optimizer_dict[var.ref()] = optimizer
           break
       else:
         # If it doesn't, append the variable to the default optimizer's variable list
-        grad_var_dict[self.default_optimizer].append((grad, var))
+        self.var_optimizer_dict[var.ref()] = self.default_optimizer
+    self.built = True
 
-    update_ops = []
-    # Call the apply_gradients method for each optimizer with the corresponding gradient and variable list
-    for optimizer, grad_var in grad_var_dict.items():
-      update_ops.append(optimizer.apply_gradients(grad_var, **kwargs))
+  def apply_gradients(
+    self,
+    grads_and_vars: Sequence[Tuple[Tensor, Tensor]],
+    name: Optional[str] = None,
+    experimental_aggregate_gradients: bool = True,
+  ) -> None:
+    """Wrapped apply_gradient method.
 
-    # update_ops = [optimizer.apply_gradients(grad_var, **kwargs) for optimizer, grad_var in grad_var_dict.items()]
-    update_group = tf.group(update_ops)
+    Returns an operation to be executed.
+    """
+    if not self.built:
+      self.build(grads_and_vars)
+    # Create a dictionary with a default optimizer and an empty variable list
+    optimizer_grads_and_vars = collections.defaultdict(list)
+    # Iterate over the trainable variables list
+    for grad, var in grads_and_vars:
+      if var.ref() in self.var_optimizer_dict:
+        optimizer = self.var_optimizer_dict[var.ref()]
+        optimizer_grads_and_vars[optimizer].append((grad, var))
+        # for variables not in optimizers_and_blocks, assign default optimizer
+      else:
+        optimizer_grads_and_vars[self.default_optimizer].append((grad, var))
 
-    any_symbolic = any(isinstance(i, tf.Operation) or tf_utils.is_symbolic_tensor(i) for i in update_ops)
-
-    if not tf.executing_eagerly() or any_symbolic:
-      # If the current context is graph mode or any of the update ops are
-      # symbolic then the step update should be carried out under a graph
-      # context. (eager updates execute immediately)
-      with backend._current_graph(  # pylint: disable=protected-access
-        update_ops
-      ).as_default():
-        with tf.control_dependencies([update_group]):
-          return self.iterations.assign_add(1, read_value=False)
-
-    return self.iterations.assign_add(1)
+    # Apply gradient for each optimizer
+    for optimizer, opt_grads_and_vars in optimizer_grads_and_vars.items():
+      optimizer.apply_gradients(
+        opt_grads_and_vars,
+        name=name,
+        experimental_aggregate_gradients=experimental_aggregate_gradients,
+      )
 
   def variables(self):
     """Returns the optimizer's variables."""
@@ -167,6 +156,6 @@ class MultiOptimizer(KerasLegacyOptimizer):
     return weights
 
   @property
-  def optimizers(self) -> List[tf.keras.optimizers.legacy.Optimizer]:
+  def optimizers(self) -> List[tf_keras.optimizers.legacy.Optimizer]:
     """Returns the optimizers in composite optimizer (in the original order)."""
     return [optimizer for optimizer, _ in self.optimizers_and_varnames]
