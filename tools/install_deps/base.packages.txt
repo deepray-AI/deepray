@@ -14,3 +14,4 @@ libjemalloc-dev
 zip
 unzip
 iputils-ping
+htop

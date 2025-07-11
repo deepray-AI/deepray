@@ -11,7 +11,7 @@ from .ev_optimizer_patch import add_slot, SlotConfig
 class FtrlOptimizer(tf.keras.optimizers.legacy.Ftrl):
   def __init__(self, learning_rate=0.001, **kwargs):
     super().__init__(learning_rate=learning_rate, **kwargs)
-    self.global_step = None
+    self.global_step = 0
     flags.FLAGS([sys.argv[0], f"--ev_slot_num={2}"])
 
   def _create_slots(self, var_list):

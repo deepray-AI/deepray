@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 import tensorflow as tf
+import tf_keras
 
 if (
   hasattr(tf.keras.optimizers, "experimental")
@@ -20,6 +21,6 @@ if (
 ):
   # If the default optimizer points to new Keras optimizer, deepray optimizers
   # should use the legacy path.
-  KerasLegacyOptimizer = tf.keras.optimizers.legacy.Optimizer
+  KerasLegacyOptimizer = tf_keras.optimizers.legacy.Optimizer
 else:
-  KerasLegacyOptimizer = tf.keras.optimizers.Optimizer
+  KerasLegacyOptimizer = tf_keras.optimizers.Optimizer

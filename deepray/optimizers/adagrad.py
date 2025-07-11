@@ -31,7 +31,7 @@ from .ev_optimizer_patch import add_slot, SlotConfig, _resource_apply_sparse_dup
 class Adagrad(tf.keras.optimizers.legacy.Adagrad):
   def __init__(self, learning_rate=0.001, **kwargs):
     super().__init__(learning_rate=learning_rate, **kwargs)
-    self.global_step = None
+    self.global_step = 0
     flags.FLAGS([sys.argv[0], f"--ev_slot_num={1}"])
 
   def _create_slots(self, var_list):

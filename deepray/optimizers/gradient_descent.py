@@ -30,7 +30,7 @@ from deepray.custom_ops.embedding_variable import kv_variable_ops
 class SGD(gd_old.SGD):
   def __init__(self, learning_rate=0.01, **kwargs):
     super().__init__(learning_rate=learning_rate, **kwargs)
-    self.global_step = None
+    self.global_step = 0
 
   def _resource_apply_sparse_duplicate_indices(self, grad, var, indices, **kwargs):
     var_device, var_dtype = var.device, var.dtype.base_dtype
