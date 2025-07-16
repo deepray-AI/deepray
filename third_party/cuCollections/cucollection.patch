@@ -149,27 +149,8 @@ index c1e21e8..13b252e 100644
 +
 +} // namespace detail
 +} // namespace cuco
-diff --git a/include/cuco/detail/pair.cuh b/include/cuco/detail/pair.cuh
-index 0d8a85e..a5178de 100644
---- a/include/cuco/detail/pair.cuh
-+++ b/include/cuco/detail/pair.cuh
-@@ -22,6 +22,14 @@
- #include <tuple>
- #include <type_traits>
- 
-+namespace std {
-+template <class...>
-+using void_t = void;
-+
-+template <bool B>
-+using bool_constant = std::integral_constant<bool, B>;
-+} // namespace std
-+
- namespace cuco {
- namespace detail {
- 
 diff --git a/include/cuco/detail/static_map.inl b/include/cuco/detail/static_map.inl
-index 1719970..c7ef713 100644
+index 1719970..23482f8 100644
 --- a/include/cuco/detail/static_map.inl
 +++ b/include/cuco/detail/static_map.inl
 @@ -31,7 +31,10 @@ static_map<Key, Value, Scope, Allocator>::static_map(std::size_t capacity,
@@ -252,15 +233,6 @@ index 1719970..c7ef713 100644
        }();
  
        // successful insert
-@@ -302,7 +313,7 @@ template <typename CG, typename Hash, typename KeyEqual>
- __device__ bool static_map<Key, Value, Scope, Allocator>::device_mutable_view::insert(
-   CG const& g, value_type const& insert_pair, Hash hash, KeyEqual key_equal) noexcept
- {
--  auto current_slot = initial_slot(g, insert_pair.first, hash);
-+  auto current_slot = this->initial_slot(g, insert_pair.first, hash);
- 
-   while (true) {
-     key_type const existing_key = current_slot->first.load(cuda::std::memory_order_relaxed);
 @@ -325,18 +336,18 @@ __device__ bool static_map<Key, Value, Scope, Allocator>::device_mutable_view::i
        uint32_t src_lane = __ffs(window_contains_empty) - 1;
  
@@ -291,13 +263,7 @@ index 1719970..c7ef713 100644
        }
  
        uint32_t res_status = g.shfl(static_cast<uint32_t>(status), src_lane);
-@@ -353,11 +364,48 @@ __device__ bool static_map<Key, Value, Scope, Allocator>::device_mutable_view::i
-     // if there are no empty slots in the current window,
-     // we move onto the next window
-     else {
--      current_slot = next_slot(g, current_slot);
-+      current_slot = this->next_slot(g, current_slot);
-     }
+@@ -358,6 +369,43 @@ __device__ bool static_map<Key, Value, Scope, Allocator>::device_mutable_view::i
    }
  }
  
@@ -341,24 +307,6 @@ index 1719970..c7ef713 100644
  template <typename Key, typename Value, cuda::thread_scope Scope, typename Allocator>
  template <typename Hash, typename KeyEqual>
  __device__ typename static_map<Key, Value, Scope, Allocator>::device_view::iterator
-@@ -412,7 +460,7 @@ static_map<Key, Value, Scope, Allocator>::device_view::find(CG g,
-                                                             Hash hash,
-                                                             KeyEqual key_equal) noexcept
- {
--  auto current_slot = initial_slot(g, k, hash);
-+  auto current_slot = this->initial_slot(g, k, hash);
- 
-   while (true) {
-     auto const existing_key = current_slot->first.load(cuda::std::memory_order_relaxed);
-@@ -438,7 +486,7 @@ static_map<Key, Value, Scope, Allocator>::device_view::find(CG g,
- 
-     // otherwise, all slots in the current window are full with other keys, so we move onto the
-     // next window
--    current_slot = next_slot(g, current_slot);
-+    current_slot = this->next_slot(g, current_slot);
-   }
- }
- 
 @@ -482,6 +530,42 @@ static_map<Key, Value, Scope, Allocator>::device_view::find(CG g,
    }
  }
@@ -370,7 +318,7 @@ index 1719970..c7ef713 100644
 +                                                                Hash hash,
 +                                                                KeyEqual key_equal) noexcept
 +{
-+  auto current_slot = this->ith_slot(idx, hash);
++  auto current_slot = ith_slot(idx, hash);
 +
 +  auto const existing_key = current_slot->first.load(cuda::std::memory_order_relaxed);
 +  // Key doesn't exist, return end()
@@ -483,7 +431,7 @@ index 2e57ac6..b85759d 100644
    thrust::device_vector<view_type> submap_views_;  ///< vector of device views for each submap
    thrust::device_vector<mutable_view_type>
 diff --git a/include/cuco/static_map.cuh b/include/cuco/static_map.cuh
-index 321b1f3..c6179f6 100644
+index 321b1f3..fa810e4 100644
 --- a/include/cuco/static_map.cuh
 +++ b/include/cuco/static_map.cuh
 @@ -123,10 +123,10 @@ class static_map {
@@ -501,18 +449,6 @@ index 321b1f3..c6179f6 100644
  
    friend class dynamic_map<Key, Value, Scope, Allocator>;
  
-@@ -141,9 +141,9 @@ class static_map {
-   using atomic_ctr_type    = cuda::atomic<std::size_t, Scope>;
-   using allocator_type     = Allocator;
-   using slot_allocator_type =
--    typename std::allocator_traits<Allocator>::rebind_alloc<pair_atomic_type>;
-+    typename std::allocator_traits<Allocator>::template rebind_alloc<pair_atomic_type>;
-   using counter_allocator_type =
--    typename std::allocator_traits<Allocator>::rebind_alloc<atomic_ctr_type>;
-+    typename std::allocator_traits<Allocator>::template rebind_alloc<atomic_ctr_type>;
- 
- #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 700)
-   static_assert(atomic_key_type::is_always_lock_free,
 @@ -417,6 +417,18 @@ class static_map {
        return &slots_[(hash(k) + g.thread_rank()) % capacity_];
      }

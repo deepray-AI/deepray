@@ -69,11 +69,32 @@ class GPUHashMapKV : public KVInterface<K, V> {
                                  const Eigen::GpuDevice& device) {
     if (n > 0) {
       mutex_lock lock(lock_);
-      int remaining_size =
-          n + *(hash_table_->start_idx) -
-          hash_table_->mem_bank_num * hash_table_->initial_bank_size;
-      if (remaining_size > 0) {
-        Resize(remaining_size);
+
+      // ++ Correct Fix: Add an explicit synchronization before reading the
+      // shared state ++
+      // 1. Before the CPU reads start_idx, explicitly prefetch its latest value
+      //    from the GPU to ensure coherency. cudaCpuDeviceId is a built-in
+      //    constant representing the host CPU.
+      cudaMemPrefetchAsync(
+          hash_table_->start_idx,
+          sizeof(cuda::atomic<std::size_t, cuda::thread_scope_device>),
+          cudaCpuDeviceId, device.stream());
+      // 2. Crucial step: wait for the asynchronous prefetch operation to
+      // complete.
+      cudaStreamSynchronize(device.stream());
+      // ++ End of Fix ++
+
+      // 1. Get the total capacity of all current memory banks.
+      size_t current_capacity =
+          (size_t)hash_table_->mem_bank_num * hash_table_->initial_bank_size;
+      // 2. Predict the maximum required ID after this batch (now reading the
+      // correct, latest value).
+      size_t required_capacity = *(hash_table_->start_idx) + n;
+      // 3. If the required capacity exceeds the current capacity, perform a
+      // resize.
+      if (required_capacity > current_capacity) {
+        int hint = required_capacity - current_capacity;
+        Resize(hint);
       }
       functor::KvLookupInsertKey<Eigen::GpuDevice, K, V>()(
           keys, item_idxs, n, hash_table_, hash_table_->start_idx,
