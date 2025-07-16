@@ -8,7 +8,7 @@ Deepray contains list of features to improve usability and performance for Deep 
 
 **Trainer**
  - Distributed Training with Horovod backend
- - Gradient accumulation
+ - Gradient Accumulation
 
 **Layers**
  - Embedding Variable from [DeepRec](https://github.com/DeepRec-AI/DeepRec).
@@ -35,7 +35,7 @@ Deepray contains list of features to improve usability and performance for Deep 
 #### Compatibility Matrix
 |  Deepray        | TensorFlow |  Compiler  | cuDNN | CUDA |
 | :-------------- | :--------- | :--------- | :---- | :--- |
-| deepray-0.21.86 | 2.15       | GCC 11.4.0 | 8.9   | 12.3.2 |
+| deepray-0.21.92 | 2.15       | GCC 11.4.0 | 8.9   | 12.2.2 |
 
 
 # Quick start
@@ -46,10 +46,10 @@ pip install deepray
 ```
 
  - Using Docker(**Recommended**):
-Latest Release Images: **hailinfufu/deepray-release:nightly-py3.10-tf2.15.0-cu12.3.2-ubuntu22.04**
+Latest Release Images: **hailinfufu/deepray-release:nightly-gpu-py3.10-tf2.15.1-cu12.2.2-ubuntu20.04**
 ```
-docker pull hailinfufu/deepray-release:nightly-py3.10-tf2.15.0-cu12.3.2-ubuntu22.04
-docker run -it hailinfufu/deepray-release:nightly-py3.10-tf2.15.0-cu12.3.2-ubuntu22.04
+docker pull hailinfufu/deepray-release:nightly-gpu-py3.10-tf2.15.1-cu12.2.2-ubuntu20.04
+docker run -it hailinfufu/deepray-release:nightly-gpu-py3.10-tf2.15.1-cu12.2.2-ubuntu20.04
 ```
 
  - Build from source:

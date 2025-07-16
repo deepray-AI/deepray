@@ -112,3 +112,6 @@ ENV PATH /opt/conda/bin:$PATH
 
 # Setup gdb-dashboard
 RUN wget -P ~ https://github.com/cyrus-and/gdb-dashboard/raw/master/.gdbinit
+
+# Setup curedump
+RUN echo "kernel.core_pattern = core.%e.%p.%t" >> /etc/sysctl.conf
