@@ -115,3 +115,11 @@ RUN wget -P ~ https://github.com/cyrus-and/gdb-dashboard/raw/master/.gdbinit
 
 # Setup curedump
 RUN echo "kernel.core_pattern = core.%e.%p.%t" >> /etc/sysctl.conf
+
+# Setup NSight Systems
+COPY tools/install_deps/install_nsight-systems.sh /install_deps/
+RUN bash /install_deps/install_nsight-systems.sh
+RUN wget https://raw.githubusercontent.com/harrism/nsys_easy/refs/heads/main/nsys_easy -O /usr/local/bin/nsys_easy && chmod +x /usr/local/bin/nsys_easy
+
+# Set breakpoint() in Python to call pudb
+ENV PYTHONBREAKPOINT=pudb.set_trace

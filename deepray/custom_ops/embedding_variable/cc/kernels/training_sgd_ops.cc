@@ -131,8 +131,10 @@ class KvResourceSparseApplyGradientDescentOp : public OpKernel {
         };
         const int64 cost = 1000;
         auto worker_threads = *(ctx->device()->tensorflow_cpu_worker_threads());
-        Shard(worker_threads.num_threads, worker_threads.workers, N, cost,
-              do_work);
+        Shard(/*max_parallelism=*/worker_threads.num_threads,
+              /*workers=*/worker_threads.workers,
+              /*total=*/N,
+              /*cost_per_unit=*/cost, do_work);
         if (has_counts && !indices_as_pointer) {
           const Tensor& indices = ctx->input(5);
           var->UpdateCache(indices, indices_counts);

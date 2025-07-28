@@ -1,13 +1,18 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "cmake")
+
 package(default_visibility = ["//visibility:public"])
 
-licenses(["notice"]) # Boost Software License, Version 1.0.
+filegroup(
+    name = "all_srcs",
+    srcs = glob(["**"]),
+)
 
-cc_library(
-  name = "libcuckoo",
-  hdrs = glob(["libcuckoo/*.hh"]),
-  includes = ["."],
-  copts = [
-        "-std=c++11",
-  ],
-  visibility = ["//visibility:public"],
+cmake(
+    name = "libcuckoo",
+    build_args = [
+        "--verbose",
+        "-j `nproc`",
+    ],
+    lib_source = ":all_srcs",
+    out_headers_only = True,
 )
