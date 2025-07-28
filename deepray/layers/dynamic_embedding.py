@@ -161,7 +161,7 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
         initializer=initializer,
         name=name,
         devices=de_option["devices"],
-        kv_creator=de_option["kv_creator"],
+        kv_creator=kwargs.get("kv_creator") if kwargs.get("kv_creator", None) else de_option["kv_creator"],
         **kwargs,
       )
       if is_main_process():
@@ -169,6 +169,10 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
       return
 
     de_option = self.get_de_options(device, init_capacity, **kwargs)
+    if kwargs.get("kv_creator", None):
+      kv_creator = kwargs.pop("kv_creator")
+    else:
+      kv_creator = de_option["kv_creator"]
     if not flags.FLAGS.use_horovod:
       self.emb = EmbeddingLayerGPU(
         embedding_size=embedding_dim,
@@ -178,7 +182,7 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
         name=name,
         devices=de_option["devices"],
         init_capacity=init_capacity,
-        kv_creator=de_option["kv_creator"],
+        kv_creator=kv_creator,
         **kwargs,
       )
       if is_main_process():
@@ -192,7 +196,7 @@ class DistributedDynamicEmbedding(tf.keras.layers.Layer):
         name=name,
         devices=de_option["devices"],
         init_capacity=init_capacity,
-        kv_creator=de_option["kv_creator"],
+        kv_creator=kv_creator,
         **kwargs,
       )
       if is_main_process():

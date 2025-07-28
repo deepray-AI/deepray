@@ -715,7 +715,7 @@ class SSDHashKV : public KVInterface<K, V> {
     return strings::StrCat(
         "map info size:", Size(),
         ", map info bucket_count:", hash_map_.load_factor(),
-        ",map info load_factor:", hash_map_.load_factor(),
+        ", map info load_factor:", hash_map_.load_factor(),
         ", map info max_load_factor:", hash_map_.max_load_factor(),
         ", map info min_load_factor: ", hash_map_.min_load_factor(),
         ", evict_version: ", evict_version_,

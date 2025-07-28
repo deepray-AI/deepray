@@ -238,19 +238,6 @@ def _tf_repositories():
         ],
     )
 
-    # http_archive(
-    #     name = "sparsehash_c11",  # BSD-3-Clause License
-    #     build_file = "//third_party/sparsehash_c11:sparsehash_c11.BUILD",
-    #     patch_args = ["-p1"],
-    #     patches = ["//third_party/sparsehash_c11:sparsehash_c11.patch"],
-    #     sha256 = "d4a43cad1e27646ff0ef3a8ce3e18540dbcb1fdec6cc1d1cb9b5095a9ca2a755",
-    #     strip_prefix = "sparsehash-c11-2.11.1",
-    #     urls = [
-    #         "https://github.com/sparsehash/sparsehash-c11/archive/v2.11.1.tar.gz",
-    #         # "https://github.com/sparsehash/sparsehash-c11/archive/v2.11.1.tar.gz",
-    #     ],
-    # )
-
     http_archive(
         name = "cutlass",
         urls = ["https://github.com/NVIDIA/cutlass/archive/319a389f42b776fae5701afcb943fc03be5b5c25.zip"],
@@ -273,14 +260,10 @@ def _tf_repositories():
     http_archive(
         name = "libcuckoo",
         build_file = "//third_party:libcuckoo.BUILD",
-        patch_args = ["-p1"],
-        patches = [
-            "//third_party:cuckoohash_map.patch",
-        ],
-        sha256 = "7238436b7346a0edf4ce57c12f43f71af5347b8b15f9bf2f0e24bfdca6225fc5",
-        strip_prefix = "libcuckoo-0.3",
+        sha256 = "c7c45494a5d10dd2876b47480133b0fe3c1f17d09016d9a42d577c674688616a",
+        strip_prefix = "libcuckoo-master",
         urls = [
-            "https://github.com/efficient/libcuckoo/archive/v0.3.zip",
+            "https://github.com/efficient/libcuckoo/archive/refs/heads/master.zip",
         ],
     )
 
@@ -313,6 +296,14 @@ def _tf_repositories():
         urls = [
             "https://github.com/openssl/openssl/archive/refs/tags/openssl-3.0.2.tar.gz",
         ],
+    )
+
+    http_archive(
+        name = "com_github_andremaravilha_cxxtimer",
+        sha256 = "d966949ae801acc9e895e7416a710fd3d44cd780e140602d4db59659e1dbd590",
+        urls = ["https://github.com/andremaravilha/cxxtimer/archive/refs/heads/master.zip"],
+        build_file = "//third_party:cxxtimer.BUILD",
+        strip_prefix = "cxxtimer-master",
     )
 
 def workspace():

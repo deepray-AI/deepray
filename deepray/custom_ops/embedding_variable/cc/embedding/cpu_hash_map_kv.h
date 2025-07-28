@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef TENSORFLOW_CORE_FRAMEWORK_EMBEDDING_CPU_HASH_MAP_KV_H_
 #define TENSORFLOW_CORE_FRAMEWORK_EMBEDDING_CPU_HASH_MAP_KV_H_
 
+#include "absl/hash/hash.h"
 #include "kv_interface.h"
 #include "sparsehash/dense_hash_map_lockless"
 #include "tensorflow/core/lib/core/status.h"
@@ -26,12 +27,13 @@ namespace embedding {
 template <class K, class V>
 class LocklessHashMap : public KVInterface<K, V> {
  public:
-  LocklessHashMap(FeatureDescriptor<V>* feat_desc) : feat_desc_(feat_desc) {
-    hash_map_.max_load_factor(0.8);
+  explicit LocklessHashMap(FeatureDescriptor<V>* feat_desc)
+      : feat_desc_(feat_desc) {
     hash_map_.set_empty_key_and_value(LocklessHashMap<K, V>::EMPTY_KEY_,
                                       nullptr);
-    hash_map_.set_counternum(16);
     hash_map_.set_deleted_key(LocklessHashMap<K, V>::DELETED_KEY_);
+    hash_map_.max_load_factor(0.8);
+    hash_map_.set_counternum(16);
     pthread_key_create(&key_, NULL);
   }
 
@@ -151,12 +153,11 @@ class LocklessHashMap : public KVInterface<K, V> {
   }
 
   std::string DebugString() const override {
-    LOG(INFO) << "map info size:" << Size()
-              << "map info bucket_count:" << hash_map_.bucket_count()
-              << "map info load_factor:" << hash_map_.load_factor()
-              << "map info max_load_factor:" << hash_map_.max_load_factor()
-              << "map info min_load_factor:" << hash_map_.min_load_factor();
-    return "";
+    return strings::StrCat("map info size: ", Size(),
+                           ", bucket_count: ", hash_map_.bucket_count(),
+                           ", load_factor: ", hash_map_.load_factor(),
+                           ", max_load_factor: ", hash_map_.max_load_factor(),
+                           ", min_load_factor: ", hash_map_.min_load_factor());
   }
 
   void UpdateValuePtr(K key, void* new_value_ptr,
@@ -195,7 +196,8 @@ class LocklessHashMap : public KVInterface<K, V> {
   }
 
  private:
-  typedef google::dense_hash_map_lockless<K, void*> LockLessHashMap;
+  typedef google::dense_hash_map_lockless<K, void*, absl::Hash<K>>
+      LockLessHashMap;
   static const int EMPTY_KEY_;
   static const int DELETED_KEY_;
   LockLessHashMap hash_map_;
