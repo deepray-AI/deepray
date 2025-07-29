@@ -15,3 +15,7 @@ zip
 unzip
 iputils-ping
 htop
+
+# Install OpenSSH for MPI to communicate between containers
+openssh-client
+openssh-server
