@@ -103,7 +103,6 @@ RUN bash /install_deps/install_openssh.sh
 
 # Setup openmpi
 COPY --from=openmpi_builder /opt/openmpi /opt/openmpi
-COPY --from=openmpi_builder /etc/ssh/ /etc/ssh/
 ENV PATH=${PATH}:/opt/openmpi/bin \
     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openmpi/lib
 RUN mpirun --version
@@ -117,7 +116,7 @@ ENV PATH /opt/conda/bin:$PATH
 # Setup gdb-dashboard
 RUN wget -P ~ https://github.com/cyrus-and/gdb-dashboard/raw/master/.gdbinit
 
-# Setup curedump
+# Setup coredump
 RUN echo "kernel.core_pattern = core.%e.%p.%t" >> /etc/sysctl.conf
 
 # Setup NSight Systems
