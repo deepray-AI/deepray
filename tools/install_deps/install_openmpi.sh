@@ -32,21 +32,7 @@ make -j $(nproc)
 make install
 ldconfig
 
-# Install OpenSSH for MPI to communicate between containers
-apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
-    openssh-client openssh-server &&
-    mkdir -p /var/run/sshd
-
-# Allow OpenSSH to talk to containers without asking for confirmation
-# by disabling StrictHostKeyChecking.
-# mpi-operator mounts the .ssh folder from a Secret. For that to work, we need
-# to disable UserKnownHostsFile to avoid write permissions.
-# Disabling StrictModes avoids directory and files read permission checks.
-sed -i 's/[ #]\(.*StrictHostKeyChecking \).*/ \1no/g' /etc/ssh/ssh_config &&
-    echo "    UserKnownHostsFile /dev/null" >>/etc/ssh/ssh_config &&
-    sed -i 's/#\(StrictModes \).*/\1no/g' /etc/ssh/sshd_config
-
-# Install Python packages for this container's version
+# Configure OpenMPI
 cat >bashrc.txt <<'EOF'
 export OPENMPI_HOME=/opt/openmpi
 export PATH="${OPENMPI_HOME}/bin:${PATH}"
