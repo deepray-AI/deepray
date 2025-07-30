@@ -56,7 +56,6 @@ ARG PY_VERSION
 
 # Setup openmpi
 COPY --from=openmpi_builder /opt/openmpi /opt/openmpi
-COPY --from=openmpi_builder /etc/ssh/ /etc/ssh/
 ENV PATH=${PATH}:/opt/openmpi/bin \
     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openmpi/lib
 RUN mpirun --version
