@@ -97,6 +97,10 @@ COPY --from=cmake_builder /opt/cmake /opt/cmake
 ENV PATH=${PATH}:/opt/cmake/bin \
     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/cmake/lib
 
+# Setup openssh
+COPY tools/install_deps/install_openssh.sh /install_deps/
+RUN bash /install_deps/install_openssh.sh
+
 # Setup openmpi
 COPY --from=openmpi_builder /opt/openmpi /opt/openmpi
 COPY --from=openmpi_builder /etc/ssh/ /etc/ssh/
