@@ -3,10 +3,12 @@
 # @Author  : Hailin.Fu
 # @license : Copyright(C),  <hailin.fu@>
 import os
-import yaml
+
 import pandas as pd
 import tensorflow as tf
+import yaml
 from absl import logging, flags
+from yaml import CLoader as Loader
 
 from deepray.design_patterns import SingletonType
 from deepray.utils.horovod_utils import is_main_process
@@ -18,7 +20,7 @@ class FeatureMap(metaclass=SingletonType):
       # Read YAML file
       with open(flags.FLAGS.config_file, encoding="utf-8") as stream:
         try:
-          self.yaml_conf = yaml.safe_load(stream)
+          self.yaml_conf = yaml.load(stream, Loader=Loader)
         except yaml.YAMLError as exc:
           logging.error(exc)
     if flags.FLAGS.feature_map and tf.io.gfile.exists(flags.FLAGS.feature_map):
