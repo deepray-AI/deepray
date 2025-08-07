@@ -102,3 +102,5 @@ ENV PATH /opt/conda/bin:$PATH
 COPY wheelhouse/ /install_deps/wheelhouse/
 RUN pip install /install_deps/wheelhouse/deepray-*.whl
 
+# Set breakpoint() in Python to call pudb
+ENV PYTHONBREAKPOINT=pudb.set_trace

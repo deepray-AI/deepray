@@ -12,5 +12,6 @@ tmux
 rsync
 zip
 libjemalloc-dev
+libyaml-cpp-dev
 unzip
 iputils-ping
