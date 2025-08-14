@@ -113,6 +113,7 @@ class KVInterface {
   virtual GPUHashTable<K, V>* HashTable() { return nullptr; }
 
   virtual void SetValueLen(int64 value_len) {}
+  virtual void SetSlotNum(int slot_num) {}
 };
 
 }  // namespace embedding

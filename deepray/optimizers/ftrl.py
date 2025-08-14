@@ -12,15 +12,14 @@ class FtrlOptimizer(tf.keras.optimizers.legacy.Ftrl):
   def __init__(self, learning_rate=0.001, **kwargs):
     super().__init__(learning_rate=learning_rate, **kwargs)
     self.global_step = 0
-    flags.FLAGS([sys.argv[0], f"--ev_slot_num={2}"])
 
   def _create_slots(self, var_list):
     # Create the "accum" and "linear" slots.
     for var in var_list:
       dtype = var.dtype.base_dtype
       init = tf.compat.v1.constant_initializer(self._initial_accumulator_value, dtype=dtype)
-      self.add_slot(var, "accumulator", init, slot_config=SlotConfig(slot_index=1, slot_num=2))
-      self.add_slot(var, "linear", slot_config=SlotConfig(slot_index=2, slot_num=2))
+      self.add_slot(var, "accumulator", init, slot_config=SlotConfig(slot_index=1))
+      self.add_slot(var, "linear", slot_config=SlotConfig(slot_index=2))
 
   def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
     var_device, var_dtype = var.device, var.dtype.base_dtype

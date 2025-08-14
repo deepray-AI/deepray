@@ -226,7 +226,6 @@ class InitializeKvVariableOp : public OpKernel {
     OP_REQUIRES_OK(c, c->GetAttr("default_value_dim", &default_value_dim_));
     OP_REQUIRES_OK(c, c->GetAttr("default_value_no_permission",
                                  &default_value_no_permission_));
-    OP_REQUIRES_OK(c, c->GetAttr("slot_num", &slot_num_));
     OP_REQUIRES_OK(c, c->GetAttr("record_freq", &record_freq_));
     OP_REQUIRES_OK(c, c->GetAttr("record_version", &record_version_));
     int embedding_var_type = 0;
@@ -314,7 +313,7 @@ class InitializeKvVariableOp : public OpKernel {
                     context->device()->GetAllocator(AllocatorAttributes());
                 auto embedding_config = EmbeddingConfig(
                     emb_index_ + block_num_ * slot_index_, emb_index_,
-                    block_num_, slot_num_, opname + "-primary", steps_to_live_,
+                    block_num_, opname + "-primary", steps_to_live_,
                     filter_freq_, max_freq_, l2_weight_threshold_,
                     max_element_size_, false_positive_probability_,
                     counter_type_, default_value_dim_,
@@ -323,8 +322,8 @@ class InitializeKvVariableOp : public OpKernel {
                 Allocator* alloc_for_ev =
                     (device_type_str_ == "CPU") ? ev_allocator() : allocator;
                 auto feat_desc = new embedding::FeatureDescriptor<TValue>(
-                    block_num_, slot_num_ + 1, alloc_for_ev, storage_type_,
-                    record_freq_, embedding_config.is_save_version(),
+                    block_num_, alloc_for_ev, storage_type_, record_freq_,
+                    embedding_config.is_save_version(),
                     {embedding_config.is_counter_filter(), filter_freq_});
                 auto storage = embedding::StorageFactory::Create<TKey, TValue>(
                     embedding::StorageConfig(storage_type_, storage_path_,
@@ -333,7 +332,7 @@ class InitializeKvVariableOp : public OpKernel {
                 *ptr = new EmbeddingVar<TKey, TValue>(handle_self.name(),
                                                       storage, embedding_config,
                                                       alloc_for_ev, feat_desc);
-                return (*ptr)->Init(default_values, default_value_dim_);
+                return (*ptr)->Init(default_values);
               }));
     } else {
       EmbeddingVar<TKey, TValue>* primary_variable = nullptr;
@@ -348,16 +347,16 @@ class InitializeKvVariableOp : public OpKernel {
                     context->device()->GetAllocator(AllocatorAttributes());
                 auto embedding_config = EmbeddingConfig(
                     primary_emb_index + block_num_ * primary_slot_index,
-                    primary_emb_index, block_num_, slot_num_,
-                    opname + "-primary", steps_to_live_, filter_freq_,
-                    max_freq_, l2_weight_threshold_, max_element_size_,
+                    primary_emb_index, block_num_, opname + "-primary",
+                    steps_to_live_, filter_freq_, max_freq_,
+                    l2_weight_threshold_, max_element_size_,
                     false_positive_probability_, counter_type_, 0, record_freq_,
                     record_version_, is_inference_);
                 Allocator* alloc_for_ev =
                     (device_type_str_ == "CPU") ? ev_allocator() : allocator;
                 auto feat_desc = new embedding::FeatureDescriptor<TValue>(
-                    block_num_, slot_num_ + 1, alloc_for_ev, storage_type_,
-                    record_freq_, embedding_config.is_save_version(),
+                    block_num_, alloc_for_ev, storage_type_, record_freq_,
+                    embedding_config.is_save_version(),
                     {embedding_config.is_counter_filter(), filter_freq_});
                 auto storage = embedding::StorageFactory::Create<TKey, TValue>(
                     embedding::StorageConfig(storage_type_, storage_path_,
@@ -381,8 +380,8 @@ class InitializeKvVariableOp : public OpKernel {
                     context->device()->GetAllocator(AllocatorAttributes());
                 auto embedding_config = EmbeddingConfig(
                     emb_index_ + block_num_ * slot_index_, emb_index_,
-                    block_num_, slot_num_, opname, steps_to_live_, filter_freq_,
-                    max_freq_, l2_weight_threshold_, max_element_size_,
+                    block_num_, opname, steps_to_live_, filter_freq_, max_freq_,
+                    l2_weight_threshold_, max_element_size_,
                     false_positive_probability_, counter_type_,
                     default_value_dim_, default_value_no_permission_,
                     record_freq_, record_version_, is_inference_);
@@ -392,7 +391,7 @@ class InitializeKvVariableOp : public OpKernel {
                     handle_self.name(), primary_variable->storage(),
                     embedding_config, alloc_for_ev,
                     primary_variable->feature_descriptor());
-                return (*ptr)->Init(default_values, default_value_dim_);
+                return (*ptr)->Init(default_values);
               }));
       core::ScopedUnref unref_me(primary_variable);
     }
@@ -410,7 +409,6 @@ class InitializeKvVariableOp : public OpKernel {
   int64 emb_index_;
   int64 block_num_;
   int64 slot_index_;
-  int64 slot_num_;
   std::string ht_type_;
   int64 ht_partition_num_;
   int64 filter_freq_;
@@ -515,51 +513,6 @@ class KvResourceIsInitializedOp : public OpKernel {
                               .HostMemory("is_initialized")   \
                               .Device(DEVICE_##dev),          \
                           KvResourceIsInitializedOp<ktype, vtype>);
-#define REGISTER_KERNELS_ALL(dev, type) \
-  REGISTER_KERNELS(dev, int32, type)    \
-  REGISTER_KERNELS(dev, int64, type)
-#define REGISTER_KERNELS_CPU(type) REGISTER_KERNELS_ALL(CPU, type)
-TF_CALL_FLOAT_TYPES(REGISTER_KERNELS_CPU)
-#undef REGISTER_KERNELS_CPU
-
-#if GOOGLE_CUDA
-#define REGISTER_KERNELS_GPU(type) REGISTER_KERNELS_ALL(GPU, type)
-TF_CALL_GPU_NUMBER_TYPES(REGISTER_KERNELS_GPU)
-#undef REGISTER_KERNELS_GPU
-#endif  // GOOGLE_CUDA
-
-#undef REGISTER_KERNELS_ALL
-#undef REGISTER_KERNELS
-
-template <typename TKey, typename TValue>
-class KvResourceIsAllSlotInitializedOp : public OpKernel {
- public:
-  explicit KvResourceIsAllSlotInitializedOp(OpKernelConstruction* c)
-      : OpKernel(c) {}
-
-  void Compute(OpKernelContext* ctx) override {
-    Tensor* output;
-    OP_REQUIRES_OK(ctx, ctx->allocate_output(0, {}, &output));
-    EmbeddingVar<TKey, TValue>* ev = nullptr;
-    bool found;
-    if (LookupResource<EmbeddingVar<TKey, TValue>>(ctx, HandleFromInput(ctx, 0),
-                                                   &ev)
-            .ok()) {
-      found = ev->IsAllSlotInitialized();
-      ev->Unref();
-    } else {
-      found = false;
-    }
-    output->flat<bool>()(0) = found;
-  }
-};
-#define REGISTER_KERNELS(dev, ktype, vtype)                          \
-  REGISTER_KERNEL_BUILDER(Name("KvVarIsAllSlotInitializedOp")        \
-                              .TypeConstraint<ktype>("Tkeys")        \
-                              .TypeConstraint<vtype>("dtype")        \
-                              .HostMemory("is_all_slot_initialized") \
-                              .Device(DEVICE_##dev),                 \
-                          KvResourceIsAllSlotInitializedOp<ktype, vtype>);
 #define REGISTER_KERNELS_ALL(dev, type) \
   REGISTER_KERNELS(dev, int32, type)    \
   REGISTER_KERNELS(dev, int64, type)

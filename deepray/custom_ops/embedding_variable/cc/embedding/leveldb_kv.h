@@ -165,7 +165,7 @@ class LevelDBKV : public KVInterface<K, V> {
       K key;
       memcpy((char*)&key, it->key().ToString().data(), sizeof(K));
       key_list->emplace_back(key);
-      FeatureDescriptor<V> hbm_feat_desc(1, 1, ev_allocator() /*useless*/,
+      FeatureDescriptor<V> hbm_feat_desc(1, ev_allocator() /*useless*/,
                                          StorageType::HBM_DRAM, true, true,
                                          {false, 0});
       void* value_ptr = cpu_allocator()->AllocateRaw(
@@ -195,7 +195,7 @@ class LevelDBKV : public KVInterface<K, V> {
       int part_id = key % kSavedPartitionNum % partition_nums;
       if (part_id == partition_id) continue;
       key_list[part_id].emplace_back(key);
-      FeatureDescriptor<V> hbm_feat_desc(1, 1, ev_allocator() /*useless*/,
+      FeatureDescriptor<V> hbm_feat_desc(1, ev_allocator() /*useless*/,
                                          StorageType::HBM_DRAM, true, true,
                                          {false, 0});
       void* value_ptr = cpu_allocator()->AllocateRaw(

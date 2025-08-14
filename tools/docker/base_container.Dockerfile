@@ -104,3 +104,6 @@ RUN pip install /install_deps/wheelhouse/deepray-*.whl
 
 # Set breakpoint() in Python to call pudb
 ENV PYTHONBREAKPOINT=pudb.set_trace
+
+# Setup gdb-dashboard
+RUN wget -P ~ https://github.com/cyrus-and/gdb-dashboard/raw/master/.gdbinit

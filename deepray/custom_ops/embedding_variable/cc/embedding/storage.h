@@ -61,9 +61,7 @@ class Storage {
 
  public:
   explicit Storage(const StorageConfig& storage_config)
-      : storage_config_(storage_config) {
-    initialize_value_.resize(storage_config.embedding_config.slot_num + 1);
-  }
+      : storage_config_(storage_config) {}
   virtual ~Storage() {}
   TF_DISALLOW_COPY_AND_ASSIGN(Storage);
 
@@ -209,9 +207,9 @@ class Storage {
       ss << ssd_emb_file_name << "/" << file_id << ".emb";
       int fd = open(ss.str().data(), O_RDONLY);
       EmbeddingConfig& emb_config = storage_config_.embedding_config;
-      FeatureDescriptor<V> normal_feat_desc(
-          emb_config.block_num, emb_config.slot_num + 1, ev_allocator(),
-          StorageType::DRAM, true, true, {false, 0});
+      FeatureDescriptor<V> normal_feat_desc(emb_config.block_num,
+                                            ev_allocator(), StorageType::DRAM,
+                                            true, true, {false, 0});
       void* value_ptr = normal_feat_desc.Allocate();
       char* file_addr =
           (char*)mmap(nullptr, normal_feat_desc.data_bytes() + key_offset,
@@ -359,7 +357,6 @@ class Storage {
 
   mutex mu_;
   std::atomic_flag flag_ = ATOMIC_FLAG_INIT;
-  std::vector<V*> initialize_value_;
 };
 }  // namespace embedding
 }  // namespace tensorflow

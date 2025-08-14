@@ -50,8 +50,8 @@ class GPUHashMapKV : public KVInterface<K, V> {
                                    hash_table_->initial_bank_size);
       }
       if (hash_table_->mem_bank_num != 0) {
-        auto num_elements = hash_table_->mem_bank_num *
-                            (config_.block_num * (1 + config_.slot_num));
+        auto num_elements =
+            hash_table_->mem_bank_num * config_.block_num * slot_num_;
         TypedAllocator::Deallocate(alloc_, hash_table_->d_bank_ptrs,
                                    num_elements);
         TypedAllocator::Deallocate(alloc_, hash_table_->d_existence_flag_ptrs,
@@ -64,6 +64,7 @@ class GPUHashMapKV : public KVInterface<K, V> {
   TF_DISALLOW_COPY_AND_ASSIGN(GPUHashMapKV);
 
   void SetValueLen(int64 value_len) { value_len_ = value_len; }
+  void SetSlotNum(int slot_num) { slot_num_ = slot_num; }
 
   Status BatchLookupOrCreateKeys(const K* keys, size_t n, int32* item_idxs,
                                  const Eigen::GpuDevice& device) {
@@ -113,8 +114,7 @@ class GPUHashMapKV : public KVInterface<K, V> {
       functor::KvLookupCreateEmb<Eigen::GpuDevice, K, V>()(
           keys, val, default_v, value_len_, item_idxs, n, config_.emb_index,
           default_v_num, hash_table_->d_bank_ptrs,
-          hash_table_->d_existence_flag_ptrs,
-          (config_.block_num * (1 + config_.slot_num)),
+          hash_table_->d_existence_flag_ptrs, config_.block_num * slot_num_,
           hash_table_->initial_bank_size, device.stream());
       TypedAllocator::Deallocate(alloc_, item_idxs, n);
     }
@@ -141,7 +141,7 @@ class GPUHashMapKV : public KVInterface<K, V> {
       value_list->emplace_back(values + i * value_len_);
     }
 
-    auto slot_num = emb_config.block_num * (1 + emb_config.slot_num);
+    auto slot_num = emb_config.block_num * slot_num_;
     functor::KvKeyGetSnapshot<Eigen::GpuDevice, K, V>()(
         keys_gpu, item_idxs, emb_config.emb_index, emb_config.primary_emb_index,
         hash_table_->d_existence_flag_ptrs, hash_table_->mem_bank_num, slot_num,
@@ -212,8 +212,8 @@ class GPUHashMapKV : public KVInterface<K, V> {
             key_import.data(), value_gpu, value_len_, item_idxs, n,
             emb_config.emb_index, key_import.size(), hash_table_->d_bank_ptrs,
             hash_table_->d_existence_flag_ptrs,
-            (emb_config.block_num * (1 + emb_config.slot_num)),
-            hash_table_->initial_bank_size, stream);
+            emb_config.block_num * slot_num_, hash_table_->initial_bank_size,
+            stream);
         EventSynchronize(stream);
         TypedAllocator::Deallocate(alloc_, item_idxs, n);
         TypedAllocator::Deallocate(alloc_, value_gpu, value_import.size());
@@ -281,13 +281,13 @@ class GPUHashMapKV : public KVInterface<K, V> {
       if (is_inference_) {
         functor::KvLookupKey<GPUStaticHashTable<K, V>, K, V>()(
             keys, val, n, value_len_, config_.emb_index,
-            (config_.block_num * (1 + config_.slot_num)), static_hash_table_,
-            default_v, config_.default_value_dim, device.stream());
+            (config_.block_num * slot_num_), static_hash_table_, default_v,
+            config_.default_value_dim, device.stream());
       } else {
         functor::KvLookupKey<GPUHashTable<K, V>, K, V>()(
             keys, val, n, value_len_, config_.emb_index,
-            (config_.block_num * (1 + config_.slot_num)), hash_table_,
-            default_v, config_.default_value_dim, device.stream());
+            (config_.block_num * slot_num_), hash_table_, default_v,
+            config_.default_value_dim, device.stream());
       }
     }
     return OkStatus();
@@ -296,7 +296,7 @@ class GPUHashMapKV : public KVInterface<K, V> {
  private:
   void Resize(int hint) {
     while (hint > 0) {
-      for (int i = 0; i < (config_.block_num * (1 + config_.slot_num)); ++i) {
+      for (int i = 0; i < (config_.block_num * slot_num_); ++i) {
         V* ptr = TypedAllocator::Allocate<V>(
             alloc_, value_len_ * hash_table_->initial_bank_size,
             AllocationAttributes());
@@ -310,8 +310,8 @@ class GPUHashMapKV : public KVInterface<K, V> {
       ++hash_table_->mem_bank_num;
     }
 
-    auto num_elements = hash_table_->mem_bank_num *
-                        (config_.block_num * (1 + config_.slot_num));
+    auto num_elements =
+        hash_table_->mem_bank_num * config_.block_num * slot_num_;
     if (hash_table_->d_bank_ptrs) {
       TypedAllocator::Deallocate(alloc_, hash_table_->d_bank_ptrs,
                                  num_elements);
@@ -344,6 +344,7 @@ class GPUHashMapKV : public KVInterface<K, V> {
   GPUHashTable<K, V>* hash_table_;
   Allocator* alloc_;
   int64 value_len_;
+  int slot_num_;
   mutex lock_;
 };
 

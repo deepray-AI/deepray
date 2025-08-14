@@ -31,13 +31,12 @@ class NormalFeatureDescriptorImpl;
 template <class V>
 class CounterFilterDescriptorImpl : public FeatureDescriptorImpl<V> {
  public:
-  CounterFilterDescriptorImpl(Allocator* alloc, int64 slot_num,
-                              bool need_record_freq, bool need_record_version,
-                              int64 filter_freq, StorageType storage_type)
+  CounterFilterDescriptorImpl(Allocator* alloc, bool need_record_freq,
+                              bool need_record_version, int64 filter_freq,
+                              StorageType storage_type)
       : filter_freq_(filter_freq),
         is_record_freq_(need_record_freq),
-        FeatureDescriptorImpl<V>(slot_num, need_record_freq,
-                                 need_record_version) {
+        FeatureDescriptorImpl<V>(need_record_freq, need_record_version) {
     if (filter_freq >= (1L << version_offset_bits_)) {
       LOG(FATAL) << "Filter freqeuncy threshold shouldn't bigger than 2^12.";
     }
@@ -46,11 +45,11 @@ class CounterFilterDescriptorImpl : public FeatureDescriptorImpl<V> {
         storage_type == StorageType::HBM_DRAM_SSDHASH) {
 #if GOOGLE_CUDA
       feat_desc_impl_.reset(new HbmMultiTierFeatureDescriptorImpl<V>(
-          alloc, slot_num, need_record_freq, need_record_version));
+          alloc, need_record_freq, need_record_version));
 #endif  // GOOGLE_CUDA
     } else {
       feat_desc_impl_.reset(new NormalFeatureDescriptorImpl<V>(
-          alloc, slot_num, need_record_freq, need_record_version));
+          alloc, need_record_freq, need_record_version));
     }
   }
 
@@ -75,13 +74,13 @@ class CounterFilterDescriptorImpl : public FeatureDescriptorImpl<V> {
 
   ~CounterFilterDescriptorImpl() {}
 
-  bool InitSlotInfo(int emb_index, int64 embedding_dim,
-                    const std::pair<V*, int64>& default_value) override {
+  Status InitSlotInfo(int emb_index, int64 embedding_dim,
+                      const std::pair<V*, int64>& default_value) override {
     return feat_desc_impl_->InitSlotInfo(emb_index, embedding_dim,
                                          default_value);
   }
 
-  bool InitSlotInfo(FeatureDescriptorImpl<V>* feat_desc_impl) override {
+  Status InitSlotInfo(FeatureDescriptorImpl<V>* feat_desc_impl) override {
     return feat_desc_impl_->InitSlotInfo(feat_desc_impl);
   }
 

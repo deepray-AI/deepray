@@ -157,7 +157,7 @@ class DramLevelDBStore : public MultiTierStorage<K, V> {
     {
       mutex_lock l(*(leveldb_->get_mutex()));
       std::vector<FeatureDescriptor<V>*> feat_desc_list(2);
-      FeatureDescriptor<V> hbm_feat_desc(1, 1, ev_allocator() /*useless*/,
+      FeatureDescriptor<V> hbm_feat_desc(1, ev_allocator() /*useless*/,
                                          StorageType::HBM_DRAM, true, true,
                                          {false, 0});
       feat_desc_list[0] = dram_feat_desc_;

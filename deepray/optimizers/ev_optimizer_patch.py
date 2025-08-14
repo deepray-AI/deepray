@@ -48,8 +48,7 @@ from deepray.custom_ops.embedding_variable.variable_scope import (
 
 
 class SlotConfig:
-  def __init__(self, slot_num=1, slot_index=0, slot_type=config_pb2.SlotType.EMBEDDING_VARIABLE):
-    self.slot_num = slot_num
+  def __init__(self, slot_index=0, slot_type=config_pb2.SlotType.EMBEDDING_VARIABLE):
     self.slot_index = slot_index
     self.slot_type = slot_type
 
@@ -57,11 +56,6 @@ class SlotConfig:
 def _set_init_op_embedding_type_attr(var, embedding_type):
   var._init_op._set_attr("embedding_variable_type", attr_value_pb2.AttrValue(i=embedding_type))
   var._initializer_for_restore._set_attr("embedding_variable_type", attr_value_pb2.AttrValue(i=embedding_type))
-
-
-def _set_init_op_slot_num_attr(var, slot_num):
-  var._init_op._set_attr("slot_num", attr_value_pb2.AttrValue(i=slot_num))
-  var._initializer_for_restore._set_attr("slot_num", attr_value_pb2.AttrValue(i=slot_num))
 
 
 def add_slot(self, var, slot_name, initializer="zeros", shape=None, slot_config=None):
@@ -126,8 +120,6 @@ def add_slot(self, var, slot_name, initializer="zeros", shape=None, slot_config=
           else:
             filter_strategy = ev_variables.CounterFilter(filter_freq=var._filter_freq)
         if slot_config.slot_type is config_pb2.SlotType.EMBEDDING_VARIABLE:
-          # _set_init_op_slot_num_attr(var, slot_config.slot_num)
-          var._slot_num = slot_config.slot_num
           emb_index = var._emb_index
           if var.block_num > 1:
             var = var._primary
@@ -146,7 +138,6 @@ def add_slot(self, var, slot_name, initializer="zeros", shape=None, slot_config=
               block_num=var.block_num,
               slot_index=slot_config.slot_index,
               primary=var._primary,
-              slot_num=slot_config.slot_num,
               storage_type=var.storage_type,
               storage_path=var._storage_path,
               storage_size=var._storage_size,

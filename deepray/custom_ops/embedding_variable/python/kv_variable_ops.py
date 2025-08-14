@@ -607,11 +607,6 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
         if self._primary is None:
           self._primary = self
 
-        if self._is_primary:
-          self._slot_num = flags.FLAGS.ev_slot_num
-        else:
-          self._slot_num = evconfig.slot_num
-
         if self._in_graph_mode:
           with ops.name_scope("IsInitialized"):
             self._is_initialized_op = gen_kv_variable_ops.kv_var_is_initialized_op(
@@ -630,7 +625,6 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
                   self._primary._handle,
                   variables._try_guard_against_uninitialized_dependencies(name, initial_value),
                   ops.convert_to_tensor(invalid_key),
-                  slot_num=self._slot_num,
                   shape=initial_value.get_shape()[rank:],
                   steps_to_live=self._steps_to_live,
                   emb_index=self._emb_index,
@@ -673,7 +667,6 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
             self._primary._handle,
             initial_value,
             ops.convert_to_tensor(invalid_key),
-            slot_num=self._slot_num,
             shape=shape,
             steps_to_live=self._steps_to_live,
             emb_index=self._emb_index,
@@ -747,7 +740,6 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
         variables._try_guard_against_uninitialized_dependencies(name, initial_value),
         ops.convert_to_tensor(invalid_key),
         initial_num_buckets=config_pb2.IsSetInitialized.NOT_SET_INITAILIZED,
-        slot_num=self._slot_num,
         shape=initial_value.get_shape()[rank:],
         steps_to_live=self._steps_to_live,
         emb_index=self._emb_index,
@@ -818,11 +810,6 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
 
   def is_initialized(self):
     return gen_kv_variable_ops.kv_var_is_initialized_op(self._handle, Tkeys=self._invalid_key_type, dtype=self._dtype)
-
-  def is_all_slot_initialized(self):
-    return gen_kv_variable_ops.kv_var_is_all_slot_initialized_op(
-      self._handle, Tkeys=self._invalid_key_type, dtype=self._dtype
-    )
 
   @property
   def block_num(self):

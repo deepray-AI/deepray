@@ -39,24 +39,22 @@ class CounterFilterDescriptorImpl;
 template <class V>
 class FeatureDescriptor {
  public:
-  FeatureDescriptor(int64 block_num, int64 slot_num, Allocator* alloc,
-                    StorageType storage_type, bool need_record_freq,
-                    bool need_record_version,
+  FeatureDescriptor(int64 block_num, Allocator* alloc, StorageType storage_type,
+                    bool need_record_freq, bool need_record_version,
                     const std::pair<bool, int64>& filter_info) {
     if (block_num > 1) {
-      feat_desc_impl_.reset(
-          new DynmaicDimDescriptorImpl<V>(alloc, block_num * slot_num));
+      feat_desc_impl_.reset(new DynmaicDimDescriptorImpl<V>(alloc));
     } else if (filter_info.first) {
       feat_desc_impl_.reset(new CounterFilterDescriptorImpl<V>(
-          alloc, slot_num, need_record_freq, need_record_version,
-          filter_info.second, storage_type));
+          alloc, need_record_freq, need_record_version, filter_info.second,
+          storage_type));
     } else if (storage_type == StorageType::HBM_DRAM ||
                storage_type == StorageType::HBM_DRAM_SSDHASH) {
       feat_desc_impl_.reset(new HbmMultiTierFeatureDescriptorImpl<V>(
-          alloc, slot_num, need_record_freq, need_record_version));
+          alloc, need_record_freq, need_record_version));
     } else {
       feat_desc_impl_.reset(new NormalFeatureDescriptorImpl<V>(
-          alloc, slot_num, need_record_freq, need_record_version));
+          alloc, need_record_freq, need_record_version));
     }
   }
 
@@ -78,13 +76,13 @@ class FeatureDescriptor {
     }
   }
 
-  bool InitSlotInfo(int emb_index, int64 embedding_dim,
-                    const std::pair<V*, int64>& default_value) {
+  Status InitSlotInfo(int emb_index, int64 embedding_dim,
+                      const std::pair<V*, int64>& default_value) {
     return feat_desc_impl_->InitSlotInfo(emb_index, embedding_dim,
                                          default_value);
   }
 
-  bool InitSlotInfo(FeatureDescriptor<V>* feat_desc) {
+  Status InitSlotInfo(FeatureDescriptor<V>* feat_desc) {
     return feat_desc_impl_->InitSlotInfo(feat_desc->feat_desc_impl_.get());
   }
 
@@ -130,6 +128,8 @@ class FeatureDescriptor {
   int64 GetFreq(void* val) { return feat_desc_impl_->GetFreq(val); }
 
   int64 GetVersion(void* val) { return feat_desc_impl_->GetVersion(val); }
+
+  int32 GetSlotNum() { return feat_desc_impl_->GetSlotNum(); }
 
   void SetFreq(void* val, int64 freq) { feat_desc_impl_->SetFreq(val, freq); }
 

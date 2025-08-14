@@ -106,7 +106,6 @@ REGISTER_OP("InitializeKvVariableOp")
     .Input("resource_primary: resource")
     .Input("value: dtype")
     .Input("empty_key: Tkeys")
-    .Attr("slot_num: int = 0")
     .Attr("Tkeys: {int64, int32}")
     .Attr("dtype: type")
     .Attr("shape: shape")
@@ -150,7 +149,6 @@ REGISTER_OP("InitializeKvVariableV2Op")
     .Input("resource_primary: resource")
     .Input("value: dtype")
     .Input("empty_key: Tkeys")
-    .Attr("slot_num: int = 0")
     .Attr("Tkeys: {int64, int32}")
     .Attr("dtype: type")
     .Attr("shape: shape")
@@ -201,20 +199,6 @@ Checks whether a resource handle-based variable has been initialized.
 
 resource: the input resource handle.
 is_initialized: a scalar boolean which is true if the variable has been
-initialized.
-)doc");
-
-REGISTER_OP("KvVarIsAllSlotInitializedOp")
-    .Input("resource: resource")
-    .Output("is_all_slot_initialized: bool")
-    .Attr("Tkeys: {int64, int32}")
-    .Attr("dtype: type = DT_FLOAT")
-    .SetShapeFn(tensorflow::shape_inference::ScalarShape)
-    .Doc(R"doc(
-Checks whether a resource handle-based variable has been initialized.
-
-resource: the input resource handle.
-is_all_slot_initialized: a scalar boolean which is true if the variable has been
 initialized.
 )doc");
 

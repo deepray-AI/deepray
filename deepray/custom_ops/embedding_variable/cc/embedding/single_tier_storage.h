@@ -392,6 +392,12 @@ class HbmStorage : public SingleTierStorage<K, V> {
   }
 
  protected:
+  void Init() override {
+    slot_num++;
+    printf("HbmStorage has registered %d slot.\n", slot_num);
+    SingleTierStorage<K, V>::kv_->SetSlotNum(slot_num);
+  }
+
   Status RestoreFeatures(int64 key_num, int bucket_num, int64 partition_id,
                          int64 partition_num, int64 value_len, bool is_filter,
                          bool is_incr, const EmbeddingConfig& emb_config,
@@ -418,6 +424,9 @@ class HbmStorage : public SingleTierStorage<K, V> {
     gpu_kv->Import(key_import, value_import, device, emb_config);
     return OkStatus();
   }
+
+ private:
+  int slot_num = 0;
 };
 
 template <typename K, typename V>

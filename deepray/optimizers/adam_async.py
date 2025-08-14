@@ -36,15 +36,14 @@ class AdamAsync(tf.keras.optimizers.legacy.Adam):
     super().__init__(learning_rate=learning_rate, **kwargs)
     self._apply_sparse_rmsprop = apply_sparse_rmsprop
     self.global_step = 0
-    flags.FLAGS([sys.argv[0], f"--ev_slot_num={2}"])
 
   def _create_slots(self, var_list):
     # Create slots for the first and second moments.
     # Separate for-loops to respect the ordering of slot variables from v1.
     for var in var_list:
-      self.add_slot(var, "m", slot_config=SlotConfig(slot_index=1, slot_num=2))
+      self.add_slot(var, "m", slot_config=SlotConfig(slot_index=1))
       # for var in var_list:
-      self.add_slot(var, "v", slot_config=SlotConfig(slot_index=2, slot_num=2))
+      self.add_slot(var, "v", slot_config=SlotConfig(slot_index=2))
       if isinstance(var, kv_variable_ops.EmbeddingVariable):
         self.add_slot(
           var,

@@ -66,20 +66,24 @@ class DynmaicDimDescriptorImpl : public FeatureDescriptorImpl<V> {
   using FeatureDescriptorImpl<V>::slot_infos_;
 
  public:
-  DynmaicDimDescriptorImpl(Allocator* alloc, int64 slot_num)
-      : alloc_bytes_(sizeof(std::atomic_flag) + sizeof(MetaHeader) +
-                     sizeof(V*) * slot_num),
-        header_offset_bytes_(sizeof(V*) * slot_num),
-        flag_offset_bytes_(sizeof(MetaHeader) + sizeof(V*) * slot_num),
-        FeatureDescriptorImpl<V>(slot_num, false, false) {
+  DynmaicDimDescriptorImpl(Allocator* alloc)
+      : alloc_bytes_(0), alloc_(alloc), FeatureDescriptorImpl<V>(false, false) {
     FeatureDescriptorImpl<V>::CreateFreqAndVersionDescriptor(&alloc_bytes_);
   }
   ~DynmaicDimDescriptorImpl() {}
 
-  bool InitSlotInfo(int emb_index, int64 embedding_dim,
-                    const std::pair<V*, int64>& default_value) override {
-    return FeatureDescriptorImpl<V>::SetEmbeddingInfo(emb_index, embedding_dim,
-                                                      default_value);
+  Status InitSlotInfo(int emb_index, int64 embedding_dim,
+                      const std::pair<V*, int64>& default_value) override {
+    TF_CHECK_OK(FeatureDescriptorImpl<V>::SetEmbeddingInfo(
+        emb_index, embedding_dim, default_value));
+    // Initialize the allocation sizes and offsets
+    alloc_bytes_ = sizeof(std::atomic_flag) + sizeof(MetaHeader) +
+                   sizeof(V*) * this->GetSlotNum();
+    header_offset_bytes_ = sizeof(V*) * this->GetSlotNum();
+    flag_offset_bytes_ = sizeof(MetaHeader) + sizeof(V*) * this->GetSlotNum();
+
+    FeatureDescriptorImpl<V>::SetFreqAndVersionOffset(&alloc_bytes_);
+    return OkStatus();
   }
 
   V* GetEmbedding(void* val, int emb_index) override {

@@ -36,15 +36,14 @@ class Adam(adam_old.Adam):
   def __init__(self, learning_rate=0.001, **kwargs):
     super().__init__(learning_rate=learning_rate, **kwargs)
     self.global_step = 0
-    flags.FLAGS([sys.argv[0], f"--ev_slot_num={2}"])
 
   def _create_slots(self, var_list):
     # Create slots for the first and second moments.
     # Separate for-loops to respect the ordering of slot variables from v1.
     for var in var_list:
-      self.add_slot(var, "m", slot_config=SlotConfig(slot_index=1, slot_num=2))
+      self.add_slot(var, "m", slot_config=SlotConfig(slot_index=1))
     for var in var_list:
-      self.add_slot(var, "v", slot_config=SlotConfig(slot_index=2, slot_num=2))
+      self.add_slot(var, "v", slot_config=SlotConfig(slot_index=2))
     if self.amsgrad:
       for var in var_list:
         self.add_slot(var, "vhat")

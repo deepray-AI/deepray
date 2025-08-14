@@ -13,7 +13,6 @@ struct EmbeddingConfig {
   int64 emb_index;
   int64 primary_emb_index;
   int64 block_num;
-  int64 slot_num;
   std::string name;
   int64 steps_to_live;
   int64 filter_freq;
@@ -29,10 +28,10 @@ struct EmbeddingConfig {
   bool is_inference;
 
   EmbeddingConfig(int64 emb_index = 0, int64 primary_emb_index = 0,
-                  int64 block_num = 1, int slot_num = 0,
-                  const std::string& name = "", int64 steps_to_live = 0,
-                  int64 filter_freq = 0, int64 max_freq = 999999,
-                  float l2_weight_threshold = -1.0, int64 max_element_size = 0,
+                  int64 block_num = 1, const std::string& name = "",
+                  int64 steps_to_live = 0, int64 filter_freq = 0,
+                  int64 max_freq = 999999, float l2_weight_threshold = -1.0,
+                  int64 max_element_size = 0,
                   float false_positive_probability = -1.0,
                   DataType counter_type = DT_UINT64,
                   int64 default_value_dim = 4096,
@@ -42,7 +41,6 @@ struct EmbeddingConfig {
       : emb_index(emb_index),
         primary_emb_index(primary_emb_index),
         block_num(block_num),
-        slot_num(slot_num),
         name(name),
         steps_to_live(steps_to_live),
         filter_freq(filter_freq),
@@ -98,9 +96,8 @@ struct EmbeddingConfig {
     return strings::StrCat(
         "opname: ", name, " emb_index: ", emb_index,
         " primary_emb_index: ", primary_emb_index, " block_num: ", block_num,
-        " slot_num: ", slot_num, " steps_to_live: ", steps_to_live,
-        " filter_freq: ", filter_freq, " max_freq: ", max_freq,
-        " l2_weight_threshold: ", l2_weight_threshold,
+        " steps_to_live: ", steps_to_live, " filter_freq: ", filter_freq,
+        " max_freq: ", max_freq, " l2_weight_threshold: ", l2_weight_threshold,
         " default_value_dim: ", default_value_dim);
   }
 };

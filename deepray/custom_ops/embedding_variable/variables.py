@@ -144,7 +144,6 @@ class EmbeddingVariableConfig(object):
     slot_index=None,
     block_num=None,
     primary=None,
-    slot_num=None,
     storage_type=config_pb2.StorageType.DRAM,
     storage_path=None,
     storage_size=None,
@@ -166,7 +165,6 @@ class EmbeddingVariableConfig(object):
     self.slot_index = slot_index
     self.block_num = block_num
     self.primary = primary
-    self.slot_num = slot_num
     self.ht_type = ht_type
     self.l2_weight_threshold = l2_weight_threshold
     self.filter_strategy = filter_strategy

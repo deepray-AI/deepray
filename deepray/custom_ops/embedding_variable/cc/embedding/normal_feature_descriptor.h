@@ -28,12 +28,13 @@ class HbmMultiTierFeatureDescriptorImpl;
 template <class V>
 class NormalFeatureDescriptorImpl : public FeatureDescriptorImpl<V> {
  public:
-  NormalFeatureDescriptorImpl(Allocator* alloc, int64 slot_num,
-                              bool need_record_freq, bool need_record_version)
+  NormalFeatureDescriptorImpl(Allocator* alloc, bool need_record_freq,
+                              bool need_record_version)
       : alloc_bytes_(0),
         alloc_(alloc),
-        FeatureDescriptorImpl<V>(slot_num, need_record_freq,
-                                 need_record_version) {}
+        FeatureDescriptorImpl<V>(need_record_freq, need_record_version) {
+    FeatureDescriptorImpl<V>::CreateFreqAndVersionDescriptor(&alloc_bytes_);
+  }
 
   NormalFeatureDescriptorImpl(NormalFeatureDescriptorImpl<V>* feat_desc_impl)
       : alloc_(feat_desc_impl->alloc_),
@@ -47,22 +48,22 @@ class NormalFeatureDescriptorImpl : public FeatureDescriptorImpl<V> {
 
   ~NormalFeatureDescriptorImpl() {}
 
-  bool InitSlotInfo(int emb_index, int64 embedding_dim,
-                    const std::pair<V*, int64>& default_value) override {
-    bool is_compute_alloc_bytes = FeatureDescriptorImpl<V>::SetEmbeddingInfo(
-        emb_index, embedding_dim, default_value);
-    if (is_compute_alloc_bytes) {
-      FeatureDescriptorImpl<V>::ComputeAllocBytes(&alloc_bytes_);
-      FeatureDescriptorImpl<V>::CreateFreqAndVersionDescriptor(&alloc_bytes_);
-    }
-    return is_compute_alloc_bytes;
-  }
-
-  bool InitSlotInfo(FeatureDescriptorImpl<V>* feat_desc_impl) override {
-    FeatureDescriptorImpl<V>::SetSlotInfo(feat_desc_impl);
+  Status InitSlotInfo(int emb_index, int64 embedding_dim,
+                      const std::pair<V*, int64>& default_value) override {
+    TF_CHECK_OK(FeatureDescriptorImpl<V>::SetEmbeddingInfo(
+        emb_index, embedding_dim, default_value));
+    alloc_bytes_ = 0;  // Reset alloc_bytes_
     FeatureDescriptorImpl<V>::ComputeAllocBytes(&alloc_bytes_);
     FeatureDescriptorImpl<V>::SetFreqAndVersionOffset(&alloc_bytes_);
-    return true;
+    return OkStatus();
+  }
+
+  Status InitSlotInfo(FeatureDescriptorImpl<V>* feat_desc_impl) override {
+    FeatureDescriptorImpl<V>::SetSlotInfo(feat_desc_impl);
+    alloc_bytes_ = 0;  // Reset alloc_bytes_
+    FeatureDescriptorImpl<V>::ComputeAllocBytes(&alloc_bytes_);
+    FeatureDescriptorImpl<V>::SetFreqAndVersionOffset(&alloc_bytes_);
+    return OkStatus();
   }
 
   V* GetEmbedding(void* val, int emb_index) override {

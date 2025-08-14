@@ -62,7 +62,7 @@ class EmbeddingVar : public ResourceBase {
         emb_config_(emb_cfg),
         feat_desc_(feat_desc) {}
 
-  Status Init(const Tensor& default_tensor, int64 default_value_dim) {
+  Status Init(const Tensor& default_tensor) {
     if (storage_ == nullptr) {
       return errors::InvalidArgument(
           "Invalid ht_type to construct EmbeddingVar");
@@ -71,7 +71,6 @@ class EmbeddingVar : public ResourceBase {
     storage_type_ = storage_->GetStorageType();
     filter_ = FilterFactory::CreateFilter<K, V, EmbeddingVar<K, V>>(
         emb_config_, this, storage_, feat_desc_);
-    emb_config_.default_value_dim = default_value_dim;
     value_len_ = default_tensor.NumElements() / emb_config_.default_value_dim;
 
     if (storage_->IsUseHbm()) {
@@ -110,24 +109,17 @@ class EmbeddingVar : public ResourceBase {
             static_cast<V>(emb_config_.default_value_no_permission);
       }
     }
-    bool is_all_slots_initialized = feat_desc_->InitSlotInfo(
+    feat_desc_->InitSlotInfo(
         emb_config_.emb_index, value_len_,
         std::pair<V*, int64>(default_value_, emb_config_.default_value_dim));
-    if (is_all_slots_initialized) {
-      storage_->Init();
-      SetAllSlotInitialized();
-    }
+    storage_->Init();
 
     return OkStatus();
   }
 
   void SetInitialized() { is_initialized_ = true; }
 
-  void SetAllSlotInitialized() { is_all_slot_initialized_ = true; }
-
   bool IsInitialized() const { return is_initialized_; }
-
-  bool IsAllSlotInitialized() const { return is_all_slot_initialized_; }
 
   Status LookupKey(K key, void** value_ptr) {
     return storage_->Get(key, value_ptr);
@@ -562,7 +554,7 @@ class EmbeddingVar : public ResourceBase {
 
   int64 GetEmbeddingIndex() { return emb_config_.emb_index; }
 
-  int64 GetEmbeddingSlotNum() { return emb_config_.slot_num; }
+  int64 GetEmbeddingSlotNum() { return feat_desc_->GetSlotNum(); }
 
   Allocator* GetAllocator() { return alloc_; }
 
@@ -631,7 +623,7 @@ class EmbeddingVar : public ResourceBase {
   }
 
   int32 SlotNum() {
-    return (emb_config_.block_num * (1 + emb_config_.slot_num));
+    return (emb_config_.block_num * this->GetEmbeddingSlotNum());
   }
 
   int32 EmbIdx() { return emb_config_.emb_index; }
@@ -681,7 +673,6 @@ class EmbeddingVar : public ResourceBase {
 
   std::string name_;
   bool is_initialized_ = false;
-  bool is_all_slot_initialized_ = false;
 
   mutex mu_;
 
