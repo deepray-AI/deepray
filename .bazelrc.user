@@ -1,2 +1,1 @@
-startup --output_base=/workspaces/cache/bazel
 build --verbose_failures=true
