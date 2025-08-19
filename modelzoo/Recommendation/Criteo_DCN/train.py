@@ -28,16 +28,11 @@ def main():
   define_flags()
   pid = os.getpid()
   # input("pid: " + str(pid) +", press enter to continue")
-  if flags.FLAGS.use_dynamic_embedding:
-    from tensorflow_recommenders_addons import dynamic_embedding as de
 
-    optimizer = dp.optimizers.Adam(learning_rate=flags.FLAGS.learning_rate, amsgrad=False)
-    optimizer = de.DynamicEmbeddingOptimizer(optimizer, synchronous=flags.FLAGS.use_horovod)
-  else:
-    optimizer = dp.optimizers.Adam(learning_rate=flags.FLAGS.learning_rate, amsgrad=False)
-    # optimizer = dp.optimizers.SGD(flags.FLAGS.learning_rate)
-    # optimizer = dp.optimizers.Adagrad(learning_rate=flags.FLAGS.learning_rate)
-    # optimizer = dp.optimizers.FtrlOptimizer(learning_rate=flags.FLAGS.learning_rate)
+  optimizer = dp.optimizers.Adam(learning_rate=flags.FLAGS.learning_rate, amsgrad=False)
+  # optimizer = dp.optimizers.SGD(flags.FLAGS.learning_rate)
+  # optimizer = dp.optimizers.Adagrad(learning_rate=flags.FLAGS.learning_rate)
+  # optimizer = dp.optimizers.FtrlOptimizer(learning_rate=flags.FLAGS.learning_rate)
   model = Ranking(interaction="cross", use_group_embedding=False)
 
   data_pipe = CustomParquetPipeline()

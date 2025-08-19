@@ -76,8 +76,8 @@ class DynmaicDimDescriptorImpl : public FeatureDescriptorImpl<V> {
   }
   ~DynmaicDimDescriptorImpl() {}
 
-  bool InitSlotInfo(int emb_index, int64 embedding_dim,
-                    const std::pair<V*, int64>& default_value) override {
+  Status InitSlotInfo(int emb_index, int64 embedding_dim,
+                      const std::pair<V*, int64>& default_value) override {
     return FeatureDescriptorImpl<V>::SetEmbeddingInfo(emb_index, embedding_dim,
                                                       default_value);
   }

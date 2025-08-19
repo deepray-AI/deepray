@@ -26,11 +26,11 @@ limitations under the License.
 namespace tensorflow {
 namespace embedding {
 struct SlotInfo {
-  int embedding_dim;
+  int64 embedding_dim;
   int embedding_offset;
   void* default_value;
   int64 default_value_dim;
-  int default_value_len;
+  int64 default_value_len;
 };
 
 class BaseFreqDescriptor {
@@ -126,12 +126,8 @@ template <class V>
 class FeatureDescriptorImpl {
  public:
   FeatureDescriptorImpl(int64 slot_num, bool need_record_freq,
-                        bool need_record_version) {
-    slot_infos_.resize(slot_num);
-    for (int i = 0; i < slot_infos_.size(); i++) {
-      slot_infos_[i].embedding_offset = EMPTY_OFFSET_VALUE;
-    }
-
+                        bool need_record_version)
+      : slot_num_(slot_num) {
     if (!need_record_freq) {
       freq_desc_.reset(new NonFreqDescriptor());
     }
@@ -148,9 +144,9 @@ class FeatureDescriptorImpl {
 
   virtual ~FeatureDescriptorImpl() {}
 
-  virtual bool InitSlotInfo(int emb_index, int64 embedding_dim,
-                            const std::pair<V*, int64>& default_value) = 0;
-  virtual bool InitSlotInfo(FeatureDescriptorImpl<V>* feat_desc_impl) {
+  virtual Status InitSlotInfo(int emb_index, int64 embedding_dim,
+                              const std::pair<V*, int64>& default_value) = 0;
+  virtual Status InitSlotInfo(FeatureDescriptorImpl<V>* feat_desc_impl) {
     LOG(FATAL) << "InitSlotInfo(feat_desc_impl) is not implemented.";
   }
   virtual V* GetEmbedding(void* val, int emb_index) = 0;
@@ -188,6 +184,8 @@ class FeatureDescriptorImpl {
     freq_desc_->AddFreq(val, freq);
   }
 
+  int64 GetSlotNum() { return slot_num_; }
+
   inline int total_dim() {
     int64 slot_num = slot_infos_.size();
     return slot_infos_[slot_num - 1].embedding_offset +
@@ -195,31 +193,40 @@ class FeatureDescriptorImpl {
   }
 
  protected:
-  bool SetEmbeddingInfo(int emb_index, int64 embedding_dim,
-                        const std::pair<V*, int64>& default_value) {
-    slot_infos_[emb_index].default_value = default_value.first;
-    slot_infos_[emb_index].default_value_dim = default_value.second;
-    slot_infos_[emb_index].default_value_len = embedding_dim;
+  Status SetEmbeddingInfo(int slot_index, int64 embedding_dim,
+                          const std::pair<V*, int64>& default_value) {
+    // Check for duplicate slot_index
+    if (slot_infos_.find(slot_index) != slot_infos_.end()) {
+      LOG(FATAL) << "Already exists slot_index in SlotInfos: " << slot_index;
+      // return tensorflow::errors::AlreadyExists(
+      //     "already exists slot_index: ", slot_index, " in SlotInfos.");
+      return OkStatus();
+    }
 
+    // Determine aligned dimension
     bool is_aligned = true;
     TF_CHECK_OK(ReadBoolFromEnvVar("EV_DATA_ALIGNED", true, &is_aligned));
-    if (is_aligned) {
-      embedding_dim = ComputeAlignedDim(embedding_dim);
-    }
+    const int64 aligned_embedding_dim =
+        is_aligned ? ComputeAlignedDim(embedding_dim) : embedding_dim;
 
-    // Avoid parallel consitency issue
-    __sync_bool_compare_and_swap(&slot_infos_[emb_index].embedding_offset,
-                                 EMPTY_OFFSET_VALUE, embedding_dim);
-    slot_infos_[emb_index].embedding_dim = embedding_dim;
-    // Check whether all offsets are set
-    for (int i = 0; i < slot_infos_.size(); i++) {
-      if (slot_infos_[i].embedding_offset == EMPTY_OFFSET_VALUE) {
-        return false;
-      }
-    }
+    // Insert new slot info with initialized offset
+    const int64 initial_offset = (slot_index == 0) ? 0 : EMPTY_OFFSET_VALUE;
+    auto [it, inserted] = slot_infos_.emplace(
+        slot_index, SlotInfo{/*embedding_dim=*/aligned_embedding_dim,
+                             /*embedding_offset=*/initial_offset,
+                             /*default_value=*/default_value.first,
+                             /*default_value_dim=*/default_value.second,
+                             /*embedding_dim=*/embedding_dim});
 
-    ComputeEmbeddingOffsets();
-    return true;
+    // Calculate and set offset if needed
+    if (slot_index > 0) {
+      const int64 prev_offset = slot_infos_.at(slot_index - 1).embedding_offset;
+      const int64 new_offset =
+          prev_offset + slot_infos_.at(slot_index - 1).embedding_dim;
+      __sync_bool_compare_and_swap(&it->second.embedding_offset,
+                                   EMPTY_OFFSET_VALUE, new_offset);
+    }
+    return OkStatus();
   }
 
   void SetSlotInfo(FeatureDescriptorImpl<V>* feat_desc_impl) {
@@ -227,8 +234,8 @@ class FeatureDescriptorImpl {
   }
 
   void ComputeAllocBytes(int* alloc_bytes) {
-    for (auto slot_info : slot_infos_) {
-      *alloc_bytes += slot_info.embedding_dim * sizeof(V);
+    for (const auto& pair : slot_infos_) {
+      *alloc_bytes += pair.second.embedding_dim * sizeof(V);
     }
   }
 
@@ -267,6 +274,8 @@ class FeatureDescriptorImpl {
   }
 
  private:
+  int64 slot_num_;
+
   int64 ComputeAlignedDim(int64 embedding_dim) {
     int padding_bytes = ALIGN_BYTES - embedding_dim * sizeof(V) % ALIGN_BYTES;
     if (padding_bytes == ALIGN_BYTES) {
@@ -276,19 +285,10 @@ class FeatureDescriptorImpl {
     }
   }
 
-  void ComputeEmbeddingOffsets() {
-    for (int i = slot_infos_.size() - 1; i >= 0; i--) {
-      slot_infos_[i].embedding_offset = 0;
-      for (int j = 0; j < i; j++) {
-        slot_infos_[i].embedding_offset += slot_infos_[j].embedding_offset;
-      }
-    }
-  }
-
  protected:
   const int EMPTY_OFFSET_VALUE = -1;
   const int ALIGN_BYTES = 16;
-  std::vector<SlotInfo> slot_infos_;
+  std::map<int, SlotInfo> slot_infos_;
   std::unique_ptr<BaseFreqDescriptor> freq_desc_;
   std::unique_ptr<BaseVersionDescriptor> version_desc_;
 };
