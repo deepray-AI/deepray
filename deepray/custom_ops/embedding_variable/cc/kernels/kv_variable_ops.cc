@@ -323,7 +323,7 @@ class InitializeKvVariableOp : public OpKernel {
                 Allocator* alloc_for_ev =
                     (device_type_str_ == "CPU") ? ev_allocator() : allocator;
                 auto feat_desc = new embedding::FeatureDescriptor<TValue>(
-                    block_num_, slot_num_ + 1, alloc_for_ev, storage_type_,
+                    block_num_, slot_num_, alloc_for_ev, storage_type_,
                     record_freq_, embedding_config.is_save_version(),
                     {embedding_config.is_counter_filter(), filter_freq_});
                 auto storage = embedding::StorageFactory::Create<TKey, TValue>(
@@ -356,7 +356,7 @@ class InitializeKvVariableOp : public OpKernel {
                 Allocator* alloc_for_ev =
                     (device_type_str_ == "CPU") ? ev_allocator() : allocator;
                 auto feat_desc = new embedding::FeatureDescriptor<TValue>(
-                    block_num_, slot_num_ + 1, alloc_for_ev, storage_type_,
+                    block_num_, slot_num_, alloc_for_ev, storage_type_,
                     record_freq_, embedding_config.is_save_version(),
                     {embedding_config.is_counter_filter(), filter_freq_});
                 auto storage = embedding::StorageFactory::Create<TKey, TValue>(

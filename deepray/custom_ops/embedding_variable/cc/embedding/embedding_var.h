@@ -110,14 +110,13 @@ class EmbeddingVar : public ResourceBase {
             static_cast<V>(emb_config_.default_value_no_permission);
       }
     }
-    bool is_all_slots_initialized = feat_desc_->InitSlotInfo(
+    TF_CHECK_OK(feat_desc_->InitSlotInfo(
         emb_config_.emb_index, value_len_,
-        std::pair<V*, int64>(default_value_, emb_config_.default_value_dim));
-    if (is_all_slots_initialized) {
+        std::pair<V*, int64>(default_value_, emb_config_.default_value_dim)));
+    if (emb_config_.emb_index == feat_desc_->GetSlotNum()) {
       storage_->Init();
       SetAllSlotInitialized();
     }
-
     return OkStatus();
   }
 

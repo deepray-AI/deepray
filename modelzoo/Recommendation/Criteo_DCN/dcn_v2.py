@@ -47,6 +47,7 @@ class EmbeddingContainer(tf.Module):
         name="emb" + name,
         storage_type="DRAM",  # DRAM HBM
         # with_unique=True,
+        optimizer_type="Adam",
       )
       self.embeddings[name] = emb
 

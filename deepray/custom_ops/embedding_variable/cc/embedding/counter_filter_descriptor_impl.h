@@ -75,13 +75,13 @@ class CounterFilterDescriptorImpl : public FeatureDescriptorImpl<V> {
 
   ~CounterFilterDescriptorImpl() {}
 
-  bool InitSlotInfo(int emb_index, int64 embedding_dim,
-                    const std::pair<V*, int64>& default_value) override {
+  Status InitSlotInfo(int emb_index, int64 embedding_dim,
+                      const std::pair<V*, int64>& default_value) override {
     return feat_desc_impl_->InitSlotInfo(emb_index, embedding_dim,
                                          default_value);
   }
 
-  bool InitSlotInfo(FeatureDescriptorImpl<V>* feat_desc_impl) override {
+  Status InitSlotInfo(FeatureDescriptorImpl<V>* feat_desc_impl) override {
     return feat_desc_impl_->InitSlotInfo(feat_desc_impl);
   }
 

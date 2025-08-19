@@ -100,7 +100,6 @@ def define_common_flags():
   flags.DEFINE_string("feature_map", None, "path to feature_map")
   flags.DEFINE_string("black_list", None, "black list for feature_map")
   flags.DEFINE_string("white_list", None, "white list for feature_map")
-  flags.DEFINE_integer("ev_slot_num", 0, "ev_slot_num")
 
 
 def use_float16():

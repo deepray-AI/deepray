@@ -66,6 +66,7 @@ class EmbeddingVariable(tf.keras.layers.Layer):
     value_dtype: str = None,
     initializer=None,
     name: str = "",
+    optimizer_type=None,
     with_unique=False,
     partition_fn: typing.Callable[[typing.Any, typing.Any], typing.Any] = None,
     **kwargs,
@@ -101,6 +102,7 @@ class EmbeddingVariable(tf.keras.layers.Layer):
       initializer=initializer,
       name=name,
       ev_option=ev_option,
+      optimizer_type=optimizer_type,
     )
 
     self.partition_fn = partition_fn

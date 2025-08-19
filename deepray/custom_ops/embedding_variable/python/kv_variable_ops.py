@@ -607,10 +607,7 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
         if self._primary is None:
           self._primary = self
 
-        if self._is_primary:
-          self._slot_num = flags.FLAGS.ev_slot_num
-        else:
-          self._slot_num = evconfig.slot_num
+        self._slot_num = evconfig.slot_num
 
         if self._in_graph_mode:
           with ops.name_scope("IsInitialized"):

@@ -78,13 +78,13 @@ class FeatureDescriptor {
     }
   }
 
-  bool InitSlotInfo(int emb_index, int64 embedding_dim,
-                    const std::pair<V*, int64>& default_value) {
+  Status InitSlotInfo(int emb_index, int64 embedding_dim,
+                      const std::pair<V*, int64>& default_value) {
     return feat_desc_impl_->InitSlotInfo(emb_index, embedding_dim,
                                          default_value);
   }
 
-  bool InitSlotInfo(FeatureDescriptor<V>* feat_desc) {
+  Status InitSlotInfo(FeatureDescriptor<V>* feat_desc) {
     return feat_desc_impl_->InitSlotInfo(feat_desc->feat_desc_impl_.get());
   }
 
@@ -130,6 +130,8 @@ class FeatureDescriptor {
   int64 GetFreq(void* val) { return feat_desc_impl_->GetFreq(val); }
 
   int64 GetVersion(void* val) { return feat_desc_impl_->GetVersion(val); }
+
+  int64 GetSlotNum() { return feat_desc_impl_->GetSlotNum(); }
 
   void SetFreq(void* val, int64 freq) { feat_desc_impl_->SetFreq(val, freq); }
 

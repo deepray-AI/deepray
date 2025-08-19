@@ -36,7 +36,6 @@ class AdamAsync(tf.keras.optimizers.legacy.Adam):
     super().__init__(learning_rate=learning_rate, **kwargs)
     self._apply_sparse_rmsprop = apply_sparse_rmsprop
     self.global_step = 0
-    flags.FLAGS([sys.argv[0], f"--ev_slot_num={2}"])
 
   def _create_slots(self, var_list):
     # Create slots for the first and second moments.

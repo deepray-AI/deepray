@@ -21,6 +21,13 @@ from .python import kv_variable_ops
 
 logger = logging_util.get_logger()
 
+OptimizerType = {
+  "Adam": 2,
+  "Adagrad": 1,
+  "Ftrl": 2,
+  "SGD": 0,
+}
+
 
 @tf_export(v1=["VariableScope"])
 class VariableScope(object):
@@ -1100,6 +1107,7 @@ def get_embedding_variable_v2_internal(
 def get_embedding_variable(
   name,
   embedding_dim,
+  optimizer_type=None,
   key_dtype=dtypes.int64,
   value_dtype=None,
   initializer=None,
@@ -1171,6 +1179,7 @@ def get_embedding_variable(
       layout=ev_option.storage_option.layout,
       default_value_dim=ev_option.init.default_value_dim,
       default_value_no_permission=ev_option.init.default_value_no_permission,
+      slot_num=OptimizerType[optimizer_type] if optimizer_type else 0,
     ),
     ht_partition_num=ev_option.ht_partition_num,
   )

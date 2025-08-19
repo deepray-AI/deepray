@@ -45,16 +45,16 @@ class HbmMultiTierFeatureDescriptorImpl : public FeatureDescriptorImpl<V> {
 
   ~HbmMultiTierFeatureDescriptorImpl() {}
 
-  bool InitSlotInfo(int emb_index, int64 embedding_dim,
-                    const std::pair<V*, int64>& default_value) override {
-    bool is_compute_alloc_bytes = FeatureDescriptorImpl<V>::SetEmbeddingInfo(
-        emb_index, embedding_dim, default_value);
-    if (is_compute_alloc_bytes) {
+  Status InitSlotInfo(int emb_index, int64 embedding_dim,
+                      const std::pair<V*, int64>& default_value) override {
+    TF_CHECK_OK(FeatureDescriptorImpl<V>::SetEmbeddingInfo(
+        emb_index, embedding_dim, default_value));
+    if (emb_index == this->GetSlotNum()) {
       FeatureDescriptorImpl<V>::ComputeAllocBytes(&hbm_alloc_bytes_);
       embedding_mem_pool_.reset(new EmbeddingMemoryPool<V>(
           hbm_alloc_, hbm_alloc_bytes_ / sizeof(V), 1024 * 1024 * 64));
     }
-    return is_compute_alloc_bytes;
+    return OkStatus();
   }
 
   V* GetEmbedding(void* val, int emb_index) override {
