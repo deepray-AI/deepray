@@ -1,13 +1,18 @@
 diff --git a/tensorflow/workspace0.bzl b/tensorflow/workspace0.bzl
-index d8b53e1ef8b..a8c00f1598e 100644
+index d8b53e1ef8b..801d56fb41c 100644
 --- a/tensorflow/workspace0.bzl
 +++ b/tensorflow/workspace0.bzl
-@@ -133,7 +133,7 @@ def workspace():
+@@ -133,7 +133,12 @@ def workspace():
      _tf_bind()
  
      grpc_extra_deps()
 -    rules_foreign_cc_dependencies()
-+    rules_foreign_cc_dependencies(cmake_version="3.29.5")
++    rules_foreign_cc_dependencies(
++        # cmake_version="3.29.5"
++        register_preinstalled_tools = True,
++        register_built_tools = False,
++        register_default_tools = False,
++        )
      config_googleapis()
  
  # Alias so it can be loaded without assigning to a different symbol to prevent

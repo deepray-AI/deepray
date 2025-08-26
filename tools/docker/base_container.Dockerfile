@@ -104,3 +104,6 @@ RUN pip install /install_deps/wheelhouse/deepray-*.whl
 
 # Set breakpoint() in Python to call pudb
 ENV PYTHONBREAKPOINT=pudb.set_trace
+
+# Enable jemalloc to optimize memory usage
+ENV LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libjemalloc.so"

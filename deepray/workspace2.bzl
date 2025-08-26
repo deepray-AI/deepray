@@ -182,27 +182,6 @@ def _tf_repositories():
     )
 
     http_archive(
-        name = "murmurhash",
-        build_file = "//third_party:murmurhash.BUILD",
-        sha256 = "19a7ccc176ca4185db94047de6847d8a0332e8f4c14e8e88b9048f74bdafe879",
-        strip_prefix = "smhasher-master",
-        urls = [
-            "https://github.com/aappleby/smhasher/archive/master.zip",
-        ],
-    )
-
-    http_archive(
-        name = "farmhash",
-        sha256 = "6560547c63e4af82b0f202cb710ceabb3f21347a4b996db565a411da5b17aba0",
-        build_file = "//third_party:farmhash.BUILD",
-        strip_prefix = "farmhash-816a4ae622e964763ca0862d9dbd19324a1eaf45",
-        urls = [
-            "https://mirror.bazel.build/github.com/google/farmhash/archive/816a4ae622e964763ca0862d9dbd19324a1eaf45.tar.gz",
-            "https://github.com/google/farmhash/archive/816a4ae622e964763ca0862d9dbd19324a1eaf45.tar.gz",
-        ],
-    )
-
-    http_archive(
         name = "com_github_NVIDIA_cuCollections",
         # sha256 = "6560547c63e4af82b0f202cb710ceabb3f21347a4b996db565a411da5b17aba0",
         build_file = "//third_party/cuCollections:cuCollections.BUILD",
@@ -304,6 +283,14 @@ def _tf_repositories():
         urls = ["https://github.com/andremaravilha/cxxtimer/archive/refs/heads/master.zip"],
         build_file = "//third_party:cxxtimer.BUILD",
         strip_prefix = "cxxtimer-master",
+    )
+
+    http_archive(
+        name = "com_github_Cyan4973_xxHash",
+        sha256 = "aae608dfe8213dfd05d909a57718ef82f30722c392344583d3f39050c7f29a80",
+        urls = ["https://github.com/Cyan4973/xxHash/archive/refs/tags/v0.8.3.tar.gz"],
+        build_file = "//third_party:xxHash.BUILD",
+        strip_prefix = "xxHash-0.8.3",
     )
 
 def workspace():

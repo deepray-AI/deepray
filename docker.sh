@@ -22,6 +22,7 @@ docker run --gpus all -it \
     --volume=dev-build:/workspaces \
     --privileged \
     --cap-add=SYS_PTRACE \
-    --shm-size=1g \
+    --shm-size=4g \
+    --ipc=host \
     --ulimit memlock=-1 \
     hailinfufu/deepray-dev:latest-gpu-py${PY_VERSION}-tf${TF_VERSION}-cu12.2.2-ubuntu${OS_VERSION}
