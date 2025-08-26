@@ -20,9 +20,17 @@ limitations under the License.
 #include "kv_interface.h"
 #include "sparsehash/dense_hash_map_lockless"
 #include "tensorflow/core/lib/core/status.h"
+#include "xxhash.h"
 
 namespace tensorflow {
 namespace embedding {
+
+template <typename Key>
+struct XXHash {
+  size_t operator()(const Key& key) const {
+    return XXH3_64bits(&key, sizeof(key));
+  }
+};
 
 template <class K, class V>
 class LocklessHashMap : public KVInterface<K, V> {
@@ -196,8 +204,7 @@ class LocklessHashMap : public KVInterface<K, V> {
   }
 
  private:
-  typedef google::dense_hash_map_lockless<K, void*, absl::Hash<K>>
-      LockLessHashMap;
+  typedef google::dense_hash_map_lockless<K, void*, XXHash<K>> LockLessHashMap;
   static const int EMPTY_KEY_;
   static const int DELETED_KEY_;
   LockLessHashMap hash_map_;

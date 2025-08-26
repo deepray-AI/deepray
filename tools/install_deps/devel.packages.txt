@@ -1,6 +1,7 @@
-# All required CUDA packages
+# All required packages for building
 wget
 build-essential
+ninja-build
 git
 lld
 gdb
