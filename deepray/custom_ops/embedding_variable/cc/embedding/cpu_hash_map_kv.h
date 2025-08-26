@@ -16,7 +16,6 @@ limitations under the License.
 #ifndef TENSORFLOW_CORE_FRAMEWORK_EMBEDDING_CPU_HASH_MAP_KV_H_
 #define TENSORFLOW_CORE_FRAMEWORK_EMBEDDING_CPU_HASH_MAP_KV_H_
 
-#include "absl/hash/hash.h"
 #include "kv_interface.h"
 #include "sparsehash/dense_hash_map_lockless"
 #include "tensorflow/core/lib/core/status.h"
