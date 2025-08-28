@@ -93,10 +93,6 @@ COPY --from=patchelf_builder /usr/local/bin/patchelf /usr/local/bin/patchelf
 COPY --from=bazelisk_builder /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=bazelisk_builder /usr/local/bin/clang-format-9 /usr/local/bin/clang-format
 
-# Setup clang
-COPY tools/install_deps/install_clang.sh /install_deps/
-RUN bash /install_deps/install_clang.sh 17
-
 # Setup cmake
 COPY --from=cmake_builder /opt/cmake /opt/cmake
 ENV PATH=${PATH}:/opt/cmake/bin \
@@ -128,6 +124,10 @@ RUN echo "kernel.core_pattern = core.%e.%p.%t" >> /etc/sysctl.conf
 COPY tools/install_deps/install_nsight-systems.sh /install_deps/
 RUN bash /install_deps/install_nsight-systems.sh
 RUN wget https://raw.githubusercontent.com/harrism/nsys_easy/refs/heads/main/nsys_easy -O /usr/local/bin/nsys_easy && chmod +x /usr/local/bin/nsys_easy
+
+# Setup clang
+COPY tools/install_deps/install_clang.sh /install_deps/
+RUN bash /install_deps/install_clang.sh 17
 
 # Set breakpoint() in Python to call pudb
 ENV PYTHONBREAKPOINT=pudb.set_trace
