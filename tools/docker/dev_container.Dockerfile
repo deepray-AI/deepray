@@ -22,6 +22,8 @@ ARG TF_VERSION=2.15.1
 
 FROM ubuntu:${OS_VERSION} AS base_builder
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Comment it if you are not in China
 # RUN sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 # RUN sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
