@@ -842,6 +842,10 @@ class EmbeddingVariable(ResourceVariable, saveable_object.SaveableObject):
   # def _gather_saveables_for_checkpoint(self):
   #   return {"foo": lambda name: EmbeddingVariableSaveable(self, name)}
 
+  def get_dynamic_shape(self):
+    """The shape of this variable."""
+    return gen_kv_variable_ops.kv_variable_shape(self._handle, Tkeys=self._invalid_key_type, dtype=self.dtype)
+
 
 def lookup_resource(var):
   return gen_kv_variable_ops.kv_resource_lookup_resource(var.handle, Tkeys=var._invalid_key_type, dtype=var._dtype)

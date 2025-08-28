@@ -78,3 +78,75 @@ def set_gpu_thread_mode_and_count(gpu_thread_mode, datasets_num_private_threads,
   if not datasets_num_private_threads:
     datasets_num_private_threads = min(cpu_count - total_gpu_thread_count - num_runtime_threads, num_gpus * 8)
     logging.info("Set datasets_num_private_threads to %s", datasets_num_private_threads)
+
+
+def format_param_count(count):
+  """Format parameter count into human-readable string."""
+  count = int(count)
+  if count < 1000:
+    return f"{count}"
+  elif count < 1_000_000:
+    return f"{count / 1_000:,.1f}K"
+  elif count < 1_000_000_000:
+    return f"{count / 1_000_000:,.1f}M"
+  elif count < 1_000_000_000_000:
+    return f"{count / 1_000_000_000:,.2f}B"
+  else:
+    return f"{count / 1_000_000_000_000:,.2f}T"
+
+
+def count_params(model):
+  """Count the total number of parameters in a model, including EmbeddingVariables."""
+  from tf_keras.src.utils.layer_utils import count_params
+  from deepray.custom_ops.embedding_variable import kv_variable_ops
+
+  model_size = 0
+  regular_weights = []
+  embedding_vars = []
+
+  for weight in model.weights:
+    if isinstance(weight, kv_variable_ops.EmbeddingVariable):
+      # Calculate parameters for EmbeddingVariable
+      shape = weight.get_dynamic_shape().numpy()
+      param_count = int(shape[0]) * int(shape[1])
+      model_size += param_count
+      embedding_vars.append((weight.name, int(shape[0]), int(shape[1]), param_count))
+    else:
+      # Collect regular weights
+      regular_weights.append(weight)
+
+  # Print embedding variables sorted by first dimension
+  if embedding_vars:
+    print("\nEmbedding Variables (sorted by vocabulary size):")
+    print("-" * 78)
+    print(f"{'Name':30} | {'Shape(IDs * Dims)':18} | {'Params':>10} | {'% Total':>7}")
+    print("-" * 78)
+
+    embedding_vars.sort(key=lambda x: x[1], reverse=True)
+    total_embedding_params = sum(param_count for _, _, _, param_count in embedding_vars)
+
+    for name, num_ids, num_dims, param_count in embedding_vars:
+      percentage = (param_count / total_embedding_params) * 100
+      shape_str = f"{num_ids:,} * {num_dims}"
+      # Shorten the long names
+      short_name = name if len(name) <= 28 else name[:25] + "..."
+      print(f"{short_name:30} | {shape_str:18} | {format_param_count(param_count):>10} | {percentage:5.1f}%")
+
+  # Add parameters from regular weights
+  regular_params = count_params(regular_weights)
+  model_size += regular_params
+
+  # Print summary with better formatting
+  print("\nParameter Summary:")
+  print("-" * 50)
+  embedding_total = model_size - regular_params
+  embedding_percent = (embedding_total / model_size * 100) if model_size > 0 else 0
+  regular_percent = (regular_params / model_size * 100) if model_size > 0 else 0
+
+  print(f"{'Embedding parameters:':20} {format_param_count(embedding_total):>10} ({embedding_percent:5.1f}%)")
+  print(f"{'Regular parameters:':20} {format_param_count(regular_params):>10} ({regular_percent:5.1f}%)")
+  print("-" * 50)
+  print(f"{'TOTAL:':20} {format_param_count(model_size):>10}")
+  print(f"{'':20} ({model_size:,})")
+
+  return model_size

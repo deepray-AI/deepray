@@ -41,9 +41,6 @@ RUN bash /install_deps/install_bazelisk.sh
 COPY tools/install_deps/clang-format.sh /install_deps/
 RUN bash /install_deps/clang-format.sh
 
-COPY tools/install_deps/install_clang.sh /install_deps/
-RUN bash /install_deps/install_clang.sh 17
-
 FROM base_builder AS cmake_builder
 COPY tools/install_deps/install_cmake.sh /install_deps/
 RUN bash /install_deps/install_cmake.sh
@@ -93,8 +90,10 @@ RUN bash /install_deps/setup.packages.sh /install_deps/devel.packages.txt
 COPY --from=patchelf_builder /usr/local/bin/patchelf /usr/local/bin/patchelf
 COPY --from=bazelisk_builder /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=bazelisk_builder /usr/local/bin/clang-format-9 /usr/local/bin/clang-format
-COPY --from=bazelisk_builder /usr/bin/clang-17 /usr/bin/clang
-COPY --from=bazelisk_builder /usr/bin/clang++-17 /usr/bin/clang++
+
+# Setup clang
+COPY tools/install_deps/install_clang.sh /install_deps/
+RUN bash /install_deps/install_clang.sh 17
 
 # Setup cmake
 COPY --from=cmake_builder /opt/cmake /opt/cmake
