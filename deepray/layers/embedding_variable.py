@@ -136,7 +136,7 @@ class EmbeddingVariable(tf.keras.layers.Layer):
     with ops.name_scope(f"{self.name}/EmbeddingWithUnique"):
       ids_flat = tf.reshape(ids, [-1])
       unique_ids, idx = tf.unique(ids_flat)
-      unique_embeddings = self.embedding_variable.sparse_read(unique_ids)
+      unique_embeddings = self.read(unique_ids)
       embeddings_flat = tf.gather(unique_embeddings, idx)
       embeddings_shape = tf.concat([tf.shape(ids), tf.constant(self.embedding_size, shape=(1,))], 0)
       embeddings = tf.reshape(embeddings_flat, embeddings_shape)

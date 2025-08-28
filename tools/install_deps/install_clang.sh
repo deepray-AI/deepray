@@ -17,6 +17,9 @@ set -x -e
 
 CLANG_VERSION=${1:-"18"}
 
+# Prevent "apt install tzinfo" from raising an interactive location prompt
+export DEBIAN_FRONTEND=noninteractive
+
 apt-get update && apt-get install -y --allow-downgrades --allow-change-held-packages --no-install-recommends \
     wget software-properties-common gnupg
 

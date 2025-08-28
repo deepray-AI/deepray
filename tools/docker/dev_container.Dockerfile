@@ -22,6 +22,8 @@ ARG TF_VERSION=2.15.1
 
 FROM ubuntu:${OS_VERSION} AS base_builder
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Comment it if you are not in China
 # RUN sed -i "s@http://.*archive.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
 # RUN sed -i "s@http://.*security.ubuntu.com@https://mirrors.tuna.tsinghua.edu.cn@g" /etc/apt/sources.list
@@ -40,9 +42,6 @@ RUN bash /install_deps/install_bazelisk.sh
 
 COPY tools/install_deps/clang-format.sh /install_deps/
 RUN bash /install_deps/clang-format.sh
-
-COPY tools/install_deps/install_clang.sh /install_deps/
-RUN bash /install_deps/install_clang.sh 17
 
 FROM base_builder AS cmake_builder
 COPY tools/install_deps/install_cmake.sh /install_deps/
@@ -93,8 +92,6 @@ RUN bash /install_deps/setup.packages.sh /install_deps/devel.packages.txt
 COPY --from=patchelf_builder /usr/local/bin/patchelf /usr/local/bin/patchelf
 COPY --from=bazelisk_builder /usr/local/bin/bazel /usr/local/bin/bazel
 COPY --from=bazelisk_builder /usr/local/bin/clang-format-9 /usr/local/bin/clang-format
-COPY --from=bazelisk_builder /usr/bin/clang-17 /usr/bin/clang
-COPY --from=bazelisk_builder /usr/bin/clang++-17 /usr/bin/clang++
 
 # Setup cmake
 COPY --from=cmake_builder /opt/cmake /opt/cmake
@@ -127,6 +124,10 @@ RUN echo "kernel.core_pattern = core.%e.%p.%t" >> /etc/sysctl.conf
 COPY tools/install_deps/install_nsight-systems.sh /install_deps/
 RUN bash /install_deps/install_nsight-systems.sh
 RUN wget https://raw.githubusercontent.com/harrism/nsys_easy/refs/heads/main/nsys_easy -O /usr/local/bin/nsys_easy && chmod +x /usr/local/bin/nsys_easy
+
+# Setup clang
+COPY tools/install_deps/install_clang.sh /install_deps/
+RUN bash /install_deps/install_clang.sh 17
 
 # Set breakpoint() in Python to call pudb
 ENV PYTHONBREAKPOINT=pudb.set_trace
