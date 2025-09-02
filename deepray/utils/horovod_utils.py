@@ -62,26 +62,6 @@ class CommToolBase(object):
     """
     raise NotImplementedError("local_rank() is not implemented")
 
-  def id_in_rank(self):
-    """Returns the local id of current `context` in current rank.
-
-    `id_in_rank` belongs to [0, num_gpu_per_rank-1].
-    """
-    raise NotImplementedError("id_in_rank() is not implemented")
-
-  def num_gpu_per_rank(self):
-    """Returns how many GPUs a process controls."""
-    raise NotImplementedError("num_gpu_per_rank() is not implemented")
-
-  def global_gpu_id(self):
-    """Returns the global id of GPU(in current context) among all participating GPUs.
-
-    `global_gpu_id` belongs to [0, num_gpus-1].
-
-    `global_gpu_id` should be equal to `rank * num_gpu_per_rank + id_in_rank`.
-    """
-    raise NotImplementedError("global_gpu_id() is not implemented")
-
   def num_gpus(self):
     """Returns how many GPUs are running in total.
 
@@ -133,15 +113,6 @@ class HorovodTool(CommToolBase):
 
   def local_rank(self):
     return hvd.local_rank()
-
-  def id_in_rank(self):
-    return 0
-
-  def num_gpu_per_rank(self):
-    return 1
-
-  def global_gpu_id(self):
-    return hvd.rank()
 
   def num_gpus(self):
     return hvd.size()
@@ -205,18 +176,6 @@ def main_warning(info):
     logger.warning(info)
 
 
-def id_in_rank():
-  return 0
-
-
-def num_gpu_per_rank():
-  return 1
-
-
-def global_gpu_id():
-  return get_rank()
-
-
 def rank():
   return _COMM_TOOL.rank()
 
@@ -227,18 +186,6 @@ def num_ranks():
 
 def local_rank():
   return _COMM_TOOL.local_rank()
-
-
-def id_in_rank():
-  return _COMM_TOOL.id_in_rank()
-
-
-def num_gpu_per_rank():
-  return _COMM_TOOL.num_gpu_per_rank()
-
-
-def global_gpu_id():
-  return _COMM_TOOL.global_gpu_id()
 
 
 def num_gpus():
