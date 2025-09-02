@@ -237,7 +237,7 @@ Status KvVariableShapeShapeFn(InferenceContext* c) {
 REGISTER_OP("KvVariableShape")
     .Input("input: resource")
     .Output("output: out_type")
-    .Attr("out_type: {int32, int64} = DT_INT32")
+    .Attr("out_type: {int32, int64} = DT_INT64")
     .Attr("Tkeys: {int64, int32}")
     .Attr("dtype: type = DT_FLOAT")
     // .SetShapeFn(KvVariableShapeShapeFn)

@@ -16,11 +16,13 @@
 import multiprocessing
 import os
 
+import horovod.tensorflow as hvd
 import tensorflow as tf
 from absl import logging
 from tensorflow.python import tf2
 
 from deepray.utils import logging_util
+from deepray.utils.horovod_utils import get_world_size, main_print
 
 logger = logging_util.get_logger()
 
@@ -107,8 +109,10 @@ def count_params(model):
   for weight in model.weights:
     if isinstance(weight, kv_variable_ops.EmbeddingVariable):
       # Calculate parameters for EmbeddingVariable
-      shape = weight.get_dynamic_shape().numpy()
-      param_count = int(shape[0]) * int(shape[1])
+      shape = weight.get_dynamic_shape()
+      param_count = shape[0] * shape[1]
+      if get_world_size() > 1:
+        param_count = hvd.allreduce(param_count, op=hvd.Sum)
       model_size += param_count
       embedding_vars.append((weight.name, int(shape[0]), int(shape[1]), param_count))
     else:
@@ -117,10 +121,10 @@ def count_params(model):
 
   # Print embedding variables sorted by first dimension
   if embedding_vars:
-    print("\nEmbedding Variables (sorted by vocabulary size):")
-    print("-" * 78)
-    print(f"{'Name':30} | {'Shape(IDs * Dims)':18} | {'Params':>10} | {'% Total':>7}")
-    print("-" * 78)
+    main_print("\nEmbedding Variables (sorted by vocabulary size):")
+    main_print("-" * 78)
+    main_print(f"{'Name':30} | {'Shape(IDs * Dims)':18} | {'Params':>10} | {'% Total':>7}")
+    main_print("-" * 78)
 
     embedding_vars.sort(key=lambda x: x[1], reverse=True)
     total_embedding_params = sum(param_count for _, _, _, param_count in embedding_vars)
@@ -129,24 +133,24 @@ def count_params(model):
       percentage = (param_count / total_embedding_params) * 100
       shape_str = f"{num_ids:,} * {num_dims}"
       # Shorten the long names
-      short_name = name if len(name) <= 28 else name[:25] + "..."
-      print(f"{short_name:30} | {shape_str:18} | {format_param_count(param_count):>10} | {percentage:5.1f}%")
+      short_name = name if len(name) <= 38 else name[:35] + "..."
+      main_print(f"{short_name:30} | {shape_str:18} | {format_param_count(param_count):>10} | {percentage:5.1f}%")
 
   # Add parameters from regular weights
   regular_params = count_params(regular_weights)
   model_size += regular_params
 
   # Print summary with better formatting
-  print("\nParameter Summary:")
-  print("-" * 50)
+  main_print("\nParameter Summary:")
+  main_print("-" * 50)
   embedding_total = model_size - regular_params
   embedding_percent = (embedding_total / model_size * 100) if model_size > 0 else 0
   regular_percent = (regular_params / model_size * 100) if model_size > 0 else 0
 
-  print(f"{'Embedding parameters:':20} {format_param_count(embedding_total):>10} ({embedding_percent:5.1f}%)")
-  print(f"{'Regular parameters:':20} {format_param_count(regular_params):>10} ({regular_percent:5.1f}%)")
-  print("-" * 50)
-  print(f"{'TOTAL:':20} {format_param_count(model_size):>10}")
-  print(f"{'':20} ({model_size:,})")
+  main_print(f"{'Embedding parameters:':20} {format_param_count(embedding_total):>10} ({embedding_percent:5.1f}%)")
+  main_print(f"{'Regular parameters:':20} {format_param_count(regular_params):>10} ({regular_percent:5.1f}%)")
+  main_print("-" * 50)
+  main_print(f"{'TOTAL:':20} {format_param_count(model_size):>10}")
+  main_print(f"{'':20} ({model_size:,})")
 
   return model_size
