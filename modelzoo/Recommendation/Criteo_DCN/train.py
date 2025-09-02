@@ -3,8 +3,6 @@ import sys
 
 import tensorflow as tf
 from absl import flags
-from tf_keras.optimizers.legacy import Adam
-import tf_keras
 
 import deepray as dp
 from datasets.custom_dataset import CustomParquetPipeline
@@ -14,7 +12,7 @@ from deepray.callbacks.training_speed import TrainingSpeed
 from deepray.core.trainer import Trainer
 from deepray.utils import logging_util
 from deepray.utils.export import export_to_savedmodel
-from tf_keras.src.optimizers.legacy import adam as adam_old
+from deepray.utils.keras_utils import count_params
 
 logger = logging_util.get_logger()
 
@@ -74,6 +72,7 @@ def main():
       ModelCheckpoint(),
     ],
   )
+  count_params(model)
   savedmodel_path = export_to_savedmodel(model)
   print(savedmodel_path)
 

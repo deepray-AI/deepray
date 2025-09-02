@@ -16,13 +16,12 @@
 import multiprocessing
 import os
 
-import horovod.tensorflow as hvd
 import tensorflow as tf
 from absl import logging
 from tensorflow.python import tf2
 
 from deepray.utils import logging_util
-from deepray.utils.horovod_utils import get_world_size, main_print
+from deepray.utils.horovod_utils import get_world_size, main_print, allreduce
 
 logger = logging_util.get_logger()
 
@@ -112,7 +111,7 @@ def count_params(model):
       shape = weight.get_dynamic_shape()
       param_count = shape[0] * shape[1]
       if get_world_size() > 1:
-        param_count = hvd.allreduce(param_count, op=hvd.Sum)
+        param_count = allreduce(param_count, op="sum")
       model_size += param_count
       embedding_vars.append((weight.name, int(shape[0]), int(shape[1]), param_count))
     else:
