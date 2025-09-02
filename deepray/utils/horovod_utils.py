@@ -47,6 +47,11 @@ def main_info(info):
     logger.info(info)
 
 
+def main_print(info):
+  if is_main_process():
+    print(info)
+
+
 def main_warning(info):
   if is_main_process():
     logger.warning(info)
