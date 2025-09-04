@@ -102,8 +102,10 @@ def runner(function, verbose=None):
     try:
       import horovod
 
-      os.environ["HOROVOD_STALL_CHECK_TIME_SECONDS"] = "5"
-      os.environ["HOROVOD_STALL_SHUTDOWN_TIME_SECONDS"] = "30"
+      if "HOROVOD_STALL_CHECK_TIME_SECONDS" not in os.environ:
+        os.environ["HOROVOD_STALL_CHECK_TIME_SECONDS"] = "6"
+      if "HOROVOD_STALL_SHUTDOWN_TIME_SECONDS" not in os.environ:
+        os.environ["HOROVOD_STALL_SHUTDOWN_TIME_SECONDS"] = "60"
     except ImportError:
       raise ValueError("Please install Horovod properly first if you want to use Horovod distribution_strategy.")
 
