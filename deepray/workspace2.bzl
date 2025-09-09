@@ -172,13 +172,10 @@ def _tf_repositories():
     )
 
     http_archive(
-        name = "tbb",
-        build_file = "//third_party:tbb.BUILD",
-        sha256 = "e75fafb171fcd392fdedac14f1a6d6c6211230c6a38169a0ec279ea0d80b8a22",
-        strip_prefix = "oneTBB-2019_U1",
-        urls = [
-            "https://github.com/01org/tbb/archive/2019_U1.zip",
-        ],
+        name = "oneTBB",
+        urls = ["https://github.com/uxlfoundation/oneTBB/archive/refs/tags/v2022.2.0.zip"],
+        strip_prefix = "oneTBB-2022.2.0",
+        sha256 = "5470ccd4d127c6d680e46fee016531e452dc653d8eb1a40bd78ff087600fa582",
     )
 
     http_archive(
