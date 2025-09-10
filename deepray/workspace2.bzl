@@ -1,7 +1,7 @@
 """Deepray workspace initialization. Consult the WORKSPACE on how to use it."""
 
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-load("//third_party:repo.bzl", "tf_http_archive")
 
 # Sanitize a dependency so that it works correctly from code that includes
 # TensorFlow as a submodule.
@@ -188,28 +188,23 @@ def _tf_repositories():
         ],
     )
 
-    tf_http_archive(
-        name = "cuCollections",  # Apache License 2.0
-        patch_file = [clean_dep("//third_party/cuCollections:cucollection.patch")],
-        build_file = clean_dep("//third_party/cuCollections:cuco.BUILD"),
-        sha256 = "c5c77a1f96b439b67280e86483ce8d5994aa4d14b7627b1d3bd7880be6be23fa",
-        strip_prefix = "cuCollections-193de1aa74f5721717f991ca757dc610c852bb17",
-        urls = [
-            "https://github.com/NVIDIA/cuCollections/archive/193de1aa74f5721717f991ca757dc610c852bb17.zip",
-            "https://github.com/NVIDIA/cuCollections/archive/193de1aa74f5721717f991ca757dc610c852bb17.zip",
-        ],
+    git_repository(
+        name = "cuCollections",
+        remote = "https://github.com/fuhailin/cuCollections.git",
+        build_file = "//third_party/cuCollections:cuco.BUILD",
+        commit = "ef08bd880319adfb59a4f9c5a86641909e03926c",
     )
 
-    tf_http_archive(
-        name = "sparsehash_c11",  # BSD-3-Clause License
-        build_file = clean_dep("//third_party/sparsehash_c11:sparsehash_c11.BUILD"),
-        patch_file = [
-            clean_dep("//third_party/sparsehash_c11:sparsehash_c11.patch"),
+    http_archive(
+        name = "sparsehash_c11",
+        patch_args = ["-p1"],
+        patches = [
+            "//third_party/sparsehash_c11:sparsehash_c11.patch",
         ],
+        build_file = "//third_party/sparsehash_c11:sparsehash_c11.BUILD",
         sha256 = "d4a43cad1e27646ff0ef3a8ce3e18540dbcb1fdec6cc1d1cb9b5095a9ca2a755",
         strip_prefix = "sparsehash-c11-2.11.1",
         urls = [
-            "https://github.com/sparsehash/sparsehash-c11/archive/v2.11.1.tar.gz",
             "https://github.com/sparsehash/sparsehash-c11/archive/v2.11.1.tar.gz",
         ],
     )
@@ -253,7 +248,7 @@ def _tf_repositories():
         ],
     )
 
-    tf_http_archive(
+    http_archive(
         name = "readerwriterqueue_archive",
         build_file = clean_dep("//third_party:readerwriterqueue.BUILD"),
         sha256 = "fc68f55bbd49a8b646462695e1777fb8f2c0b4f342d5e6574135211312ba56c1",
