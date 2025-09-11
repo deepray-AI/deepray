@@ -1,27 +1,3 @@
-From 2d87035732d9ae347515b8497ca7a75d3b36f8cf Mon Sep 17 00:00:00 2001
-From: Tongxuan Liu <tongxuan.ltx@alibaba-inc.com>
-Date: Mon, 13 Mar 2023 08:58:56 +0800
-Subject: [PATCH] Avoid fetching nullptr when use feature filter.
-
----
- Makefile                                      |   13 +-
- sparsehash/dense_hash_map_lockless            |  447 ++++
- sparsehash/dense_hash_set_lockless            |  381 +++
- sparsehash/internal/densehashtable.h          |   16 +-
- sparsehash/internal/densehashtable_lockless.h | 2035 +++++++++++++++++
- sparsehash/internal/hashtable-common.h        |    4 +
- sparsehash/internal/sparsehashtable.h         |   18 +-
- sparsehash/traits                             |   10 +-
- tests/bench_lockless.cc                       | 1466 ++++++++++++
- tests/dense_hash_map_unittests.cc             |  137 +-
- tests/rwlock.h                                |  224 ++
- 11 files changed, 4728 insertions(+), 23 deletions(-)
- create mode 100644 sparsehash/dense_hash_map_lockless
- create mode 100644 sparsehash/dense_hash_set_lockless
- create mode 100644 sparsehash/internal/densehashtable_lockless.h
- create mode 100644 tests/bench_lockless.cc
- create mode 100644 tests/rwlock.h
-
 diff --git a/Makefile b/Makefile
 index 8bc9963..3bf2368 100644
 --- a/Makefile
@@ -3069,7 +3045,7 @@ index 4687874..4193ca6 100644
      resize_delta(static_cast<size_type>(dist));
      for (; dist > 0; --dist, ++f) {
 diff --git a/sparsehash/traits b/sparsehash/traits
-index 65135a6..8e0a0d6 100644
+index 65135a6..45e8927 100644
 --- a/sparsehash/traits
 +++ b/sparsehash/traits
 @@ -40,11 +40,19 @@ namespace google {
@@ -3092,13 +3068,6 @@ index 65135a6..8e0a0d6 100644
  template <class T, class U>
  struct is_relocatable<std::pair<T, U>>
      : std::integral_constant<bool, (is_relocatable<T>::value &&
-@@ -52,4 +60,4 @@ struct is_relocatable<std::pair<T, U>>
- 
- template <class T>
- struct is_relocatable<const T> : is_relocatable<T> {};
--}
-\ No newline at end of file
-+}
 diff --git a/tests/bench_lockless.cc b/tests/bench_lockless.cc
 new file mode 100644
 index 0000000..ac94adf
@@ -4572,7 +4541,7 @@ index 0000000..ac94adf
 +  return 0;
 +}
 diff --git a/tests/dense_hash_map_unittests.cc b/tests/dense_hash_map_unittests.cc
-index 7c4b3c1..37560c1 100644
+index 7c4b3c1..f815cd6 100644
 --- a/tests/dense_hash_map_unittests.cc
 +++ b/tests/dense_hash_map_unittests.cc
 @@ -1,21 +1,128 @@
@@ -4698,8 +4667,6 @@ index 7c4b3c1..37560c1 100644
 +  ht_insert.set_counternum(16);
  
 -	ASSERT_EQ(map.size(), 2);
--}
-\ No newline at end of file
 +  for (size_t i = 0 ; i < THREADNUM; i++) {
 +    insert_threads[i] = std::thread(multi_insertion);
 +  }
@@ -4719,7 +4686,8 @@ index 7c4b3c1..37560c1 100644
 +    ASSERT_EQ(ht_insert.size_lockless(), 5);
 +    ASSERT_EQ(ht_insert.size_lockless(), sum);
 +  }
-+}
+ }
+\ No newline at end of file
 diff --git a/tests/rwlock.h b/tests/rwlock.h
 new file mode 100644
 index 0000000..25e8e93
@@ -4951,6 +4919,3 @@ index 0000000..25e8e93
 +    lock_type* lock_;
 +};
 \ No newline at end of file
--- 
-2.25.1
-
