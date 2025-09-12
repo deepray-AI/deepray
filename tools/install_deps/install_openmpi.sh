@@ -15,7 +15,7 @@
 # ==============================================================================
 set -x -e
 
-OPENMPI_VERSION=${1:-"5.0.7"}
+OPENMPI_VERSION=${1:-"5.0.8"}
 
 apt-get update &&
     apt-get install --no-install-recommends --yes \
