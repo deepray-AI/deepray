@@ -135,8 +135,14 @@ class HorovodTool(CommToolBase):
   def allgather(self, tensor):
     return hvd.allgather(tensor)
 
+  def allgather_object(self, obj):
+    return hvd.allgather_object(obj)
+
   def broadcast(self, tensor, root):
     return hvd.broadcast(tensor, root)
+
+  def broadcast_object(self, tensor, root_rank=0):
+    return hvd.broadcast_object(tensor, root_rank)
 
 
 # The global communication tool instance, it should only be set by `set_comm_tool` method.
@@ -204,5 +210,13 @@ def allgather(*args, **kwargs):
   return _COMM_TOOL.allgather(*args, **kwargs)
 
 
+def allgather_object(*args, **kwargs):
+  return _COMM_TOOL.allgather_object(*args, **kwargs)
+
+
 def broadcast(*args, **kwargs):
   return _COMM_TOOL.broadcast(*args, **kwargs)
+
+
+def broadcast_object(*args, **kwargs):
+  return _COMM_TOOL.broadcast_object(*args, **kwargs)
