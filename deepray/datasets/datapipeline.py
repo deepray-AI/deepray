@@ -35,6 +35,7 @@ class DataPipeline(object):
     # self.conf = Foo(flags.FLAGS.conf_file).conf
     self.url = None
     self.prebatch_size = kwargs.get("prebatch_size", None)
+    self.shuffle = kwargs.get("shuffle", False)
 
   @abc.abstractmethod
   def __len__(self):
@@ -63,7 +64,7 @@ class DataPipeline(object):
 
   @abc.abstractmethod
   def build_dataset(
-    self, batch_size, input_file_pattern=None, is_training=True, epochs=1, shuffle=False, *args, **kwargs
+    self, batch_size, input_file_pattern=None, is_training=True, epochs=1, *args, **kwargs
   ):
     """
     must be defined in subclass
