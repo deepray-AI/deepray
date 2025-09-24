@@ -72,7 +72,7 @@ class EmbeddingVariable(tf.keras.layers.Layer):
     **kwargs,
   ):
     super(EmbeddingVariable, self).__init__(name=name)
-    self.embedding_size = embedding_dim
+    self.embedding_dim = embedding_dim
     self.with_unique = with_unique
     self.world_size = get_world_size()
 
@@ -138,21 +138,21 @@ class EmbeddingVariable(tf.keras.layers.Layer):
       unique_ids, idx = tf.unique(ids_flat)
       unique_embeddings = self.read(unique_ids)
       embeddings_flat = tf.gather(unique_embeddings, idx)
-      embeddings_shape = tf.concat([tf.shape(ids), tf.constant(self.embedding_size, shape=(1,))], 0)
+      embeddings_shape = tf.concat([tf.shape(ids), tf.constant(self.embedding_dim, shape=(1,))], 0)
       embeddings = tf.reshape(embeddings_flat, embeddings_shape)
     return embeddings
 
   def hvd_read(self, ids, *args, **kwargs):
     """
     Compute embedding output for feature ids. The output shape will be (shape(ids),
-    embedding_size).
+    embedding_dim).
 
     Args:
       ids: feature ids of the input. It should be same dtype as the key_dtype
         of the layer.
 
     Returns:
-      A embedding output with shape (shape(ids), embedding_size).
+      A embedding output with shape (shape(ids), embedding_dim).
     """
     is_ragged = isinstance(ids, tf.RaggedTensor)
 
@@ -161,7 +161,7 @@ class EmbeddingVariable(tf.keras.layers.Layer):
       ids = ids.flat_values
 
     input_shape = tf.shape(ids)
-    embeddings_shape = tf.concat([input_shape, [self.embedding_size]], 0)
+    embeddings_shape = tf.concat([input_shape, [self.embedding_dim]], 0)
 
     ids_flat = tf.reshape(ids, [-1])
 
@@ -179,7 +179,7 @@ class EmbeddingVariable(tf.keras.layers.Layer):
       lookup_result, _ = hvd.alltoall(lookup_result, splits=remote_sizes, name=f"{self.name}_alltoall_embeddings")
 
       input_shape = tf.shape(ids)
-      recover_shape = tf.concat((input_shape, (self.embedding_size,)), axis=0)
+      recover_shape = tf.concat((input_shape, (self.embedding_dim,)), axis=0)
       gather_indices = tf.expand_dims(tf.concat(gather_indices, axis=0), axis=-1)
       lookup_result = tf.scatter_nd(gather_indices, lookup_result, recover_shape)
       return lookup_result
