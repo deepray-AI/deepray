@@ -26,7 +26,7 @@ export OMPI_DIR=${INSTALL_DIR}/openmpi
 
 apt-get update &&
     apt-get install --no-install-recommends --yes \
-        wget build-essential autoconf
+        wget build-essential autoconf libtool
 
 # Install UCX
 mkdir /tmp/ucx && cd /tmp/ucx
