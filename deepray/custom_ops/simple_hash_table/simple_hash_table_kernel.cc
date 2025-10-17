@@ -93,8 +93,6 @@ class SimpleHashTableResource : public ::tensorflow::ResourceBase {
   Status Import(const Tensor& keys, const Tensor& values) {
     const auto key_values = keys.flat<K>();
     const auto value_values = values.flat<V>();
-    LOG(INFO) << "key_values = " << key_values;
-    LOG(INFO) << "value_values = " << value_values;
 
     mutex_lock l(mu_);
     table_.clear();

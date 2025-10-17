@@ -90,6 +90,8 @@ RUN bash /install_deps/install_openssh.sh
 
 # Setup openmpi
 COPY --from=openmpi_builder /opt/openmpi /opt/openmpi
+COPY --from=openmpi_builder /opt/ucx /opt/ucx
+COPY --from=openmpi_builder /opt/ucc /opt/ucc
 ENV PATH=${PATH}:/opt/openmpi/bin \
     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openmpi/lib
 RUN mpirun --version

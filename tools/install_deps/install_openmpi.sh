@@ -16,18 +16,40 @@
 set -x -e
 
 OPENMPI_VERSION=${1:-"5.0.8"}
+export BUILD_DIR=/tmp
+export INSTALL_DIR=/opt
+export UCX_DIR=${INSTALL_DIR}/ucx
+export UCC_DIR=${INSTALL_DIR}/ucc
+export OMPI_DIR=${INSTALL_DIR}/openmpi
 
 apt-get update &&
     apt-get install --no-install-recommends --yes \
         wget build-essential
 
-# Install Open MPI
+# Install UCX
+git clone https://github.com/openucx/ucx.git ${BUILD_DIR}/ucx
+cd ${BUILD_DIR}/ucx
+git checkout v1.5.1
+./autogen.sh
+./configure --prefix=${UCX_DIR}
+make -j $(nproc)
+make install
+
+# Install UCC
+git clone https://github.com/openucx/ucc.git ${BUILD_DIR}/ucc
+cd ${BUILD_DIR}/ucc
+git checkout v1.5.1
+./autogen.sh
+./configure --prefix=${UCC_DIR} --with-ucx=${UCX_DIR}
+make -j $(nproc) && make install
+
+# Install OpenMPI
 mkdir /tmp/openmpi &&
     cd /tmp/openmpi
 wget --no-check-certificate --progress=dot:mega -O openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${OPENMPI_VERSION}.tar.gz
 tar -zxf openmpi-${OPENMPI_VERSION}.tar.gz
 cd openmpi-${OPENMPI_VERSION}
-./configure --enable-orterun-prefix-by-default --prefix=/opt/openmpi
+./configure --enable-orterun-prefix-by-default --prefix=${OMPI_DIR} --with-ucx=${UCX_DIR} --with-ucc=${UCC_DIR}
 make -j $(nproc)
 make install
 ldconfig
@@ -45,4 +67,4 @@ export PATH="${OPENMPI_HOME}/bin:${PATH}"
 export LD_LIBRARY_PATH="${OPENMPI_HOME}/lib:${LD_LIBRARY_PATH}"
 
 mpirun --version &&
-    rm -rf /tmp/openmpi
+    rm -rf ${BUILD_DIR}
