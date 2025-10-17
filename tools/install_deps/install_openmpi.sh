@@ -24,7 +24,7 @@ export OMPI_DIR=${INSTALL_DIR}/openmpi
 
 apt-get update &&
     apt-get install --no-install-recommends --yes \
-        wget build-essential
+        wget build-essential git
 
 # Install UCX
 git clone https://github.com/openucx/ucx.git ${BUILD_DIR}/ucx
