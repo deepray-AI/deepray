@@ -16,6 +16,8 @@
 set -x -e
 
 OPENMPI_VERSION=${1:-"5.0.8"}
+UCX_VERSION=${2:-"1.19.0"}
+UCC_VERSION=${3:-"1.5.1"}
 export BUILD_DIR=/tmp
 export INSTALL_DIR=/opt
 export UCX_DIR=${INSTALL_DIR}/ucx
@@ -24,28 +26,29 @@ export OMPI_DIR=${INSTALL_DIR}/openmpi
 
 apt-get update &&
     apt-get install --no-install-recommends --yes \
-        wget build-essential git
+        wget build-essential
 
 # Install UCX
-git clone https://github.com/openucx/ucx.git ${BUILD_DIR}/ucx
-cd ${BUILD_DIR}/ucx
-git checkout v1.5.1
+mkdir /tmp/ucx && cd /tmp/ucx
+wget --no-check-certificate --progress=dot:mega -O ucx-${UCX_VERSION}.tar.gz https://github.com/openucx/ucx/archive/refs/tags/v${UCX_VERSION}.tar.gz
+tar -zxf ucx-${UCX_VERSION}.tar.gz
+cd ucx-${UCX_VERSION}
 ./autogen.sh
 ./configure --prefix=${UCX_DIR}
 make -j $(nproc)
 make install
 
 # Install UCC
-git clone https://github.com/openucx/ucc.git ${BUILD_DIR}/ucc
-cd ${BUILD_DIR}/ucc
-git checkout v1.5.1
+mkdir /tmp/ucc && cd /tmp/ucc
+wget --no-check-certificate --progress=dot:mega -O ucc-${UCC_VERSION}.tar.gz https://github.com/openucx/ucc/archive/refs/tags/v${UCC_VERSION}.tar.gz
+tar -zxf ucc-${UCC_VERSION}.tar.gz
+cd ucc-${UCC_VERSION}
 ./autogen.sh
 ./configure --prefix=${UCC_DIR} --with-ucx=${UCX_DIR}
 make -j $(nproc) && make install
 
 # Install OpenMPI
-mkdir /tmp/openmpi &&
-    cd /tmp/openmpi
+mkdir /tmp/openmpi && cd /tmp/openmpi
 wget --no-check-certificate --progress=dot:mega -O openmpi-${OPENMPI_VERSION}.tar.gz https://download.open-mpi.org/release/open-mpi/v5.0/openmpi-${OPENMPI_VERSION}.tar.gz
 tar -zxf openmpi-${OPENMPI_VERSION}.tar.gz
 cd openmpi-${OPENMPI_VERSION}
