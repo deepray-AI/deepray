@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-set -x -e
+set -xeuo pipefail
 
 PY_VERSION=${1:-"3.10"}
 

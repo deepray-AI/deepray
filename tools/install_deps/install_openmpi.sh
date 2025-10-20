@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-set -x -e
+set -xeuo pipefail
 
 OPENMPI_VERSION=${1:-"5.0.8"}
 UCX_VERSION=${2:-"1.19.0"}
@@ -26,7 +26,7 @@ export OMPI_DIR=${INSTALL_DIR}/openmpi
 
 apt-get update &&
     apt-get install --no-install-recommends --yes \
-        wget build-essential autoconf automake libtool
+        wget build-essential autoconf automake libtool git
 
 # Install UCX
 mkdir /tmp/ucx && cd /tmp/ucx
@@ -45,7 +45,8 @@ tar -zxf ucc-${UCC_VERSION}.tar.gz
 cd ucc-${UCC_VERSION}
 ./autogen.sh
 ./configure --prefix=${UCC_DIR} --with-ucx=${UCX_DIR}
-make -j $(nproc) && make install
+make -j $(nproc)
+make install
 
 # Install OpenMPI
 mkdir /tmp/openmpi && cd /tmp/openmpi
