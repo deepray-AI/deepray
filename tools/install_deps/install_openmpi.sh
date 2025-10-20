@@ -62,13 +62,13 @@ ldconfig
 cat >bashrc.txt <<'EOF'
 export OPENMPI_HOME=/opt/openmpi
 export PATH="${OPENMPI_HOME}/bin:${PATH}"
-export LD_LIBRARY_PATH="${OPENMPI_HOME}/lib:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${OPENMPI_HOME}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 EOF
 cat bashrc.txt >>/root/.bashrc
 
 export OPENMPI_HOME=/opt/openmpi
 export PATH="${OPENMPI_HOME}/bin:${PATH}"
-export LD_LIBRARY_PATH="${OPENMPI_HOME}/lib:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${OPENMPI_HOME}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 mpirun --version &&
     rm -rf ${BUILD_DIR}
