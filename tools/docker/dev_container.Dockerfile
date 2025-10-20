@@ -1,4 +1,4 @@
-#syntax=docker/dockerfile:1.4
+# syntax=docker/dockerfile:1.4
 # Copyright 2025 The Deepray Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -58,6 +58,8 @@ ARG PY_VERSION
 
 # Setup openmpi
 COPY --from=openmpi_builder /opt/openmpi /opt/openmpi
+COPY --from=openmpi_builder /opt/ucx /opt/ucx
+COPY --from=openmpi_builder /opt/ucc /opt/ucc
 ENV PATH=${PATH}:/opt/openmpi/bin \
     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openmpi/lib
 RUN mpirun --version

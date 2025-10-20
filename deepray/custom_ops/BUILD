@@ -14,7 +14,7 @@ py_library(
         # "//deepray/custom_ops/multiplex_4:multiplex_4_op",
         "//deepray/custom_ops/parquet_dataset",
         "//deepray/custom_ops/seq2seq",
-        # "//deepray/custom_ops/simple_hash_table",
+        "//deepray/custom_ops/simple_hash_table",
         # "//deepray/custom_ops/sleep:sleep_op",
         "//deepray/custom_ops/training_ops",
         "//deepray/custom_ops/unique_ops",

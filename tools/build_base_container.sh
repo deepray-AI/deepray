@@ -9,10 +9,7 @@ OS_VERSION=${4:-"20.04"}
 
 docker build \
     -f tools/docker/base_container.Dockerfile \
-    --network=host \
     --progress=plain \
-    --build-arg http_proxy=http://127.0.0.1:7890 \
-    --build-arg https_proxy=http://127.0.0.1:7890 \
     --build-arg CUDA_VERSION=${CUDA_VERSION} \
     --build-arg TF_VERSION=${TF_VERSION} \
     --build-arg PY_VERSION=${PY_VERSION} \
