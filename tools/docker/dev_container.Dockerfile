@@ -1,4 +1,4 @@
-#syntax=docker/dockerfile:1.4
+# syntax=docker/dockerfile:1.4
 # Copyright 2025 The Deepray Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
