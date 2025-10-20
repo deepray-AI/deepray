@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-set -x -e
+set -xeuo pipefail
 
 CMAKE_VERSION=${1:-"3.31.0"}
 
@@ -27,12 +27,12 @@ rm /tmp/cmake-install.sh
 cat >bashrc.txt <<'EOF'
 export CMAKE_HOME=/opt/cmake
 export PATH="${CMAKE_HOME}/bin:${PATH}"
-export LD_LIBRARY_PATH="${CMAKE_HOME}/lib:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${CMAKE_HOME}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 EOF
 cat bashrc.txt >>/root/.bashrc
 
 export CMAKE_HOME=/opt/cmake
 export PATH="${CMAKE_HOME}/bin:${PATH}"
-export LD_LIBRARY_PATH="${CMAKE_HOME}/lib:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${CMAKE_HOME}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 cmake --version

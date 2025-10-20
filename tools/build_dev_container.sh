@@ -4,11 +4,14 @@ set -x -e
 
 PY_VERSION=${1:-"3.10"}
 TF_VERSION=${2:-"2.15.1"}
-OS_VERSION=${3:-"20.04"}
-CUDA_VERSION=${4:-"12.2.2"}
+CUDA_VERSION=${3:-"12.2.2"}
+OS_VERSION=${4:-"20.04"}
 
 docker build \
     -f tools/docker/dev_container.Dockerfile \
+    --network=host \
+    --build-arg http_proxy=http://127.0.0.1:7890 \
+    --build-arg https_proxy=http://127.0.0.1:7890 \
     --progress=plain \
     --build-arg TF_PACKAGE=tensorflow \
     --build-arg PY_VERSION=${PY_VERSION} \
