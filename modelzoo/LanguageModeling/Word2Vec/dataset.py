@@ -1,11 +1,5 @@
-import tqdm
 import tensorflow as tf
-import numpy as np
-import re
-import string
 import tqdm
-from absl import flags
-from tensorflow.keras import layers
 
 
 # Generates skip-gram pairs with negative sampling for a list of sequences
