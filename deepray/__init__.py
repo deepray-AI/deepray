@@ -36,6 +36,7 @@ from deepray.utils import logging_util
 from deepray.utils import types
 from deepray.utils.ensure_tf_install import _check_tf_version
 from deepray.utils.flags import common_flags
+from deepray.utils.keras_utils import set_random_seed
 from deepray.version import __version__
 
 # _check_tf_version()
@@ -43,9 +44,15 @@ from deepray.version import __version__
 logger = logging_util.get_logger()
 common_flags.define_common_flags()
 
+# Parsing sys.argv so we can use flags by `import deepray`
+flags.FLAGS(sys.argv, known_only=True)
+if flags.FLAGS.random_seed is not None:
+  set_random_seed(flags.FLAGS.random_seed)
+
 
 def init():
   logger.debug(f"sys.argv = {sys.argv}")  # sys.argv from Horovod
+  # Parsing `distribution_strategy` this additional flag
   flags.FLAGS(sys.argv, known_only=True)
 
   gpus = tf.config.list_physical_devices("GPU")

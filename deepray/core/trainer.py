@@ -62,13 +62,6 @@ from deepray.utils.horovod_utils import is_main_process
 logger = logging_util.get_logger()
 
 
-def set_random_seed(random_seed):
-  random.seed(random_seed)  # set random seed for python
-  np.random.seed(random_seed)  # set random seed for numpy
-  tf.random.set_seed(random_seed)  # set random seed for tensorflow-cpu
-  os.environ["TF_DETERMINISTIC_OPS"] = "1"  # set random seed for tensorflow-gpu
-
-
 @keras_export("keras.Model", "keras.models.Model")
 class Trainer:
   """A model grouping layers into an object with training/inference features.
@@ -349,8 +342,6 @@ class Trainer:
       logger.info("flags.FLAGS:")
       for key, value in sorted(flags.FLAGS.flag_values_dict().items()):
         logger.info(f"\t{key:25}= {value}")
-    if flags.FLAGS.random_seed is not None:
-      set_random_seed(flags.FLAGS.random_seed)
 
   def _create_counter_variable(self, init_value):
     """Helper function for counter variable creation.
