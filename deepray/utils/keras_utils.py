@@ -15,7 +15,9 @@
 
 import multiprocessing
 import os
+import random
 
+import numpy as np
 import tensorflow as tf
 from absl import logging
 from tensorflow.python import tf2
@@ -153,3 +155,11 @@ def count_params(model):
   main_print(f"{'':20} ({model_size:,})")
 
   return model_size
+
+
+def set_random_seed(random_seed):
+  random.seed(random_seed)  # set random seed for python
+  np.random.seed(random_seed)  # set random seed for numpy
+  tf.random.set_seed(random_seed)  # set random seed for tensorflow-cpu
+  # The following operation will significantly reduce the training speed, so we have disabled it.
+  # os.environ["TF_DETERMINISTIC_OPS"] = "1"  # set random seed for tensorflow-gpu
