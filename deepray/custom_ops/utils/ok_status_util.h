@@ -33,7 +33,7 @@ This code is for compatibility.*/
 #else
 // #pragma message(PRINT_MACRO(TF_VERSION_INTEGER))
 // #define TFOkStatus Status::OK()
-#define TFOkStatus absl::OkStatus()
+#define TFOkStatus Status::OK()
 #endif
 }  // namespace deepray
 }  // namespace tensorflow

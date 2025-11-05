@@ -1,4 +1,5 @@
 load("@local_config_cuda//cuda:build_defs.bzl", "cuda_library")
+load("@local_config_tf//:build_defs.bzl", "TF_VERSION_INTEGER")
 load("@org_tensorflow//tensorflow:tensorflow.bzl", "tf_copts")
 
 package(default_visibility = ["//visibility:public"])
@@ -23,6 +24,9 @@ cc_library(
     name = "ok_status_util",
     srcs = [
         "ok_status_util.h",
+    ],
+    defines = [
+        TF_VERSION_INTEGER,
     ],
     visibility = ["//visibility:public"],
 )

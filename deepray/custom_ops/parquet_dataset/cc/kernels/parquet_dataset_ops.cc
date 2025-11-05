@@ -16,6 +16,7 @@ limitations under the License.
 
 #include <unordered_set>
 
+#include "deepray/custom_ops/utils/ok_status_util.h"
 #include "tensorflow/core/framework/common_shape_fns.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/op_def_builder.h"
@@ -83,14 +84,14 @@ class ParquetTabularDatasetOp::Dataset : public DatasetBase {
     return output_shapes_;
   }
 
-  Status CheckExternalState() const override { return OkStatus(); }
+  Status CheckExternalState() const override { return TFOkStatus; }
 
   string DebugString() const override {
     return "ParquetTabularDatasetOp::Dataset";
   }
 
   Status InputDatasets(std::vector<const DatasetBase*>* inputs) const override {
-    return OkStatus();
+    return TFOkStatus;
   }
 
  protected:
@@ -122,7 +123,7 @@ class ParquetTabularDatasetOp::Dataset : public DatasetBase {
                        {"partition_index", partition_index},
                        {"drop_remainder", drop_remainder}},
                       output));
-    return OkStatus();
+    return TFOkStatus;
   }
 
  private:
@@ -159,7 +160,7 @@ class ParquetTabularDatasetOp::Dataset::Iterator
       return s;
     }
     *end_of_sequence = true;
-    return OkStatus();
+    return TFOkStatus;
   }
 
  protected:

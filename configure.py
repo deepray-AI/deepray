@@ -29,6 +29,7 @@ from typing import Optional
 
 import tensorflow as tf
 from packaging.version import Version
+from typing import List, Optional
 
 # pylint: disable=g-import-not-at-top
 try:
@@ -873,7 +874,7 @@ def _find_executable_or_die(executable_name: str, executable_path: Optional[str]
   return resolved_path_to_exe
 
 
-def _get_cuda_compute_capabilities_or_die() -> list[str]:
+def _get_cuda_compute_capabilities_or_die() -> List[str]:
   """Finds compute capabilities via nvidia-smi or rasies exception.
 
   Returns:
