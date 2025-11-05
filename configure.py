@@ -25,11 +25,10 @@ import re
 import shutil
 import subprocess
 import sys
-from typing import Optional
+from typing import List, Optional
 
 import tensorflow as tf
 from packaging.version import Version
-from typing import List, Optional
 
 # pylint: disable=g-import-not-at-top
 try:
