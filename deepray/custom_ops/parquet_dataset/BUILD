@@ -14,6 +14,7 @@ custom_op_library(
     deps = [
         ":arrow_util",
         ":parquet_batch_reader",
+        "//deepray/custom_ops/utils:ok_status_util",
     ],
 )
 
@@ -31,6 +32,7 @@ cc_library(
         "DEEPREC_ARROW_ZEROCOPY",
     ],
     deps = [
+        "//deepray/custom_ops/utils:ok_status_util",
         "@local_config_tf//:libtensorflow_framework",
         "@local_config_tf//:tf_header_lib",
         "@org_apache_arrow//:arrow",
@@ -47,6 +49,7 @@ cc_library(
     ],
     deps = [
         ":arrow_util",
+        "//deepray/custom_ops/utils:ok_status_util",
         "@local_config_tf//:libtensorflow_framework",
         "@local_config_tf//:tf_header_lib",
         "@org_apache_arrow//:arrow",

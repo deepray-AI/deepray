@@ -78,6 +78,8 @@ ENV PATH=${PATH}:/opt/cmake/bin \
     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/cmake/lib
 
 RUN HOROVOD_WITH_MPI=1 HOROVOD_GPU_OPERATIONS=NCCL HOROVOD_WITH_TENSORFLOW=1 pip install --no-cache-dir horovod -U
+COPY tools/releases/horovod_runner_patch.sh /tmp/
+RUN bash /tmp/horovod_runner_patch.sh
 
 COPY tools/install_deps/devel.requirements.txt /install_deps/devel.requirements.txt
 RUN pip install --no-cache-dir -r /install_deps/devel.requirements.txt -U
@@ -106,6 +108,8 @@ RUN bash /install_deps/install_openssh.sh
 
 # Setup openmpi
 COPY --from=openmpi_builder /opt/openmpi /opt/openmpi
+COPY --from=openmpi_builder /opt/ucx /opt/ucx
+COPY --from=openmpi_builder /opt/ucc /opt/ucc
 ENV PATH=${PATH}:/opt/openmpi/bin \
     LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openmpi/lib
 RUN mpirun --version
