@@ -54,11 +54,11 @@ def _clip_clicks(row, behavior_log_cols, duration):
     ts_list = row[ts_col]
     begin_idx = 0
     end_idx = len(ts_list)
-    for ts in ts_list:
+    for i, ts in enumerate(ts_list):
       if ts < min_ts:
-        begin_idx += 1
+        begin_idx = max(begin_idx, i + 1)
       elif ts >= max_ts:
-        end_idx -= 1
+        end_idx = min(end_idx, i)
     for col in cols:
       row[col] = row[col][begin_idx:end_idx]
   return row
